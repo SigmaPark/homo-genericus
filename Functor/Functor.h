@@ -12,8 +12,11 @@
 #include <tuple>
 
 #ifndef LAMBDIZE
+
+//	convert template object into generic lambda
 #define LAMBDIZE(TemFunc, ...)	\
 	[](auto&&...args){  return TemFunc __VA_ARGS__ (std::forward<decltype(args)>(args)...);  }
+
 #else
 	static_assert(false, "macro LAMBDIZE is already defined elsewhere.");
 #endif
@@ -27,7 +30,7 @@ namespace sgm
 	class Functor;
 
 
-	//	함수의 매개변수 개수를 Functor객체에 입력하여 생성시킨다.
+	//	notify dimension of Functor, the number of parameters of Functor.
 	template<size_t D>
 	class Dimension {};
 
@@ -57,7 +60,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	//	튜플타입을 구별해내기 위한 템플릿 장치
+	//	template trick to detect std::tuple template class
 	class _Tuple_Detect_Helper
 	{
 	public:
@@ -77,7 +80,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	//	하나 이상의 리턴값을 표현하기 위한 객체.
+	//	data structure to express multiple output from Functor
 	class Flat_Pack_t
 	{
 	protected:
