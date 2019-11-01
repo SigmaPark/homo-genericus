@@ -669,7 +669,13 @@ namespace sgm
 		return 
 		outCON::Morph
 		(	std::forward<CON>(con), sgm::identity<>(), std::move(pol) 
-		,	static_cast< typename std::decay_t<CON>::value_type >( *std::cbegin(con) )
+		,	std::move
+			(	static_cast
+				<	std::decay_t	
+					<	typename std::decay_t<CON>::value_type 
+					>
+				>( *std::cbegin(con) )
+			)
 		);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -856,7 +862,7 @@ namespace sgm
 			con_size	= con.size(), 
 			size		= con_size < n ? con_size : n;
 
-		_Ranker_Helper<size_t, F> helper( size, std::forward<F>(f) );
+		_Ranker_Helper<elem_t, F> helper( size, std::forward<F>(f) );
 
 		for(auto const& t : con)
 			helper(t);
@@ -895,14 +901,6 @@ namespace sgm
 		return Repack< std_array<SIZE> >(helper.get_rankers());
 	}
 	#endif
-
-
-	template<typename CON, typename F = decltype(std::less<>())>
-	static auto Top_Ranker(CON&& con, F&& f = std::less<>())
-	{
-		return *std::min_element( std::cbegin(con), std::cend(con), std::forward<F>(f) );
-	}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	
 	template<typename CON>
