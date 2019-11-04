@@ -54,16 +54,22 @@ void tutorial01()
 
 void tutorial02()
 {
+	auto s
+	=	sgm::Morph
+		(	sgm::Repack<sgm::std_list>(sgm::indices(20, 1))
+		,	[](size_t i){  return 1.5 * double(i);  }
+		);
 
-
+	Show::Container(s);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 int main()
 {
-	tutorial01();
+	tutorial01(),
+	std::wcout << '\n';
 
-
+	tutorial02();
 
 	return 0;
 }

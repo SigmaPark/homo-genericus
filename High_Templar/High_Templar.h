@@ -1,4 +1,4 @@
-/*	함수형 프로그래밍의 higher ordre function들을 template 형태로 제공한다
+/**	Higher order functions in FP paradigm as template function format
 */
 #pragma once
 
@@ -18,7 +18,8 @@
 namespace sgm
 {
 
-
+	/**	Functional object which identically gives what it takes
+	*/
 	template<typename _T = void>
 	class identity
 	{
@@ -45,12 +46,22 @@ namespace sgm
 			return _indices_tail<D - 1, OFFSET, index_t>( ns..., sizeof...(Ns) + OFFSET );
 	}
 
+	/**	Integral domain as std::array container
+
+	*	Initialized in compile time.
+
+	*	Should be used for small size domain. (under few hundreds)
+	*/
 	template<size_t N, size_t OFFSET = 0, typename index_t = size_t>
 	static auto constexpr indices(){  return _indices_tail<N, OFFSET, index_t>();  }
 	#endif
 
 
 	#ifdef _VECTOR_
+	/**	Integral domain as std::vector container
+
+	*	Initialized in run time.
+	*/
 	template<typename T, typename POL>
 	static auto indices(size_t const s, T const offset, POL&& pol)
 	{
@@ -68,6 +79,9 @@ namespace sgm
 		return res;
 	}
 
+	/**	Overloading :
+		_2ND could be a type for std::execution policy or an integral offset.
+	*/
 	template<typename _2ND>
 	static auto indices(size_t const s, _2ND&& second)
 	{
@@ -86,6 +100,8 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	/**	CRTP to create types from template classes
+	*/
 	template<typename T>
 	class Templar
 	{
@@ -116,12 +132,15 @@ namespace sgm
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
-	
+	/**	Trait class for converting template class into sgm::Templar
+	*/
 	template<typename CON>
 	class Container_traits;
 
 
-#define SPECIALIZE_CONTAINER_TRAITS(con)	\
+	/**	Macro idiom for specialization for sgm::Container_traits
+	*/
+	#define SPECIALIZE_CONTAINER_TRAITS(con)	\
 	template<typename...ARGS>	\
 	class Container_traits< std::con<ARGS...> >	\
 	{	\
@@ -132,7 +151,10 @@ namespace sgm
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
+	/**	Common iterative routines
 
+	*	Chosen depanding on a method that uses it. (strategy pattern)
+	*/
 	class Looper
 	{
 	public:
@@ -640,7 +662,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	/*	함수형 프로그래밍의 고차함수 Map과 동일한 역할
+	/**	Higher order function, Map in FP
 	*/
 	template
 	<	typename CON, typename F
@@ -661,27 +683,25 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	/*	컨테이너 캐스팅
+	/**	Container casting method
 	*/
-	template<typename outCON, typename CON, typename POL = std::execution::sequenced_policy>
+	template
+	<	typename outCON, typename CON
+	,	typename elem_t = std::decay_t< typename std::decay_t<CON>::value_type >
+	,	typename POL = std::execution::sequenced_policy
+	>
 	static auto Repack(CON&& con, POL pol = std::execution::seq)
 	{
-		return 
+		return
 		outCON::Morph
-		(	std::forward<CON>(con), sgm::identity<>(), std::move(pol) 
-		,	std::move
-			(	static_cast
-				<	std::decay_t	
-					<	typename std::decay_t<CON>::value_type 
-					>
-				>( *std::cbegin(con) )
-			)
+		(	std::forward<CON>(con), sgm::identity<>(), std::move(pol)
+		,	std::move(  static_cast<elem_t>( *std::cbegin(con) )  )
 		);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	/*	함수형 프로그래밍의 고차함수 Filter
+	/**	Higher order function, Filter in FP
 	*/
 	template<typename CON, typename F, typename POL = std::execution::sequenced_policy>
 	static auto Filter(CON&& con, F&& f, POL pol = std::execution::seq)
@@ -694,7 +714,7 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	/*	함수형 프로그래밍의 고차함수 Reduce
+	/**	Higher order function, Fold(or Reduce) in FP
 	*/
 	template<typename CON, typename F, typename POL, typename T>
 	static auto Fold(CON&& con, F&& f, POL&& pol, T&& init)
@@ -711,6 +731,9 @@ namespace sgm
 		);
 	}
 
+	/**	Overloading :
+		_3RD could be a type for std::execution policy or an initial value.
+	*/
 	template<typename CON, typename F, typename _3RD>
 	static auto Fold(CON&& con, F&& f, _3RD&& third)
 	{
@@ -729,6 +752,9 @@ namespace sgm
 			);
 	}
 
+	/**	Overloading :
+		_2ND could be a type for std::execution policy or folding method.
+	*/
 	template<typename CON, typename _2ND>
 	static auto Fold(CON&& con, _2ND&& second)
 	{
@@ -750,7 +776,7 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	/*	정렬
+	/**	Sorting
 	*/
 	template<typename CON, typename F, typename POL>
 	static auto Sort(CON con, F&& f, [[maybe_unused]] POL&& pol)
@@ -782,6 +808,9 @@ namespace sgm
 		return con;
 	}
 
+	/**	Overloading :
+		_2ND could be a type for std::execution policy or comparison operation.
+	*/
 	template<typename CON, typename _2ND>
 	static auto Sort(CON&& con, _2ND&& second)
 	{
@@ -852,6 +881,8 @@ namespace sgm
 	};
 
 
+	/**	Top n members when ordered by comparison operation f
+	*/
 	template
 	<	typename CON, typename F = decltype(std::less<>())
 	,	typename elem_t = typename std::decay_t<CON>::value_type
@@ -882,6 +913,11 @@ namespace sgm
 	#endif
 
 
+	/**	Overloading for std::array type result
+
+	*	The number of rankers should be determined in compile time 
+		as non-type template parameter, SIZE.
+	*/
 	#if defined _LIST_ && defined _ARRAY_
 	template
 	<	size_t SIZE, typename CON, typename F = decltype(std::less<>())
@@ -901,8 +937,15 @@ namespace sgm
 		return Repack< std_array<SIZE> >(helper.get_rankers());
 	}
 	#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
-	
+	/**	Taking n elements from front/rear side
+
+	*	Take abs(n) elements from front side if n is positive.
+
+	*	Take abs(n) elements from rear side if n is negative. 
+		The order of elements is conserved. (not reversed)
+	*/
 	template<typename CON>
 	static auto Take(CON&& con, signed int n)
 	{

@@ -1,3 +1,5 @@
+/**	Macro trick for tail-recusive implementation
+*/
 #pragma once
 
 #ifndef _SGM_RECURSION_

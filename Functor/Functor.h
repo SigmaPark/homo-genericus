@@ -1,3 +1,5 @@
+/**	FP style 1st-class citizen callable object, sgm::Functor
+*/
 #pragma once
 
 #ifndef _SGM_FUNCTOR_
@@ -11,26 +13,52 @@
 #include <memory>
 #include <tuple>
 
-#ifndef LAMBDIZE
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-//	convert template object into generic lambda
-#define LAMBDIZE(TemFunc, ...)	\
-	[](auto&&...args){  return TemFunc __VA_ARGS__ (std::forward<decltype(args)>(args)...);  }
+#ifndef SGM_FUNCTOR
+	/**	Macro function which converts template function into sgm::Functor
+
+	*	You can use template-specializing signature < type1, type2, ... >
+		as variadic parameters "..." 
+	*/
+	#define SGM_FUNCTOR(TemFunc, Dimension, ...)	\
+	(	[](auto&&...args)		\
+		{	\
+			return TemFunc __VA_ARGS__ ( std::forward<decltype(args)>(args)... );	\
+		}	\
+	/	sgm::Dim<Dimension>	\
+	)
 
 #else
-	static_assert(false, "macro LAMBDIZE is already defined elsewhere.");
+	static_assert(false, "macro SGM_FUNCTOR is already defined elsewhere.");
 #endif
+
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
 {
 
+	/**	Template class for sgm::Functor types
+
+	*	If you want not to use "auto" declaration for readability, use this as type declaration. 
+
+	*	Note that automatic type deduction for template class constructor is available
+		from C++17 so that you might not have to write template signature explicitly,
+		i.e., just
+			sgm::Functor foo = .... ;
+		is fine instead of
+			sgm::Functor<DIGIT, F_t> foo = .... ;
+		.
+	*/
 	template<size_t D, typename F>
 	class Functor;
 
 
-	//	notify dimension of Functor, the number of parameters of Functor.
+	/**	Template class which notifies dimension of Functor, the number of parameters
+
+	*	Its template alias sgm::Dim for short.
+	*/
 	template<size_t D>
 	class Dimension {};
 
@@ -46,12 +74,18 @@ namespace sgm
 	};
 
 
+	/**	Boolean const expression to varify if one is sgm::Functor type
+	*/
 	template<typename FTR>
 	static bool constexpr is_Functor_v 
 	=	std::is_base_of_v< Functor_t, std::decay_t<FTR> >;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	/**	Operator type builder for sgm::Functor
+
+	*	This derives sgm::Functor from lambda or other callable objects with sgm::Dim<DIGIT>.
+	*/
 	template<size_t D, typename G> 
 	decltype(auto) constexpr operator/(G&& g, Dimension<D>)
 	{
@@ -59,8 +93,7 @@ namespace sgm
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
-
-	//	template trick to detect std::tuple template class
+	 
 	class _Tuple_Detect_Helper
 	{
 	public:
@@ -80,7 +113,6 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	//	data structure to express multiple output from Functor
 	class Flat_Pack_t
 	{
 	protected:
@@ -96,6 +128,7 @@ namespace sgm
 	class Flat_Pack;
 
 
+	//	Builder for sgm::Flat_Pack
 	template<typename T>
 	static auto make_fpack(T&& t)
 	{
@@ -108,8 +141,19 @@ namespace sgm
 	}
 
 
+	/**	Data structure to express multiple output from sgm::Functor
+
+	*	Member operator() gives itself as tuple type.
+
+	*	Member operator+ does concatenation like std::tuple_cat,
+		i.e.,
+			{ t1, t2 } + { t3, t4, t5 } 
+		becomes
+			{ t1, t2, t3, t4, t5 }
+		.
+	*/
 	template<typename TU>
-	class Flat_Pack : public Flat_Pack_t
+	class Flat_Pack : Flat_Pack_t
 	{
 	public:
 		using tuple_t = TU;
@@ -133,26 +177,26 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	class Tupling_Helper_t
+	class _Tupling_Helper_t
 	{
 	public:
-		Tupling_Helper_t() = delete;
+		_Tupling_Helper_t() = delete;
 
 		enum class Curry{ NONE, FRONT, REAR };
 	};
 
 
-	template<size_t N, Tupling_Helper_t::Curry C>
-	class Tupling_Helper
+	template<size_t N, _Tupling_Helper_t::Curry C>
+	class _Tupling_Helper
 	{
 	public:
-		Tupling_Helper() = delete;
+		_Tupling_Helper() = delete;
 
 		template<typename SPF, typename TU, typename...ARGS>
 		static decltype(auto) constexpr calc(SPF&& spf, TU&& tu, ARGS&&...args)
 		{
 			return
-			Tupling_Helper<N - 1, C>::calc
+			_Tupling_Helper<N - 1, C>::calc
 			(	std::forward<SPF>(spf), std::forward<TU>(tu)
 			,	std::get<N - 1>( std::forward<TU>(tu) ), std::forward<ARGS>(args)...
 			);
@@ -160,24 +204,24 @@ namespace sgm
 	};
 
 
-	template<Tupling_Helper_t::Curry C>
-	class Tupling_Helper<0, C>
+	template<_Tupling_Helper_t::Curry C>
+	class _Tupling_Helper<0, C>
 	{
 	public:
-		Tupling_Helper() = delete;
+		_Tupling_Helper() = delete;
 
 		template<typename SPF, typename TU, typename...ARGS>
 		static decltype(auto) constexpr calc(SPF&& spf, TU&&, ARGS&&...args)
 		{
-			if constexpr(C == Tupling_Helper_t::Curry::NONE)
+			if constexpr(C == _Tupling_Helper_t::Curry::NONE)
 				return (*spf)( std::forward<ARGS>(args)... );
-			else if constexpr(C == Tupling_Helper_t::Curry::FRONT)
+			else if constexpr(C == _Tupling_Helper_t::Curry::FRONT)
 				return 
 				[spf, args...](auto&&...params)
 				{
 					return (*spf)( args..., std::forward<decltype(params)>(params)... );
 				};
-			else if constexpr(C == Tupling_Helper_t::Curry::REAR)
+			else if constexpr(C == _Tupling_Helper_t::Curry::REAR)
 				return
 				[spf, args...](auto&&...params)
 				{
@@ -191,24 +235,24 @@ namespace sgm
 
 
 	template<size_t NOF_PART, size_t S, size_t...SIZES>
-	class Partition_Helper
+	class _Partition_Helper
 	{
 	public:
-		Partition_Helper() = delete;
+		_Partition_Helper() = delete;
 
 		template<typename TTU, typename TU, typename A, typename...ARGS>
 		static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu, A&& a, ARGS&&...args)
 		{
 			if constexpr(S == 0)
 				return 
-				Partition_Helper<NOF_PART - 1, SIZES...>::calc
+				_Partition_Helper<NOF_PART - 1, SIZES...>::calc
 				(	std::tuple_cat(  std::move(ttu), std::make_tuple( std::move(tu) )  )
 				,	std::tuple()
 				,	std::forward<A>(a), std::forward<ARGS>(args)...
 				);
 			else
 				return
-				Partition_Helper<NOF_PART, S - 1, SIZES...>::calc
+				_Partition_Helper<NOF_PART, S - 1, SIZES...>::calc
 				(	std::move(ttu)
 				,	std::tuple_cat(  std::move(tu), std::make_tuple( std::forward<A>(a) )  )
 				,	std::forward<ARGS>(args)...
@@ -218,10 +262,10 @@ namespace sgm
 
 
 	template<>
-	class Partition_Helper<1, 0>
+	class _Partition_Helper<1, 0>
 	{
 	public:
-		Partition_Helper() = delete;
+		_Partition_Helper() = delete;
 
 		template<typename TTU, typename TU>
 		static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu)
@@ -232,33 +276,34 @@ namespace sgm
 
 
 	template<size_t...SIZES>
-	class Partition
+	class _Partition
 	{
 	public:
-		Partition() = delete;
+		_Partition() = delete;
 
 		template<typename...ARGS>
 		static decltype(auto) constexpr calc(ARGS&&...args)
 		{
 			return
-			Partition_Helper<sizeof...(SIZES), SIZES...>::calc
+			_Partition_Helper<sizeof...(SIZES), SIZES...>::calc
 			(	std::tuple(), std::tuple(), std::forward<ARGS>(args)...
 			);
 		}
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
 
-
+	/**	FP style 1st-class citizen callable object
+	*/
 	template<size_t D, typename F>
 	class Functor : Functor_t
 	{
 	public:
 		static_assert(D != 0, "dimensionless.");
 		
-
+		//	The number of parameters it needs
 		enum { DIMENSION = D };
 
-
+		//	Evaluation
 		template<typename...ARGS>
 		decltype(auto) operator()(ARGS&&...args) const
 		{
@@ -267,7 +312,7 @@ namespace sgm
 			return (*_spf)( std::forward<ARGS>(args)... );
 		}
 
-
+		//	Partial evaluation from front side
 		template<typename...ARGS>
 		decltype(auto) front(ARGS&&...args) const
 		{
@@ -280,7 +325,7 @@ namespace sgm
 			} / Dim<D - sizeof...(ARGS)>;
 		}
 
-
+		//	Partial evaluation from rear side
 		template<typename...ARGS>
 		decltype(auto) rear(ARGS&&...args) const
 		{
@@ -293,28 +338,29 @@ namespace sgm
 			} / Dim<D - sizeof...(ARGS)>;
 		}
 
-
+		//	Evaluation with parameters as a tuple or sgm::Flat_Pack data
 		template<typename PACK>
 		decltype(auto) operator[](PACK&& pack) const
 		{
 			if constexpr (is_Flat_Pack_v<PACK>)
 				return
-				Tupling_Helper
+				_Tupling_Helper
 				<	std::tuple_size< std::decay_t<typename PACK::tuple_t> >::value
-				,	Tupling_Helper_t::Curry::NONE
+				,	_Tupling_Helper_t::Curry::NONE
 				>
 				::	calc( _spf, std::forward<PACK>(pack()) );			
 			else if constexpr (is_tuple_v<PACK>)
 				return
-				Tupling_Helper
-				<	std::tuple_size< std::decay_t<PACK> >::value, Tupling_Helper_t::Curry::NONE
+				_Tupling_Helper
+				<	std::tuple_size< std::decay_t<PACK> >::value
+				,	_Tupling_Helper_t::Curry::NONE
 				>
 				::	calc( _spf, std::forward<PACK>(pack) );
 			else
 				static_assert(false, "PACK is not sgm::Flat_Pack or tuple type.");
 		}
 
-
+		//	Partial evaluation with tuple input from front side
 		template<typename TU>
 		decltype(auto) front_tuple(TU&& tu) const
 		{
@@ -323,11 +369,11 @@ namespace sgm
 			size_t constexpr tu_size = std::tuple_size< std::decay_t<TU> >::value;
 
 			return
-			Tupling_Helper<tu_size, Tupling_Helper_t::Curry::FRONT>
+			_Tupling_Helper<tu_size, _Tupling_Helper_t::Curry::FRONT>
 			::	calc( _spf, std::forward<TU>(tu) ) / Dim<D - tu_size>;
 		}
 
-
+		//	Partial evaluation with tuple input from rear side
 		template<typename TU>
 		decltype(auto) rear_tuple(TU&& tu) const
 		{
@@ -336,11 +382,11 @@ namespace sgm
 			size_t constexpr tu_size = std::tuple_size< std::decay_t<TU> >::value;
 
 			return
-			Tupling_Helper<tu_size, Tupling_Helper_t::Curry::REAR>
+			_Tupling_Helper<tu_size, _Tupling_Helper_t::Curry::REAR>
 			::	calc( _spf, std::forward<TU>(tu) ) / Dim<D - tu_size>;
 		}
 
-
+		//	Functional composition
 		template<typename FTR>
 		decltype(auto) operator<=(FTR&& ftr) const
 		{
@@ -359,7 +405,10 @@ namespace sgm
 			} / Dim< std::decay_t<FTR>::DIMENSION >;
 		}
 	
-
+		/**	Merging two sgm::Functor objects into one which returns multiple output
+		
+		*	The type of output is sgm::Flat_Pack.	
+		*/
 		template<typename FTR>
 		decltype(auto) operator+(FTR&& ftr) const
 		{
@@ -372,7 +421,7 @@ namespace sgm
 			[clone = *this, ftr](auto&&...args)
 			{
 				auto&& [tu1, tu2]
-				=	Partition< D, std::decay_t<FTR>::DIMENSION >
+				=	_Partition< D, std::decay_t<FTR>::DIMENSION >
 					::	calc( std::forward<decltype(args)>(args)... );
 
 				return
@@ -385,6 +434,12 @@ namespace sgm
 		template<size_t _D, typename G>
 		friend decltype(auto) constexpr operator/(G&&, Dimension<_D>);
 		
+		/**	Private constructor
+		
+		*	operator/ can access here exclusively.
+
+		*	Note that default copy/move constructors work separately as public
+		*/
 		Functor(F&& f) : _spf( std::make_shared<F const>(f) )
 		{
 			static_assert
@@ -393,12 +448,26 @@ namespace sgm
 			);
 		}
 
+		//	Callable object as shared_ptr
 		std::shared_ptr<F const> const _spf;
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	/**	Infix operation maker
 
+	*	Putting an sgm::Functor between two operator^ , 
+		you can use the Functor as if it is an infix operator.
+		For example, with an sgm::Functor ftr,
+			x ^ftr^ y 
+		results 
+			ftr(x, y) 
+		if ftr is binary, or
+			ftr.front(x, y) 
+		if its dimension is higher than 2.
+
+	*	Note that only Lvalue sgm::Functor is valid. (restriction on purpose for readability)
+	*/
 	template<typename T, typename F, size_t D>
 	decltype(auto) constexpr operator^(T&& t, sgm::Functor<D, F>& ftr)
 	{

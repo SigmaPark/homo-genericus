@@ -3,6 +3,7 @@
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
+
 template<typename X, typename Y, typename Z>
 decltype(auto) tfunc(X&& x, Y&& y, Z&& z)
 {  
@@ -12,15 +13,15 @@ decltype(auto) tfunc(X&& x, Y&& y, Z&& z)
 
 int main()
 {
-	sgm::Functor ftr = LAMBDIZE(tfunc) / sgm::Dim<3>;
-
+	auto ftr = SGM_FUNCTOR(tfunc, 3);
+	
 	sgm::Functor times_2 
 	=	[](auto&& x)
 		{  
 			return 2*x;  
 		} / sgm::Dim<1>;
 	
-	auto ftr1 = ftr.rear(3.2, 0.2);
+	auto ftr1 = SGM_FUNCTOR(tfunc, 3).rear(3.2, 0.2);	
 	auto ftr_t1 = ftr.rear_tuple( std::tuple(3.2, 0.2) );
 
 	auto ftr2 = ftr.front(2.1);
