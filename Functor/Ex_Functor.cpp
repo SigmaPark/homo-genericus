@@ -13,37 +13,60 @@ decltype(auto) tfunc(X&& x, Y&& y, Z&& z)
 
 int main()
 {
-	auto ftr = SGM_FUNCTOR(tfunc, 3);
-	
-	sgm::Functor times_2 
-	=	[](auto&& x)
-		{  
-			return 2*x;  
-		} / sgm::Dim<1>;
-	
-	auto ftr1 = SGM_FUNCTOR(tfunc, 3).rear(3.2, 0.2);	
-	auto ftr_t1 = ftr.rear_tuple( std::tuple(3.2, 0.2) );
+	using namespace sgm;
 
-	auto ftr2 = ftr.front(2.1);
-	auto ftr_t2 = ftr.front_tuple( std::tuple(2.1) );
+	Functor ftr = SGM_FUNCTOR(tfunc, 3);
+	Functor ftr2 = ftr(__, -1);
+	Functor ftr1 = ftr(2, 3, __);
 
-	sgm::Functor ftr_c = times_2 <= ftr2;
-
-	sgm::Functor ftr_a = ftr1 + ftr2 + ftr_c;
-	auto res_a = ftr_a(2.1, 3.2, 0.2, 3.2, 0.2)();
-
-	std::cout 
-	<<	"ftr(2.1, 3.2, 0.2) = " << ftr(2.1, 3.2, 0.2) << '\n'
-	<<	"ftr[ std::tuple(2.1, 3.2, 0.2) ] = " << ftr[std::tuple(2.1, 3.2, 0.2)] << '\n'
-	<<	"ftr1(2.1) = " << ftr1(2.1) << '\n'
-	<<	"ftr_t1(2.1) = " << ftr_t1(2.1) << '\n'
-	<<	"ftr2(3,2, 0.2) = " << ftr2(3.2, 0.2) << '\n'
-	<<	"ftr_t2(3.2, 0.2) = " << ftr_t2(3.2, 0.2) << '\n'
-	<<	"ftr_c(3.2, 0.2) = " << ftr_c(3.2, 0.2) << '\n'
-	<<	"ftr_a(2.1, 3.2, 0.2, 3.2, 0.2) = "
-	<<	std::get<0>(res_a) << ' ' << std::get<1>(res_a) << ' ' << std::get<2>(res_a) << '\n'
-	<<	"3.2 ^ftr2^ 0.2 = " << (3.2 ^ftr2^ 0.2) << '\n'
+	std::cout
+	<<	ftr(2, 3, -1) << '\n'
+	<<	ftr1(-1) << '\n'
+	<<	ftr2(2, 3) << '\n'
+	<<	(2 ^ftr2^ 3) << '\n'
+	<<	SGM_FUNCTOR(tfunc, 3)(2, 3, -1) << '\n'
+	<<	SGM_FUNCTOR(tfunc, 3)(__, -1)(2, 3) << '\n'
+	<<	SGM_FUNCTOR(tfunc, 3)(2, 3, __)(-1) << '\n'
+	<<	[](auto&& x, auto&& y, auto&& z)
+		{
+			return x*(y - z);
+		} / Dim<3>(2, 3, -1)
+	<<	'\n'
+	<<	(	[](auto&& x, auto&& y, auto&& z)
+			{
+				return x*(y - z);
+			} / Dim<3>(2, 3, __)
+		)(-1)
+	<<	'\n'
+	<<	(	[](auto&& x, auto&& y, auto&& z)
+			{
+				return x*(y - z);
+			} / Dim<3>(__, -1)
+		)(2, 3)
+	<<	'\n'
 	;
+
 	
+	Functor ftrL 
+	=	[](auto&& x, auto&& y, auto&& z)
+		{
+			return x*(y - z);
+		} / Dim<3>;
+
+	std::cout
+	<<	( ftrL | Pass<3> )(2, 3, -1) << '\n'
+	<<	( ftrL | Pass<-3> )(-1, 3, 2) << '\n'
+	<<	(	[](auto&& x)
+			{  
+				std::cout<< "you got " << x << ".\n"; 
+				return x; 
+			} / Dim<1>
+		|	ftrL
+		|	Pass<2> + [](auto&& x){  return x/2;  } / Dim<1>
+		)(2, 3, -2)
+	<<	'\n'
+	;
+
+
 	return 0;
 }
