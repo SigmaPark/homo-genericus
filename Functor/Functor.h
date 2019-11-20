@@ -5,8 +5,8 @@
 #ifndef _SGM_FUNCTOR_
 #define _SGM_FUNCTOR_
 
-#ifdef _MSC_VER
-	static_assert(_MSC_VER >= 1914, "C++17 or higher version language support is required.");
+#if defined(_MSC_VER) && _MSC_VER < 1914
+	#error C++17 or higher version language support is required.
 #endif
 
 #include <type_traits>
@@ -47,7 +47,7 @@ namespace sgm
 		template<typename...ARGS>
 		static bool constexpr is_well_used()
 		{
-			if constexpr(size_t constexpr nofBlank = _nofB<0, ARGS...>(); nofBlank == 0)
+			if constexpr(unsigned constexpr nofBlank = _nofB<0, ARGS...>(); nofBlank == 0)
 				return true;
 			else if constexpr(nofBlank > 1)
 				return false;
@@ -58,8 +58,8 @@ namespace sgm
 		}
 
 
-		template<size_t N, typename T, typename...TYPES>
-		static size_t constexpr _nofB()
+		template<unsigned N, typename T, typename...TYPES>
+		static unsigned constexpr _nofB()
 		{
 			if constexpr(std::is_same_v< Blanker, std::decay_t<T> >)
 				return _nofB<N + 1, TYPES...>();
@@ -67,8 +67,8 @@ namespace sgm
 				return _nofB<N, TYPES...>();
 		}
 
-		template<size_t N>
-		static size_t constexpr _nofB()
+		template<unsigned N>
+		static unsigned constexpr _nofB()
 		{
 			return N;
 		}
@@ -204,7 +204,7 @@ namespace sgm
 
 	*	Its template alias sgm::Dim for short.
 	*/
-	template<size_t D, typename...ARGS>
+	template<unsigned D, typename...ARGS>
 	class Dimension 
 	{
 	public:
@@ -217,14 +217,14 @@ namespace sgm
 		}
 
 	private:
-		template<size_t _D, typename G, typename..._ARGS>
+		template<unsigned _D, typename G, typename..._ARGS>
 		friend decltype(auto) constexpr operator/(G&&, Dimension<_D, _ARGS...>);
 
 		std::tuple<ARGS...> const _tu;
 	};
 
 
-	template<size_t D>
+	template<unsigned D>
 	static auto const Dim = Dimension<D>();
 	//========//========//========//========//=======#//========//========//========//========//===
 
@@ -241,7 +241,7 @@ namespace sgm
 			sgm::Functor<DIGIT, F_t> foo = .... ;
 		.
 	*/
-	template<size_t D, typename F>
+	template<unsigned D, typename F>
 	class Functor;
 
 
@@ -249,7 +249,7 @@ namespace sgm
 
 	*	This derives sgm::Functor from lambda or other callable objects with sgm::Dim<DIGIT>.
 	*/
-	template<size_t D, typename G> 
+	template<unsigned D, typename G> 
 	decltype(auto) constexpr operator/(G&& g, Dimension<D>)
 	{
 		return Functor<D, G>( std::forward<G>(g) );
@@ -258,7 +258,7 @@ namespace sgm
 
 	/**	Building and Evaluation
 	*/
-	template<size_t _D, typename G, typename..._ARGS>
+	template<unsigned _D, typename G, typename..._ARGS>
 	decltype(auto) constexpr operator/(G&& g, Dimension<_D, _ARGS...> d)
 	{
 		return (std::forward<G>(g) / Dim<_D>)( Params(d._tu) );
@@ -266,7 +266,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<size_t N>
+	template<unsigned N>
 	class _Multipling_Helper
 	{
 	public:
@@ -314,7 +314,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<size_t NOF_PART, size_t S, size_t...SIZES>
+	template<unsigned NOF_PART, unsigned S, unsigned...SIZES>
 	class _Partition_Helper
 	{
 	public:
@@ -355,7 +355,7 @@ namespace sgm
 	};
 
 
-	template<size_t...SIZES>
+	template<unsigned...SIZES>
 	class _Partition
 	{
 	public:
@@ -373,7 +373,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<signed long long N>
+	template<signed N>
 	class _reverse_Params_Helper
 	{
 	public:
@@ -399,7 +399,7 @@ namespace sgm
 
 	*	The order of parameters becomes reverse if N is negative.
 	*/
-	template<signed long long N>
+	template<signed N>
 	static auto const Pass
 	=	[](auto&&...args)
 		{
@@ -416,7 +416,7 @@ namespace sgm
 
 	/**	FP style 1st-class citizen callable object
 	*/
-	template<size_t D, typename F>
+	template<unsigned D, typename F>
 	class Functor : Functor_t
 	{
 	public:
@@ -534,7 +534,7 @@ namespace sgm
 		}
 
 
-		template<size_t N, typename...TYPES, typename...ARGS>
+		template<unsigned N, typename...TYPES, typename...ARGS>
 		decltype(auto) _cut_rear_helper
 		(	[[maybe_unused]] std::tuple<TYPES...>&& tu, ARGS&&...args
 		)	const
@@ -558,7 +558,7 @@ namespace sgm
 		}
 
 
-		template<size_t _D, typename G>
+		template<unsigned _D, typename G>
 		friend decltype(auto) constexpr operator/(G&&, Dimension<_D>);
 		
 		/**	Private constructor
@@ -590,7 +590,7 @@ namespace sgm
 		results 
 			ftr(x, y) .
 	*/
-	template<typename T, typename F, size_t D>
+	template<typename T, typename F, unsigned D>
 	decltype(auto) constexpr operator^(T&& t, sgm::Functor<D, F> const& ftr)
 	{
 		static_assert(D == 2, "not a binary operation.");
@@ -599,7 +599,7 @@ namespace sgm
 	}
 
 
-	template<size_t D, typename F>
+	template<unsigned D, typename F>
 	class _infixedFunctor : public Functor<D, F>
 	{
 	public:
@@ -624,10 +624,10 @@ namespace sgm
 		_infixer_Helper() = delete;
 
 	private:
-		template<typename T, typename F, size_t D>
+		template<typename T, typename F, unsigned D>
 		friend decltype(auto) constexpr operator^(T&&, sgm::Functor<D, F> const&);
 
-		template<size_t D, typename F>
+		template<unsigned D, typename F>
 		static decltype(auto) make_infixer(Functor<D, F>&& ftr)
 		{
 			return _infixedFunctor<D, F>( std::move(ftr) );

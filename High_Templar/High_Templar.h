@@ -5,8 +5,8 @@
 #ifndef _SGM_HIGH_TEMPLAR_
 #define _SGM_HIGH_TEMPLAR_
 
-#ifdef _MSC_VER
-	static_assert(_MSC_VER >= 1914, "C++17 or higher version language support is required.");
+#if defined(_MSC_VER) && _MSC_VER < 1914
+	#error C++17 or higher version language support is required.
 #endif
 
 #include <algorithm>
@@ -53,7 +53,7 @@ namespace sgm
 	*	Should be used for small size domain. (under few hundreds)
 	*/
 	template<size_t N, size_t OFFSET = 0, typename index_t = size_t>
-	static auto constexpr indices(){  return _indices_tail<N, OFFSET, index_t>();  }
+	static auto constexpr indices_v = _indices_tail<N, OFFSET, index_t>();
 	#endif
 
 
@@ -87,8 +87,10 @@ namespace sgm
 	{
 		if constexpr(std::is_execution_policy_v< std::decay_t<_2ND> >)
 			return indices( s, size_t(0), std::move(second) );
-		else
+		else if constexpr(std::is_integral_v< std::decay_t<_2ND> >)
 			return indices( s, std::forward<_2ND>(second), std::execution::seq);
+		else 
+			static_assert(false, "no suitable method was found.");
 	}
 
 	inline auto indices(size_t const s)
@@ -334,7 +336,7 @@ namespace sgm
 		<	typename CON, typename F, typename POL
 		,	typename X = typename std::decay_t<CON>::value_type
 		>
-		static auto _Filter(CON&& con, F&& f, POL&& pol)
+		static auto _Filter(CON&& con, F&& f, [[maybe_unused]] POL&& pol)
 		{
 			if constexpr (std::is_same_v<POL, std::execution::sequenced_policy>)
 				return
@@ -744,7 +746,7 @@ namespace sgm
 			,	std::next( std::cbegin(con) ), std::cend(con), *std::cbegin(con)
 			,	std::forward<F>(f)
 			);
-		else
+		else //	case when third parameter is used as an initial value
 			return
 			std::reduce
 			(	std::cbegin(con), std::cend(con), std::forward<_3RD>(third)
@@ -760,7 +762,7 @@ namespace sgm
 	{
 		if constexpr(std::is_execution_policy_v< std::decay_t<_2ND> >) 
 			return std::reduce( std::move(second), std::cbegin(con), std::cend(con) );
-		else
+		else //	case when second parameter is used as a functor for folding
 			return 
 			std::reduce
 			(	std::next( std::cbegin(con) ), std::cend(con), *std::cbegin(con)
@@ -816,7 +818,7 @@ namespace sgm
 	{
 		if constexpr(std::is_execution_policy_v< std::decay_t<_2ND> >) 
 			return Sort( std::forward<CON>(con), std::less<>(), std::move(second) );
-		else
+		else //	case when second parameter is used as a functor for comparison
 			return
 			Sort( std::forward<CON>(con), std::forward<_2ND>(second), std::execution::seq );
 	}
@@ -946,8 +948,11 @@ namespace sgm
 	*	Take abs(n) elements from rear side if n is negative. 
 		The order of elements is conserved. (not reversed)
 	*/
-	template<typename CON>
-	static auto Take(CON&& con, signed int n)
+	template
+	<	typename CON, typename SN
+	,	typename = std::enable_if_t< std::is_signed_v<SN> && std::is_integral_v<SN> >  
+	>
+	static auto Take(CON&& con, SN n)
 	{
 		if( auto gap = abs(n); n > 0 )
 			return std::decay_t<CON>(  std::cbegin(con), std::next( std::cbegin(con), gap )  );

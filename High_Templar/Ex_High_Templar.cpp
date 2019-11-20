@@ -17,7 +17,7 @@ public:
 	Show() = delete;
 
 	template<typename CON>
-	static void Container(CON&& con, size_t row_size = 10)
+	static void Container(CON&& con, size_t row_size = 20)
 	{
 		auto d = row_size;
 
@@ -31,45 +31,29 @@ public:
 			d--;
 		}
 
-		std::cout << '\n';
+		std::cout << "\n\n";
 	}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-void tutorial01()
-{
-	auto const vector_indices = sgm::indices(10);
-	auto const vector_indices2 = sgm::indices(7, 1);
-	auto const array_indices = sgm::indices<10>();
-	auto const array_indices2 = sgm::indices<10, 5>();
-
-	Show::Container(vector_indices);
-	Show::Container(vector_indices2);
-	Show::Container(array_indices);
-	Show::Container(array_indices2);
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-void tutorial02()
-{
-	auto s
-	=	sgm::Morph
-		(	sgm::Repack<sgm::std_list>(sgm::indices(20, 1))
-		,	[](size_t i){  return 1.5 * double(i);  }
-		);
-
-	Show::Container(s);
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 int main()
 {
-	tutorial01(),
-	std::wcout << '\n';
+	using namespace sgm;
 
-	tutorial02();
+	auto constexpr i_arr = indices_v<20, 1>;
+	auto const c1 = Repack<std_list>(i_arr);
+	auto const c2 = Filter(c1, [](auto const& x){  return x % 2 == 0;  });
+	auto const c3 = Morph(c2, [](auto const& x) {  return double(3*x / 2);  });
+	auto const c4 = Rankers(c3, 3, [](auto x, auto y){  return abs(x - 10) < abs(y - 10);  });
+	auto const c5 = Sort(c4, std::less<>());
+	auto const val = Fold(c5, std::multiplies<>(), -1.0);
+
+	Show::Container(c1);
+	Show::Container(c2);
+	Show::Container(c3);
+	Show::Container(c4);
+	Show::Container(c5);
+	std::cout << val << '\n';
 
 	return 0;
 }

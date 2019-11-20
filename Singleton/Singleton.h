@@ -3,9 +3,10 @@
 #ifndef _SGM_SINGLETON_
 #define _SGM_SINGLETON_
 
-#ifdef _MSC_VER
-	static_assert(_MSC_VER >= 1914, "C++17 or higher version language support is required");
+#if defined(_MSC_VER) && _MSC_VER < 1914
+	#error C++17 or higher version language support is required.
 #endif
+
 
 #include <memory>
 #include <mutex>

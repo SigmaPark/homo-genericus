@@ -5,9 +5,10 @@
 #ifndef _SGM_RECURSION_
 #define _SGM_RECURSION_
 
-#ifdef _MSC_VER
-	static_assert(_MSC_VER >= 1914, "C++17 or higher version language support is required.");
+#if defined(_MSC_VER) && _MSC_VER < 1914
+	#error C++17 or higher version language support is required.
 #endif
+
 
 #include <tuple>
 
