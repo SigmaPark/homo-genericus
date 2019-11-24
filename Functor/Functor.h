@@ -28,9 +28,8 @@
 		}	\
 	/	sgm::Dim<(Dimension)>	\
 	)
-
 #else
-	static_assert(false, "macro SGM_FUNCTOR is already defined elsewhere.");
+	#error macro SGM_FUNCTOR is already defined elsewhere.
 #endif
 
 

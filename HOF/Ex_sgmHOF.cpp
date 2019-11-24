@@ -38,9 +38,9 @@ int main()
 	auto constexpr i_arr = indices_v<20, 1>;
 	auto const c1 = Repack_c<1, std_list>(i_arr);
 	auto const c2 = Filter_c<2>(c1, [](auto const& x){  return x % 2 == 0;  });
-	auto const c3 = Morph_c<2>(c2, [](auto const& x) {  return double(3*x / 2);  });
+	auto const c3 = Morph_c<2>(c2, [](auto const& x){  return double(3*x / 2);  });
 	
-	auto const c4 
+	auto const c4
 	=	Rankers_c<3>(c3, 3, [](auto x, auto y){  return abs(x - 10) < abs(y - 10);  });
 
 	auto const c5 = Sort_c<2>(c4, std::less<>());

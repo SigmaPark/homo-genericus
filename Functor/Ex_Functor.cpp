@@ -27,6 +27,7 @@ int main()
 	<<	SGM_FUNCTOR(tfunc, 3)(2, 3, -1) << '\n'
 	<<	SGM_FUNCTOR(tfunc, 3)(__, -1)(2, 3) << '\n'
 	<<	SGM_FUNCTOR(tfunc, 3)(2, 3, __)(-1) << '\n'
+
 	<<	[](auto&& x, auto&& y, auto&& z)
 		{
 			return x*(y - z);

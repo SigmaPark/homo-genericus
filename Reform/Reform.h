@@ -3,8 +3,8 @@
 #ifndef _SGM_REFORM_
 #define _SGM_REFORM_
 
-#ifdef _MSC_VER
-	static_assert(_MSC_VER >= 1914, "C++17 or higher version language support is required.");
+#if defined(_MSC_VER) && _MSC_VER < 1914
+	#error C++17 or higher version language support is required.
 #endif
 
 #include <limits>
@@ -55,20 +55,6 @@ namespace sgm
 
 	template<unsigned N = 1>
 	using Real_t = typename Real<N>::type;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-	template<unsigned N = 1>
-	inline static auto constexpr Epsilon = std::numeric_limits< Real_t<N> >::epsilon();
-
-
-	template<unsigned PoD, typename T1, typename T2>
-	static bool is_close(T1 t1, T2 t2)
-	{
-		static_assert(std::is_same_v<T1, T2>, "dismatched type comparison.");
-
-		return abs(t1 - t2) < (T1)pow(10.0, PoD) * std::numeric_limits<T1>::epsilon();
-	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
