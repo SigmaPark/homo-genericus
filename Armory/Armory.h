@@ -35,7 +35,7 @@ namespace sgm
 
 
 	template<unsigned PoD, typename T>
-	static bool is_close_to_0(T t)
+	static bool is_almost_0(T t)
 	{
 		return is_close<PoD>( t, T(0) );
 	}
@@ -91,15 +91,14 @@ namespace sgm
 			);
 		else if constexpr(std::is_invocable_r_v< den_t, decay_t<F>, elem_t >)
 		{
-			auto wgts 
-			=	reserved_vector<den_t>(  std::distance( cbegin(con), cend(con) )  );
+			auto wgts = reserved_vector<den_t>(  std::distance( cbegin(con), cend(con) )  );
 
 			for(auto const& elem : con)
 				wgts.emplace_back( wgt_func(elem) );
 
 			if
 			(	auto const den = std::reduce( cbegin(wgts), cend(wgts) )
-			;	sgm::is_close_to_0<PoD>(den)
+			;	sgm::is_almost_0<PoD>(den)
 			)
 				return opt_elem_t{};
 			else
@@ -112,8 +111,7 @@ namespace sgm
 				/	den
 				);
 		}
-		else
-			static_assert(false, "no suitable method was found.");
+		else static_assert(false, "no suitable method was found.");
 	}
 }
 
