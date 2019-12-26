@@ -15,7 +15,7 @@
 #ifndef DEFINE_SGM_REAL_TYPE
 	#define DEFINE_SGM_REAL_TYPE(Number, Type)	\
 		template<>	\
-		class sgm::Real<(Number)>	\
+		class sgm::_Real<(Number)>	\
 		{	\
 		public:	\
 			using type = Type;	\
@@ -28,7 +28,7 @@
 #ifndef DEFINE_SGM_INDEX_TYPE
 	#define DEFINE_SGM_INDEX_TYPE(Number, Type)	\
 		template<>	\
-		class sgm::index<(Number)>	\
+		class sgm::_index<(Number)>	\
 		{	\
 		public:	\
 			using type = Type;	\
@@ -42,36 +42,22 @@ namespace sgm
 {
 	
 	template<unsigned>
-	class Real;
+	class _Real;
 
-
-	template<>
-	class Real<1>
-	{
-	public:
-		using type = float;
-	};
-
+	DEFINE_SGM_REAL_TYPE(1, float);
 
 	template<unsigned N = 1>
-	using Real_t = typename Real<N>::type;
+	using Real_t = typename _Real<N>::type;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	template<unsigned>
-	class index;
+	class _index;
 
-
-	template<>
-	class index<1>
-	{
-	public:
-		using type = size_t;
-	};
-
+	DEFINE_SGM_INDEX_TYPE(1, size_t);
 
 	template<unsigned N = 1>
-	using idx_t = typename index<N>::type;
+	using idx_t = typename _index<N>::type;
 	//========//========//========//========//=======#//========//========//========//========//===
 }
 

@@ -11,7 +11,6 @@
 #include <cassert>
 #include <limits>
 #include <cmath>
-#include <tuple>
 #include <type_traits>
 #include <optional>
 
@@ -28,19 +27,19 @@ namespace sgm
 	template< template<typename, unsigned> class TC >
 	class did_tem_TN_class
 	{
-	public:
-		did_tem_TN_class() = delete;
-
-		template<typename T>
-		static bool constexpr create_v 
-		=	_create( static_cast< std::decay_t<T> const* >(nullptr) );
-
 	private:
 		template<	typename T, unsigned D>
 		static bool constexpr _create(TC<T, D> const*){  return true;  }
 			
 		template<typename T>
 		static bool constexpr _create(T const*) {  return false;  }
+
+	public:
+		did_tem_TN_class() = delete;
+
+		template<typename T>
+		static bool constexpr create_v 
+		=	_create( static_cast< std::decay_t<T> const* >(nullptr) );
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
@@ -91,7 +90,7 @@ namespace sgm
 
 		auto operator()(unsigned dim) const-> T{  return uv(dim);  }
 
-		auto operator-() const{  return UnitVector<T, D>(-uv);  }
+		auto operator-() const-> UnitVector<T, D>{  return -uv;  }
 
 		auto adjoint() const-> Eigen::Matrix<T, 1, D>{  return uv.adjoint();  }
 
@@ -285,12 +284,12 @@ namespace sgm
 	{
 		using std::decay_t, std::forward;
 		using elem_t = typename decay_t<G>::elem_t;
-		unsigned constexpr dimension = decay_t<G>::DIMENSION;
-
+		
+		auto&& qpt = forward<V>(query_point);
+		auto&& gobj = forward<G>(geometric_object);
 
 		if constexpr
-		(	auto&& [qpt, gobj]
-			=	std::forward_as_tuple( forward<V>(query_point), forward<G>(geometric_object) )
+		(	unsigned constexpr dimension = decay_t<G>::DIMENSION
 		;	std::is_scalar_v< decay_t<res_t> >
 		)
 			if constexpr(did_tem_TN_class<Plane>::create_v<G> && std::is_signed_v<dist_t>)
