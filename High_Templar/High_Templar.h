@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iterator>
 #include <execution>
+#include <iostream>		// for std::cout. it seems redundant. Refactory to eliminate it later.
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -47,9 +48,9 @@ namespace sgm
 	}
 
 	/**	Integral domain as std::array container
-
+	*
 	*	Initialized in compile time.
-
+	*
 	*	Should be used for small size domain. (under few hundreds)
 	*/
 	template<size_t N, size_t OFFSET = 0, typename index_t = size_t>
@@ -59,7 +60,7 @@ namespace sgm
 
 	#ifdef _VECTOR_
 	/**	Integral domain as std::vector container
-
+	*
 	*	Initialized in run time.
 	*/
 	template<typename T, typename POL>
@@ -80,7 +81,7 @@ namespace sgm
 	}
 
 	/**	Overloading :
-		_2ND could be a type for std::execution policy or an integral offset.
+	*	_2ND could be a type for std::execution policy or an integral offset.
 	*/
 	template<typename _2ND>
 	static auto indices(size_t const s, _2ND&& second)
@@ -89,13 +90,13 @@ namespace sgm
 			return indices( s, size_t(0), std::move(second) );
 		else if constexpr(std::is_integral_v< std::decay_t<_2ND> >)
 			return indices( s, std::forward<_2ND>(second), std::execution::seq);
-		else 
-			static_assert(false, "no suitable method was found.");
+		else static_assert(false, "no suitable method was found.");
 	}
 
-	inline auto indices(size_t const s)
+	template<typename T = size_t>
+	auto indices(size_t const s)
 	{
-		return indices( s, size_t(0), std::execution::seq );
+		return indices( s, T(0), std::execution::seq );
 	}
 	#endif
 
@@ -154,7 +155,7 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	/**	Common iterative routines
-
+	*
 	*	Chosen depanding on a method that uses it. (strategy pattern)
 	*/
 	class Looper
@@ -734,7 +735,7 @@ namespace sgm
 	}
 
 	/**	Overloading :
-		_3RD could be a type for std::execution policy or an initial value.
+	*	_3RD could be a type for std::execution policy or an initial value.
 	*/
 	template<typename CON, typename F, typename _3RD>
 	static auto Fold(CON&& con, F&& f, _3RD&& third)
@@ -755,7 +756,7 @@ namespace sgm
 	}
 
 	/**	Overloading :
-		_2ND could be a type for std::execution policy or folding method.
+	*	_2ND could be a type for std::execution policy or folding method.
 	*/
 	template<typename CON, typename _2ND>
 	static auto Fold(CON&& con, _2ND&& second)
@@ -804,14 +805,13 @@ namespace sgm
 			#endif
 		)
 			con.sort( std::forward<F>(f) );
-		else
-			static_assert(false, "no suitable sorting method is found");
+		else static_assert(false, "no suitable sorting method is found");
 
 		return con;
 	}
 
 	/**	Overloading :
-		_2ND could be a type for std::execution policy or comparison operation.
+	*	_2ND could be a type for std::execution policy or comparison operation.
 	*/
 	template<typename CON, typename _2ND>
 	static auto Sort(CON&& con, _2ND&& second)
@@ -916,9 +916,9 @@ namespace sgm
 
 
 	/**	Overloading for std::array type result
-
+	*
 	*	The number of rankers should be determined in compile time 
-		as non-type template parameter, SIZE.
+	*	as non-type template parameter, SIZE.
 	*/
 	#if defined _LIST_ && defined _ARRAY_
 	template
@@ -942,11 +942,11 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	/**	Taking n elements from front/rear side
-
+	*
 	*	Take abs(n) elements from front side if n is positive.
-
+	*
 	*	Take abs(n) elements from rear side if n is negative. 
-		The order of elements is conserved. (not reversed)
+	*	The order of elements is conserved. (not reversed)
 	*/
 	template
 	<	typename CON, typename SN

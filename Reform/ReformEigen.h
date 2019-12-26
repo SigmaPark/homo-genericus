@@ -7,7 +7,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\..\..\Eigen_3_3_7\Eigen\Dense"
+#include "..\..\Eigen_3_3_7\Eigen\Dense"
 #include <cassert>
 #include <limits>
 #include <cmath>
