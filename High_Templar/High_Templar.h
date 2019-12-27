@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <iterator>
 #include <execution>
-#include <iostream>		// for std::cout. it seems redundant. Refactory to eliminate it later.
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -374,8 +373,8 @@ namespace sgm
 		static auto _Morph(CON&& con, F&& f, POL&& pol, Y&&)
 		{
 			if(con.size() != N)
-				std::cout << "Exception : array size doesn't agree with input. \n",
-				throw false;
+				throw
+				std::make_pair("Exception : array size doesn't agree with input", false).second;
 
 			return
 			Looper::_Transform
