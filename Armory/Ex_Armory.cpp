@@ -1,6 +1,7 @@
 #include "Armory.h"
 #include <iostream>
 
+
 int main()
 {
 	using namespace sgm;

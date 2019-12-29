@@ -9,6 +9,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
+#include <cassert>
 #include <algorithm>
 #include <iterator>
 #include <execution>
@@ -372,9 +373,7 @@ namespace sgm
 		template<typename CON, typename F, typename POL, typename Y>
 		static auto _Morph(CON&& con, F&& f, POL&& pol, Y&&)
 		{
-			if(con.size() != N)
-				throw
-				std::make_pair("Exception : array size doesn't agree with input", false).second;
+			assert(con.size() == N && "container size dismatched.");
 
 			return
 			Looper::_Transform

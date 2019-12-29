@@ -8,6 +8,13 @@
 	#error C++17 or higher version language support is required.
 #endif
 
+#ifdef max
+	#undef max
+#endif
+#ifdef min
+	#undef min
+#endif
+
 #include <cassert>
 #include <optional>
 #include <vector>
@@ -26,19 +33,16 @@ namespace sgm
 	template<unsigned DP, typename T1, typename T2 = T1>
 	static bool is_close(T1 t1, T2 t2)
 	{
-		using std::decay_t;
-
 		static_assert
-		(	(	std::is_convertible_v< decay_t<T2>, decay_t<T1> >
-			&&	std::is_arithmetic_v< decay_t<T1> >
-			)
+		(	std::is_convertible_v<T2, T1> && std::is_arithmetic_v<T1>
 		,	"types to be compared are not arithmetric or dismatched each other."
 		);
 		
-		if constexpr(std::is_floating_point_v< decay_t<T1> >)
-			return abs(t1 - t2) < (T1)pow(10.0, DP) * std::numeric_limits<T1>::epsilon();
-		else if constexpr(std::is_integral_v< decay_t<T1> >)
+		if constexpr(std::is_floating_point_v<T1>)
+			return abs(t1 - t2) < (T1)pow(10, DP) * std::numeric_limits<T1>::epsilon();
+		else if constexpr(std::is_integral_v<T1>)
 			return t1 == t2;
+		else static_assert(false, "no suitable method was found.");
 	}
 
 
@@ -54,7 +58,7 @@ namespace sgm
 	{
 		static_assert(std::is_arithmetic_v< std::decay_t<T> >, "T is not arithmetric.");
 
-		return ( t - std::numeric_limits<T>::max() / (T)pow(10.0, DP) ) >= T(0);
+		return t >= std::numeric_limits<T>::max() / (T)pow(10, DP);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -92,12 +96,12 @@ namespace sgm
 		using std::cbegin, std::cend, std::decay_t;
 		using elem_t = decay_t<decltype( *cbegin(con) )>;
 
-		if constexpr		// uniformly weighted average
+		if constexpr	//	uniformly weighted average
 		(	auto const [eager_reduce, con_size]
 			=	std::make_pair
 				(	[pol](auto const& c)
 					{
-						assert( cbegin(c) != cend(c) );
+						assert( cbegin(c) != cend(c) && "c is empty." );
 
 						return
 						std::reduce
@@ -157,7 +161,7 @@ namespace sgm
 
 			return eager_tran_reduce(wcon);
 		}
-		else
+		else	//	wgt is regarded as an iterable container having weighting coefficients.
 			return eager_tran_reduce( std::forward<W>(wgt) );
 	}
 

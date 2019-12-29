@@ -24,8 +24,9 @@ public:
 		for(auto const& t : con)
 		{
 			if(d == 0)
-				std::cout << '\n',
+				std::cout << std::endl,
 				d = row_size;
+			
 
 			std::cout << t << ' ',
 			d--;
