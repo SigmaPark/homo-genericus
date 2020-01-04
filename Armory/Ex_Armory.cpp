@@ -16,7 +16,18 @@ int main()
 		(	std::vector<float>{1,2,3,4,5,6}
 		,	std::vector<float>{1,1,1,1,1,1}, std::execution::par
 		).value() << '\n'
+	<<	Bound(0).between(-1, 1) << '\n'
 	;
+
+	try
+	{
+		auto const g = Bound(0).between(1, -1);
+	}
+	catch(sgm::Exception const& e)
+	{
+		std::wcerr << L"Exception tag : " << e.tag() << '\n';
+	}
+
 
 	return 0;
 }

@@ -29,6 +29,48 @@
 namespace sgm
 {
 
+	class Exception
+	{
+	public:
+		virtual wchar_t const* tag() const { return nullptr; }
+
+		bool operator==(Exception const& e) const{  return tag() == e.tag();  }
+		bool operator!=(Exception const& e) const{  return tag() != e.tag();  }
+		bool operator==(wchar_t const* t) const{  return tag() == t;  }
+		bool operator!=(wchar_t const* t) const{  return tag() != t;  }
+
+	protected:
+		Exception(){};
+	};
+
+
+	#ifndef SGM_EXCEPTION
+	#define SGM_EXCEPTION(exception_tag) \
+		[]	\
+		{	\
+			class exception_tag : public Exception	\
+			{	\
+			public:	\
+				wchar_t const* tag() const override{  return L#exception_tag;  }	\
+			};	\
+			throw exception_tag();	\
+		}()
+	#endif
+
+	#ifndef SGM_EXCEPTION2
+	#define SGM_EXCEPTION2(exception_name, ...) \
+		[]	\
+		{	\
+			class exception_name : public Exception	\
+			{	\
+			public:	\
+				wchar_t const* tag() const override{  return L#__VA_ARGS__;  }	\
+			};	\
+			throw exception_name();	\
+		}()
+	#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
 
 	template<unsigned DP, typename T1, typename T2 = T1>
 	static bool is_close(T1 t1, T2 t2)
@@ -56,10 +98,72 @@ namespace sgm
 	template<unsigned DP, typename T>
 	static bool is_big_enough(T t)
 	{
-		static_assert(std::is_arithmetic_v< std::decay_t<T> >, "T is not arithmetric.");
+		static_assert(std::is_arithmetic_v<T>, "T is not arithmetric.");
 
 		return t >= std::numeric_limits<T>::max() / (T)pow(10, DP);
 	}
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<  typename T, typename LESS = std::less< std::decay_t<T> >  >
+	class Bound
+	{
+	public:
+		Bound(T t, LESS lc = std::less< std::decay_t<T> >()) 
+		:	val( std::forward<T>(t) ), less_comp( std::forward<LESS>(lc) )
+		{}
+
+
+		Bound(Bound const&) = delete;
+
+		
+		template<typename L>
+		decltype(auto) over(L&& lower) const &&
+		{
+			return
+			less_comp(val, lower) 
+			?	static_cast< std::decay_t<T> >(lower)
+			:	std::forward<T>(val);
+		}
+
+
+		template<typename U>
+		decltype(auto) under(U&& upper) const &&
+		{
+			return
+			less_comp(upper, val) 
+			?	static_cast< std::decay_t<T> >(upper)
+			:	std::forward<T>(val);
+		}
+
+
+		template<typename L, typename U>
+		decltype(auto) between(L&& lower, U&& upper) const &&
+		{
+			if( !less_comp(lower, upper) )
+				SGM_EXCEPTION2
+				(	Wrong_Number_inputs
+				,	lower value is greater than upper value
+				);
+
+			return
+			less_comp(val, lower) 
+			?	static_cast< std::decay_t<T> >(lower)
+			:
+			less_comp(upper, val)
+			?	static_cast< std::decay_t<T> >(upper)
+			:	std::forward<T>(val);
+		}
+
+
+	private:
+		T val;
+		LESS less_comp;
+	};
+
+
+	template<typename T>
+	Bound(T&&)-> Bound<T&&>;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -72,6 +176,18 @@ namespace sgm
 
 		return res;
 	}
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+	
+	template<typename CON>
+	using element_t
+	=	std::decay_t
+		<	decltype
+			(	*std::cbegin
+				(	std::declval< std::decay_t<CON> >() 
+				)
+			)
+		>;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -94,7 +210,7 @@ namespace sgm
 	static decltype(auto) Mean(CON&& con, [[maybe_unused]] W&& wgt, POL pol)
 	{
 		using std::cbegin, std::cend, std::decay_t;
-		using elem_t = decay_t<decltype( *cbegin(con) )>;
+		using elem_t = element_t<CON>;//decay_t<decltype( *cbegin(con) )>;
 
 		if constexpr	//	uniformly weighted average
 		(	auto const [eager_reduce, con_size]
@@ -106,7 +222,7 @@ namespace sgm
 						return
 						std::reduce
 						(	pol, std::next( cbegin(c) ), cend(c), *cbegin(c)
-						,	std::plus< decay_t<decltype( *cbegin(c) )> >()
+						,	std::plus< element_t<decltype(c)> >()
 						);
 					}
 				,	std::distance( cbegin(con), cend(con) )
@@ -124,7 +240,7 @@ namespace sgm
 				{
 					using producted_t 
 					=	decltype
-						(	std::declval< decay_t<decltype( *cbegin(wc) )> >() 
+						(	std::declval< element_t<decltype(wc)> >()
 						*	std::declval<elem_t>()
 						);
 
