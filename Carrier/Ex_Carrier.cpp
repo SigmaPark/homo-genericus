@@ -35,7 +35,7 @@ public:
 			stt2 = sgm::Static_CArr<int, 3>::from_iterable(std::vector<int>{2, 5, 8}),
 			stt3 = sgm::Static_CArr<int, 3>::from_indexed(Lvec),
 			stt4 = sgm::Static_CArr<int, 3>::from_indexed(std::vector<int>{2, 5, 8}),
-			stt5 = sgm::Static_CArr<int, 3>::from_iterable(std::initializer_list<int>{2, 5, 8});
+			stt5{2, 5, 8};
 
 
 		using stt_deep_t = sgm::Static_CArr<int, 3, sgm::Carry_t::DEEP>;
@@ -64,7 +64,7 @@ public:
 			dnm2 = sgm::Dynamic_CArr<int>::from_iterable(std::vector<int>{2, 5, 8}),
 			dnm3 = sgm::Dynamic_CArr<int>::from_indexed(Lvec),
 			dnm4 = sgm::Dynamic_CArr<int>::from_indexed(std::vector<int>{2, 5, 8}),
-			dnm5 = sgm::Dynamic_CArr<int>::from_iterable(std::initializer_list<int>{2, 5, 8});
+			dnm5{2, 5, 8};
 
 		using dnm_deep_t = sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP>;
 
@@ -86,12 +86,12 @@ public:
 	static void Method3()
 	{
 		static_assert
-		(	(	sgm::CArrier::Made< sgm::Static_CArr<int, 3> >::value
-			&&	sgm::CArrier::Made< sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP> >::value
-			&&	sgm::CArrier::Made_Static
+		(	(	sgm::CArrier_Trait::is< sgm::Static_CArr<int, 3> >::value
+			&&	sgm::CArrier_Trait::is< sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP> >::value
+			&&	sgm::CArrier_Trait::is_Static
 				<	sgm::Static_CArr<double, 1, sgm::Carry_t::DEEP> 
 				>::	value
-			&&	sgm::CArrier::Made_Dynamic< sgm::Dynamic_CArr<double> >::value
+			&&	sgm::CArrier_Trait::is_Dynamic< sgm::Dynamic_CArr<double> >::value
 			)
 		,	"Not CArrier type"
 		);
@@ -101,12 +101,12 @@ public:
 	static void Method4()
 	{
 		static_assert
-		(	(	sgm::CArrier::Made_Shallow< sgm::Static_CArr<int, 3> >::value
-			&&	sgm::CArrier::Made_Deep< sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP> >::value
-			&&	!sgm::CArrier::Made_Shallow
+		(	(	sgm::CArrier_Trait::is_Shallow< sgm::Static_CArr<int, 3> >::value
+			&&	sgm::CArrier_Trait::is_Deep< sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP> >::value
+			&&	!sgm::CArrier_Trait::is_Shallow
 				<	sgm::Static_CArr<double, 1, sgm::Carry_t::DEEP> 
 				>::	value
-			&&	sgm::CArrier::Made_Shallow< sgm::Dynamic_CArr<double> >::value
+			&&	sgm::CArrier_Trait::is_Shallow< sgm::Dynamic_CArr<double> >::value
 			)
 		,	"dismatched Carry_t"
 		);
@@ -136,9 +136,22 @@ public:
 			std::cout << *itr << ' ';
 		std::cout << std::endl;
 
-		for( auto t : sgm::Dynamic_CArr<int>::from_indexed(std::vector<int>{2, 5, 8}) )
+		for
+		(	auto const& t 
+		:	sgm::Dynamic_CArr<int, sgm::Carry_t::DEEP>::from_indexed(std::vector<int>{2, 5, 8}) 
+		)
 			std::cout << t << ' ';
 		std::cout << std::endl;
+	}
+
+
+	static void Method6()
+	{
+		sgm::Dynamic_CArr<int> const stt1{4, 5, 6};
+
+		stt1.at(1) = 10;
+
+		std::cout << stt1[1] << std::endl;
 	}
 };
 
@@ -150,6 +163,9 @@ int main()
 	Test::Method3();
 	Test::Method4();
 	Test::Method5();
+	Test::Method6();
+
+	std::cout << "Test Successed.\n";
 
 	return 0;
 }
