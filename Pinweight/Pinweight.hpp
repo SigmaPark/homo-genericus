@@ -70,11 +70,18 @@ namespace sgm
 
 
 		operator T const&() const{  return *pval;  }
-
-		auto value()-> T&{  return *pval;  }
+		
 		auto value() const-> T const&{  return *pval;  }
-		auto operator*()-> T&{  return *pval;  }
-		auto operator*() const-> T const&{  return *pval;  }
+
+		auto value()-> T&
+		{
+			if(*pcount > 1)
+				_my_pcount_down(),
+				pval = new T(*pval),
+				pcount = new size_t(1);
+			
+			return *pval;
+		}
 
 		bool share_with(Pinweight const& pw) const{  return pval == pw.pval;  }
 

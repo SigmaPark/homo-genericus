@@ -61,11 +61,19 @@ public:
 	{
 		class T5{  public: void method() const{}  };
 
-		sgm::Pinweight<T5> const pw;
+		sgm::Pinweight<T5> const pw1;
 
-		pw.value().method();
+		pw1.value().method();
 
-		(*pw).method();
+		sgm::Pinweight<T5> pw2 = pw1;
+
+		static_cast<T5>(pw2).method();
+
+		assert( pw1.share_with(pw2) );
+
+		pw2.value().method();
+
+		assert( !pw1.share_with(pw2) );
 	}
 
 };
