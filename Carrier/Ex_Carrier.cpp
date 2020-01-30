@@ -11,21 +11,6 @@ public:
 	Test() = delete;
 
 
-	template<typename C1, typename C2>
-	static bool have_same_contents(C1&& c1, C2&& c2)
-	{
-		bool ans = c1.size() == c2.size();
-
-		for
-		(	size_t idx = 0
-		;	idx < c1.size() && ans
-		;	ans = c1[idx] == c2[idx], idx++
-		);
-
-		return ans;
-	}
-
-
 	static void Method1()
 	{
 		std::vector<int> const Lvec{2, 5, 8};
@@ -152,7 +137,43 @@ public:
 		stt1.at(1) = 10;
 
 		std::cout << stt1[1] << std::endl;
+
+
+		sgm::same_mutability< int const, std::vector<double> >::type v = {10};
+
+		std::cout << v.front() << std::endl;
+
+		class contest
+		{
+		public:
+			void operator()() const { std::cout << "const\n"; }
+			void operator()() { std::cout << "mutable\n"; }
+		};
+
+		contest mc;
+		contest const cc;
+
+		mc();
+		cc();
+
 	}
+
+
+private:
+	template<typename C1, typename C2>
+	static bool have_same_contents(C1&& c1, C2&& c2)
+	{
+		bool ans = c1.size() == c2.size();
+
+		for
+		(	size_t idx = 0
+		;	idx < c1.size() && ans
+		;	ans = c1[idx] == c2[idx], idx++
+		);
+
+		return ans;
+	}
+
 };
 
 

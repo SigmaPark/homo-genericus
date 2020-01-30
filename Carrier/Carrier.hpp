@@ -26,6 +26,43 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	template<bool> class Boolean_Flag;
+	template<> class Boolean_Flag<true>{  public: enum : bool{ value = true };  };
+	template<> class Boolean_Flag<false>{  public: enum : bool{ value = false };  };
+	//========//========//========//========//=======#//========//========//========//========//===
+
+	template<typename T>
+	class is_mutable
+	{
+	private:
+		template<typename Q>
+		static auto get_type(Q const*){  return Boolean_Flag<false>();  }
+
+		template<typename Q>
+		static auto get_type(Q*){  return Boolean_Flag<true>();  }
+		
+	public:
+		enum : bool{ value = decltype(  get_type( (T*) nullptr )  )::value };
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<typename Ref_t, typename T>
+	class same_mutability
+	{
+	private:
+		template<typename Q>
+		static auto get_type(Q const*){  return *(T const*)nullptr;  }
+
+		template<typename Q>
+		static auto get_type(Q*){  return *(T*) nullptr;  }
+
+	public:
+		using type = decltype(  get_type( (Ref_t*) nullptr )  );
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
 	template<typename T> 
 	class Proxy_Ref
 	{
@@ -714,6 +751,91 @@ namespace sgm
 		}
 
 	};	// End of class Dynamic_CArr<T, Carry_t::DEEP>
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<typename T>
+	class _Original_type
+	{
+	private:
+		template<typename Q> class typer			{  public: using type = Q;  };
+		template<typename Q> class typer<Q const>	{  public: using type = Q;  };
+		template<typename Q> class typer<Q&>			{  public: using type = Q;  };
+		template<typename Q> class typer<Q const&>	{  public: using type = Q;  };
+		template<typename Q> class typer<Q&&>		{  public: using type = Q;  };
+
+	public:
+		using type = typename typer<T>::type;
+	};
+
+	template<typename T>
+	using Original_t = typename _Original_type<T>::type;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<typename T>
+	class Carrier
+	{
+	public:
+		Carrier() : _pp(nullptr), size_t(0){}
+
+		template<typename CON>
+		Carrier(CON&& con) 
+		:	_pp( new T const*[con.size()] )
+		,	_n(con.size())
+		{
+			auto p = _pp[0];
+			auto itr = con.begin();
+
+			for(; itr != con.end(); ++itr, ++p)
+				p = static_cast<T const*>(&*itr);
+		}
+
+		Carrier(Carrier const& cpy) : _pp( new T const*[cpy._n] ), _n(cpy._n)
+		{
+			for(size_t idx = 0; idx < _n; idx++)
+				_pp[idx] = cpy._pp[idx];
+		}
+
+		Carrier(Carrier&& cpy) : _pp(cpy._pp), _n(cpy._n){  cpy._pp = nullptr;  }
+		~Carrier(){  delete[] _pp, _pp = nullptr;  }
+
+
+		template<typename CON>
+		auto operator=(CON&& con)-> Carrier const&
+		{
+			if (con.size() != _n)
+				delete[] _pp,
+				_pp = new T const*[con.size()];
+			
+			auto p = _pp[0];
+			auto itr = con.begin();
+
+			for(; itr != con.end(); ++itr, ++p)
+				p = static_cast<T const*>(&*itr);
+			
+			return *this;
+		}
+
+		auto operator=(Carrier const& cpy)-> Carrier const&
+		{
+			if (cpy._n != _n)
+				delete[] _pp,
+				_pp = new T const*[cpy._n];
+
+			for(size_t idx = 0; idx < _n; idx++)
+				_pp[idx] = cpy._pp[idx];
+
+			return *this;
+		}
+
+		auto size() const-> size_t{  return _n;  }
+		auto operator[](size_t idx) const-> T const&{  return *_pp[idx];  }
+
+	private:
+		T const** _pp;
+		size_t _n;
+	};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
