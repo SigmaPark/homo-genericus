@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef _SGM_CARRIER_
+#define _SGM_CARRIER_
 
 namespace sgm
 {
@@ -12,7 +14,7 @@ namespace sgm
 		template<class Q> struct _Original			{  using type = Q;  };
 		template<class Q> struct _Original<Q const>	{  using type = Q;  };
 		template<class Q> struct _Original<Q&>		{  using type = Q;  };
-		template<class Q> struct _Original<Q const&>{  using type = Q;  };
+		template<class Q> struct _Original<Q const&>	{  using type = Q;  };
 		template<class Q> struct _Original<Q&&>		{  using type = Q;  };
 
 	public:
@@ -57,11 +59,11 @@ namespace sgm
 	class _Ref_Traits_Helper
 	{
 	private:
-		template<class Q> struct _CVL			{  enum : bool{  C = false, V = true, L = true};  };
-		template<class Q> struct _CVL<Q const>	{  enum : bool{  C = true, V = true, L = true};  };
-		template<class Q> struct _CVL<Q&>		{  enum : bool{  C = false, V = false, L = true};  };
-		template<class Q> struct _CVL<Q const&>	{  enum : bool{  C = true, V = false, L = true};  };
-		template<class Q> struct _CVL<Q&&>		{  enum : bool{  C = false, V = false, L = false};  };
+		template<class Q> struct _CVL			{  enum : bool{C = false, V = true, L = true};  };
+		template<class Q> struct _CVL<Q const>	{  enum : bool{C = true, V = true, L = true};	};
+		template<class Q> struct _CVL<Q&>		{  enum : bool{C = false, V = false, L = true};	};
+		template<class Q> struct _CVL<Q const&>	{  enum : bool{C = true, V = false, L = true};	};
+		template<class Q> struct _CVL<Q&&>		{  enum : bool{C = false, V = false, L = false};	};
 
 
 	public:
@@ -74,30 +76,40 @@ namespace sgm
 	using _RTH = _Ref_Traits_Helper<T>;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
-	#ifndef SGM_FORWARD
-		#define SGM_FORWARD(t, ...)	\
-		static_cast	\
-		<	_Selective_t	\
-			<	_RTH<decltype(t)>::is_Val	\
-			,	_Selective_t< _RTH<decltype(t)>::is_Const, __VA_ARGS__ const, __VA_ARGS__ >	\
-			,	_Selective_t	\
-				<	_RTH<decltype(t)>::is_LRef	\
-				,	_Selective_t< _RTH<decltype(t)>::is_Const, __VA_ARGS__ const&, __VA_ARGS__ & >	\
-				,	__VA_ARGS__ &&	\
-				>	\
-			>	\
-		>	\
-		(t)
-	#else
-		#error SGM_FORWARD was already defined elsewhere.
-	#endif
+
+	template<class T, class Q>
+	static auto _Forward(Q&& q)
+	->	_Selective_t	
+		<	_RTH<decltype(q)>::is_Val	
+		,	_Selective_t< _RTH<decltype(q)>::is_Const, T const, T >	
+		,	_Selective_t	
+			<	_RTH<decltype(q)>::is_LRef	
+			,	_Selective_t< _RTH<decltype(q)>::is_Const, T const&, T& >	
+			,	T&&	
+			>	
+		>
+	{
+		return
+		static_cast
+		<	_Selective_t	
+			<	_RTH<decltype(q)>::is_Val	
+			,	_Selective_t< _RTH<decltype(q)>::is_Const, T const, T >	
+			,	_Selective_t	
+				<	_RTH<decltype(q)>::is_LRef	
+				,	_Selective_t< _RTH<decltype(q)>::is_Const, T const&, T& >	
+				,	T&&	
+				>	
+			>
+		>
+		(q);
+	}
 
 
-	#ifndef SGM_MOVE
-		#define SGM_MOVE(t) static_cast< Original_t<decltype(t)>&& >(t)
-	#else
-		#error SGM_MOVE was already defined elsewhere.
-	#endif
+	template<class T>
+	static auto _Move(T&& t)-> _Original_t<decltype(t)>&&
+	{
+		return static_cast< _Original_t<decltype(t)>&& >(t);
+	}
 	//========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -139,7 +151,7 @@ namespace sgm
 		Carrier(Carrier&& carr) : _arr(carr._arr), _n(carr._n){  carr._arr = nullptr;  }
 
 		template<class CON>
-		Carrier(CON&& a) : _arr(  allocation( SGM_FORWARD(a, CON) )  ), _n(a.size()){}
+		Carrier(CON&& a) : _arr(  allocation( _Forward<CON>(a) )  ), _n(a.size()){}
 
 		~Carrier(){  delete[] _arr, _arr = nullptr;  }
 
@@ -163,7 +175,7 @@ namespace sgm
 		template<class CON>
 		auto operator=(CON&& con)-> Carrier const&
 		{
-			op_equal( SGM_FORWARD(con, CON) );
+			op_equal( _Forward<CON>(con) );
 
 			return *this;
 		}
@@ -247,13 +259,11 @@ namespace sgm
 			if(idx >= _n)
 				throw !(bool) L"index is out of valid range.";
 		}
-	};
+
+	};	// end of class Carrier<T>
 	//========//========//========//========//=======#//========//========//========//========//=======#
 
 
+}	// end of namespace sgm
 
-
-}
-
-#undef SGM_MOVE
-#undef SGM_FORWARD
+#endif	// end of #ifndef _SGM_CARRIER_
