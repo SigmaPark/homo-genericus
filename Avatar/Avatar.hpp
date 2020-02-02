@@ -22,7 +22,7 @@ namespace sgm
 
 		Avatar() : _pval(nullptr), _state(State::TEMPORARY){}
 		Avatar(T& t) : _pval(&t), _state(State::REFERENCING){}
-		Avatar(T&& t) : _pval(  new T( static_cast<T&&>(t) )  ), _state(State::REFERENCING){}
+		Avatar(T&& t) : _pval(  new T( static_cast<T&&>(t) )  ), _state(State::TEMPORARY){}
 
 		~Avatar()
 		{
