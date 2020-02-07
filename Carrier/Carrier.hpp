@@ -3,8 +3,23 @@
 #ifndef _SGM_CARRIER_
 #define _SGM_CARRIER_
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+	#error C++11 or higher version of language support is required.
+#endif
+
+#include <cstdlib>
+#include <initializer_list>
+
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+
+
 namespace sgm
 {
+
+
+#ifdef _CSTDDEF_
+	using std::size_t;
+#endif
 
 
 	template<class T>
@@ -26,7 +41,7 @@ namespace sgm
 	//	Similar to std::decay_t
 	template<class T>
 	using _Original_t = typename _Original_Helper<T>::type;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 	
 	template<bool B, class true_t, class false_t> class _Selective;
@@ -52,19 +67,23 @@ namespace sgm
 	//	Similar to std::conditional_t
 	template<bool B, class true_t, class false_t>
 	using _Selective_t = typename _Selective<B, true_t, false_t>::type;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template<class T>
 	class _Ref_Traits_Helper
 	{
 	private:
-		template<class Q> struct _CVL			{  enum : bool{C = false, V = true, L = true};  };
-		template<class Q> struct _CVL<Q const>	{  enum : bool{C = true, V = true, L = true};	};
-		template<class Q> struct _CVL<Q&>		{  enum : bool{C = false, V = false, L = true};	};
-		template<class Q> struct _CVL<Q const&>	{  enum : bool{C = true, V = false, L = true};	};
-		template<class Q> struct _CVL<Q&&>		{  enum : bool{C = false, V = false, L = false};	};
-
+		template<class Q> 
+		struct _CVL			{  enum : bool{C = false, V = true, L = true};	};
+		template<class Q> 
+		struct _CVL<Q const>	{  enum : bool{C = true, V = true, L = true};	};
+		template<class Q> 
+		struct _CVL<Q&>		{  enum : bool{C = false, V = false, L = true};	};
+		template<class Q> 
+		struct _CVL<Q const&>	{  enum : bool{C = true, V = false, L = true};	};
+		template<class Q> 
+		struct _CVL<Q&&>		{  enum : bool{C = false, V = false, L = false};	};
 
 	public:
 		_Ref_Traits_Helper() = delete;
@@ -74,7 +93,7 @@ namespace sgm
 
 	template<class T>
 	using _RTH = _Ref_Traits_Helper<T>;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template<class T, class Q>
@@ -108,9 +127,9 @@ namespace sgm
 	template<class T>
 	static auto _Move(T&& t)-> _Original_t<decltype(t)>&&
 	{
-		return static_cast< _Original_t<decltype(t)>&& >(t);
+		return ( _Original_t<decltype(t)>&& ) t;
 	}
-	//========//========//========//========//=======#//========//========//========//========//=======#
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	template<class T>
@@ -119,149 +138,289 @@ namespace sgm
 	public:
 		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}
 
-		auto operator++()-> CArr_iterator{  return CArr_iterator(_arr, ++_idx);  }
-		auto operator++() const-> CArr_iterator const{  return CArr_iterator(_arr, ++_idx);  }
+		auto operator++()-> CArr_iterator			{  return CArr_iterator(_arr, ++_idx);  }
+		auto operator++() const-> CArr_iterator const	{  return CArr_iterator(_arr, ++_idx);  }
 
-		auto operator++(int)-> CArr_iterator{  _idx++; return *this;  }
-		auto operator++(int) const-> CArr_iterator const{  _idx++; return *this;  }
+		auto operator++(int)-> CArr_iterator				{  _idx++; return *this;  }
+		auto operator++(int) const-> CArr_iterator const	{  _idx++; return *this;  }
 
 		bool operator!=(CArr_iterator const itr) const{  return _idx != itr._idx;  }
 		bool operator==(CArr_iterator const itr) const{  return _idx == itr._idx;  }
 
-		auto operator*()-> T&{  return _arr[_idx];  }
-		auto operator*() const-> T const&{  return _arr[_idx];  }
+		auto operator*()-> T&				{  return _arr[_idx];  }
+		auto operator*() const-> T const&	{  return _arr[_idx];  }
 		
 
 	private:
 		T* _arr;
-		size_t _idx;
+		size_t mutable _idx;
 	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+	//========//========//========//========//=======#//========//========//========//========//===
+	
+	
+	template<class> class Carrier;
+
+	template<class T>
+	class _CArr_Helper
+	{
+	public:
+		_CArr_Helper() = delete;
+
+	private:
+		friend class Carrier<T>;
+		using value_t = _Original_t<T>;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		template<class ITR>
+		class _tied
+		{
+		public:
+			_tied(size_t idx, ITR itr) : idx(idx), itr(itr){}
+
+			auto operator++(int)-> _tied
+			{
+				idx++, itr++;
+
+				return *this;
+			}
+		
+			size_t idx;
+			ITR itr;
+		};
+
+		template<class ITR>
+		static auto make_tied(size_t idx, ITR itr)-> _tied<ITR>
+		{  
+			return _tied<ITR>(idx, itr);  
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		static auto _alloc(size_t capa)-> value_t*
+		{
+			return static_cast<value_t*>(  std::malloc( sizeof(value_t) * capa )  );
+		}
+
+
+		template<class...ARGS>
+		static auto _fill(size_t size, value_t* const arr, ARGS const&...args)-> value_t*
+		{
+			for(size_t idx = 0; idx < size; idx++)
+				new(arr + idx) value_t(args...);
+
+			return arr;
+		}
+
+
+		static auto _remove(size_t size, value_t* const arr)-> value_t*
+		{
+			for(size_t idx = 0; idx < size; idx++)
+				(arr + idx)->~value_t();
+
+			return arr;
+		}
+
+
+		static auto _copy(size_t size, value_t* const arr)-> value_t*
+		{
+			value_t* rarr = _alloc(size);
+
+			for(size_t idx = 0; idx < size; idx++)
+				new(rarr + idx) value_t(arr[idx]);
+
+			return rarr;
+		}
+
+		template<class CON>
+		static auto _copy(size_t size, CON&& con)-> value_t*
+		{
+			value_t* arr = _alloc(size);
+
+			using elem_t 
+			=	_Selective_t< _RTH<decltype(con)>::is_LRef, value_t const&, value_t&& >;
+
+			for(auto tied = make_tied(0, con.begin()); tied.idx < size; tied++)
+				new(arr + tied.idx) value_t( (elem_t)*tied.itr );
+
+			return arr;
+		}
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	template<class T>
 	class Carrier
 	{
 	public:
-		using value_t = T;
-		using index_t = size_t;
+		using value_t = _Original_t<T>;
+		using method_t = _CArr_Helper<T>;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		Carrier() : _arr(nullptr), _n(0){}
-		Carrier(Carrier const& carr) : _arr( allocation(carr) ), _n(carr._n){}
-		Carrier(Carrier&& carr) : _arr(carr._arr), _n(carr._n){  carr._arr = nullptr;  }
+		Carrier() : _capa(0), _size(0), _arr(nullptr){}
+
+		explicit Carrier(size_t capa) : _capa(capa), _size(0), _arr( method_t::_alloc(capa) ){}
+		explicit Carrier(int capa) : Carrier( size_t(capa) ){}
+		explicit Carrier(unsigned capa) : Carrier( size_t(capa) ){}
+
+		template<class...ARGS>
+		Carrier(size_t size, ARGS const&...args) 
+		:	_capa(size), _size(size)
+		,	_arr(  method_t::_fill( size, method_t::_alloc(size), args... )  )
+		{}
+
+		Carrier(Carrier const& ca)
+		:	_capa(ca._capa), _size(ca._size)
+		,	_arr
+			(	ca._size > 0
+				?	method_t::_copy(ca._size, ca._arr)
+				:
+				ca._capa > 0
+				?	method_t::_alloc(ca._capa)
+				:	nullptr
+			)
+		{}
+
+		Carrier(Carrier& ca) : Carrier( static_cast<Carrier const&>(ca) ){}
+
+		Carrier(Carrier&& ca) : _capa(ca._capa), _size(ca._size), _arr(ca._arr)
+		{
+			ca._size = ca._capa = 0, ca._arr = nullptr;
+		}
+
+		template<class Q>
+		Carrier(std::initializer_list<Q>&& con)
+		:	_capa(con.size()), _size(_capa), _arr(  method_t::_copy( _capa, _Move(con) )  )
+		{}
 
 		template<class CON>
-		Carrier(CON&& a) : _arr(  allocation( _Forward<CON>(a) )  ), _n(a.size()){}
+		Carrier(CON&& con)
+		:	_capa(con.size()), _size(_capa)
+		,	_arr(  method_t::_copy( _capa, _Forward<CON>(con) )  )
+		{}
 
-		~Carrier(){  delete[] _arr, _arr = nullptr;  }
 
-
-		auto operator=(Carrier const& carr)-> Carrier const&
+		~Carrier()
 		{
-			op_equal(carr);
-
-			return *this;
+			if(_arr != nullptr)
+				_arr = method_t::_remove(_size, _arr),
+				std::free(_arr), _arr = nullptr;
+					
+			_size = _capa = 0;
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		auto operator=(Carrier&& carr)-> Carrier const&
+
+		auto operator=(Carrier const& ca)-> Carrier&{  return _equal(ca);  }
+		auto operator=(Carrier& ca)-> Carrier&{  return _equal(ca);  }
+
+		auto operator=(Carrier&& ca)-> Carrier&
 		{
-			delete[] _arr, _arr = carr._arr, carr._arr = nullptr;
+			this->~Carrier();
 
-			_n = carr._n;
+			_capa = ca._capa, _size = ca._size, _arr = ca._arr,
+			ca._size = ca._capa = 0, ca._arr = nullptr;
 
 			return *this;
 		}
 
 		template<class CON>
-		auto operator=(CON&& con)-> Carrier const&
+		auto operator=(CON&& con)-> Carrier&{  return _equal( _Forward<CON>(con) );  }
+
+
+		auto operator[](size_t idx) const-> value_t const&{  return _arr[idx];  }
+		auto operator[](size_t idx)-> value_t&{  return _arr[idx];  }
+
+
+		auto operator>>(value_t const& val)-> Carrier&{  return emplace_back(val);  }
+		auto operator>>(value_t&& val)-> Carrier&		{  return emplace_back( _Move(val) );  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto capacity() const-> size_t	{  return _capa;  }
+		auto size() const-> size_t		{  return _size;  }
+
+		bool no_capacity() const	{  return _capa == 0;  }
+		bool no_element() const	{  return _size ==0;  }
+
+
+		template<class...ARGS>
+		auto emplace_back(ARGS&&...args)-> Carrier&
 		{
-			op_equal( _Forward<CON>(con) );
+		#ifdef _DEBUG
+			if(_size >= _capa)
+				throw !(bool) L"can't emplace_back : out of index";
+		#endif
+			new(_arr +_size) value_t( _Forward<ARGS>(args)... ), _size++;
 
 			return *this;
 		}
 
 
-		auto operator[](index_t idx) const-> T const&
-		{  
-			index_check(idx); 
-			
-			return _arr[idx];  
-		}
-
-		auto operator[](index_t idx)-> T&
+		auto pop_back()-> Carrier&
 		{
-			index_check(idx); 
-			
-			return _arr[idx];
+		#ifdef _DEBUG
+			if(no_element())
+				throw !(bool) L"can't pop_back : no element to pop";
+		#endif
+			_size--, (_arr + _size)->~value_t();
+
+			return *this;
 		}
 
 
-		bool is_empty() const{  return _arr == nullptr;  }
-		auto size() const-> size_t{  return _n;  }
-		void clear(){  delete[] _arr, _arr = nullptr, _n = 0;  }
-		
-		
+		auto clear()-> Carrier&
+		{
+			_arr = method_t::_remove(_size, _arr), _size = 0;
+
+			return *this;
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 		using iterator_t = CArr_iterator<value_t>;
 
-		auto begin()-> iterator_t{  return iterator_t(_arr, 0);  }
-		auto end()-> iterator_t{  return iterator_t(_arr, _n);  }
-		auto begin() const-> iterator_t const{  return iterator_t(_arr, 0);  }
-		auto end() const-> iterator_t const{  return iterator_t(_arr, _n);  }
+		auto begin()-> iterator_t				{  return iterator_t(_arr, 0);  }
+		auto begin() const-> iterator_t const	{  return iterator_t(_arr, 0);  }
+		auto cbegin()-> iterator_t const			{  return iterator_t(_arr, 0);  }
+		auto cbegin() const-> iterator_t const	{  return iterator_t(_arr, 0);  }
 
-		auto cbegin()-> iterator_t const{  return iterator_t(_arr, 0);  }
-		auto cend()-> iterator_t const{  return iterator_t(_arr, _n);  }
-		auto cbegin() const-> iterator_t const{  return iterator_t(_arr, 0);  }
-		auto cend() const-> iterator_t const{  return iterator_t(_arr, _n);  }
+		auto end()-> iterator_t				{  return iterator_t(_arr, _size);  }
+		auto end() const-> iterator_t const		{  return iterator_t(_arr, _size);  }
+		auto cend()-> iterator_t const			{  return iterator_t(_arr, _size);  }
+		auto cend() const-> iterator_t const		{  return iterator_t(_arr, _size);  }
 
 
 	private:
-		T* _arr;
-		size_t _n;
-
-
-		template<class Q>
-		static auto allocation(Q&& q)-> T*
-		{
-			T* arr = new T[q.size()];
-
-			auto itr = q.begin();
-			index_t idx = 0;
-
-			for(; itr != q.end(); itr++, idx++)
-				arr[idx] = _Selective_t< _RTH<decltype(q)>::is_LRef, T const&, T&& >(*itr);
-
-			return arr;
-		}
+		size_t _capa, _size;
+		value_t* _arr;
 
 
 		template<class CON>
-		void op_equal(CON&& con)
+		auto _equal(CON&& con)-> Carrier&
 		{
-			size_t const con_size = con.size();
+			{
+				size_t const con_size = con.size();
 
-			if(con_size == 0)
-				return;
-			else if(_n != con_size)
-				_n = con_size,
-				delete[] _arr,
-				_arr = new T[_n];
+				if(_capa < con_size)
+					this->~Carrier(),
+					_arr = method_t::_alloc(con_size),
+					_size = 0, _capa = con_size;
+			}
+			{
+				using elem_t
+				=	_Selective_t< _RTH<decltype(con)>::is_LRef, value_t const&, value_t&& >;
 
-			auto itr = con.begin();
-			index_t idx = 0;
+				auto tied = method_t::make_tied(0, con.begin());
 
-			for(; idx < _n; idx++, itr++)
-				_arr[idx] = _Selective_t< _RTH<decltype(con)>::is_LRef, T const&, T&& >(*itr);
-		}
+				for(; tied.idx < _size && tied.itr != con.end(); tied++)
+					_arr[tied.idx] = elem_t(*tied.itr);
 
-
-		void index_check(index_t idx) const
-		{
-			if(idx >= _n)
-				throw !(bool) L"index is out of valid range.";
+				for(; tied.idx < _capa && tied.itr != con.end(); tied++)
+					emplace_back( elem_t(*tied.itr) );
+			}
+			return *this;
 		}
 
 	};	// end of class Carrier<T>
-	//========//========//========//========//=======#//========//========//========//========//=======#
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 }	// end of namespace sgm

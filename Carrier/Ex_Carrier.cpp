@@ -1,6 +1,5 @@
 #include "Carrier.hpp"
 #include <cassert>
-#include <initializer_list>
 #include <utility>
 
 
