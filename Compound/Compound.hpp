@@ -97,6 +97,6 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-}
+}	// end of namespace sgm
 
-#endif
+#endif // end of #ifndef _SGM_COMPOUND_

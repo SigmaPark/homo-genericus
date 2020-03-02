@@ -251,7 +251,7 @@ namespace sgm
 		template<typename T>
 		static auto _ReservedVector(size_t N)
 		{
-			container_t<T> res{};
+			container_t< std::decay_t<T> > res{};
 
 			res.reserve(N);
 
@@ -281,7 +281,7 @@ namespace sgm
 
 		template
 		<	typename CON, typename F, typename POL
-		,	typename X = typename std::decay_t<CON>::value_type
+		,	typename X = std::decay_t< typename std::decay_t<CON>::value_type >
 		>
 		static auto _Filter(CON&& con, F&& f, [[maybe_unused]] POL&& pol)
 		{
@@ -324,7 +324,7 @@ namespace sgm
 
 	protected:
 		template<typename CON, typename F, typename POL, typename Y>
-		static auto _Morph(CON&& con, F&& f, POL&&, Y&&)
+		static auto _Morph(CON&& con, F&& f, POL&&, Y)
 		{
 			return 
 			Looper::_Emplace_Back
@@ -335,7 +335,7 @@ namespace sgm
 
 		template
 		<	typename CON, typename F, typename POL
-		,	typename X = typename std::decay_t<CON>::value_type
+		,	typename X = std::decay_t< typename std::decay_t<CON>::value_type >
 		>
 		static auto _Filter(CON&& con, F&& f, [[maybe_unused]] POL&& pol)
 		{
@@ -435,7 +435,7 @@ namespace sgm
 
 		template
 		<	typename CON, typename F, typename POL
-		,	typename X = typename std::decay_t<CON>::value_type
+		,	typename X = std::decay_t< typename std::decay_t<CON>::value_type >
 		>
 		static auto _Filter(CON&& con, F&& f, [[maybe_unused]] POL&& pol)
 		{
@@ -669,16 +669,19 @@ namespace sgm
 	<	typename CON, typename F
 	,	typename POL = std::execution::sequenced_policy
 	,	typename Y
-		=	std::invoke_result_t
-			<	std::decay_t<F>, typename std::decay_t<CON>::value_type 
+		=	std::decay_t
+			<	std::invoke_result_t
+				<	std::decay_t<F>, typename std::decay_t<CON>::value_type 
+				>
 			>
 	>
-	static auto Morph(CON&& con, F&& f, POL pol = std::execution::seq, Y&& dftval = Y())
+	static auto Morph(CON&& con, F&& f, POL pol = std::execution::seq)
 	{
+		Y const dftval = *std::cbegin(con);
+
 		return
 		Container_traits< std::decay_t<CON> >::Templar_t::Morph
-		(	std::forward<CON>(con), std::forward<F>(f)
-		,	std::move(pol), std::forward<Y>(dftval)
+		(	std::forward<CON>(con), std::forward<F>(f), std::move(pol), dftval
 		);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -693,11 +696,10 @@ namespace sgm
 	>
 	static auto Repack(CON&& con, POL pol = std::execution::seq)
 	{
+		elem_t const dftval = *std::cbegin(con);
+
 		return
-		outCON::Morph
-		(	std::forward<CON>(con), sgm::identity<>(), std::move(pol)
-		,	std::move(  static_cast<elem_t>( *std::cbegin(con) )  )
-		);
+		outCON::Morph( std::forward<CON>(con), sgm::identity<>(), std::move(pol), dftval );
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
