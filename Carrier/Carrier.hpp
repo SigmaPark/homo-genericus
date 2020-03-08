@@ -8,7 +8,6 @@
 #endif
 
 #include <cstdlib>
-#include <initializer_list>
 #include "..\Type_Analysis\Type_Analysis.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -23,29 +22,144 @@ namespace sgm
 #endif
 
 
-	template<class T>
+	template<class T, bool REVERSE> class CArr_iterator;
+
+
+	template<class T, bool REVERSE>
 	class CArr_iterator
-	{
-	public:
-		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}
-
-		auto operator++()-> CArr_iterator			{  return CArr_iterator(_arr, ++_idx);  }
-		auto operator++() const-> CArr_iterator const	{  return CArr_iterator(_arr, ++_idx);  }
-
-		auto operator++(int)-> CArr_iterator				{  _idx++; return *this;  }
-		auto operator++(int) const-> CArr_iterator const	{  _idx++; return *this;  }
-
-		bool operator!=(CArr_iterator const itr) const{  return _idx != itr._idx;  }
-		bool operator==(CArr_iterator const itr) const{  return _idx == itr._idx;  }
-
-		auto operator*()-> T&				{  return _arr[_idx];  }
-		auto operator*() const-> T const&	{  return _arr[_idx];  }
-		
-
+	{	
 	private:
-		T* _arr;
-		size_t mutable _idx;
-	};
+		enum class dir_t : bool { F, B };
+
+		using iter_t = CArr_iterator;
+
+
+
+	public:	
+		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}	
+
+	#ifndef _MUTABLE_AND_IMMUTABLE_MEMBERS
+		#define _MUTABLE_AND_IMMUTABLE_MEMBERS(NAME, ARGS, RES, ...)	\
+			auto NAME (ARGS)->				RES{__VA_ARGS__}	\
+			auto NAME (ARGS) const-> const	RES{__VA_ARGS__}
+	#else
+		#error _MUTABLE_AND_IMMUTABLE_MEMBERS was already defined somewhere else.
+	#endif
+
+		//	itr++	(rvalue) 
+		auto operator++(int) const-> iter_t
+		{
+			iter_t const itr = *this;
+			
+			_idx = shifted(_idx);
+			
+			return itr;		
+		}
+
+		//	++itr	(lvalue)
+		_MUTABLE_AND_IMMUTABLE_MEMBERS(operator++, , iter_t&, return *this += 1;)
+
+		//	itr--	(rvalue)
+		auto operator--(int) const-> iter_t
+		{
+			iter_t const itr = *this;
+
+			_idx = shifted(_idx, dir_t::B);
+
+			return itr;
+		}
+
+		//	--itr	(lvalue)
+		_MUTABLE_AND_IMMUTABLE_MEMBERS(operator--, , iter_t&, return *this -= 1;)
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		
+		bool operator!=(iter_t const itr) const{  return _idx != itr._idx;  }	
+		bool operator==(iter_t const itr) const{  return _idx == itr._idx;  }	
+		
+		bool operator<(iter_t const itr) const{  return Less(*this, itr);  }
+		bool operator>(iter_t const itr) const{  return Less(itr, *this);  }
+
+		bool operator<=(iter_t const itr) const{  return *this < itr || *this == itr;  }
+		bool operator>=(iter_t const itr) const{  return *this > itr || *this == itr;  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		_MUTABLE_AND_IMMUTABLE_MEMBERS( operator*, , T&, return (*this)[0]; )
+		
+		_MUTABLE_AND_IMMUTABLE_MEMBERS
+		(	operator[], size_t interval, T&
+		,	return *( _arr + shifted(_idx, dir_t::F, interval) - (REVERSE ? 1 : 0) );
+		)
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		auto operator+(size_t interval) const-> iter_t
+		{
+			return iter_t( _arr, shifted(_idx, dir_t::F, interval) );
+		}
+
+		auto operator-(size_t interval) const-> iter_t
+		{
+			return iter_t( _arr, shifted(_idx, dir_t::B, interval) );
+		}
+
+		_MUTABLE_AND_IMMUTABLE_MEMBERS
+		(	operator+=, size_t interval, iter_t&
+		,	_idx = shifted(_idx, dir_t::F, interval);
+
+			return *this;
+		)
+
+		_MUTABLE_AND_IMMUTABLE_MEMBERS
+		(	operator-=, size_t interval, iter_t&
+		,	_idx = shifted(_idx, dir_t::B, interval);
+
+			return *this;
+		)
+
+	#undef _MUTABLE_AND_IMMUTABLE_MEMBERS
+	
+
+	private:	
+		T* _arr;	
+		size_t mutable _idx;	
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		template<bool _REVERSE> static size_t _shifted(size_t idx, dir_t dir, size_t interval);
+
+		template<> static size_t _shifted<false>	(size_t idx, dir_t dir, size_t interval)
+		{  
+			return dir == dir_t::F ? idx + interval : idx - interval;
+		}
+
+		template<> static size_t _shifted<true>	(size_t idx, dir_t dir, size_t interval)
+		{
+			return dir == dir_t::B ? idx + interval : idx - interval;
+		}
+
+		static size_t shifted(size_t idx, dir_t dir = dir_t::F, size_t interval = 1)
+		{
+			return _shifted<REVERSE>(idx, dir, interval); 
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		
+		template<bool _REVERSE> static bool _less(iter_t const itr1, iter_t const itr2);
+
+		template<> static bool _less<false> (iter_t const itr1, iter_t const itr2)
+		{
+			return itr1._idx < itr2._idx;
+		}
+
+		template<> static bool _less<true> (iter_t const itr1, iter_t const itr2)
+		{
+			return itr1._idx > itr2._idx;
+		}
+
+		static bool Less(iter_t const itr1, iter_t const itr2)
+		{  
+			return _less<REVERSE>(itr1, itr2);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+	};// end of template class CArr_iterator
 	//========//========//========//========//=======#//========//========//========//========//===
 	
 	
@@ -134,7 +248,8 @@ namespace sgm
 
 			return arr;
 		}
-	};
+
+	};// end of template class _CArr_Helper
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -177,10 +292,12 @@ namespace sgm
 			ca._size = ca._capa = 0, ca._arr = nullptr;
 		}
 
+	#ifdef _INITIALIZER_LIST_
 		template<class Q>
 		Carrier(std::initializer_list<Q>&& con)
 		:	_capa(con.size()), _size(_capa), _arr(  method_t::_copy( _capa, _Move(con) )  )
 		{}
+	#endif
 
 		template<class CON>
 		Carrier(CON&& con)
@@ -266,7 +383,7 @@ namespace sgm
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		using iterator_t = CArr_iterator<value_t>;
+		using iterator_t = CArr_iterator<value_t, false>;
 
 		auto begin()-> iterator_t				{  return iterator_t(_arr, 0);  }
 		auto begin() const-> iterator_t const	{  return iterator_t(_arr, 0);  }
@@ -278,6 +395,19 @@ namespace sgm
 		auto cend()-> iterator_t const			{  return iterator_t(_arr, _size);  }
 		auto cend() const-> iterator_t const		{  return iterator_t(_arr, _size);  }
 
+
+		using riterator_t = CArr_iterator<value_t, true>;
+
+		auto rbegin()-> riterator_t				{  return riterator_t(_arr, _size);  }
+		auto rbegin() const-> riterator_t const	{  return riterator_t(_arr, _size);  }
+		auto crbegin()-> riterator_t const		{  return riterator_t(_arr, _size);  }
+		auto crbegin() const-> riterator_t const	{  return riterator_t(_arr, _size);  }
+
+		auto rend()-> riterator_t				{  return riterator_t(_arr, 0);  }
+		auto rend() const-> riterator_t const	{  return riterator_t(_arr, 0);  }
+		auto crend()-> riterator_t const			{  return riterator_t(_arr, 0);  }
+		auto crend() const-> riterator_t const	{  return riterator_t(_arr, 0);  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 	private:
 		size_t _capa, _size;
@@ -316,4 +446,21 @@ namespace sgm
 
 }	// end of namespace sgm
 
-#endif	// end of #ifndef _SGM_CARRIER_
+#endif // end of #ifndef _SGM_CARRIER_
+
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+
+#ifdef _ITERATOR_
+namespace std
+{
+	template<class T, bool FRONT>
+	struct iterator_traits< sgm::CArr_iterator<T, FRONT> >
+	{
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = void;
+		using pointer = T*;
+		using reference = T&;
+	};
+}
+#endif

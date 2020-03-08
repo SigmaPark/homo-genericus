@@ -1,3 +1,6 @@
+#include <initializer_list>
+#include <iterator>
+#include <vector>
 #include "Carrier.hpp"
 #include <cassert>
 #include <utility>
@@ -72,15 +75,44 @@ public:
 	}
 
 
+	static void Method3()
+	{
+		sgm::Carrier<int> const
+			crr1{3, 1, 4, 1, 5, 9, 2},
+			crr2{2, 9, 5, 1, 4, 1, 3};
+
+		for
+		(	auto Pa = std::make_pair(crr1.crbegin(), crr2.cbegin())
+		;	Pa != std::make_pair(crr1.crend(), crr2.cend())
+		;	Pa.first++, Pa.second++
+		)
+			assert(*Pa.first == *Pa.second);
+	}
+
+
+	static void Method4()
+	{
+		//sgm::Carrier<double> const dv{1.0, 3.0, 7.0, 12.0, 20.0};
+
+		//auto&& itr = dv.rbegin();
+
+		//assert(itr[2] == 3.0);
+
+		//std::vector<double>::reverse_iterator&& s = itr++;
+
+	}
+
 
 };
 
-
-
 int main()
 {
+
+
 	UnitTest::Method1();
 	UnitTest::Method2();
+	UnitTest::Method3();
+	UnitTest::Method4();
 
 	return 0;
 }
