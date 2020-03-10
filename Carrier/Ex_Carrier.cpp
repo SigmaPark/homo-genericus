@@ -5,6 +5,7 @@
 #include <cassert>
 #include <utility>
 
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 class UnitTest
 {
@@ -19,7 +20,7 @@ private:
 		bool res = con1.size() == con2.size();
 
 		for
-		(	auto itrPa = std::make_pair(con1.begin(), con2.begin())
+		(	auto itrPa = std::make_pair(con1.begin(), con2.begin()) 
 		;	itrPa.first != con1.end() && res
 		;	res = *itrPa.first == *itrPa.second, itrPa.first++, itrPa.second++
 		);
@@ -63,7 +64,7 @@ public:
 		*crr1.begin() = 15;
 		crr1[2] = 44;
 		
-		assert(same_iterables(crr1, initList<int>{15, 2, 44, 3}));
+		assert( same_iterables(crr1, initList<int>{15, 2, 44, 3}) );
 
 		sgm::Carrier<int> const crr2 = crr1;
 		sgm::Carrier<int> crr3 = crr2;
@@ -86,24 +87,61 @@ public:
 		;	Pa != std::make_pair(crr1.crend(), crr2.cend())
 		;	Pa.first++, Pa.second++
 		)
-			assert(*Pa.first == *Pa.second);
+		{
+			int n1 = *Pa.first, n2 = *Pa.second;
+
+			assert(n1 == n2);
+		}
 	}
 
 
 	static void Method4()
 	{
-		//sgm::Carrier<double> const dv{1.0, 3.0, 7.0, 12.0, 20.0};
+		sgm::Carrier<double> const dv{1.0, 3.0, 7.0, 12.0, 20.0};
 
-		//auto&& itr = dv.rbegin();
+		auto itr = dv.rbegin();
 
 		//assert(itr[2] == 3.0);
 
-		//std::vector<double>::reverse_iterator&& s = itr++;
+		std::vector<int> const v1{4, 5, 6}, v2{0, 2, 4};
+
+
+	}
+
+
+	static void Method5()
+	{
+		std::vector<int> v1 = sgm::Carrier<int>{3, 1, 4};
+
+		assert( v1.at(0) == 3 );
+		assert( v1.at(1) == 1 );
+		assert( v1.at(2) == 4 );
+	}
+
+
+	static void Method6()
+	{
+		sgm::Carrier<int> const ccrr1{2, 5};
+		sgm::Carrier<int> crr2{20, 500};
+
+		auto itr1 = ccrr1.begin();
+		auto itr2 = crr2.begin();
+
+		//*itr1 = 60;		// compile error
+		*itr2 = 11;
+
+		//tr2 = itr1;	// compile error
+		itr1 = itr2;
+
 
 	}
 
 
 };
+
+
+
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 int main()
 {
@@ -113,6 +151,8 @@ int main()
 	UnitTest::Method2();
 	UnitTest::Method3();
 	UnitTest::Method4();
+	UnitTest::Method5();
+	UnitTest::Method6();
 
 	return 0;
 }

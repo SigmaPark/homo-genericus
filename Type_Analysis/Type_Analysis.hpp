@@ -54,7 +54,8 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class T> static auto Declval()-> T{  return *(T*)nullptr;  }
+	template<class T> static auto Declval()
+	->	_Original_t<T>{  return *(_Original_t<T>*)nullptr;  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -63,6 +64,9 @@ namespace sgm
 	{
 	public: using type = decltype( Declval<F>()( Declval<ARGS>()... )  );
 	};
+
+	template<class F, class...ARGS>
+	using _Result_of_t = typename _Result_of<F, ARGS...>::type;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 
@@ -83,6 +87,19 @@ namespace sgm
 	//	Similar to std::conditional_t
 	template<bool B, class true_t, class false_t>
 	using _Selective_t = typename _Selective<B, true_t, false_t>::type;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<bool B, class T> 
+	class _Provided : public No_Making
+	{
+	public:	
+		static_assert(B, "type condition failed.");
+
+		using type = T;
+	};
+
+	template<bool B, class T> using Provided_t = typename _Provided<B, T>::type;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

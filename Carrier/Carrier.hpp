@@ -8,6 +8,7 @@
 #endif
 
 #include <cstdlib>
+#include <cassert>
 #include "..\Type_Analysis\Type_Analysis.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -22,10 +23,41 @@ namespace sgm
 #endif
 
 
-	template<class T, bool REVERSE> class CArr_iterator;
+
+	template<class T, class Host_t, bool MUTABLE, bool REVERSE> class CArr_iterator;
 
 
-	template<class T, bool REVERSE>
+	template<class T>
+	class _CArr_iterator_Helper : public No_Making
+	{
+		template<class, class, bool, bool> friend class CArr_iterator;
+
+
+		template
+		<	class H1, class H2, bool M1, bool M2, bool R1, bool R2
+		,	class itr1_t = CArr_iterator<T, H1, M1, R1>
+		,	class itr2_t = CArr_iterator<T, H2, M2, R2>
+		>
+		static auto _Substitution
+		(	CArr_iterator<T, H1, M1, R1>& itr1, CArr_iterator<T, H2, M2, R2> itr2
+		)->	itr1_t&
+		{
+			static_assert
+			(	!itr1_t::EVENTUALLY_MUTABLE || itr2_t::EVENTUALLY_MUTABLE
+			,	"cannot bind immutable iterator to mutable one."
+			);
+			
+			itr1._arr = itr2._arr, itr1._idx = itr2._idx;
+		
+			return itr1;
+		}
+
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+
+	template<class T, class Host_t, bool MUTABLE, bool REVERSE>
 	class CArr_iterator
 	{	
 	private:
@@ -33,15 +65,28 @@ namespace sgm
 
 		using iter_t = CArr_iterator;
 
+		enum : bool{EVENTUALLY_MUTABLE = MUTABLE && _RTH<Host_t>::is_Const ? false : true};
+
+		template<class _T> friend class _CArr_iterator_Helper;
 
 
 	public:	
-		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}	
+		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<class _H, bool _M, bool _R>
+		auto operator=(CArr_iterator<T, _H, _M, _R> itr)-> iter_t&
+		{
+			return _CArr_iterator_Helper<T>::_Substitution(*this, itr);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 
 	#ifndef _MUTABLE_AND_IMMUTABLE_MEMBERS
 		#define _MUTABLE_AND_IMMUTABLE_MEMBERS(NAME, ARGS, RES, ...)	\
-			auto NAME (ARGS)->				RES{__VA_ARGS__}	\
-			auto NAME (ARGS) const-> const	RES{__VA_ARGS__}
+			auto NAME (ARGS)-> _Selective_t<EVENTUALLY_MUTABLE, RES, const RES>	{__VA_ARGS__} \
+			auto NAME (ARGS) const-> const RES								{__VA_ARGS__}
 	#else
 		#error _MUTABLE_AND_IMMUTABLE_MEMBERS was already defined somewhere else.
 	#endif
@@ -73,6 +118,7 @@ namespace sgm
 		_MUTABLE_AND_IMMUTABLE_MEMBERS(operator--, , iter_t&, return *this -= 1;)
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 		
+
 		bool operator!=(iter_t const itr) const{  return _idx != itr._idx;  }	
 		bool operator==(iter_t const itr) const{  return _idx == itr._idx;  }	
 		
@@ -83,6 +129,7 @@ namespace sgm
 		bool operator>=(iter_t const itr) const{  return *this > itr || *this == itr;  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
+
 		_MUTABLE_AND_IMMUTABLE_MEMBERS( operator*, , T&, return (*this)[0]; )
 		
 		_MUTABLE_AND_IMMUTABLE_MEMBERS
@@ -90,6 +137,7 @@ namespace sgm
 		,	return *( _arr + shifted(_idx, dir_t::F, interval) - (REVERSE ? 1 : 0) );
 		)
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 
 		auto operator+(size_t interval) const-> iter_t
 		{
@@ -115,8 +163,25 @@ namespace sgm
 			return *this;
 		)
 
+
 	#undef _MUTABLE_AND_IMMUTABLE_MEMBERS
-	
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto operator-(iter_t itr) const-> signed long long
+		{
+			bool const has_greater_idx = _idx > itr._idx ? true : false;
+			size_t const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
+
+			assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.");
+
+			return 
+			!REVERSE && has_greater_idx || REVERSE && !has_greater_idx 
+			?	(signed long long) du
+			:	-(signed long long) du;
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 
 	private:	
 		T* _arr;	
@@ -157,7 +222,6 @@ namespace sgm
 		{  
 			return _less<REVERSE>(itr1, itr2);
 		}
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 	};// end of template class CArr_iterator
 	//========//========//========//========//=======#//========//========//========//========//===
@@ -166,12 +230,8 @@ namespace sgm
 	template<class> class Carrier;
 
 	template<class T>
-	class _CArr_Helper
+	class _CArr_Helper : public No_Making
 	{
-	public:
-		_CArr_Helper() = delete;
-
-	private:
 		friend class Carrier<T>;
 		using value_t = _Original_t<T>;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -325,14 +385,15 @@ namespace sgm
 			this->~Carrier();
 
 			_capa = ca._capa, _size = ca._size, _arr = ca._arr,
-			ca._size = ca._capa = 0, ca._arr = nullptr;
+			ca._size = ca._capa = 0, 
+			ca._arr = nullptr;
 
 			return *this;
 		}
 
 		template<class CON>
 		auto operator=(CON&& con)-> Carrier&{  return _equal( _Forward<CON>(con) );  }
-
+		 
 
 		auto operator[](size_t idx) const-> value_t const&{  return _arr[idx];  }
 		auto operator[](size_t idx)-> value_t&{  return _arr[idx];  }
@@ -340,6 +401,9 @@ namespace sgm
 
 		auto operator>>(value_t const& val)-> Carrier&{  return emplace_back(val);  }
 		auto operator>>(value_t&& val)-> Carrier&		{  return emplace_back( _Move(val) );  }
+
+
+		template<class CON> operator CON() const{  return _Original_t<CON>(begin(), end());  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -353,10 +417,8 @@ namespace sgm
 		template<class...ARGS>
 		auto emplace_back(ARGS&&...args)-> Carrier&
 		{
-		#ifdef _DEBUG
-			if(_size >= _capa)
-				throw !(bool) L"can't emplace_back : out of index";
-		#endif
+			assert(_size < _capa && L"can't emplace_back : out of index");
+
 			new(_arr +_size) value_t( _Forward<ARGS>(args)... ), _size++;
 
 			return *this;
@@ -365,10 +427,8 @@ namespace sgm
 
 		auto pop_back()-> Carrier&
 		{
-		#ifdef _DEBUG
-			if(no_element())
-				throw !(bool) L"can't pop_back : no element to pop";
-		#endif
+			assert(!no_element() && L"can't pop_back : no element to pop");
+
 			_size--, (_arr + _size)->~value_t();
 
 			return *this;
@@ -383,30 +443,43 @@ namespace sgm
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		using iterator_t = CArr_iterator<value_t, false>;
 
-		auto begin()-> iterator_t				{  return iterator_t(_arr, 0);  }
-		auto begin() const-> iterator_t const	{  return iterator_t(_arr, 0);  }
-		auto cbegin()-> iterator_t const			{  return iterator_t(_arr, 0);  }
-		auto cbegin() const-> iterator_t const	{  return iterator_t(_arr, 0);  }
+		template<class H> using iterator_t = CArr_iterator<value_t, H, true, false>;
+		template<class H> using citerator_t = CArr_iterator<value_t, H, false, false>;
+		template<class H> using riterator_t = CArr_iterator<value_t, H, true, true>;
+		template<class H> using criterator_t = CArr_iterator<value_t, H, false, true>;
 
-		auto end()-> iterator_t				{  return iterator_t(_arr, _size);  }
-		auto end() const-> iterator_t const		{  return iterator_t(_arr, _size);  }
-		auto cend()-> iterator_t const			{  return iterator_t(_arr, _size);  }
-		auto cend() const-> iterator_t const		{  return iterator_t(_arr, _size);  }
+	#ifndef _DECL_CARR_ITERATOR
+		#define _DECL_CARR_ITERATOR(HEAD, FUNC, C, IDX)	\
+			auto HEAD##FUNC() C -> HEAD##iterator_t<Carrier C>		\
+			{	\
+				return HEAD##iterator_t<Carrier C>(_arr, IDX);		\
+			}
+	#else
+		#error _DECL_CARR_ITERATOR was already defined somewhere else.
+	#endif
 
+		_DECL_CARR_ITERATOR( , begin, , 0)
+		_DECL_CARR_ITERATOR( , begin, const, 0)
+		_DECL_CARR_ITERATOR( c, begin, , 0)
+		_DECL_CARR_ITERATOR( c, begin, const, 0)
 
-		using riterator_t = CArr_iterator<value_t, true>;
+		_DECL_CARR_ITERATOR( , end, , _size)
+		_DECL_CARR_ITERATOR( , end, const, _size)
+		_DECL_CARR_ITERATOR( c, end, , _size)
+		_DECL_CARR_ITERATOR( c, end, const, _size)
 
-		auto rbegin()-> riterator_t				{  return riterator_t(_arr, _size);  }
-		auto rbegin() const-> riterator_t const	{  return riterator_t(_arr, _size);  }
-		auto crbegin()-> riterator_t const		{  return riterator_t(_arr, _size);  }
-		auto crbegin() const-> riterator_t const	{  return riterator_t(_arr, _size);  }
+		_DECL_CARR_ITERATOR( r, begin, , _size)
+		_DECL_CARR_ITERATOR( r, begin, const, _size)
+		_DECL_CARR_ITERATOR( cr, begin, , _size)
+		_DECL_CARR_ITERATOR( cr, begin, const, _size)
 
-		auto rend()-> riterator_t				{  return riterator_t(_arr, 0);  }
-		auto rend() const-> riterator_t const	{  return riterator_t(_arr, 0);  }
-		auto crend()-> riterator_t const			{  return riterator_t(_arr, 0);  }
-		auto crend() const-> riterator_t const	{  return riterator_t(_arr, 0);  }
+		_DECL_CARR_ITERATOR( r, end, , 0)
+		_DECL_CARR_ITERATOR( r, end, const, 0)
+		_DECL_CARR_ITERATOR( cr, end, , 0)
+		_DECL_CARR_ITERATOR( cr, end, const, 0)
+
+	#undef _DECL_CARR_ITERATOR
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 	private:
@@ -453,14 +526,20 @@ namespace sgm
 #ifdef _ITERATOR_
 namespace std
 {
-	template<class T, bool FRONT>
-	struct iterator_traits< sgm::CArr_iterator<T, FRONT> >
+
+	template<class T, class Host_t, bool MUTABLE, bool REVERSE>
+	struct iterator_traits< sgm::CArr_iterator<T, Host_t, MUTABLE, REVERSE> >
 	{
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
-		using difference_type = void;
-		using pointer = T*;
-		using reference = T&;
+		using difference_type = signed long long;
+		
+		using pointer 
+		=	sgm::_Selective_t< MUTABLE && !sgm::_RTH<Host_t>::is_Const,	T*, T const* >;
+		
+		using reference 
+		=	sgm::_Selective_t< MUTABLE && !sgm::_RTH<Host_t>::is_Const, T&, T const& >;
 	};
+
 }
 #endif
