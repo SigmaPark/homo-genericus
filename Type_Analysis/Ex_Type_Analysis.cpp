@@ -1,6 +1,5 @@
 #include "Type_Analysis.hpp"
 #include <cassert>
-#include <type_traits>
 
 namespace
 {
@@ -18,10 +17,13 @@ namespace
 }
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-
+template<class...>
+class Flux{};
 
 int main()
 {
+	using namespace sgm;
+
 
 	return 0;
 }

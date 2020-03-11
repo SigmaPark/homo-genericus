@@ -9,7 +9,8 @@
 
 #include <cstdlib>
 #include <cassert>
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\Type_Analysis\Type_Analysis.hpp" 
+
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -60,15 +61,14 @@ namespace sgm
 	template<class T, class Host_t, bool MUTABLE, bool REVERSE>
 	class CArr_iterator
 	{	
-	private:
-		enum class dir_t : bool { F, B };
+		template<class _T> friend class _CArr_iterator_Helper;
+
+		enum class dir_t : bool {F, B};
 
 		using iter_t = CArr_iterator;
 
-		enum : bool{EVENTUALLY_MUTABLE = MUTABLE && _RTH<Host_t>::is_Const ? false : true};
-
-		template<class _T> friend class _CArr_iterator_Helper;
-
+		//enum : bool{EVENTUALLY_MUTABLE = MUTABLE && _RTH<Host_t>::is_Const ? false : true};
+		enum : bool{EVENTUALLY_MUTABLE = MUTABLE && is_immutable<Host_t>::value ? false : true};
 
 	public:	
 		CArr_iterator(T* arr, size_t idx) : _arr(arr), _idx(idx){}
@@ -85,8 +85,10 @@ namespace sgm
 
 	#ifndef _MUTABLE_AND_IMMUTABLE_MEMBERS
 		#define _MUTABLE_AND_IMMUTABLE_MEMBERS(NAME, ARGS, RES, ...)	\
-			auto NAME (ARGS)-> _Selective_t<EVENTUALLY_MUTABLE, RES, const RES>	{__VA_ARGS__} \
-			auto NAME (ARGS) const-> const RES								{__VA_ARGS__}
+			auto NAME (ARGS)	\
+			->	std::conditional_t<EVENTUALLY_MUTABLE, RES, const RES>	{__VA_ARGS__} \
+			\
+			auto NAME (ARGS) const-> const RES						{__VA_ARGS__}
 	#else
 		#error _MUTABLE_AND_IMMUTABLE_MEMBERS was already defined somewhere else.
 	#endif
@@ -233,30 +235,40 @@ namespace sgm
 	class _CArr_Helper : public No_Making
 	{
 		friend class Carrier<T>;
-		using value_t = _Original_t<T>;
+
+		using value_t = std::decay_t<T>;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		template<class ITR>
-		class _tied
+		template<class ITR1, class ITR2>
+		struct _tied
 		{
 		public:
-			_tied(size_t idx, ITR itr) : idx(idx), itr(itr){}
+			_tied(ITR1 itr1, ITR2 itr2) : _1st(itr1), _2nd(itr2){}
 
-			auto operator++(int)-> _tied
+			auto operator++()-> _tied&
 			{
-				idx++, itr++;
+				_1st++, _2nd++;
 
 				return *this;
 			}
-		
-			size_t idx;
-			ITR itr;
+
+			auto operator++(int)-> _tied&
+			{
+				_tied res(_1st, _2nd);
+
+				++(*this);
+
+				return res;
+			}
+
+			ITR1 _1st;
+			ITR2 _2nd;
 		};
 
-		template<class ITR>
-		static auto make_tied(size_t idx, ITR itr)-> _tied<ITR>
+		template<class ITR1, class ITR2>
+		static auto make_tied(ITR1 itr1, ITR2 itr2)-> _tied<ITR1, ITR2>
 		{  
-			return _tied<ITR>(idx, itr);  
+			return _tied<ITR1, ITR2>(itr1, itr2);  
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
@@ -300,11 +312,13 @@ namespace sgm
 		{
 			value_t* arr = _alloc(size);
 
-			using elem_t 
-			=	_Selective_t< _RTH<decltype(con)>::is_LRef, value_t const&, value_t&& >;
+			using elem_t
+			=	std::conditional_t
+				<	std::is_lvalue_reference<decltype(con)>::value, value_t const&, value_t&& 
+				>;
 
-			for(auto tied = make_tied(0, con.begin()); tied.idx < size; tied++)
-				new(arr + tied.idx) value_t( (elem_t)*tied.itr );
+			for( auto tied = make_tied<size_t>(0, con.begin()); tied._1st < size; ++tied )
+				new(arr + tied._1st) value_t( (elem_t)*tied._2nd );
 
 			return arr;
 		}
@@ -317,7 +331,7 @@ namespace sgm
 	class Carrier
 	{
 	public:
-		using value_t = _Original_t<T>;
+		using value_t = std::decay_t<T>;
 		using method_t = _CArr_Helper<T>;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
@@ -355,14 +369,14 @@ namespace sgm
 	#ifdef _INITIALIZER_LIST_
 		template<class Q>
 		Carrier(std::initializer_list<Q>&& con)
-		:	_capa(con.size()), _size(_capa), _arr(  method_t::_copy( _capa, _Move(con) )  )
+		:	_capa(con.size()), _size(_capa), _arr(  method_t::_copy( _capa, std::move(con) )  )
 		{}
 	#endif
 
 		template<class CON>
 		Carrier(CON&& con)
 		:	_capa(con.size()), _size(_capa)
-		,	_arr(  method_t::_copy( _capa, _Forward<CON>(con) )  )
+		,	_arr(  method_t::_copy( _capa, std::forward<CON>(con) )  )
 		{}
 
 
@@ -392,7 +406,7 @@ namespace sgm
 		}
 
 		template<class CON>
-		auto operator=(CON&& con)-> Carrier&{  return _equal( _Forward<CON>(con) );  }
+		auto operator=(CON&& con)-> Carrier&{  return _equal( std::forward<CON>(con) );  }
 		 
 
 		auto operator[](size_t idx) const-> value_t const&{  return _arr[idx];  }
@@ -400,10 +414,10 @@ namespace sgm
 
 
 		auto operator>>(value_t const& val)-> Carrier&{  return emplace_back(val);  }
-		auto operator>>(value_t&& val)-> Carrier&		{  return emplace_back( _Move(val) );  }
+		auto operator>>(value_t&& val)-> Carrier&		{  return emplace_back( std::move(val) );  }
 
 
-		template<class CON> operator CON() const{  return _Original_t<CON>(begin(), end());  }
+		template<class CON> operator CON() const{  return std::decay_t<CON>(begin(), end());  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -419,7 +433,7 @@ namespace sgm
 		{
 			assert(_size < _capa && L"can't emplace_back : out of index");
 
-			new(_arr +_size) value_t( _Forward<ARGS>(args)... ), _size++;
+			new(_arr +_size) value_t( std::forward<ARGS>(args)... ), _size++;
 
 			return *this;
 		}
@@ -500,15 +514,18 @@ namespace sgm
 			}
 			{
 				using elem_t
-				=	_Selective_t< _RTH<decltype(con)>::is_LRef, value_t const&, value_t&& >;
+				=	std::conditional_t
+					<	std::is_lvalue_reference<decltype(con)>::value
+					,	value_t const&, value_t&& 
+					>;
 
-				auto tied = method_t::make_tied(0, con.begin());
+				auto tied = method_t::template make_tied<size_t>(0, con.begin());
 
-				for(; tied.idx < _size && tied.itr != con.end(); tied++)
-					_arr[tied.idx] = elem_t(*tied.itr);
+				for(; tied._1st < _size && tied._2nd != con.end(); ++tied)
+					_arr[tied._1st] = elem_t(*tied._2nd);
 
-				for(; tied.idx < _capa && tied.itr != con.end(); tied++)
-					emplace_back( elem_t(*tied.itr) );
+				for(; tied._1st < _capa && tied._2nd != con.end(); ++tied)
+					emplace_back( elem_t(*tied._2nd) );
 			}
 			return *this;
 		}
@@ -535,10 +552,10 @@ namespace std
 		using difference_type = signed long long;
 		
 		using pointer 
-		=	sgm::_Selective_t< MUTABLE && !sgm::_RTH<Host_t>::is_Const,	T*, T const* >;
+		=	std::conditional_t< MUTABLE && !sgm::is_immutable<Host_t>::value, T*, T const* >;
 		
 		using reference 
-		=	sgm::_Selective_t< MUTABLE && !sgm::_RTH<Host_t>::is_Const, T&, T const& >;
+		=	std::conditional_t< MUTABLE && !sgm::is_immutable<Host_t>::value, T&, T const& >;
 	};
 
 }

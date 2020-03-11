@@ -29,13 +29,21 @@ public:
 		auto domain = sgm::indices(5);
 		
 		auto itr = domain.cbegin();
-
+		 
 		for(size_t n = 0; n < domain.size(); n++)
 			assert(*itr++ == n);
 	}
 
+
+	template<>
+	static void Case<3>()
+	{
+		//auto x = sgm::HT11::PAR + sgm::HT11::PW;
+	}
+
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+
 
 int main()
 {
@@ -44,3 +52,33 @@ int main()
 
 	return 0;
 }
+
+
+#if 0
+
+
+template
+<	class FLAGS, ....
+
+	class y_t 
+	=	std::conditional_t
+		<	Has_Type<PW>::in<FLAGS>::value
+		,	
+		,	
+		>
+>
+static auto Morph()
+{
+	//static_assert();
+}
+
+...
+
+
+using namespace sgm;
+
+Morph< Flags<PW, PAR> >();
+
+
+
+#endif

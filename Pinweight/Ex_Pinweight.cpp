@@ -76,6 +76,22 @@ public:
 		assert( !pw1.share_with(pw2) );
 	}
 
+
+	static void Test6()
+	{
+		using namespace sgm;
+
+		Pinweight<int> pw;
+
+		Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
+
+		std::is_same< std::decay_t<decltype(ppw.value())>, int >::value;
+
+		pw = ppw;
+
+		assert(pw == 24);
+	}
+
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -87,6 +103,7 @@ int main()
 	UnitTest::Test3();
 	UnitTest::Test4();
 	UnitTest::Test5();
+	UnitTest::Test6();
 	
 	return 0;
 }

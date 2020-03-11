@@ -10,6 +10,8 @@
 #endif
 
 #include "..\Carrier\Carrier.hpp"
+#include "..\Pinweight\Pinweight.hpp"
+#include "..\Flags\Flags.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -17,22 +19,9 @@ namespace sgm
 {
 
 
-#ifndef _ITERATOR_
-	#ifndef _ITERATING_METHOD
-		#define _ITERATING_METHOD(method)	\
-			template<class CON>	\
-			static auto method(CON&& con) SGM_DECLTYPE_AUTO(con.method())
-	#else
-		#error _ITERATING_METHOD was already defined somewhere else.
-	#endif
-
-	_ITERATING_METHOD(cbegin)
-	_ITERATING_METHOD(cend)
-	_ITERATING_METHOD(begin)
-	_ITERATING_METHOD(end)
-
-	#undef _ITERATING_METHOD
-#endif
+	class PWT : public Flag_t{};
+	class PAR : public Flag_t{};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	template<class T = size_t>
@@ -48,11 +37,13 @@ namespace sgm
 
 
 	template
-	<	class CON, class FUNC
+	<	class FLAGS = Flags<>
+	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
 	,	class y_t 
-		=	_Result_of_t
-			<	FUNC
-			,	_Original_t< decltype(*Declval<CON>().begin()) >
+		=	Pinweight
+			<	std::result_of_t
+				<	FUNC( std::decay_t< decltype(*Declval<CON>().begin()) > )
+				>
 			>
 	>
 	static auto Morph(CON&& con, FUNC&& func)-> Carrier<y_t>
@@ -68,7 +59,7 @@ namespace sgm
 
 	template
 	<	class CON, class FUNC
-	,	class x_t = _Original_t< decltype(*Declval<CON>().begin()) >
+	,	class x_t = Pinweight<  std::decay_t< decltype(*Declval<CON>().begin()) >  >
 	>
 	static auto Filter(CON&& con, FUNC&& func)-> Carrier<x_t>
 	{
@@ -85,7 +76,7 @@ namespace sgm
 	template<class CON, class FUNC, class res_t>
 	static auto Fold(CON&& con, FUNC&& func, res_t&& init)-> res_t
 	{
-		res_t res = init;
+		res_t res = std::forward<res_t>(init);
 
 		for(auto const& x : con)
 			res = func(res, x);
@@ -94,7 +85,7 @@ namespace sgm
 	}
 
 	template<class CON, class FUNC>
-	static auto Fold(CON&& con, FUNC&& func)-> _Original_t< decltype(*Declval<CON>().begin()) >
+	static auto Fold(CON&& con, FUNC&& func)-> std::decay_t< decltype(*Declval<CON>().begin()) >
 	{
 		assert(con.begin() != con.end() && L"the container has nothing to fold.");
 
