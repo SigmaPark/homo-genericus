@@ -11,20 +11,26 @@ namespace sgm
 {
 	
 	template<class T> class is_Pinweight;
-	template<class T, bool = is_Pinweight<T>::value> class Pinweight;
+
+	template
+	<	class T, class NoRef = std::remove_reference_t<T>
+	,	class = std::conditional_t< is_Pinweight<NoRef>::value, std::true_type, std::false_type >
+	> 
+	class Pinweight;
 
 
 	template<class T>
 	class Remove_Ref_and_Pinweight : public No_Making
 	{
 		template<class Q> struct _Raw{  using type = Q;  };
+
 		template<class Q> struct _Raw<Q&>{  using type = typename _Raw<Q>::type;  };
 		template<class Q> struct _Raw<Q&&>{  using type = typename _Raw<Q>::type;  };
 		template<class Q> struct _Raw<Q const>{  using type = typename _Raw<Q>::type const;  };
 		template<class Q> struct _Raw<Q const&>{  using type = typename _Raw<Q>::type const;  };
 		
-		template<class Q, bool B> 
-		struct _Raw< Pinweight<Q, B> >{  using type = typename _Raw<Q>::type;  };
+		template<class Q, class N, class C> 
+		struct _Raw< Pinweight<Q, N, C> >{  using type = typename _Raw<N>::type;  };
 	
 	public: using type = typename _Raw<T>::type;
 	};
@@ -43,11 +49,11 @@ namespace sgm
 
 
 
-	template<class T>
-	class Pinweight<T, false>
+	template<class T, class NoRef>
+	class Pinweight<T, NoRef, std::false_type>
 	{
 	public:
-		using value_t = NoRef_NoPW_t<T>;
+		using value_t = NoRef;
 
 
 		Pinweight() : pval(new value_t()), pcount( new size_t(1) ){}
@@ -158,13 +164,10 @@ namespace sgm
 	};
 
 
-
-	template<class PIN_t>
-	class Pinweight<PIN_t, true> : public std::decay_t<PIN_t>
+	template<class PIN_t, class NoRef>
+	class Pinweight<PIN_t, NoRef, std::true_type> : public NoRef
 	{
-	public:
-		template<class Q>
-		Pinweight(Q&& q) : std::decay_t<PIN_t>( std::forward<Q>(q) ){}
+	public: template<class Q> Pinweight(Q&& q) : NoRef( std::forward<Q>(q) ){}
 	};
 
 

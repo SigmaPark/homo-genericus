@@ -347,6 +347,16 @@ namespace sgm
 		,	_arr(  method_t::_fill( size, method_t::_alloc(size), args... )  )
 		{}
 
+	#ifdef _ITERATOR_
+		template<class Q, class H, bool M, bool R>
+		Carrier(CArr_iterator<Q, H, M, R> bi, CArr_iterator<Q, H, M, R> ei)
+		:	Carrier( size_t(bi - ei) )
+		{
+			for(auto itr = bi; itr != ei; ++itr)
+				*this >> *itr;
+		}
+	#endif
+
 		Carrier(Carrier const& ca)
 		:	_capa(ca._capa), _size(ca._size)
 		,	_arr
@@ -358,8 +368,6 @@ namespace sgm
 				:	nullptr
 			)
 		{}
-
-		Carrier(Carrier& ca) : Carrier( static_cast<Carrier const&>(ca) ){}
 
 		Carrier(Carrier&& ca) : _capa(ca._capa), _size(ca._size), _arr(ca._arr)
 		{
@@ -373,7 +381,10 @@ namespace sgm
 		{}
 	#endif
 
-		template<class CON>
+		template
+		<	class CON
+		,	class = std::enable_if_t<  !std::is_same< std::decay_t<CON>, Carrier >::value  > 
+		>
 		Carrier(CON&& con)
 		:	_capa(con.size()), _size(_capa)
 		,	_arr(  method_t::_copy( _capa, std::forward<CON>(con) )  )
@@ -392,7 +403,6 @@ namespace sgm
 
 
 		auto operator=(Carrier const& ca)-> Carrier&{  return _equal(ca);  }
-		auto operator=(Carrier& ca)-> Carrier&{  return _equal(ca);  }
 
 		auto operator=(Carrier&& ca)-> Carrier&
 		{
@@ -405,7 +415,10 @@ namespace sgm
 			return *this;
 		}
 
-		template<class CON>
+		template
+		<	class CON
+		,	class = std::enable_if_t<  !std::is_same< std::decay_t<CON>, Carrier >::value  >  
+		>
 		auto operator=(CON&& con)-> Carrier&{  return _equal( std::forward<CON>(con) );  }
 		 
 

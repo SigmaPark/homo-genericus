@@ -12,6 +12,7 @@
 #include "..\Carrier\Carrier.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Flags\Flags.hpp"
+//#include <algorithm>
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -19,7 +20,15 @@ namespace sgm
 {
 
 
-	class PWT : public Flag_t{};
+	class PWT : public Flag_t
+	{
+	public:
+		template<class FLAGSET, class T>
+		using if_flag_is_in_t
+		=	std::conditional_t< FLAGSET:: template has<PWT>::value, Pinweight<T>, T >;
+	};
+
+
 	class PAR : public Flag_t{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
@@ -40,8 +49,9 @@ namespace sgm
 	<	class FLAGS = Flags<>
 	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
 	,	class y_t 
-		=	Pinweight
-			<	std::result_of_t
+		=	PWT::if_flag_is_in_t
+			<	FLAGS
+			,	std::result_of_t
 				<	FUNC( std::decay_t< decltype(*Declval<CON>().begin()) > )
 				>
 			>
@@ -58,8 +68,13 @@ namespace sgm
 
 
 	template
-	<	class CON, class FUNC
-	,	class x_t = Pinweight<  std::decay_t< decltype(*Declval<CON>().begin()) >  >
+	<	class FLAGS = Flags<>
+	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
+	,	class x_t 
+		=	PWT::if_flag_is_in_t
+			<	FLAGS
+			,	std::decay_t< decltype(*Declval<CON>().begin()) >
+			>
 	>
 	static auto Filter(CON&& con, FUNC&& func)-> Carrier<x_t>
 	{

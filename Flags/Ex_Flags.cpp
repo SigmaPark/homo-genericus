@@ -9,7 +9,7 @@ int main()
 {
 	using namespace sgm;
 
-	//enum : bool{ V = is_Flag<FFF>::value  };
+	static_assert(Flags<FFF, Flag_t>::has<FFF>::value, "");
 
 	return 0;
 }

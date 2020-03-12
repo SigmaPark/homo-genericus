@@ -136,6 +136,14 @@ public:
 
 	}
 
+	
+	static void Method7()
+	{
+		sgm::Carrier<double> v{1,3,5,7};
+
+		sgm::Carrier<double> crr(v.begin(), v.begin() + 2);
+	}
+
 
 };
 

@@ -12,9 +12,11 @@ public:
 	template<>
 	static void Case<1>()
 	{
+		using namespace sgm;
+
 		std::vector<int> v1{2, 4, 8};
 
-		std::vector<int> const a1 = sgm::Morph(v1, [](int i)-> int{  return 2*i;  });
+		auto const a1 = Morph< Flags<PWT> >(v1, [](int i)-> int{  return 2*i;  });
 
 		auto itr = v1.cbegin();
 		
@@ -53,32 +55,3 @@ int main()
 	return 0;
 }
 
-
-#if 0
-
-
-template
-<	class FLAGS, ....
-
-	class y_t 
-	=	std::conditional_t
-		<	Has_Type<PW>::in<FLAGS>::value
-		,	
-		,	
-		>
->
-static auto Morph()
-{
-	//static_assert();
-}
-
-...
-
-
-using namespace sgm;
-
-Morph< Flags<PW, PAR> >();
-
-
-
-#endif

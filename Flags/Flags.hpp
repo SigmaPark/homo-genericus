@@ -14,6 +14,7 @@
 namespace sgm
 {
 	
+
 	class Flag_t : public No_Making{};
 
 
@@ -27,26 +28,20 @@ namespace sgm
 	template<class...FLAGS> 
 	class _FlagSet
 	{
-		template<class...> class _TC;
-
 		static_assert
-		(	Check_All<is_Flag>::for_all< _TC<FLAGS...> >::value
+		(	Check_All<is_Flag>::for_all<FLAGS...>::value
 		,	"expected type is sgm::Flag_t or its derived type."
 		);
 
 	public:
-		
+		template<class F>
+		class has : public No_Making
+		{
+		public: enum : bool{value = Has_Type<F>:: template among<FLAGS...>::value};
+		};
 	};
 
 	template<class...FLAGS> using Flags = _FlagSet<FLAGS...>;
-
-
-
-
-
-
-
-
 
 
 }

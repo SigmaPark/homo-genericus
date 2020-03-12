@@ -61,6 +61,17 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	template<class T1, class T2>
+	class are_mutually_convertible : public No_Making
+	{
+	public:
+		enum : bool
+		{	value = std::is_convertible<T1, T2>::value && std::is_convertible<T2, T1>::value
+		};
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
 	//	same to std::declval in <utility>
 	template<class T> static auto Declval()
 	->	std::decay_t<T>{  return *(std::decay_t<T>*)nullptr;  }
@@ -71,19 +82,15 @@ namespace sgm
 	class Has_Type : public No_Making
 	{
 	public:
-		template<class> class in;
+		template<class...> class among;
 
-		template< template<class...> class TC >
-		class in<TC<>>{  public: enum : bool{value = false};  };
-
-		template< template<class...> class TC, class Q, class...TYPES >
-		class in< TC<Q, TYPES...> >
+		template<class Q, class...TYPES>
+		class among<Q, TYPES...>
 		{
-		public:
-			enum : bool
-			{	value = std::is_same<T, Q>::value ? true : in< TC<TYPES...> >::value
-			};
+		public: enum : bool{value = std::is_same<T, Q>::value ? true : among<TYPES...>::value};
 		};
+
+		template<> class among<> {  public: enum : bool{value = false}; };
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -92,35 +99,26 @@ namespace sgm
 	class Check_All : public No_Making
 	{
 	public:
-		template<class> class for_all;
+		template<class...> class for_all;
 
-		template< template<class...> class TC >
-		class for_all<TC<>>{  public: enum : bool{value = true}; };
-
-		template< template<class...> class TC, class Q, class...TYPES >
-		class for_all< TC<Q, TYPES...> >
+		template<class Q, class...TYPES>
+		class for_all<Q, TYPES...>
 		{
-		public:
-			enum : bool
-			{	value = FUNCTOR<Q>::value ? for_all< TC<TYPES...> >::value : false
-			};
+		public: enum : bool{value = FUNCTOR<Q>::value ? for_all<TYPES...>::value : false};
 		};
+
+		template<> class for_all<>{  public: enum : bool{value = true};  };
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		template<class> class for_any;
+		template<class...> class for_any;
 
-		template< template<class...> class TC >
-		class for_any<TC<>>{  public: enum : bool{value = false}; };
-
-		template< template<class...> class TC, class Q, class...TYPES >
-		class for_any< TC<Q, TYPES...> >
+		template<class Q, class...TYPES>
+		class for_any<Q, TYPES...>
 		{
-		public:
-			enum : bool
-			{	value = FUNCTOR<Q>::value ? true : for_any< TC<TYPES...> >::value
-			};
+		public: enum : bool{value = FUNCTOR<Q>::value ? true : for_any<TYPES...>::value};
 		};
-		
+
+		template<> class for_any<>{  public: enum : bool{value = false}; };
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
