@@ -139,9 +139,40 @@ public:
 	
 	static void Method7()
 	{
-		sgm::Carrier<double> v{1,3,5,7};
+		std::vector<double> v{1,3,5,7};
 
 		sgm::Carrier<double> crr(v.begin(), v.begin() + 2);
+	}
+
+
+	static void Method8()
+	{
+		{
+			sgm::Carrier<int> crr{3, 5, 7, 9, 11};
+
+			crr.pop_back(2);
+		
+			size_t n = 0;
+		
+			for(auto itr = crr.begin(); itr != crr.end(); ++itr)
+				++n,
+				assert( *itr == int(2*n + 1) );
+
+			assert(n == 3);
+		}
+		{
+			sgm::Carrier<double> crr{2, 4, 6, 8, 10, 12};
+
+			crr.pop_back_from(crr.begin() + 3);
+
+			size_t n = 0;
+
+			for(auto itr = crr.begin(); itr != crr.end(); ++itr)
+				++n,
+				assert( *itr == int(2*n) );
+
+			assert(n == 3);
+		}
 	}
 
 
@@ -153,14 +184,14 @@ public:
 
 int main()
 {
-
-
 	UnitTest::Method1();
 	UnitTest::Method2();
 	UnitTest::Method3();
 	UnitTest::Method4();
 	UnitTest::Method5();
 	UnitTest::Method6();
+	UnitTest::Method7();
+	UnitTest::Method8();
 
 	return 0;
 }

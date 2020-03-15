@@ -12,7 +12,7 @@
 #include "..\Carrier\Carrier.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Flags\Flags.hpp"
-//#include <algorithm>
+#include <algorithm>
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -123,41 +123,38 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class ITR, class FUNC, class res_t>
-	static auto _Accumulate(ITR bi, ITR ei, FUNC&& func, res_t&& init)-> res_t
+	class _Fold_Helper : No_Making
 	{
-		res_t res = std::forward<res_t>(init);
-
-		for(ITR itr = bi; itr != ei; ++itr)
-			res = func(res, *itr)
-
-		return res;
-	}
-
-	template<class ITR1, class ITR2, class FUNC1, class FUNC2, class res_t>
-	static auto _Inner_Product
-	(	ITR1 bi1, ITR1 ei1, ITR2 bi2, FUNC1&& func1, FUNC2&& func2, res_t&& init
-	)->	res_t
-	{
-		res_t res = std::forward<res_t>(init);
-
+	public:
+		template<class ITR, class FUNC, class res_t>
+		static auto Accumulate(ITR itr, ITR const ei, FUNC&& func, res_t res)
+		->	res_t
 		{
-			ITR1 itr1 = bi1;
-			ITR2 itr2 = bi2;
-
-			while(itr1 != ei1)
-				res = func2( res, func1(*itr1++, *itr2++) );
+			while(itr != ei)
+				res = func(res, *itr++);
+	
+			return res;
 		}
+	
 
-		return res;
-	}
+		template<class ITR1, class ITR2, class FUNC1, class FUNC2, class res_t>
+		static auto Inner_Product
+		(	ITR1 itr1, ITR1 const ei1, ITR2 itr2, FUNC1&& func1, FUNC2&& func2, res_t res
+		)->	res_t
+		{
+			while(itr1 != ei1)
+				res = func1( res, func2(*itr1++, *itr2++) );
+			
+			return res;
+		}
+	};
 
 
 	template<class CON, class FUNC, class res_t>
 	static auto Fold(CON&& con, FUNC&& func, res_t&& init)-> res_t
 	{
 		return 
-		_Accumulate
+		_Fold_Helper::Accumulate
 		(	con.begin(), con.end(), std::forward<FUNC>(func), std::forward<res_t>(init)
 		);
 	}
@@ -167,7 +164,10 @@ namespace sgm
 	{
 		assert(con.begin() != con.end() && L"the container has nothing to fold.");
 
-		return _Accumulate( ++con.begin(), con.end(), std::forward<FUNC>(func), *con.begin() );
+		return 
+		_Fold_Helper::Accumulate
+		(	++con.begin(), con.end(), std::forward<FUNC>(func), *con.begin() 
+		);
 	}
 
 	template<class CON1, class CON2, class FUNC1, class FUNC2, class res_t>
@@ -178,7 +178,7 @@ namespace sgm
 		assert(con1.size() == con2.size() && L"dismatched sizes.");
 
 		return
-		_Inner_Product
+		_Fold_Helper::Inner_Product
 		(	con1.begin(), con1.end(), con2.begin()
 		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2), std::forward<res_t>(init)
 		);
@@ -188,17 +188,17 @@ namespace sgm
 	static auto Fold
 	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2
 	)->	std::result_of_t
-		<	FUNC1( decltype(*Declval<CON1>().begin()), decltype(*Declval<CON2>().begin()) )
+		<	FUNC2( decltype(*Declval<CON1>().begin()), decltype(*Declval<CON2>().begin()) )
 		>
 	{
 		assert(con1.begin() != con1.end() && L"the container has nothing to fold.");
 		assert(con1.size() == con2.size() && L"dismatched sizes.");
 
 		return
-		_Inner_Product
+		_Fold_Helper::Inner_Product
 		(	++con1.begin(), con1.end(), ++con2.begin()
 		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2)
-		,	func1(*con1.begin(), *con2.end())
+		,	func2(*con1.begin(), *con2.begin())
 		);
 	}
 
@@ -207,7 +207,7 @@ namespace sgm
 	static auto rFold(CON&& con, FUNC&& func, res_t&& init)-> res_t
 	{
 		return 
-		_Accumulate
+		_Fold_Helper::Accumulate
 		(	con.rbegin(), con.rend(), std::forward<FUNC>(func), std::forward<res_t>(init)
 		);
 	}
@@ -218,7 +218,10 @@ namespace sgm
 	{
 		assert(con.rbegin() != con.rend() && L"the container has nothing to fold.");
 
-		return _Accumulate( ++con.rbegin(), con.rend(), std::forward<FUNC>(func), *con.rbegin() );
+		return 
+		_Fold_Helper::Accumulate
+		(	++con.rbegin(), con.rend(), std::forward<FUNC>(func), *con.rbegin() 
+		);
 	}
 
 	template<class CON1, class CON2, class FUNC1, class FUNC2, class res_t>
@@ -229,7 +232,7 @@ namespace sgm
 		assert(con1.size() == con2.size() && L"dismatched sizes.");
 
 		return
-		_Inner_Product
+		_Fold_Helper::Inner_Product
 		(	con1.rbegin(), con1.rend(), con2.rbegin()
 		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2), std::forward<res_t>(init)
 		);
@@ -239,20 +242,50 @@ namespace sgm
 	static auto rFold
 	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2
 	)->	std::result_of_t
-		<	FUNC1( decltype(*Declval<CON1>().rbegin()), decltype(*Declval<CON2>().rbegin()) )
+		<	FUNC2( decltype(*Declval<CON1>().rbegin()), decltype(*Declval<CON2>().rbegin()) )
 		>
 	{
 		assert(con1.rbegin() != con1.rend() && L"the container has nothing to fold.");
 		assert(con1.size() == con2.size() && L"dismatched sizes.");
 
 		return
-		_Inner_Product
+		_Fold_Helper::Inner_Product
 		(	++con1.rbegin(), con1.rend(), ++con2.rbegin()
 		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2)
-		,	func1(*con1.rbegin(), *con2.rend())
+		,	func2(*con1.rbegin(), *con2.rbegin())
 		);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+#ifdef _ALGORITHM_
+
+	template<class T, class FUNC>
+	class _Ranker_Helper
+	{
+	public:
+
+	private:
+		
+	};
+	
+
+	template
+	<	class FLAGS = Flags<>
+	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
+	,	class x_t 
+		=	PWT::if_flag_is_in_t
+			<	FLAGS
+			,	std::decay_t< decltype(*Declval<CON>().begin()) >
+			>
+	>
+	static auto Ranker(CON&& con, size_t const n, FUNC&& comp)-> Carrier<x_t>
+	{
+		
+	}
+#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
 
 }
 

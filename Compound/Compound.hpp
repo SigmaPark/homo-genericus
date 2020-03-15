@@ -16,6 +16,9 @@ namespace sgm
 
 	template<> class Compound<>{};
 
+#pragma warning(push)
+	//	default constructor or operator= might not be defined, but it doesn't matter.
+	#pragma warning(disable : 4510 4512)
 	template<class T, class...TYPES>
 	class Compound<T, TYPES...> : public Compound<TYPES...>
 	{
@@ -31,6 +34,7 @@ namespace sgm
 
 		T _first;
 	};
+#pragma warning(pop)
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	

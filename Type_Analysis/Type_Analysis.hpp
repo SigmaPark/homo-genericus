@@ -43,6 +43,19 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+#ifdef _ITERATOR_
+	template<class> using _Void_t = void;
+
+	template <class T, class = void> class is_iterator : public std::false_type{};
+
+	template <class T>
+	class is_iterator<	 T, _Void_t< typename std::iterator_traits<T>::iterator_category >  > 
+	:	public std::true_type 
+	{};
+#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
 	template<class T>
 	class is_immutable : public No_Making
 	{
@@ -122,6 +135,90 @@ namespace sgm
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
+	
+	template< template<class __Query_t, class __CONST_IF_FALSE, class...> class PROXY >
+	class DirectProxy : No_Making
+	{
+	private:
+		template<class T>
+		class Remove_CR_and_Proxy : No_Making
+		{
+			template<class Q> 
+			struct _Raw
+			{
+				using type 
+				=	std::conditional_t
+					<	std::is_same< Q, std::decay_t<Q> >::value
+					,	Q
+					,	typename _Raw< std::decay_t<Q> >::type
+					>;  
+			};
+
+			template<class Q, class...ARGS> 
+			struct _Raw< PROXY<Q, ARGS...> >
+			{
+				using type = typename _Raw< std::decay_t<Q> >::type;  
+			};
+
+		
+		public: using type = typename _Raw<T>::type;
+		};		
+
+		
+		template<class T>
+		class is_Proxy : No_Making
+		{
+		public: 
+			enum : bool
+			{	value 
+				=	!std::is_same
+					<	std::decay_t<T>, typename Remove_CR_and_Proxy<T>::type 
+					>::value
+			};
+		};
+
+
+	protected:
+		template
+		<	class T
+		,	class CONST_IF_FALSE // but not necessarily std::true_type when mutable
+			=	std::conditional_t< is_immutable<T>::value, std::false_type, std::true_type >
+		,	class = std::conditional_t< is_Proxy<T>::value, std::true_type, std::false_type >
+		,	class RawT = std::decay_t<T>
+		>
+		class Proxy;
+
+
+		template<class proxy_t, class CONST_IF_FALSE, class RawT>
+		class Proxy<proxy_t, CONST_IF_FALSE,	std::true_type, RawT> : public RawT
+		{
+		public: template<class Q> Proxy(Q&& q) : RawT( std::forward<Q>(q) ){}
+		};
+
+
+		template<class T, class CONST_IF_FALSE, class RawT>
+		class Proxy<T, CONST_IF_FALSE, std::false_type, RawT>
+		{
+		public:
+			using Self_t = Proxy;
+			using type = RawT;
+
+			enum : bool{MAYBE_MUTABLE = CONST_IF_FALSE::value};
+
+			Proxy(type const&){}
+			Proxy(type&&){}
+		};
+		
+
+	};
+
+
+
+
+
+
+
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 }
 

@@ -1,6 +1,6 @@
 #include <iterator>
 #include <vector>
-#include <cassert>
+#include <functional>
 #include "High_Templar11.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -9,8 +9,7 @@ class Tutorial : public sgm::No_Making
 public:
 	template<unsigned> static void Case();
 
-	template<>
-	static void Case<1>()
+	template<> static void Case<1>()
 	{
 		using namespace sgm;
 
@@ -25,8 +24,7 @@ public:
 	}
 
 
-	template<>
-	static void Case<2>()
+	template<> static void Case<2>()
 	{
 		auto domain = sgm::indices(5);
 		
@@ -37,10 +35,29 @@ public:
 	}
 
 
-	template<>
-	static void Case<3>()
+	template<> static void Case<3>()
 	{
-		//auto x = sgm::HT11::PAR + sgm::HT11::PW;
+		using namespace sgm;
+
+		assert(  Fold( indices<double>(10, 1), std::plus<double>() ) == 55.0  );
+		assert(  Fold( indices<double>(10, 1), std::plus<double>(), 5.0 ) == 60.0  );
+
+		assert
+		(	Fold
+			(	indices<float>(10, 1), indices<float>(10, 1)
+			,	std::plus<float>(), std::multiplies<float>()
+			) 
+		==	385.f
+		);
+
+		assert
+		(	Fold
+			(	indices<float>(10, 1), indices<float>(10, 1)
+			,	std::plus<float>(), std::multiplies<float>()
+			,	15.f
+			) 
+		==	400.f
+		);
 	}
 
 };
@@ -51,6 +68,7 @@ int main()
 {
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
+	Tutorial::Case<3>();
 
 	return 0;
 }

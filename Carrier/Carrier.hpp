@@ -347,15 +347,20 @@ namespace sgm
 		,	_arr(  method_t::_fill( size, method_t::_alloc(size), args... )  )
 		{}
 
+
+		template
+		<	class ITR
 	#ifdef _ITERATOR_
-		template<class Q, class H, bool M, bool R>
-		Carrier(CArr_iterator<Q, H, M, R> bi, CArr_iterator<Q, H, M, R> ei)
-		:	Carrier( size_t(bi - ei) )
+		,	class = std::enable_if_t< is_iterator<ITR>::value >
+	#else
+		,	class = std::enable_if_t< !std::is_integral<ITR>::value >
+	#endif
+		>
+		Carrier(ITR bi, ITR ei) : Carrier( static_cast<size_t>( std::distance(bi, ei) ) )
 		{
 			for(auto itr = bi; itr != ei; ++itr)
 				*this >> *itr;
 		}
-	#endif
 
 		Carrier(Carrier const& ca)
 		:	_capa(ca._capa), _size(ca._size)
@@ -452,13 +457,37 @@ namespace sgm
 		}
 
 
-		auto pop_back()-> Carrier&
+		auto pop_back(size_t n = 1)-> Carrier&
 		{
-			assert(!no_element() && L"can't pop_back : no element to pop");
+			assert(_size >= n && L"can't pop_back : not enough elements to pop");
 
-			_size--, (_arr + _size)->~value_t();
+			while(n-->0)
+				_size--, (_arr + _size)->~value_t();
 
 			return *this;
+		}
+
+
+		template<bool M>
+		auto pop_back_from(CArr_iterator<value_t, Carrier, M, false> ei)-> Carrier&
+		{
+			return 
+			pop_back
+			(	static_cast<size_t>
+				(	CArr_iterator<value_t, Carrier, M, false>(_arr, _size) - ei
+				)
+			);
+		}
+
+		template<bool M>
+		auto pop_back_from(CArr_iterator<value_t, Carrier, M, true> ei)-> Carrier&
+		{
+			return 
+			pop_back
+			(	static_cast<size_t>
+				(	CArr_iterator<value_t, Carrier, M, true>(_arr, 0) - ei
+				)
+			);
 		}
 
 

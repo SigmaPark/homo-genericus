@@ -48,7 +48,13 @@ namespace sgm
 
 
 
+	template<class PIN_t, class NoRef>
+	class Pinweight<PIN_t, NoRef, std::true_type> : public NoRef
+	{
+	public: template<class Q> Pinweight(Q&& q) : NoRef( std::forward<Q>(q) ){}
+	};
 
+	 
 	template<class T, class NoRef>
 	class Pinweight<T, NoRef, std::false_type>
 	{
@@ -161,13 +167,6 @@ namespace sgm
 				delete pcount, pcount = nullptr;
 		}
 
-	};
-
-
-	template<class PIN_t, class NoRef>
-	class Pinweight<PIN_t, NoRef, std::true_type> : public NoRef
-	{
-	public: template<class Q> Pinweight(Q&& q) : NoRef( std::forward<Q>(q) ){}
 	};
 
 

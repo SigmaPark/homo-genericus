@@ -3,122 +3,79 @@
 #ifndef _SGM_AVATAR_
 #define _SGM_AVATAR_
 
+#include <cassert>
+#include "..\Type_Analysis\Type_Analysis.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
 {
+	
+
+	//template<class> class is_Avatar;
+
+	//template
+	//<	class T, class NoRef
+	//,	class = std::conditional_t< is_Avatar<NoRef>::value, std::true_type, std::false_type >
+	//>
+	//class Avatar;
 
 
 	template<class T>
 	class Avatar
 	{
-		enum class State{ TEMPORARY, REFERENCING, DEAD };
+		enum class State{ YET, OWNING, GONE };
 
 
 	public:
-		bool is_temporary() const{  return _state == State::TEMPORARY;  }
-		bool is_released() const{  return _state == State::DEAD;  }
+		//using value_t = NoRef; 
+
+		bool is_yet() const	{  return _state == State::YET;  }
+		bool is_owning() const	{  return _state == State::OWNING;  }
+		bool has_gone() const	{  return _state == State::GONE;  }
 
 
-		Avatar() : _pval(nullptr), _state(State::TEMPORARY){}
-		Avatar(T& t) : _pval(&t), _state(State::REFERENCING){}
-		Avatar(T&& t) : _pval(  new T( static_cast<T&&>(t) )  ), _state(State::TEMPORARY){}
+		Avatar() : _pval(nullptr), _state(State::YET){}
+		Avatar(T& t) : _pval(&t), _state(State::OWNING){}
 
-		~Avatar()
-		{
-			if(is_temporary())
-				delete _pval, _pval = nullptr;
-
-			_state = State::DEAD;
-		}
-
-		Avatar(Avatar const& avt) 
-		:	_pval( avt.is_temporary() ? new T(*avt._pval) : avt._pval )
-		,	_state(avt.is_released() ? State::TEMPORARY : avt._state)
-		{
-			if(is_released()) 
-				throw !(bool) L"Avatar was released already";
-		}
-
-		Avatar(Avatar&& avt) 
-		:	_pval(avt._pval)
-		,	_state(avt.is_released() ? State::TEMPORARY : avt._state)
-		{
-			if(is_released())
-				throw !(bool) L"Avatar was released already";
-			else if(is_temporary())
-				avt._pval = nullptr;
-			
-		}
-
+		~Avatar(){  _pval = nullptr, _state = State::GONE;  }
 		
-		operator T const&() const{  return _value_impl(*this);  }
-		auto value()-> T&{  return _value_impl(*this);  }
-		auto value() const-> T const&{  return _value_impl(*this);  }
+		
+		auto operator()(T& t)-> Avatar&{  return *this = Avatar(t);  }
+		
 
-
-		auto operator=(T& t)-> Avatar const&
+		template
+		<	class Q
+		,	class 
+			=	std::enable_if_t
+				<	std::is_convertible<Q, T>::value 
+				&&	!std::is_same< std::decay_t<Q>, Avatar >::value
+				>
+		>
+		auto operator=(Q&& q)-> Avatar&	
 		{  
-			if (is_released())
-				throw !(bool) L"Avatar was released already";
-			else if(is_temporary())
-				delete _pval, _state = State::REFERENCING;
+			assert(is_owning() && L"Avatar has nothing");
 
-			_pval = &t;
+			*_pval = std::forward<Q>(q);
 
-			return *this;
+			return *this;  
 		}
 
-		auto operator=(T&& t) const-> Avatar const&
-		{
-			if (is_released())
-				throw !(bool) L"Avatar was released already";
-			else if(is_temporary())
-			{ 
-				if(_pval == nullptr)
-					_pval = new T( static_cast<T&&>(t) );
-				else
-					*_pval = static_cast<T&&>(t);
-
-				return *this;
-			}
-			else throw !(bool) L"having a reference already.";
-		}
-
-		auto operator=(Avatar const& avt)-> Avatar const&
-		{
-			if(is_released() || avt.is_released())
-				throw !(bool) L"Avatar was released already";
-
-			_pval = avt.is_temporary() ? new T(*avt._pval) : avt._pval,
-			_state = avt._state;
-
-			return *this;
-		}
-
-		auto operator=(Avatar&& avt)-> Avatar const&
-		{
-			if (is_released() || avt.is_released())
-				throw !(bool) L"Avatar was released already";
-			
-			_pval = avt._pval, _state = avt._state;
-
-			if(is_temporary())
-				avt._pval = nullptr;
-
-			return *this;
-		}
+		auto operator=(Avatar avt)-> Avatar&{  return *this = avt.value();  }
 
 
-		bool operator==(T const& t) const{  return *_pval == t;  }
-		bool operator==(T&& t) const{  return *_pval == static_cast<T&&>(t);  }
-		bool operator!=(T const& t) const{  return !(*this == t);  }
-		bool operator!=(T&& t) const{  return !( *this == static_cast<T&&>(t) );  }
+		operator T const&() const				{  return value();  }
+		auto value()-> T&				{  return _value_impl(*this);  }
+		auto value() const-> T const&	{  return _value_impl(*this);  }
+
+
+		bool operator==(T const& t) const	{  return *_pval == t;  }
+		bool operator==(T&& t) const		{  return *_pval == std::move(t);  }
+		bool operator!=(T const& t) const	{  return !(*this == t);  }
+		bool operator!=(T&& t) const		{  return !( *this == std::move(t) );  }
 
 		bool operator==(Avatar avt) const
 		{  
-			if(is_released() || avt.is_released()) 
-				throw !(bool) L"Avatar was released already";
+			assert(!has_gone() && !avt.has_gone() && L"Avatar was released already");
 
 			return *this == *avt._pval;  
 		}
@@ -127,24 +84,47 @@ namespace sgm
 
 
 	private:
-		T mutable* _pval;
-		State mutable _state;
+		T* _pval;
+		State _state;
 
 
 		template<class AVT>
 		static auto _value_impl(AVT& avt)-> decltype(avt.value())
 		{
-			if(avt.is_released())
-				throw !(bool) L"Avatar was released already";
-			else if(avt._pval == nullptr)
-				avt._pval = new T(), avt._state = State::TEMPORARY;	
-
+			assert(avt.is_owning() && L"Avatar has nothing");
+				
 			return *avt._pval;
 		}
 
-	};	// end of class Avatar<T>
+	}; // end of class Avatar<T>
 
 
-}	// end of namespace sgm
 
-#endif	// end of #ifndef _SGM_AVATAR_
+} // end of namespace sgm
+
+#endif // end of #ifndef _SGM_AVATAR_
+
+
+#if 0
+
+template<class T, ...ARGS> 
+class Avatar : public DirectProxy<Avatar>
+{
+//...
+	using Self_t = typename DirectProxy<Avatar>::template Proxy<T, ARGS...>;
+	using value_t = typename DirectProxy<Avatar>::template Raw<T, ARGS...>;
+};
+
+//...
+
+Avatar<  Avatar< Avatar<int> >  > nested1;
+
+static_assert( std::is_same< decltype(nested1), Avatar<int> >::value );
+
+Avatar< Avatar< Avatar<int>&& > const& > nested2;
+
+static_assert( std::is_same< decltype(nested2), Avatar<int> const
+>::value );
+
+
+#endif
