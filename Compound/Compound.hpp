@@ -30,14 +30,18 @@ namespace sgm
 		:	_first( static_cast<T>(_t) ), Compound<TYPES...>( static_cast<TYPES>(_types)... )
 		{}
 
-		enum{ N = 1 + sizeof...(TYPES) };
+		enum{ SIZE = 1 + sizeof...(TYPES) };
 
 		T _first;
 	};
 #pragma warning(pop)
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
 	
+
+
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	
+
 	template<size_t N, class CMP> class Compound_element;
 
 	template<class T, class...TYPES>

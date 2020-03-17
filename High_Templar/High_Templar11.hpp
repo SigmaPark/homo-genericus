@@ -12,7 +12,11 @@
 #include "..\Carrier\Carrier.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Flags\Flags.hpp"
-#include <algorithm>
+#include "..\Compound\Compound.hpp"
+
+#ifdef _ITERATOR_
+	#include <omp.h>
+#endif
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -20,16 +24,16 @@ namespace sgm
 {
 
 
-	class PWT : public Flag_t
+	class PWT : public Flag_t<PWT>
 	{
 	public:
-		template<class FLAGSET, class T>
-		using if_flag_is_in_t
-		=	std::conditional_t< FLAGSET:: template has<PWT>::value, Pinweight<T>, T >;
+		//template<class FLAGSET, class T>
+		//using if_flag_is_in_t
+		//=	std::conditional_t< FLAGSET:: template has<PWT>::value, Pinweight<T>, T >;
 	};
 
 
-	class PAR : public Flag_t{};
+	//class PAR : public Flag_t<PAR>{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -47,17 +51,16 @@ namespace sgm
 
 
 	template
-	<	class FLAGS = Flags<>
-	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
+	<	class CON, class FUNC, class FLAGS = Flag_t<>
 	,	class y_t 
-		=	PWT::if_flag_is_in_t
+		=	/*PWT::if_flag_is_in_t
 			<	FLAGS
-			,	std::result_of_t
-				<	FUNC( std::decay_t< decltype(*Declval<CON>().begin()) > )
+			,*/	std::result_of_t
+				<	FUNC( decltype(*Declval<CON>().begin()) )
 				>
-			>
+			/*>*/
 	>
-	static auto Morph(CON&& con, FUNC&& func)-> Carrier<y_t>
+	static auto Morph(CON&& con, FUNC&& func, FLAGS = Flag_t<>())-> Carrier<y_t>
 	{
 		Carrier<y_t> res(con.size());
 
@@ -68,49 +71,48 @@ namespace sgm
 	}
 
 
-	template
-	<	class FLAGS = Flags<>
-	,	class CON1 = std::nullptr_t, class CON2 = std::nullptr_t, class FUNC = std::nullptr_t
-	,	class y_t
-		=	PWT::if_flag_is_in_t
-			<	FLAGS
-			,	std::result_of_t
-				<	FUNC
-					(	std::decay_t< decltype(*Declval<CON1>().begin()) >
-					,	std::decay_t< decltype(*Declval<CON2>().begin()) >
-					)
-				>
-			>
-	>
-	static auto Morph(CON1&& con1, CON2&& con2, FUNC&& func)-> Carrier<y_t>
-	{
-		assert(con1.size() == con2.size() && L"dismatched size.");
+	//template
+	//<	class FLAGS = Flag_t<>
+	//,	class CON1 = std::nullptr_t, class CON2 = std::nullptr_t, class FUNC = std::nullptr_t
+	//,	class y_t
+	//	=	PWT::if_flag_is_in_t
+	//		<	FLAGS
+	//		,	std::result_of_t
+	//			<	FUNC
+	//				(	decltype(*Declval<CON1>().begin())
+	//				,	decltype(*Declval<CON2>().begin())
+	//				)
+	//			>
+	//		>
+	//>
+	//static auto Morph(CON1&& con1, CON2&& con2, FUNC&& func)-> Carrier<y_t>
+	//{
+	//	assert(con1.size() == con2.size() && L"dismatched size.");
 
-		Carrier<y_t> res(con1.size());
+	//	Carrier<y_t> res(con1.size());
 
-		{
-			auto itr1 = con1.begin();
-			auto itr2 = con2.begin();
+	//	{
+	//		auto itr1 = con1.begin();
+	//		auto itr2 = con2.begin();
 
-			while(itr1 != con1.begin())
-				res >> func(*itr1++, *itr2++);
-		}
+	//		while(itr1 != con1.begin())
+	//			res >> func(*itr1++, *itr2++);
+	//	}
 
-		return res;
-	}
+	//	return res;
+	//}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template
-	<	class FLAGS = Flags<>
-	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
+	<	class CON, class FUNC, class FLAGS = Flag_t<>
 	,	class x_t 
-		=	PWT::if_flag_is_in_t
+		=	/*PWT::if_flag_is_in_t
 			<	FLAGS
-			,	std::decay_t< decltype(*Declval<CON>().begin()) >
-			>
+			,*/	std::decay_t< decltype(*Declval<CON>().begin()) >
+			/*>*/
 	>
-	static auto Filter(CON&& con, FUNC&& func)-> Carrier<x_t>
+	static auto Filter(CON&& con, FUNC&& func, FLAGS = Flag_t<>())-> Carrier<x_t>
 	{
 		Carrier<x_t> res(con.size());
 
@@ -256,36 +258,6 @@ namespace sgm
 		);
 	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-#ifdef _ALGORITHM_
-
-	template<class T, class FUNC>
-	class _Ranker_Helper
-	{
-	public:
-
-	private:
-		
-	};
-	
-
-	template
-	<	class FLAGS = Flags<>
-	,	class CON = std::nullptr_t, class FUNC = std::nullptr_t
-	,	class x_t 
-		=	PWT::if_flag_is_in_t
-			<	FLAGS
-			,	std::decay_t< decltype(*Declval<CON>().begin()) >
-			>
-	>
-	static auto Ranker(CON&& con, size_t const n, FUNC&& comp)-> Carrier<x_t>
-	{
-		
-	}
-#endif
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
 
 }
 

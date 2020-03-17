@@ -29,7 +29,7 @@ namespace sgm
 
 
 	template<class T>
-	class _CArr_iterator_Helper : public No_Making
+	class _CArr_iterator_Helper : No_Making
 	{
 		template<class, class, bool, bool> friend class CArr_iterator;
 
@@ -232,7 +232,7 @@ namespace sgm
 	template<class> class Carrier;
 
 	template<class T>
-	class _CArr_Helper : public No_Making
+	class _CArr_Helper : No_Making
 	{
 		friend class Carrier<T>;
 
@@ -350,11 +350,13 @@ namespace sgm
 
 		template
 		<	class ITR
+		,	class 
+			=	std::enable_if_t
+				<	!std::is_integral<ITR>::value
 	#ifdef _ITERATOR_
-		,	class = std::enable_if_t< is_iterator<ITR>::value >
-	#else
-		,	class = std::enable_if_t< !std::is_integral<ITR>::value >
+				&&	is_iterator<ITR>::value 
 	#endif
+				>
 		>
 		Carrier(ITR bi, ITR ei) : Carrier( static_cast<size_t>( std::distance(bi, ei) ) )
 		{

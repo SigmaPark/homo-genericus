@@ -18,7 +18,7 @@ namespace sgm
 
 
 	template<class T>
-	class _Pointerless : public No_Making
+	class _Pointerless : No_Making
 	{
 		template<class Q> class rmv{  public: using type = Q;  };
 		template<class Q> class rmv<Q*>{  public: using type = typename rmv<Q>::type;  };
@@ -32,7 +32,7 @@ namespace sgm
 
 
 	template<bool B, class T> 
-	class _Provided : public No_Making
+	class _Provided : No_Making
 	{
 		static_assert(B, "type condition failed.");
 
@@ -57,7 +57,7 @@ namespace sgm
 
 
 	template<class T>
-	class is_immutable : public No_Making
+	class is_immutable : No_Making
 	{
 	public: 
 		enum : bool
@@ -75,7 +75,7 @@ namespace sgm
 
 
 	template<class T1, class T2>
-	class are_mutually_convertible : public No_Making
+	class are_mutually_convertible : No_Making
 	{
 	public:
 		enum : bool
@@ -88,11 +88,18 @@ namespace sgm
 	//	same to std::declval in <utility>
 	template<class T> static auto Declval()
 	->	std::decay_t<T>{  return *(std::decay_t<T>*)nullptr;  }
+
+
+	template<class CON>
+	using Elem_t = decltype(*Declval<CON>().begin());
+
+	template<class CON>
+	using RawElem_t = std::decay_t< Elem_t<CON> >;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template<class T>
-	class Has_Type : public No_Making
+	class Has_Type : No_Making
 	{
 	public:
 		template<class...> class among;
@@ -109,7 +116,7 @@ namespace sgm
 
 
 	template< template<class...> class FUNCTOR >
-	class Check_All : public No_Making
+	class Check_All : No_Making
 	{
 	public:
 		template<class...> class for_all;
@@ -211,14 +218,8 @@ namespace sgm
 		
 
 	};
-
-
-
-
-
-
-
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
 
 }
 

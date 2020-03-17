@@ -15,7 +15,7 @@ public:
 
 		std::vector<int> v1{2, 4, 8};
 
-		auto const a1 = Morph< Flags<PWT> >(v1, [](int i)-> int{  return 2*i;  });
+		auto const a1 = Morph(v1, [](int i)-> int{  return 2*i;  });
 
 		auto itr = v1.cbegin();
 		
