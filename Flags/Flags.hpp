@@ -15,83 +15,148 @@ namespace sgm
 {
 
 
-	template<class> class is_Flag;
+	template<class> struct is_Flag;
+	template<class> struct is_FlagSet;
 
 
 	template<class...FLAGS> 
-	class Flag_t
+	struct Flag
 	{
-	public:
-
-
-		template<class _FLAG>
-		auto operator&(_FLAG) const-> Flag_t<FLAGS..., _FLAG>
+		template<class F>
+		auto operator&(F) const-> Flag<FLAGS..., F>
 		{
-			static_assert(is_Flag<_FLAG>::value, "expected type is sgm::Flag_t");
+			static_assert(is_Flag<F>::value, "expected type is sgm::Flag");
 
-			return Flag_t<FLAGS..., _FLAG>();
+			return Flag<FLAGS..., F>();
 		}
 
 
 		template<class F>
-		class has : No_Making
+		struct has : No_Making
 		{
-		public: enum : bool{value = Has_Type<F>:: template among<FLAGS...>::value};
+			enum : bool{value = Has_Type<F>:: template among<FLAGS...>::value};
 		};
 
 
-		template<class> class is_superset_of;
-		template<class> class is_subset_of;
-		template<class> class has_same_flags_to : std::false_type{};
+		template<class> struct is_superset_of;
+		template<class> struct is_subset_of;
 
-		template<class..._FLAGS>
-		class has_same_flags_to< Flag_t<_FLAGS...> >
+		template<class FS> struct has_same_flags_to : std::false_type
 		{
-		public:
+			static_assert(is_FlagSet<FS>::value, "not a set of sgm::Flag");
+		};
+
+		template<class..._FS>
+		struct has_same_flags_to< Flag<_FS...> >
+		{
 			enum : bool
 			{	value 
-				=	(	is_superset_of< Flag_t<_FLAGS...> >::value
-					&&	is_subset_of< Flag_t<_FLAGS...> >::value
+				=	(	is_superset_of< Flag<_FS...> >::value
+					&&	is_subset_of< Flag<_FS...> >::value
 					)
 			};
 		};
 
 
 	private:
-		template<> class is_superset_of<Flag_t<>> : public std::true_type{};
+		template<> struct is_superset_of<Flag<>> : std::true_type{};
 		
-		template<class _F, class..._FLAGS>
-		class is_superset_of< Flag_t<_F, _FLAGS...> >
+		template<class F, class..._FS>
+		struct is_superset_of< Flag<F, _FS...> >
 		{
-		public: 
 			enum : bool
 			{	value 
-				=	Has_Type<_F>::template among<FLAGS...>::value
-					?	is_superset_of< Flag_t<_FLAGS...> >::value
+				=	Has_Type<F>::template among<FLAGS...>::value
+					?	is_superset_of< Flag<_FS...> >::value
 					:	false 
 			};
 		};
 
 
-		template<class..._FLAGS>
-		class is_subset_of< Flag_t<_FLAGS...> >
+		template<class..._FS>
+		struct is_subset_of< Flag<_FS...> >
 		{
-		public:
 			enum : bool
-			{	value = Flag_t<_FLAGS...>::template is_superset_of< Flag_t<FLAGS...> >::value
+			{	value = Flag<_FS...>::template is_superset_of< Flag<FLAGS...> >::value
 			};
 		};
 	};
 
 
+	static Flag<> const NoFlag;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	
+
 	template<class FLAG>
-	class is_Flag : No_Making
+	struct is_Flag : No_Making
 	{
-	public: enum : bool{value = std::is_convertible< FLAG, Flag_t<FLAG> >::value};
+		enum : bool{value = std::is_convertible< FLAG, Flag<FLAG> >::value};
+	};
+
+	template<class> struct is_FlagSet : std::false_type{};
+	template<class...FLAGS> struct is_FlagSet< Flag<FLAGS...> > : std::true_type{};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class, class...> struct FlagMatching;
+
+	template<class Q> struct FlagMatching<Q> : No_Making{  enum{number = 0};  };
+	
+	template<class Q, class F , class...FLAGS>
+	struct FlagMatching<Q, F, FLAGS...> : No_Making
+	{
+		enum
+		{	number 
+			=	Q::template has_same_flags_to<F>::value 
+				?	sizeof...(FLAGS) + 1 
+				:	FlagMatching<Q, FLAGS...>::number
+		};
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+	
+	template< template<class> class FM, class BRANCH >
+	struct Branch : No_Making
+	{
+	protected: 
+		template<class Q> using KeyFlag = FM<Q>;
+
+		template<class...FLAGS> struct Case
+		{
+			enum{ON = KeyFlag< Flag<FLAGS...> >::number};  
+		};
+
+
+	public:
+		template
+		<	class...TYPES, class FLAG_PARAM, class...ARGS
+		,	class = std::enable_if_t< is_FlagSet<FLAG_PARAM>::value > 
+		>
+		static auto calc(FLAG_PARAM, ARGS&&...args) SGM_DECLTYPE_AUTO
+		(
+			BRANCH::template Switch<FLAG_PARAM>::calc<TYPES...>( std::forward<ARGS>(args)... )
+		)
+
+
+		template<class...FLAGS, class...ARGS>
+		static auto calc(ARGS&&...args) SGM_DECLTYPE_AUTO
+		( 
+			BRANCH::template Switch< Flag<FLAGS...> >::calc( std::forward<ARGS>(args)... )
+		)
 	};
 
 
+#ifndef SGM_FLAG_SWITCH
+	#define SGM_FLAG_SWITCH template< class FLAG, int = KeyFlag<FLAG>::number > struct Switch
+#else
+	#error SGM_FLAG_SWITCH was already defined somewhere else.
+#endif
 
+#ifndef SGM_FLAG_CASE
+	#define SGM_FLAG_CASE(...) template<class F> struct Switch< F, Case<__VA_ARGS__>::ON >
+#else
+	#error SGM_FLAG_CASE was already defined somewhere else.
+#endif
 
 
 }

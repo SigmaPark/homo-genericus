@@ -24,7 +24,7 @@ namespace sgm
 {
 
 
-	class PWT : public Flag_t<PWT>
+	struct PWT : Flag<PWT>
 	{
 	public:
 		//template<class FLAGSET, class T>
@@ -33,7 +33,7 @@ namespace sgm
 	};
 
 
-	//class PAR : public Flag_t<PAR>{};
+	struct PAR : Flag<PAR>{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -51,7 +51,7 @@ namespace sgm
 
 
 	template
-	<	class CON, class FUNC, class FLAGS = Flag_t<>
+	<	class CON, class FUNC, class FLAGS = Flag<>
 	,	class y_t 
 		=	/*PWT::if_flag_is_in_t
 			<	FLAGS
@@ -60,7 +60,7 @@ namespace sgm
 				>
 			/*>*/
 	>
-	static auto Morph(CON&& con, FUNC&& func, FLAGS = Flag_t<>())-> Carrier<y_t>
+	static auto Morph(CON&& con, FUNC&& func, FLAGS = Flag<>())-> Carrier<y_t>
 	{
 		Carrier<y_t> res(con.size());
 
@@ -72,7 +72,7 @@ namespace sgm
 
 
 	//template
-	//<	class FLAGS = Flag_t<>
+	//<	class FLAGS = Flag<>
 	//,	class CON1 = std::nullptr_t, class CON2 = std::nullptr_t, class FUNC = std::nullptr_t
 	//,	class y_t
 	//	=	PWT::if_flag_is_in_t
@@ -105,14 +105,14 @@ namespace sgm
 
 
 	template
-	<	class CON, class FUNC, class FLAGS = Flag_t<>
+	<	class CON, class FUNC, class FLAGS = Flag<>
 	,	class x_t 
 		=	/*PWT::if_flag_is_in_t
 			<	FLAGS
 			,*/	std::decay_t< decltype(*Declval<CON>().begin()) >
 			/*>*/
 	>
-	static auto Filter(CON&& con, FUNC&& func, FLAGS = Flag_t<>())-> Carrier<x_t>
+	static auto Filter(CON&& con, FUNC&& func, FLAGS = Flag<>())-> Carrier<x_t>
 	{
 		Carrier<x_t> res(con.size());
 
