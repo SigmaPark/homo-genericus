@@ -4,7 +4,7 @@
 #include "High_Templar11.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-class Tutorial : public sgm::No_Making
+class Tutorial : sgm::No_Making
 {
 public:
 	template<unsigned> static void Case();
@@ -13,9 +13,9 @@ public:
 	{
 		using namespace sgm;
 
-		std::vector<int> v1{2, 4, 8};
+		std::vector<int> v1 = indices(10000, 1);
 
-		auto const a1 = Morph(v1, [](int i)-> int{  return 2*i;  });
+		auto const a1 = Morph<PWT, PAR>(v1, [](int i)-> int{  return 2*i;  });
 
 		auto itr = v1.cbegin();
 		
@@ -40,24 +40,20 @@ public:
 		using namespace sgm;
 
 		assert(  Fold( indices<double>(10, 1), std::plus<double>() ) == 55.0  );
-		assert(  Fold( indices<double>(10, 1), std::plus<double>(), 5.0 ) == 60.0  );
+		assert(  Fold( indices<double>(10, 1), 5.0, std::plus<double>() ) == 60.0  );
+	}
 
-		assert
-		(	Fold
-			(	indices<float>(10, 1), indices<float>(10, 1)
-			,	std::plus<float>(), std::multiplies<float>()
-			) 
-		==	385.f
-		);
 
-		assert
-		(	Fold
-			(	indices<float>(10, 1), indices<float>(10, 1)
-			,	std::plus<float>(), std::multiplies<float>()
-			,	15.f
-			) 
-		==	400.f
-		);
+	template<> static void Case<4>()
+	{
+		using namespace sgm;
+
+		auto const domain = sgm::indices(1000, 1);
+		auto is_odd = [](int n)-> bool {  return n % 2 == 1;  };
+		auto const odds = Filter<PWT, PAR>(domain, is_odd);
+
+		for(auto x : odds)
+			assert( is_odd(x) );
 	}
 
 };
@@ -69,6 +65,7 @@ int main()
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
+	Tutorial::Case<4>();
 
 	return 0;
 }

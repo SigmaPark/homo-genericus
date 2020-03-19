@@ -12,7 +12,7 @@
 #include "..\Carrier\Carrier.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Flags\Flags.hpp"
-#include "..\Compound\Compound.hpp"
+//#include "..\Compound\Compound.hpp"
 
 #ifdef _ITERATOR_
 	#include <omp.h>
@@ -24,16 +24,37 @@ namespace sgm
 {
 
 
-	struct PWT : Flag<PWT>
-	{
-	public:
-		//template<class FLAGSET, class T>
-		//using if_flag_is_in_t
-		//=	std::conditional_t< FLAGSET:: template has<PWT>::value, Pinweight<T>, T >;
-	};
+	struct PWT : Flag<PWT>{};
 
-
+#ifdef _ITERATOR_
 	struct PAR : Flag<PAR>{};
+
+	template<class CON>
+	struct has_random_access_iterator
+	{
+		enum : bool
+		{
+			value
+			=	std::is_same
+				<	typename std::iterator_traits
+					<	decltype(Declval<CON>().begin())
+					>::	iterator_category
+				,	std::random_access_iterator_tag
+				>::value
+		};
+	};
+#endif
+
+
+	template<class F>
+	using _HT11_FlagMatching
+	=	FlagMatching
+		<	F
+		,	Flag<>, Flag<PWT>
+	#ifdef _ITERATOR_
+		,	Flag<PAR>, Flag<PWT, PAR>
+	#endif
+		>;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -47,87 +68,218 @@ namespace sgm
 
 		return res;
 	}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template
-	<	class CON, class FUNC, class FLAGS = Flag<>
-	,	class y_t 
-		=	/*PWT::if_flag_is_in_t
-			<	FLAGS
-			,*/	std::result_of_t
-				<	FUNC( decltype(*Declval<CON>().begin()) )
-				>
-			/*>*/
-	>
-	static auto Morph(CON&& con, FUNC&& func, FLAGS = Flag<>())-> Carrier<y_t>
+	struct _Morph_Branch : Branch<_HT11_FlagMatching, _Morph_Branch>
 	{
-		Carrier<y_t> res(con.size());
+		SGM_FLAG_SWITCH;
+	
+	private:
+		template<class y_t, class CON, class FUNC>
+		static auto _calc(CON&& con, FUNC&& func)-> Carrier<y_t>
+		{
+			Carrier<y_t> res(con.size());
 
-		for(auto const& x : con)
-			res >> func(x);
+			for (auto const& x : con)
+				res >> func(x);
 
-		return res;
-	}
+			return res;
+		}
 
+		SGM_FLAG_CASE()
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<  std::result_of_t< FUNC(Elem_t<CON>) >  >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 
-	//template
-	//<	class FLAGS = Flag<>
-	//,	class CON1 = std::nullptr_t, class CON2 = std::nullptr_t, class FUNC = std::nullptr_t
-	//,	class y_t
-	//	=	PWT::if_flag_is_in_t
-	//		<	FLAGS
-	//		,	std::result_of_t
-	//			<	FUNC
-	//				(	decltype(*Declval<CON1>().begin())
-	//				,	decltype(*Declval<CON2>().begin())
-	//				)
-	//			>
-	//		>
-	//>
-	//static auto Morph(CON1&& con1, CON2&& con2, FUNC&& func)-> Carrier<y_t>
-	//{
-	//	assert(con1.size() == con2.size() && L"dismatched size.");
-
-	//	Carrier<y_t> res(con1.size());
-
-	//	{
-	//		auto itr1 = con1.begin();
-	//		auto itr2 = con2.begin();
-
-	//		while(itr1 != con1.begin())
-	//			res >> func(*itr1++, *itr2++);
-	//	}
-
-	//	return res;
-	//}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+		SGM_FLAG_CASE(PWT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 
 
-	template
-	<	class CON, class FUNC, class FLAGS = Flag<>
-	,	class x_t 
-		=	/*PWT::if_flag_is_in_t
-			<	FLAGS
-			,*/	std::decay_t< decltype(*Declval<CON>().begin()) >
-			/*>*/
-	>
-	static auto Filter(CON&& con, FUNC&& func, FLAGS = Flag<>())-> Carrier<x_t>
+	#ifdef _ITERATOR_
+		template<class y_t, class CON, class FUNC>
+		static auto _calc2(CON&& con, FUNC&& func)-> Carrier<y_t>
+		{
+			static_assert
+			(	has_random_access_iterator<CON>::value
+			,	"random access iterator is expected for parallelization."
+			);
+
+			if(con.begin() == con.end())
+				return Carrier<y_t>();
+
+			Carrier<y_t> res( con.size(), func(*con.begin()) );
+		
+		#pragma omp parallel for
+			for(int i = 1; i < con.size(); ++i)
+				res[i] = func(con.begin()[i]);
+
+			return res;
+		}
+
+
+		SGM_FLAG_CASE(PAR)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<  std::result_of_t< FUNC(Elem_t<CON>) >  >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+
+		SGM_FLAG_CASE(PAR, PWT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+	#endif
+
+	};
+
+
+	template<class...FLAGS, class CON, class FUNC>
+	static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		_Morph_Branch::calc<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+
+
+	template<class...ARGS, class FSET, class CON, class FUNC>
+	static auto Morph(FSET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		_Morph_Branch::calc<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+	//========//========//========//========//=======#//========//========//========//========//===
+	
+	
+
+	struct _Filter_Branch : Branch<_HT11_FlagMatching, _Filter_Branch>
 	{
-		Carrier<x_t> res(con.size());
+		SGM_FLAG_SWITCH;
+	
+	private:
+		template<class x_t, class CON, class FUNC>
+		static auto _calc(CON&& con, FUNC&& func)-> Carrier<x_t>
+		{
+			Carrier<x_t> res(con.size());
 
-		for(auto const& x : con)
-			if( func(x) )
-				res >> x;
+			for(auto const& x : con)
+				if( func(x) )
+					res >> x;
 
-		return res;
-	}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+			return res;
+		}
+
+		SGM_FLAG_CASE()
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<  std::decay_t< Elem_t<CON> >  >
+				( std::forward<CON>(con), std::forward<FUNC>(func) )
+			)
+		};
+
+		SGM_FLAG_CASE(PWT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Pinweight<  std::decay_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 
 
-	class _Fold_Helper : No_Making
+	#ifdef _ITERATOR_
+		template<class x_t, class CON, class FUNC>
+		static auto _calc2(CON&& con, FUNC&& func)-> Carrier<x_t>
+		{
+			Carrier<bool> const truth_table = Morph<PAR>(con, func);
+
+			Carrier<x_t> res
+			(	Fold
+				(	truth_table
+				,	size_t(0), [](size_t n, bool b)-> size_t{  return b ? n + 1 : n;  }
+				)
+			);
+
+			for(size_t i = 0; i < truth_table.size(); ++i)
+				if(truth_table[i])
+					res >> con.begin()[i];
+
+			return res;
+		}
+
+
+		SGM_FLAG_CASE(PAR)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<  std::decay_t< Elem_t<CON> >  >
+				(	std::forward<CON>(con), std::forward<FUNC>(func) 
+				)
+			)
+		};
+
+
+		SGM_FLAG_CASE(PAR, PWT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Pinweight<  std::decay_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+	#endif
+
+	};
+
+
+	template<class...FLAGS, class CON, class FUNC>
+	static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		_Filter_Branch::calc<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+
+
+	template<class...ARGS, class FSET, class CON, class FUNC>
+	static auto Filter(FSET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		_Filter_Branch::calc<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+
+	struct _Fold_Helper : No_Making
 	{
-	public:
 		template<class ITR, class FUNC, class res_t>
 		static auto Accumulate(ITR itr, ITR const ei, FUNC&& func, res_t res)
 		->	res_t
@@ -137,23 +289,11 @@ namespace sgm
 	
 			return res;
 		}
-	
-
-		template<class ITR1, class ITR2, class FUNC1, class FUNC2, class res_t>
-		static auto Inner_Product
-		(	ITR1 itr1, ITR1 const ei1, ITR2 itr2, FUNC1&& func1, FUNC2&& func2, res_t res
-		)->	res_t
-		{
-			while(itr1 != ei1)
-				res = func1( res, func2(*itr1++, *itr2++) );
-			
-			return res;
-		}
 	};
 
 
 	template<class CON, class FUNC, class res_t>
-	static auto Fold(CON&& con, FUNC&& func, res_t&& init)-> res_t
+	static auto Fold(CON&& con, res_t&& init, FUNC&& func)-> res_t
 	{
 		return 
 		_Fold_Helper::Accumulate
@@ -172,41 +312,9 @@ namespace sgm
 		);
 	}
 
-	template<class CON1, class CON2, class FUNC1, class FUNC2, class res_t>
-	static auto Fold
-	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2, res_t&& init
-	)->	res_t
-	{
-		assert(con1.size() == con2.size() && L"dismatched sizes.");
-
-		return
-		_Fold_Helper::Inner_Product
-		(	con1.begin(), con1.end(), con2.begin()
-		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2), std::forward<res_t>(init)
-		);
-	}
-
-	template<class CON1, class CON2, class FUNC1, class FUNC2>
-	static auto Fold
-	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2
-	)->	std::result_of_t
-		<	FUNC2( decltype(*Declval<CON1>().begin()), decltype(*Declval<CON2>().begin()) )
-		>
-	{
-		assert(con1.begin() != con1.end() && L"the container has nothing to fold.");
-		assert(con1.size() == con2.size() && L"dismatched sizes.");
-
-		return
-		_Fold_Helper::Inner_Product
-		(	++con1.begin(), con1.end(), ++con2.begin()
-		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2)
-		,	func2(*con1.begin(), *con2.begin())
-		);
-	}
-
 
 	template<class CON, class FUNC, class res_t>
-	static auto rFold(CON&& con, FUNC&& func, res_t&& init)-> res_t
+	static auto rFold(CON&& con, res_t&& init, FUNC&& func)-> res_t
 	{
 		return 
 		_Fold_Helper::Accumulate
@@ -225,39 +333,8 @@ namespace sgm
 		(	++con.rbegin(), con.rend(), std::forward<FUNC>(func), *con.rbegin() 
 		);
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
 
-	template<class CON1, class CON2, class FUNC1, class FUNC2, class res_t>
-	static auto rFold
-	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2, res_t&& init
-	)->	res_t
-	{
-		assert(con1.size() == con2.size() && L"dismatched sizes.");
-
-		return
-		_Fold_Helper::Inner_Product
-		(	con1.rbegin(), con1.rend(), con2.rbegin()
-		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2), std::forward<res_t>(init)
-		);
-	}
-
-	template<class CON1, class CON2, class FUNC1, class FUNC2>
-	static auto rFold
-	(	CON1&& con1, CON2&& con2, FUNC1&& func1, FUNC2&& func2
-	)->	std::result_of_t
-		<	FUNC2( decltype(*Declval<CON1>().rbegin()), decltype(*Declval<CON2>().rbegin()) )
-		>
-	{
-		assert(con1.rbegin() != con1.rend() && L"the container has nothing to fold.");
-		assert(con1.size() == con2.size() && L"dismatched sizes.");
-
-		return
-		_Fold_Helper::Inner_Product
-		(	++con1.rbegin(), con1.rend(), ++con2.rbegin()
-		,	std::forward<FUNC1>(func1), std::forward<FUNC2>(func2)
-		,	func2(*con1.rbegin(), *con2.rbegin())
-		);
-	}
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 }
 
