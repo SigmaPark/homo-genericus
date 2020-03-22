@@ -1,6 +1,7 @@
 #include <iterator>
 #include <vector>
 #include <functional>
+#include <omp.h>
 #include "High_Templar11.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -50,14 +51,16 @@ public:
 
 		auto const domain = sgm::indices(1000, 1);
 		auto is_odd = [](int n)-> bool {  return n % 2 == 1;  };
-		auto const odds = Filter<PWT, PAR>(domain, is_odd);
+		auto const odds = Filter<PAR>(domain, is_odd);
 
 		for(auto x : odds)
 			assert( is_odd(x) );
 	}
 
+
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+
 
 
 int main()
@@ -66,6 +69,8 @@ int main()
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
 	Tutorial::Case<4>();
+
+
 
 	return 0;
 }

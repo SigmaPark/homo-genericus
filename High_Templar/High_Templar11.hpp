@@ -11,12 +11,11 @@
 
 #include "..\Carrier\Carrier.hpp"
 #include "..\Pinweight\Pinweight.hpp"
-#include "..\Flags\Flags.hpp"
-//#include "..\Compound\Compound.hpp"
+#include "..\Avatar\Avatar.hpp"
+#include "..\Flags\Flags.hpp" 
+#include "..\Compound\Compound.hpp"
+//#include <omp.h>
 
-#ifdef _ITERATOR_
-	#include <omp.h>
-#endif
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -24,35 +23,41 @@ namespace sgm
 {
 
 
+	struct CONST : Flag<CONST>{};
 	struct PWT : Flag<PWT>{};
+	struct AVT : Flag<AVT>{};
 
-#ifdef _ITERATOR_
+#ifdef _OMPIMP
 	struct PAR : Flag<PAR>{};
 
-	template<class CON>
-	struct has_random_access_iterator
-	{
-		enum : bool
-		{
-			value
-			=	std::is_same
-				<	typename std::iterator_traits
-					<	decltype(Declval<CON>().begin())
-					>::	iterator_category
-				,	std::random_access_iterator_tag
-				>::value
-		};
-	};
-#endif
 
+	#ifdef _ITERATOR_
+		template<class CON>
+		struct has_random_access_iterator
+		{
+			enum : bool
+			{
+				value
+				=	std::is_same
+					<	typename std::iterator_traits
+						<	decltype(Declval<CON>().begin())
+						>::	iterator_category
+					,	std::random_access_iterator_tag
+					>::value
+			};
+		};
+	#endif
+#endif
 
 	template<class F>
 	using _HT11_FlagMatching
 	=	FlagMatching
 		<	F
-		,	Flag<>, Flag<PWT>
-	#ifdef _ITERATOR_
-		,	Flag<PAR>, Flag<PWT, PAR>
+		,	Flag<>, Flag<PWT>, Flag<AVT>
+		,	Flag<CONST>, Flag<PWT, CONST>, Flag<AVT, CONST>
+	#ifdef _OMPIMP
+		,	Flag<PAR>, Flag<PWT, PAR>, Flag<AVT, PAR>
+		,	Flag<PAR, CONST>, Flag<PWT, PAR, CONST>, Flag<AVT, PAR, CONST>
 	#endif
 		>;
 	//========//========//========//========//=======#//========//========//========//========//===
@@ -109,21 +114,35 @@ namespace sgm
 			)
 		};
 
+		SGM_FLAG_CASE(PWT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  > const   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 
-	#ifdef _ITERATOR_
+
+	#ifdef _OMPIMP
 		template<class y_t, class CON, class FUNC>
 		static auto _calc2(CON&& con, FUNC&& func)-> Carrier<y_t>
 		{
+		#ifdef _ITERATOR_
 			static_assert
 			(	has_random_access_iterator<CON>::value
 			,	"random access iterator is expected for parallelization."
 			);
+		#endif
 
 			if(con.begin() == con.end())
 				return Carrier<y_t>();
 
 			Carrier<y_t> res( con.size(), func(*con.begin()) );
 		
+
 		#pragma omp parallel for
 			for(int i = 1; i < con.size(); ++i)
 				res[i] = func(con.begin()[i]);
@@ -154,6 +173,17 @@ namespace sgm
 				)
 			)
 		};
+
+		SGM_FLAG_CASE(PAR, PWT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  > const   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 	#endif
 
 	};
@@ -174,7 +204,6 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 	
 	
-
 	struct _Filter_Branch : Branch<_HT11_FlagMatching, _Filter_Branch>
 	{
 		SGM_FLAG_SWITCH;
@@ -185,7 +214,7 @@ namespace sgm
 		{
 			Carrier<x_t> res(con.size());
 
-			for(auto const& x : con)
+			for(auto& x : con)
 				if( func(x) )
 					res >> x;
 
@@ -198,7 +227,8 @@ namespace sgm
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
 				_calc<  std::decay_t< Elem_t<CON> >  >
-				( std::forward<CON>(con), std::forward<FUNC>(func) )
+				(	std::forward<CON>(con), std::forward<FUNC>(func) 
+				)
 			)
 		};
 
@@ -213,8 +243,41 @@ namespace sgm
 			)
 		};
 
+		SGM_FLAG_CASE(PWT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Pinweight<  std::decay_t< Elem_t<CON> >  > const   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
 
-	#ifdef _ITERATOR_
+		SGM_FLAG_CASE(AVT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Avatar<  std::remove_reference_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+		SGM_FLAG_CASE(AVT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc<   Avatar<  std::remove_reference_t< Elem_t<CON> >  > const   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+
+	#ifdef _OMPIMP
 		template<class x_t, class CON, class FUNC>
 		static auto _calc2(CON&& con, FUNC&& func)-> Carrier<x_t>
 		{
@@ -253,6 +316,39 @@ namespace sgm
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
 				_calc2<   Pinweight<  std::decay_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+		SGM_FLAG_CASE(PAR, PWT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Pinweight<  std::decay_t< Elem_t<CON> >  > const   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+		SGM_FLAG_CASE(PAR, AVT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Avatar<  std::remove_reference_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+		SGM_FLAG_CASE(PAR, AVT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   Avatar<  std::remove_reference_t< Elem_t<CON> >  > const   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -333,6 +429,22 @@ namespace sgm
 		(	++con.rbegin(), con.rend(), std::forward<FUNC>(func), *con.rbegin() 
 		);
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	struct _Zip_Helper : Branch<_HT11_FlagMatching, _Zip_Helper>
+	{
+		SGM_FLAG_SWITCH;
+	
+	private:
+		//template< template<class> class wrap_tc, class...CS >
+		//static auto _calc(CS&&...cs)-> Compound<  wrap_tc< Elem_t<CS> >...  >
+		//{
+		//	
+		//}
+	};
+
+	//template<class...CS> static auto Zip(CS&&...cs)-> Compound< Elem_t<CS>... >;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

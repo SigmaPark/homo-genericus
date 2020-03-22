@@ -3,16 +3,6 @@
 
 class UnitTest
 {
-	class No_DftGen_t
-	{
-	public:
-		No_DftGen_t(int x) : x(x) {}
-
-		int x;
-	};
-
-
-
 public:
 	UnitTest() = delete;
 
@@ -23,7 +13,7 @@ public:
 		double const cx = 6;
 
 		{
-			sgm::Avatar<double> avt = x;
+			sgm::Avatar<double, sgm::Var> avt = x;
 
 			avt = 30;
 
@@ -32,15 +22,39 @@ public:
 		{
 			sgm::Avatar<double const> cavt = cx;
 
-			
-		}
+			assert(cavt == cx);
+
+			cavt(x);
+
+			assert(cavt == x);
+
+			x = 50;
+
+			assert(cavt == 50.0);
+		} 
 
 	}
 
 
 	static void Test2()
 	{
+		using namespace sgm;
 
+		static_assert
+		(	std::is_convertible
+			<	Avatar<  Avatar< Avatar<int> >  >, Avatar<int>
+			>::value
+		&&	!std::is_convertible
+			<	Avatar<double>, Avatar<double, Var>
+			>::value
+		&&	std::is_convertible
+			<	Avatar< Avatar<double, Var> const >, Avatar<double>
+			>::value
+		&&	std::is_convertible
+			<	Avatar<int, invar>, Avatar<  Avatar< Avatar<int, Var>, Var >, Var  >
+			>::value
+		,	""
+		);
 	}
 
 
@@ -66,6 +80,11 @@ public:
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
+template< template<class...> class...TQS >
+class ManyQuestions
+{
+};
+
 
 int main()
 {
@@ -74,6 +93,8 @@ int main()
 	UnitTest::Test3();
 	UnitTest::Test4();
 	UnitTest::Test5();
+
+	using MQ = ManyQuestions<std::is_integral, std::is_const, std::is_reference>;
 
 	return 0;
 }
