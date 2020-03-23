@@ -13,14 +13,18 @@ public:
 		double const cx = 6;
 
 		{
-			sgm::Avatar<double, sgm::Var> avt = x;
+			//sgm::Avatar<double> avt = x;
+			auto avt = sgm::make_Avatar(x);
 
 			avt = 30;
 
 			assert(avt == x && x == 30.0);
 		}
 		{
-			sgm::Avatar<double const> cavt = cx;
+			//sgm::Avatar<double const> cavt = cx;
+			auto cavt = sgm::make_Avatar(cx);
+
+			//cavt = 23;	// error
 
 			assert(cavt == cx);
 
@@ -42,16 +46,16 @@ public:
 
 		static_assert
 		(	std::is_convertible
-			<	Avatar<  Avatar< Avatar<int> >  >, Avatar<int>
+			<	Avatar<double>, Avatar<double const>
 			>::value
 		&&	!std::is_convertible
-			<	Avatar<double>, Avatar<double, Var>
+			<	Avatar<double const>, Avatar<double>
+			>::value
+		&&	!std::is_convertible
+			<	Avatar< Avatar<double> const>, Avatar<double>
 			>::value
 		&&	std::is_convertible
-			<	Avatar< Avatar<double, Var> const >, Avatar<double>
-			>::value
-		&&	std::is_convertible
-			<	Avatar<int, invar>, Avatar<  Avatar< Avatar<int, Var>, Var >, Var  >
+			<	Avatar<int>, Avatar< Avatar<int const> >
 			>::value
 		,	""
 		);
