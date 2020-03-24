@@ -139,6 +139,7 @@ namespace sgm
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
+
 	struct Mutability : No_Making{};
 	struct invariable : Mutability{};		using invar = invariable;
 	struct Variable :	Mutability{};			using Var = Variable;
@@ -148,6 +149,93 @@ namespace sgm
 	{
 		enum : bool{value = std::is_base_of<Mutability, T>::value};
 	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	
+
+
+#ifndef SGM_DECL_PROXY_TEMPLATE_CLASS
+	#define SGM_DECL_PROXY_TEMPLATE_CLASS(PROXYNAME)	\
+	template<class> struct is_##PROXYNAME;	\
+	\
+	template	\
+	<	class T, class M	\
+	,	bool IS_NESTED_PROXY = is_##PROXYNAME<T>::value	\
+	,	bool IS_IMMUTABLE	\
+		=	is_immutable<T>::value	\
+			||	(	IS_NESTED_PROXY \
+				&&	std::is_same< typename is_##PROXYNAME<T>::M_type, invar >::value	\
+				)	\
+	,	bool IS_REFERENCE = std::is_reference<T>::value	\
+	>	\
+	struct PROXYNAME##_T_Helper;	\
+	\
+	template< class T, class M, class = PROXYNAME##_T_Helper<T, M> > class PROXYNAME##_t;	\
+	template<class T> using PROXYNAME = PROXYNAME##_t<T, Var>;	\
+	template<class T> using const##PROXYNAME = PROXYNAME##_t<T, invar>;	\
+	\
+	template<class T, class M, bool IS_NESTED_PROXY, bool IS_IMMUTABLE, bool IS_REFERENCE>	\
+	struct PROXYNAME##_T_Helper : No_Making	\
+	{	\
+		using Parent_t	\
+		=	std::conditional_t	\
+			<	IS_NESTED_PROXY	\
+			,	std::conditional_t	\
+				<	IS_IMMUTABLE	\
+				,	PROXYNAME##_t< typename is_##PROXYNAME<T>::Q_type, invar >	\
+				,	PROXYNAME##_t	\
+					<	typename is_##PROXYNAME<T>::Q_type	\
+					,	typename is_##PROXYNAME<T>::M_type	\
+					>	\
+				>	\
+			,	std::conditional_t	\
+				<	IS_IMMUTABLE	\
+				,	PROXYNAME##_t< std::decay_t<T>, invar >	\
+				,	std::conditional_t	\
+					<	IS_REFERENCE	\
+					,	PROXYNAME##_t< std::decay_t<T>, M >	\
+					,	std::false_type	\
+					>	\
+				>	\
+			>;	\
+	};	\
+	\
+	template<class T>	\
+	struct is_##PROXYNAME	\
+	{	\
+	private:	\
+		template<class Q> struct Eval : public std::false_type	\
+		{	\
+			using Q_type = Q;	\
+			using M_type = void;	\
+		};	\
+		\
+		template<class Q, class M, class...TYPES>		\
+		struct Eval< PROXYNAME##_t<Q, M, TYPES...> > : public std::true_type	\
+		{	\
+			using Q_type = Q;	\
+			using M_type = M;	\
+		};	\
+		\
+	public: \
+		enum : bool{  value = Eval< std::decay_t<T> >::value  };	\
+		\
+		using Q_type = typename Eval< std::decay_t<T> >::Q_type;	\
+		using M_type = typename Eval< std::decay_t<T> >::M_type;	\
+	};	\
+	\
+	template< class T, class M, bool...BS>	\
+	class PROXYNAME##_t< T, M, PROXYNAME##_T_Helper<T, M, BS...> >	\
+	:	public PROXYNAME##_T_Helper<T, M, BS...>::Parent_t	\
+	{	\
+	public:		\
+		template<class Q>	\
+		PROXYNAME##_t(Q&& q) \
+		:	PROXYNAME##_T_Helper<T, M, BS...>::Parent_t( std::forward<Q>(q) ){}	\
+	}
+
+#else
+	#error SGM_DECL_PROXY_TEMPLATE_CLASS was already defined somewhere else.
+#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

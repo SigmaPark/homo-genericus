@@ -10,7 +10,7 @@
 namespace sgm
 {
 
-
+#if 0
 	template<class> struct is_Avatar; 
 
 
@@ -24,17 +24,16 @@ namespace sgm
 				)
 	,	bool IS_REFERENCE = std::is_reference<T>::value
 	>
-	struct _Avatar_T_Helper;
+	struct Avatar_T_Helper;
 
 
-	template< class T, class M, class = _Avatar_T_Helper<T, M> > class Avatar_t;
+	template< class T, class M, class = Avatar_T_Helper<T, M> > class Avatar_t;
 	template<class T> using Avatar = Avatar_t<T, Var>;
 	template<class T> using constAvatar = Avatar_t<T, invar>;
 
-	
 
 	template<class T, class M, bool IS_NESTED_AVATAR, bool IS_IMMUTABLE, bool IS_REFERENCE>
-	struct _Avatar_T_Helper : No_Making
+	struct Avatar_T_Helper : No_Making
 	{
 		using Parent_t
 		=	std::conditional_t
@@ -57,18 +56,47 @@ namespace sgm
 	};
 
 
+	template<class T>
+	struct is_Avatar
+	{
+	private:
+		template<class Q> struct Eval : public std::false_type
+		{
+			using Q_type = Q;
+			using M_type = void;
+		};
+
+		template<class Q, class M, class...TYPES>
+		struct Eval< Avatar_t<Q, M, TYPES...> > : public std::true_type
+		{
+			using Q_type = Q;
+			using M_type = M;
+		};
+
+	public: 
+		enum : bool{  value = Eval< std::decay_t<T> >::value  };
+
+		using Q_type = typename Eval< std::decay_t<T> >::Q_type;
+		using M_type = typename Eval< std::decay_t<T> >::M_type;
+	};
+
+
 	template< class T, class M, bool...BS>
-	class Avatar_t< T, M, _Avatar_T_Helper<T, M, BS...> > 
-	:	public _Avatar_T_Helper<T, M, BS...>::Parent_t
+	class Avatar_t< T, M, Avatar_T_Helper<T, M, BS...> >
+	:	public Avatar_T_Helper<T, M, BS...>::Parent_t
 	{
 	public: 
 		template<class Q> 
-		Avatar_t(Q&& q) : _Avatar_T_Helper<T, M, BS...>::Parent_t( std::forward<Q>(q) ){}
+		Avatar_t(Q&& q) : Avatar_T_Helper<T, M, BS...>::Parent_t( std::forward<Q>(q) ){}
 	};
+#else
+	SGM_DECL_PROXY_TEMPLATE_CLASS(Avatar);
+
+#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	template<class T>
-	class Avatar_t< T, invar, _Avatar_T_Helper<T, invar, false, false, false> >
+	class Avatar_t< T, invar, Avatar_T_Helper<T, invar, false, false, false> >
 	{
 	protected:
 		T const* _cpval;
@@ -125,15 +153,16 @@ namespace sgm
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
+
 	template<class T>
-	class Avatar_t< T, Var, _Avatar_T_Helper<T, Var, false, false, false> >
-	:	public Avatar_t< T, invar, _Avatar_T_Helper<T, invar, false, false, false> >
+	class Avatar_t< T, Var, Avatar_T_Helper<T, Var, false, false, false> >
+	:	public Avatar_t< T, invar, Avatar_T_Helper<T, invar, false, false, false> >
 	{
 	private:
 		T* _pval;
 		
 
-		using const_Avatar_t = Avatar_t<T, invar>;
+		using const_Avatar_t = constAvatar<T>;
 
 		static auto _avt_state(Avatar_t avt)-> typename const_Avatar_t::State
 		{
@@ -196,32 +225,6 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 
-	template<class T>
-	struct is_Avatar
-	{
-	private:
-		template<class Q> struct Eval : public std::false_type
-		{
-			using Q_type = Q;
-			using M_type = void;
-		};
-
-		template<class Q, class M, class...TYPES>
-		struct Eval< Avatar_t<Q, M, TYPES...> > : public std::true_type
-		{
-			using Q_type = Q;
-			using M_type = M;
-		};
-
-	public: 
-		enum : bool{  value = Eval< std::decay_t<T> >::value  };
-
-		using Q_type = typename Eval< std::decay_t<T> >::Q_type;
-		using M_type = typename Eval< std::decay_t<T> >::M_type;
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
 	template<class T> 
 	static auto make_Avatar(T&& t)-> Avatar< std::remove_reference_t<T> >
 	{
@@ -239,28 +242,3 @@ namespace sgm
 } // end of namespace sgm
 
 #endif // end of #ifndef _SGM_AVATAR_
-
-
-#if 0
-
-template<class T, ...ARGS> 
-class Avatar : public DirectProxy<Avatar>
-{
-//...
-	using Self_t = typename DirectProxy<Avatar>::template Proxy<T, ARGS...>;
-	using value_t = typename DirectProxy<Avatar>::template Raw<T, ARGS...>;
-};
-
-//...
-
-Avatar<  Avatar< Avatar<int> >  > nested1;
-
-static_assert( std::is_same< decltype(nested1), Avatar<int> >::value );
-
-Avatar< Avatar< Avatar<int>&& > const& > nested2;
-
-static_assert( std::is_same< decltype(nested2), Avatar<int> const
->::value );
-
-
-#endif

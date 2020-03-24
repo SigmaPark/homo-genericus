@@ -10,6 +10,7 @@
 namespace sgm
 {
 	
+
 	template<class T> class is_Pinweight;
 
 	template
