@@ -203,6 +203,7 @@ namespace sgm
 
 		auto operator=(const_Avatar_t cavt)-> Avatar_t{  return *this = cavt.value();  }
 
+
 		auto operator()(Avatar_t avt)-> Avatar_t
 		{
 			_cpval = _pval = avt._pval,

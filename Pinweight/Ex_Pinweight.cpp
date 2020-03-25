@@ -34,7 +34,8 @@ public:
 
 	static void Test3()
 	{
-		sgm::Pinweight<int> pw1 = 3, pw2 = pw1;
+		sgm::Pinweight<int> pw1 = 3;
+		sgm::Pinweight<int> pw2 = pw1;
 
 		assert(	pw1 == 3 && pw2 == 3 && pw1.share_with(pw2) );
 
@@ -50,10 +51,10 @@ public:
 
 		assert( pw1.share_with(pw2) );
 
-		sgm::Pinweight<int> const pw3 = pw1;
-	//	sgm::Pinweight<int const> cpw = pw3;	// compile error
+		sgm::Pinweight<int> const cpw3 = pw1;
+		sgm::Pinweight<int const> cpw = cpw3;
 
-		assert( pw1.share_with(pw3) && pw2.share_with(pw3) );
+		assert( pw1.share_with(cpw3) && pw2.share_with(cpw3) );
 	}
 
 
@@ -73,7 +74,7 @@ public:
 
 		pw2.value().method();
 
-		assert( !pw1.share_with(pw2) );
+		assert( pw1.share_with(pw2) );
 	}
 
 
@@ -84,6 +85,7 @@ public:
 		Pinweight<int> pw;
 
 		Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
+		//Pinweight<int> ppw = 24;
 
 		std::is_same< std::decay_t<decltype(ppw.value())>, int >::value;
 

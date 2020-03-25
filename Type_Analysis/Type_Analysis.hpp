@@ -236,6 +236,9 @@ namespace sgm
 #else
 	#error SGM_DECL_PROXY_TEMPLATE_CLASS was already defined somewhere else.
 #endif
+
+
+
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
