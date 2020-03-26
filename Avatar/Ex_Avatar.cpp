@@ -84,11 +84,6 @@ public:
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
-template< template<class...> class...TQS >
-class ManyQuestions
-{
-};
-
 
 int main()
 {
@@ -97,8 +92,6 @@ int main()
 	UnitTest::Test3();
 	UnitTest::Test4();
 	UnitTest::Test5();
-
-	using MQ = ManyQuestions<std::is_integral, std::is_const, std::is_reference>;
 
 	return 0;
 }

@@ -14,7 +14,7 @@ public:
 
 		pw = 32.4f;
 
-		assert(pw == 32.4f);				
+		assert(pw == 32.4f && pw.share_count() == 1);
 	}
 
 
@@ -34,8 +34,7 @@ public:
 
 	static void Test3()
 	{
-		sgm::Pinweight<int> pw1 = 3;
-		sgm::Pinweight<int> pw2 = pw1;
+		sgm::Pinweight<int> pw1 = 3, pw2 = pw1;
 
 		assert(	pw1 == 3 && pw2 == 3 && pw1.share_with(pw2) );
 
@@ -55,6 +54,7 @@ public:
 		sgm::Pinweight<int const> cpw = cpw3;
 
 		assert( pw1.share_with(cpw3) && pw2.share_with(cpw3) );
+		assert( pw1.share_count() == 4 );
 	}
 
 
@@ -74,7 +74,11 @@ public:
 
 		pw2.value().method();
 
-		assert( pw1.share_with(pw2) );
+		assert( pw1.share_with(pw2) && pw1.share_count() == 2 );
+
+		pw2 = T5();
+
+		assert( !pw1.share_with(pw2) && pw1.share_count() == 1 );
 	}
 
 
@@ -85,14 +89,21 @@ public:
 		Pinweight<int> pw;
 
 		Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
-		//Pinweight<int> ppw = 24;
+		Pinweight<int const> cpw = 53;
+
+		//cpw = pw;	//	should NOT be compiled!
+		//cpw = 32;	//	should NOT be compiled!
+
+		ppw = cpw;
 
 		std::is_same< std::decay_t<decltype(ppw.value())>, int >::value;
 
 		pw = ppw;
 
-		assert(pw == 24);
+		assert(pw == 53);
+		assert(pw.share_count() == 3);
 	}
+
 
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

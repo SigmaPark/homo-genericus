@@ -10,90 +10,9 @@
 namespace sgm
 {
 
-#if 0
-	template<class> struct is_Avatar; 
 
-
-	template
-	<	class T, class M
-	,	bool IS_NESTED_AVATAR = is_Avatar<T>::value
-	,	bool IS_IMMUTABLE 
-		=	is_immutable<T>::value 
-			||	(	IS_NESTED_AVATAR 
-				&&	std::is_same< typename is_Avatar<T>::M_type, invar >::value
-				)
-	,	bool IS_REFERENCE = std::is_reference<T>::value
-	>
-	struct Avatar_T_Helper;
-
-
-	template< class T, class M, class = Avatar_T_Helper<T, M> > class Avatar_t;
-	template<class T> using Avatar = Avatar_t<T, Var>;
-	template<class T> using constAvatar = Avatar_t<T, invar>;
-
-
-	template<class T, class M, bool IS_NESTED_AVATAR, bool IS_IMMUTABLE, bool IS_REFERENCE>
-	struct Avatar_T_Helper : No_Making
-	{
-		using Parent_t
-		=	std::conditional_t
-			<	IS_NESTED_AVATAR
-			,	std::conditional_t
-				<	IS_IMMUTABLE
-				,	Avatar_t< typename is_Avatar<T>::Q_type, invar >
-				,	Avatar_t< typename is_Avatar<T>::Q_type, typename is_Avatar<T>::M_type >
-				>
-			,	std::conditional_t
-				<	IS_IMMUTABLE
-				,	Avatar_t< std::decay_t<T>, invar >
-				,	std::conditional_t
-					<	IS_REFERENCE
-					,	Avatar_t< std::decay_t<T>, M >
-					,	std::false_type
-					>
-				>	
-			>;
-	};
-
-
-	template<class T>
-	struct is_Avatar
-	{
-	private:
-		template<class Q> struct Eval : public std::false_type
-		{
-			using Q_type = Q;
-			using M_type = void;
-		};
-
-		template<class Q, class M, class...TYPES>
-		struct Eval< Avatar_t<Q, M, TYPES...> > : public std::true_type
-		{
-			using Q_type = Q;
-			using M_type = M;
-		};
-
-	public: 
-		enum : bool{  value = Eval< std::decay_t<T> >::value  };
-
-		using Q_type = typename Eval< std::decay_t<T> >::Q_type;
-		using M_type = typename Eval< std::decay_t<T> >::M_type;
-	};
-
-
-	template< class T, class M, bool...BS>
-	class Avatar_t< T, M, Avatar_T_Helper<T, M, BS...> >
-	:	public Avatar_T_Helper<T, M, BS...>::Parent_t
-	{
-	public: 
-		template<class Q> 
-		Avatar_t(Q&& q) : Avatar_T_Helper<T, M, BS...>::Parent_t( std::forward<Q>(q) ){}
-	};
-#else
 	SGM_DECL_PROXY_TEMPLATE_CLASS(Avatar);
 
-#endif
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	template<class T>
 	class Avatar_t< T, invar, Avatar_T_Helper<T, invar, false, false, false> >
@@ -229,15 +148,10 @@ namespace sgm
 	template<class T> 
 	static auto make_Avatar(T&& t)-> Avatar< std::remove_reference_t<T> >
 	{
-		static_assert
-		(	std::is_lvalue_reference<decltype(t)>::value && !is_Avatar<T>::value
-		,	"no rvalue and no nested Avatar_t"
-		);
+		static_assert(!is_Avatar<T>::value, "no nested Avatar_t");
 
-		return Avatar< std::remove_reference_t<T> >(t);
+		return Avatar< std::remove_reference_t<T> >( std::forward<T>(t) );
 	}
-
-
 
 
 } // end of namespace sgm
