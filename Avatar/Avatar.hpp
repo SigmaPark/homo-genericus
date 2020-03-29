@@ -51,7 +51,7 @@ namespace sgm
 		void operator()(T&&) = delete;
 
 
-		auto value() const-> T const&	{  return *this;  }
+		auto value() const-> T const&	{  return *_cpval;  }
 		operator T const&() const		{  return value();  }
 
 
@@ -97,8 +97,9 @@ namespace sgm
 
 	public:	
 		Avatar_t() : const_Avatar_t(), _pval(nullptr){}
-		Avatar_t(T const& t) : const_Avatar_t(t), _pval(nullptr){}
 		Avatar_t(T& t) : const_Avatar_t(t), _pval(&t){}
+		
+		Avatar_t(T const&) = delete;
 		Avatar_t(T&&) = delete;
 
 		~Avatar_t(){  _pval = nullptr;  }

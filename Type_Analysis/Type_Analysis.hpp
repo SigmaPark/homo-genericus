@@ -236,9 +236,36 @@ namespace sgm
 #else
 	#error SGM_DECL_PROXY_TEMPLATE_CLASS was already defined somewhere else.
 #endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	template<class CON, class T> 
+	struct is_iterable
+	{
+	private:
+	#ifndef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, MARK)	\
+			template<class Q>	\
+			static auto _has_##METHOD(Q*)	\
+			->	typename std::is_convertible	\
+				<	std::decay_t< decltype( MARK Declval<Q>().METHOD() ) >, TYPE	\
+				>::	type;	\
+			\
+			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
+			\
+			using has_##METHOD = decltype( _has_##METHOD<CON>(nullptr) )
 
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(size, size_t, );
+
+		#undef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+	#else
+		#error _HAS_ITERABLE_METHOD_WHOSE_NAME_IS was already defined somewhere else.
+	#endif
+
+	public: enum : bool{value = has_begin::value && has_end::value && has_size::value};
+	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

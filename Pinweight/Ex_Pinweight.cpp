@@ -105,6 +105,34 @@ public:
 	}
 
 
+	static void Test7()
+	{
+		using namespace sgm;
+
+		Pinweight<double> const pw = 3;
+
+		{
+			Pinweight<double> pw2;
+
+			pw2 = pw;
+
+			assert(pw2 == 3 && pw.share_count() == 2);
+		}
+
+		assert(pw.share_count() == 1);
+
+		{
+			constPinweight<double> pw2 = pw;
+
+			assert(pw2 == 3 && pw.share_count() == 2);
+		}
+
+		assert(pw.share_count() == 1);
+
+
+	}
+
+
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -117,6 +145,7 @@ int main()
 	UnitTest::Test4();
 	UnitTest::Test5();
 	UnitTest::Test6();
+	UnitTest::Test7();
 	
 	return 0;
 }

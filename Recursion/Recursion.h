@@ -15,10 +15,7 @@
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 #if defined(SGM_RECURSION) || defined(ESCAPE_IF)
-	static_assert
-	(	false
-	,	"macro SGM_RECURSION or ESCAPE_IF (or both) is already defined elsewhere."
-	);
+	#error macro SGM_RECURSION or ESCAPE_IF (or both) is already defined elsewhere.
 
 #else
 	#define SGM_RECURSION(...)		\

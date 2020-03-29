@@ -119,7 +119,7 @@ namespace sgm
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  > const   >
+				_calc<   constPinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  >   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -179,7 +179,7 @@ namespace sgm
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc2<   Pinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  > const   >
+				_calc2<   constPinweight<  std::result_of_t< FUNC(Elem_t<CON>) >  >   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -248,7 +248,7 @@ namespace sgm
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc<   Pinweight<  std::decay_t< Elem_t<CON> >  > const   >
+				_calc<   constPinweight<  std::decay_t< Elem_t<CON> >  >   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -270,7 +270,7 @@ namespace sgm
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc<   Avatar<  std::remove_reference_t< Elem_t<CON> >  > const   >
+				_calc<   constAvatar<  std::remove_reference_t< Elem_t<CON> >  >   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -281,7 +281,7 @@ namespace sgm
 		template<class x_t, class CON, class FUNC>
 		static auto _calc2(CON&& con, FUNC&& func)-> Carrier<x_t>
 		{
-			Carrier<bool> const truth_table = Morph<PAR>(con, func);
+			Carrier<bool> const truth_table = Morph<PAR>( con, std::forward<FUNC>(func) );
 
 			Carrier<x_t> res
 			(	Fold
@@ -310,23 +310,41 @@ namespace sgm
 		};
 
 
-		SGM_FLAG_CASE(PAR, PWT)
-		{
-			template<class CON, class FUNC>
-			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-			(
-				_calc2<   Pinweight<  std::decay_t< Elem_t<CON> >  >   >
-				(	std::forward<CON>(con), std::forward<FUNC>(func)
-				)
-			)
-		};
-
 		SGM_FLAG_CASE(PAR, PWT, CONST)
 		{
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc2<   Pinweight<  std::decay_t< Elem_t<CON> >  > const   >
+				_calc2<   constPinweight<  std::decay_t< Elem_t<CON> >  >   >
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+		SGM_FLAG_CASE(PAR, PWT)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2
+				<   std::conditional_t
+					<	is_immutable<decltype(con)>::value
+					,	constPinweight<  std::decay_t< Elem_t<CON> >  >
+					,	Pinweight<  std::decay_t< Elem_t<CON> >  >   
+					>
+				>
+				(	std::forward<CON>(con), std::forward<FUNC>(func)
+				)
+			)
+		};
+
+
+		SGM_FLAG_CASE(PAR, AVT, CONST)
+		{
+			template<class CON, class FUNC>
+			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+			(
+				_calc2<   constAvatar<  std::decay_t< Elem_t<CON> >  >   >
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)
@@ -337,18 +355,13 @@ namespace sgm
 			template<class CON, class FUNC>
 			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 			(
-				_calc2<   Avatar<  std::remove_reference_t< Elem_t<CON> >  >   >
-				(	std::forward<CON>(con), std::forward<FUNC>(func)
-				)
-			)
-		};
-
-		SGM_FLAG_CASE(PAR, AVT, CONST)
-		{
-			template<class CON, class FUNC>
-			static auto calc(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-			(
-				_calc2<   Avatar<  std::remove_reference_t< Elem_t<CON> >  > const   >
+				_calc2
+				<   std::conditional_t
+					<	is_immutable<decltype(con)>::value
+					,	constAvatar<  std::decay_t< Elem_t<CON> >  >
+					,	Avatar<  std::remove_reference_t< Elem_t<CON> >  >   
+					>
+				>
 				(	std::forward<CON>(con), std::forward<FUNC>(func)
 				)
 			)

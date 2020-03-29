@@ -9,6 +9,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <new>
 #include "..\Type_Analysis\Type_Analysis.hpp" 
 
 
@@ -453,7 +454,7 @@ namespace sgm
 		{
 			assert(_size < _capa && L"can't emplace_back : out of index");
 
-			new(_arr +_size) value_t( std::forward<ARGS>(args)... ), _size++;
+			new(_arr + _size) value_t( std::forward<ARGS>(args)... ), _size++;
 
 			return *this;
 		}

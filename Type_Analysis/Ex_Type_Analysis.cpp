@@ -84,6 +84,60 @@ namespace
 
 			assert(aa1.value() == 10);
 		}
+
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		struct BB
+		{
+			//BB& operator=(BB) = delete;
+
+			bool operator==(BB) const{  return true;  }
+			bool operator!=(BB) const{  return false;  }
+		};
+
+
+		template<class, class T>
+		struct is_comparable
+		{
+			static_assert
+			(	std::integral_constant<T, false>::value
+			,	"2nd template parameter needs to be function type."
+			);
+		};
+
+		template<class C, class FUNC, class...ARGS>
+		struct is_comparable<C, FUNC(ARGS...)>
+		{
+		private:
+			template<class T>
+			static auto _check(T*)
+			->	typename std::is_same
+				<	decltype( std::declval<T>().operator=(std::declval<ARGS>()...) )
+				,	FUNC
+				>::	type;
+
+
+			template<class>
+			static auto _check(...)-> std::false_type;
+
+			using type = decltype( _check<C>(nullptr) );
+
+		public:
+			enum : bool{  value = type::value  };
+		};
+
+		static_assert
+		(	is_comparable<BB, BB&(BB)>::value
+		,	""
+		);
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+
+
+
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
 	};
 }
 
@@ -95,3 +149,5 @@ int main()
 
 	return 0;
 }
+
+

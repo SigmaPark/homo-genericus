@@ -1,4 +1,5 @@
 #include "Avatar.hpp"
+#include "..\Carrier\Carrier.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 class UnitTest
@@ -64,6 +65,14 @@ public:
 
 	static void Test3()
 	{
+		using namespace sgm;
+
+		int dx = 3;
+
+		Carrier< Avatar<int> > crravt(10);
+
+		crravt.emplace_back(dx);
+		//crravt >> dx;
 
 
 	}
