@@ -253,7 +253,7 @@ namespace sgm
 			\
 			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
 			\
-			using has_##METHOD = decltype( _has_##METHOD<CON>(nullptr) )
+			using has_##METHOD = decltype( _has_##METHOD< std::decay_t<CON> >(nullptr) )
 
 		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
 		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);

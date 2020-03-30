@@ -37,7 +37,9 @@ public:
 	{
 		initList<int> v1{5, 2, 4, 3};
 
-		sgm::Carrier<int> const crr1 = v1;
+		//sgm::is_iterable<initList<int>, int>::value;
+
+		sgm::Carrier<int> const crr1 = std::move(v1);
 		sgm::Carrier<int> crr2 = initList<int>{5, 2, 4, 3};
 
 		auto citr1 = crr1.cbegin();

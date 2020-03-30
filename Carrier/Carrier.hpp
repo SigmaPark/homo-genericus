@@ -308,7 +308,7 @@ namespace sgm
 			return rarr;
 		}
 
-		template<class CON>
+		template<  class CON, class = std::enable_if_t< is_iterable<CON, T>::value >  >
 		static auto _copy(size_t size, CON&& con)-> value_t*
 		{
 			value_t* arr = _alloc(size);
@@ -391,7 +391,11 @@ namespace sgm
 
 		template
 		<	class CON
-		,	class = std::enable_if_t<  !std::is_same< std::decay_t<CON>, Carrier >::value  > 
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON, T>::value
+				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
+				> 
 		>
 		Carrier(CON&& con)
 		:	_capa(con.size()), _size(_capa)
@@ -425,7 +429,11 @@ namespace sgm
 
 		template
 		<	class CON
-		,	class = std::enable_if_t<  !std::is_same< std::decay_t<CON>, Carrier >::value  >  
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON, T>::value
+				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
+				>  
 		>
 		auto operator=(CON&& con)-> Carrier&{  return _equal( std::forward<CON>(con) );  }
 		 
@@ -438,7 +446,15 @@ namespace sgm
 		auto operator>>(value_t&& val)-> Carrier&		{  return emplace_back( std::move(val) );  }
 
 
-		template<class CON> operator CON() const{  return std::decay_t<CON>(begin(), end());  }
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON, T>::value
+				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
+				> 
+		> 
+		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -549,6 +565,8 @@ namespace sgm
 		template<class CON>
 		auto _equal(CON&& con)-> Carrier&
 		{
+			static_assert(is_iterable<CON, T>::value, "CON is not iterable type.");
+
 			{
 				size_t const con_size = con.size();
 
