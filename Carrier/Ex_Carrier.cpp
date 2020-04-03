@@ -106,8 +106,6 @@ public:
 		//assert(itr[2] == 3.0);
 
 		std::vector<int> const v1{4, 5, 6}, v2{0, 2, 4};
-
-
 	}
 
 

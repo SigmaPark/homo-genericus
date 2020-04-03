@@ -125,9 +125,10 @@ namespace sgm
 		template<class Q>
 		auto _substitute(Q&& q)-> Pinweight_t&
 		{
-			_my_pcount_down();
+			const_Pinweight_t::_my_pcount_down();
 
-			_cpval = new T const( std::forward<Q>(q) ), _pcount = new size_t(1);
+			const_Pinweight_t::_cpval =	new T const( std::forward<Q>(q) ), 
+			const_Pinweight_t::_pcount = new size_t(1);
 
 			return *this; 			
 		}

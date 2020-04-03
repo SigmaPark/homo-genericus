@@ -3,6 +3,10 @@
 #ifndef _SGM_TYPE_ANALYSIS_
 #define _SGM_TYPE_ANALYSIS_
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+	#error C++11 or higher version of language support is required.
+#endif
+
 #include <type_traits>
 
 namespace sgm
@@ -68,7 +72,7 @@ namespace sgm
 					,	std::remove_pointer_t<T>
 					,	std::remove_reference_t<T> 
 					>
-				>::value
+				>::	value
 		};
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -91,9 +95,6 @@ namespace sgm
 
 	template<class CON>
 	using Elem_t = decltype(*Declval<CON>().begin());
-
-	template<class CON>
-	using RawElem_t = std::decay_t< Elem_t<CON> >;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -239,16 +240,19 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class CON, class T> 
-	struct is_iterable
+	template<class CON, class T = void> 
+	struct is_iterable : No_Making
 	{
 	private:
 	#ifndef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
-		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, MARK)	\
+		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, DEREF)	\
 			template<class Q>	\
 			static auto _has_##METHOD(Q*)	\
 			->	typename std::is_convertible	\
-				<	std::decay_t< decltype( MARK Declval<Q>().METHOD() ) >, TYPE	\
+				<	std::add_pointer_t	\
+					<	std::decay_t< decltype( DEREF Declval<Q>().METHOD() ) >  \
+					>	\
+				,	TYPE* \
 				>::	type;	\
 			\
 			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
@@ -265,6 +269,30 @@ namespace sgm
 	#endif
 
 	public: enum : bool{value = has_begin::value && has_end::value && has_size::value};
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+
+
+
+	template<class T, class _T = T>
+	struct is_compatible : No_Making
+	{
+	private:
+		template<class Q>
+		static auto _has_function(Q*)
+		->	typename std::is_same
+			<	std::add_pointer_t
+				<	std::decay_t< decltype( Declval<Q>() == Declval<_T>() ) >
+				>
+			,	bool*
+			>::	type; 
+
+		template<class>
+		static auto _has_function(...)-> std::false_type;
+
+	public: enum : bool{value = decltype( _has_function< std::decay_t<T> >(nullptr) )};
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 

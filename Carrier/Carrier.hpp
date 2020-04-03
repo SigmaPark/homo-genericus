@@ -3,15 +3,10 @@
 #ifndef _SGM_CARRIER_
 #define _SGM_CARRIER_
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-	#error C++11 or higher version of language support is required.
-#endif
-
 #include <cstdlib>
 #include <cassert>
 #include <new>
 #include "..\Type_Analysis\Type_Analysis.hpp" 
-
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -308,7 +303,7 @@ namespace sgm
 			return rarr;
 		}
 
-		template<  class CON, class = std::enable_if_t< is_iterable<CON, T>::value >  >
+		template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
 		static auto _copy(size_t size, CON&& con)-> value_t*
 		{
 			value_t* arr = _alloc(size);
@@ -359,7 +354,7 @@ namespace sgm
 	#endif
 				>
 		>
-		Carrier(ITR bi, ITR ei) : Carrier( static_cast<size_t>( std::distance(bi, ei) ) )
+		Carrier(ITR bi, ITR ei) : Carrier(  static_cast<size_t>( std::distance(bi, ei) )  )
 		{
 			for(auto itr = bi; itr != ei; ++itr)
 				*this >> *itr;
@@ -393,7 +388,7 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON, T>::value
+				<	is_iterable<CON>::value
 				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
 				> 
 		>
@@ -431,7 +426,7 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON, T>::value
+				<	is_iterable<CON>::value
 				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
 				>  
 		>
@@ -450,7 +445,7 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON, T>::value
+				<	is_iterable<CON>::value
 				&&	!std::is_same< std::decay_t<CON>, Carrier >::value  
 				> 
 		> 
@@ -565,7 +560,7 @@ namespace sgm
 		template<class CON>
 		auto _equal(CON&& con)-> Carrier&
 		{
-			static_assert(is_iterable<CON, T>::value, "CON is not iterable type.");
+			static_assert(is_iterable<CON>::value, "CON is not iterable type.");
 
 			{
 				size_t const con_size = con.size();
