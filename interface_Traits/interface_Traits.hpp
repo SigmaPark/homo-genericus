@@ -128,6 +128,15 @@ namespace sgm
 #else
 	#error SGM_HAS_MEMFUNC was already defined somewhere else.
 #endif
+
+
+#ifndef SGM_HAS_MEMDATA
+	#define SGM_HAS_MEMDATA(NAME, MEMDATA)	\
+		SGM_INTERFACE_CHECK(class...ARGS, Has_MemData_##NAME, Declval<Q>().MEMDATA)
+
+#else
+	#error SGM_HAS_MEMDATA was already defined somewhere else.
+#endif
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
