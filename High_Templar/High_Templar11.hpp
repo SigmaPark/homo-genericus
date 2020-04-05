@@ -14,7 +14,6 @@
 #include "..\Avatar\Avatar.hpp"
 #include "..\Flags\Flags.hpp" 
 #include "..\Compound\Compound.hpp"
-//#include <omp.h>
 
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#

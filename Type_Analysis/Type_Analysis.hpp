@@ -11,13 +11,44 @@
 
 namespace sgm
 {
+	
 
-
-	#ifndef SGM_DECLTYPE_AUTO
-		#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
-	#endif
+#ifndef SGM_DECLTYPE_AUTO
+	#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
+#else
+	#error SGM_DECLTYPE_AUTO was already defined somewhere else.
+#endif
 
 	struct No_Making{  No_Making() = delete;  };
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	//	same to std::declval in <utility>
+	template<class T> 
+	static auto Declval()-> std::decay_t<T>{  return *(std::decay_t<T>*)nullptr;  }
+
+
+	template<class CON>
+	using Elem_t = decltype(*Declval<CON>().begin());
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<int, class...TYPES> struct Nth_Type;
+
+	template<int N> struct Nth_Type<N> : No_Making{  using type = void;  };
+
+	template<int N, class T, class...TYPES>
+	struct Nth_Type<N, T, TYPES...> : No_Making
+	{
+		using type = std::conditional_t< N == 0, T, typename Nth_Type<N - 1, TYPES...>::type >;
+	};
+
+
+	template<class...TYPES> 
+	using First_t = typename Nth_Type<0, TYPES...>::type;
+	
+	template<class...TYPES> 
+	using Last_t = typename Nth_Type<sizeof...(TYPES) - 1, TYPES...>::type;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -58,6 +89,38 @@ namespace sgm
 	:	public std::true_type 
 	{};
 #endif
+
+
+	template<class CON, class T = void> 
+	struct is_iterable : No_Making
+	{
+	private:
+	#ifndef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, DEREF)	\
+			template<class Q>	\
+			static auto _has_##METHOD(Q*)	\
+			->	typename std::is_convertible	\
+				<	std::add_pointer_t	\
+					<	std::decay_t< decltype( DEREF Declval<Q>().METHOD() ) >  \
+					>	\
+				,	TYPE* \
+				>::	type;	\
+			\
+			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
+			\
+			using has_##METHOD = decltype( _has_##METHOD< std::decay_t<CON> >(nullptr) )
+
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(size, size_t, );
+
+		#undef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+	#else
+		#error _HAS_ITERABLE_METHOD_WHOSE_NAME_IS was already defined somewhere else.
+	#endif
+
+	public: enum : bool{value = has_begin::value && has_end::value && has_size::value};
+	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -85,16 +148,6 @@ namespace sgm
 		{	value = std::is_convertible<T1, T2>::value && std::is_convertible<T2, T1>::value
 		};
 	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-	//	same to std::declval in <utility>
-	template<class T> static auto Declval()
-	->	std::decay_t<T>{  return *(std::decay_t<T>*)nullptr;  }
-
-
-	template<class CON>
-	using Elem_t = decltype(*Declval<CON>().begin());
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -138,7 +191,8 @@ namespace sgm
 
 		template<> struct for_any<>{  enum : bool{value = false};  };
 	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	//========//========//========//========//=======#//========//========//========//========//===
+
 
 
 	struct Mutability : No_Making{};
@@ -152,7 +206,6 @@ namespace sgm
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
-
 
 #ifndef SGM_DECL_PROXY_TEMPLATE_CLASS
 	#define SGM_DECL_PROXY_TEMPLATE_CLASS(PROXYNAME)	\
@@ -237,63 +290,6 @@ namespace sgm
 #else
 	#error SGM_DECL_PROXY_TEMPLATE_CLASS was already defined somewhere else.
 #endif
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-	template<class CON, class T = void> 
-	struct is_iterable : No_Making
-	{
-	private:
-	#ifndef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
-		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, DEREF)	\
-			template<class Q>	\
-			static auto _has_##METHOD(Q*)	\
-			->	typename std::is_convertible	\
-				<	std::add_pointer_t	\
-					<	std::decay_t< decltype( DEREF Declval<Q>().METHOD() ) >  \
-					>	\
-				,	TYPE* \
-				>::	type;	\
-			\
-			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
-			\
-			using has_##METHOD = decltype( _has_##METHOD< std::decay_t<CON> >(nullptr) )
-
-		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
-		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);
-		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(size, size_t, );
-
-		#undef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
-	#else
-		#error _HAS_ITERABLE_METHOD_WHOSE_NAME_IS was already defined somewhere else.
-	#endif
-
-	public: enum : bool{value = has_begin::value && has_end::value && has_size::value};
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-
-
-
-	template<class T, class _T = T>
-	struct is_compatible : No_Making
-	{
-	private:
-		template<class Q>
-		static auto _has_function(Q*)
-		->	typename std::is_same
-			<	std::add_pointer_t
-				<	std::decay_t< decltype( Declval<Q>() == Declval<_T>() ) >
-				>
-			,	bool*
-			>::	type; 
-
-		template<class>
-		static auto _has_function(...)-> std::false_type;
-
-	public: enum : bool{value = decltype( _has_function< std::decay_t<T> >(nullptr) )};
-	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

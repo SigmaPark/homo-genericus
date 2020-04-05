@@ -1,9 +1,22 @@
-#include "Type_Analysis.hpp"
+//#include "Type_Analysis.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 #include <cassert>
 
 
 namespace
 {
+
+
+	SGM_HAS_MEMFUNC(memfunc);
+	SGM_HAS_MEMBER(memnum);
+	SGM_HAS_MEMBER(stt_calc);
+	SGM_HAS_MEMBER(sttmem);
+
+	SGM_HAS_MEMBER(value);
+	SGM_HAS_NESTED_TYPE(ID);
+	SGM_HAS_NESTED_TYPE(type);
+
+
 	class UnitTest
 	{
 	public:
@@ -92,6 +105,21 @@ namespace
 
 			bool operator==(BB) const{  return true;  }
 			bool operator!=(BB) const{  return false;  }
+
+			static auto stt_calc(int, double)-> int{  return 0;  }
+
+			int memnum;
+			auto memfunc(int)-> double{  return 0;  }
+
+			static int sttmem;
+
+			using type = double;
+
+			template<class Q>
+			using value_t = std::add_pointer_t<Q>;
+
+			enum {value = 0};
+			enum class ID{NUMBER = 123};
 		};
 
 
@@ -125,20 +153,49 @@ namespace
 			enum : bool{  value = type::value  };
 		};
 
+
 		static_assert
-		(	is_comparable<BB, BB&(BB)>::value
+		(	(	is_comparable<BB, BB&(BB)>::value
+			&&	std::is_convertible< decltype(BB::stt_calc), int(*)(int, double) >::value
+			)
 		,	""
+		);
+
+		static_assert 
+		(	(	Has_Member_memnum<BB>::value
+			&&	Has_MemFunc_memfunc<BB, int>::value
+			&&	Has_Member_stt_calc<BB>::value
+			&&	Has_Member_sttmem<BB>::value
+			&&	Has_Member_value<BB>::value
+			&&	Has_NestedType_type<BB>::value
+			&&	Has_NestedType_ID<BB>::value
+			)
+		,	"Something Wrong"
 		);
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
+		static void Case05()
+		{
+			BB bb;
 
+			auto sfunc = bb.stt_calc;
 
+			assert( sfunc(3, 0.14) == 0 );
 
+			enum {VV = sgm::is_Ordered<BB>::value};
+
+			auto Lamf = [](int)-> double{  return 0;  };
+
+			std::is_function<decltype(Lamf)(int)>::value;
+		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-
 	};
+
+	int UnitTest::BB::sttmem = 30;
+
+
 }
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -146,6 +203,7 @@ namespace
 int main()
 {
 	UnitTest::Case04();
+	UnitTest::Case05();
 
 	return 0;
 }

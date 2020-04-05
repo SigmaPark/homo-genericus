@@ -12,12 +12,12 @@ namespace sgm
 
 #ifndef SGM_INTERFACE_CHECK
 	#define SGM_INTERFACE_CHECK(TEMPLATE_ARGS, NAME, ...)	\
-		template<class T, TEMPLATE_ARGS>	\
+		template<class _CLASS, TEMPLATE_ARGS>	\
 		struct NAME	\
 		{	\
 		private:	\
-			template<class Q>	\
-			static auto _calc(Q*)	\
+			template<class _QCLASS>	\
+			static auto _calc(_QCLASS*)	\
 			->	typename std::is_convertible	\
 				<	std::add_pointer_t	\
 					<	std::decay_t<decltype(__VA_ARGS__)>	\
@@ -30,24 +30,27 @@ namespace sgm
 		public:	\
 			NAME() = delete;	\
 		\
-			enum : bool{value = decltype( _calc< std::decay_t<T> >(nullptr) )::value};	\
+			enum : bool{value = decltype( _calc< std::decay_t<_CLASS> >(nullptr) )::value};	\
 		}
+
 #else
 	#error SGM_INTERFACE_CHECK was already defined somewhere else.
 #endif
 
 
-	SGM_INTERFACE_CHECK( class _T = int, Has_Operator_index, Declval<Q>().operator[](Declval<_T>()) );
-	
-	SGM_INTERFACE_CHECK	\
-	(	class...ARGS, Has_Operator_Bracket, Declval<Q>().operator()(Declval<ARGS>()...) \
+	SGM_INTERFACE_CHECK
+	(	class _INDEX_TYPE = int
+	,	Has_Operator_index, sgm::Declval<_QCLASS>()[sgm::Declval<_INDEX_TYPE>()]
 	);
 	//========//========//========//========//=======#//========//========//========//========//===
 
 	
 #ifndef _BINARY_OPERATOR_INTERFACE
 	#define _BINARY_OPERATOR_INTERFACE(NAME, OP) \
-		SGM_INTERFACE_CHECK(class RHS = T, Has_Operator_##NAME, Declval<Q>() OP Declval<RHS>())
+		SGM_INTERFACE_CHECK	\
+		(	class _RIGHT_HAND_SIDE = _CLASS, Has_Operator_##NAME	\
+		,	sgm::Declval<_QCLASS>() OP sgm::Declval<_RIGHT_HAND_SIDE>()	\
+		)
 
 
 	_BINARY_OPERATOR_INTERFACE(Same, ==);
@@ -93,7 +96,7 @@ namespace sgm
 
 #ifndef _UNARY_OPERATOR_INTERFACE
 	#define _UNARY_OPERATOR_INTERFACE(PRE, NAME, POST)	\
-		SGM_INTERFACE_CHECK(class..., Has_Operator_##NAME, PRE Declval<Q>() POST)
+		SGM_INTERFACE_CHECK(class..., Has_Operator_##NAME, PRE sgm::Declval<_QCLASS>() POST)
 
 
 	_UNARY_OPERATOR_INTERFACE(+, Posit,/**/);
@@ -120,9 +123,10 @@ namespace sgm
 
 	
 #ifndef SGM_HAS_MEMFUNC
-	#define SGM_HAS_MEMFUNC(NAME, MEMFUNC)	\
+	#define SGM_HAS_MEMFUNC(MEMFUNC)	\
 		SGM_INTERFACE_CHECK	\
-		(	class...ARGS, Has_MemFunc_##NAME, Declval<Q>().MEMFUNC(Declval<ARGS>()...) \
+		(	class..._ARGUMENTS, Has_MemFunc_##MEMFUNC		\
+		,	sgm::Declval<_QCLASS>().MEMFUNC(sgm::Declval<_ARGUMENTS>()...) \
 		)
 
 #else
@@ -130,14 +134,37 @@ namespace sgm
 #endif
 
 
-#ifndef SGM_HAS_MEMDATA
-	#define SGM_HAS_MEMDATA(NAME, MEMDATA)	\
-		SGM_INTERFACE_CHECK(class...ARGS, Has_MemData_##NAME, Declval<Q>().MEMDATA)
+#ifndef SGM_HAS_MEMBER
+	/**	Not only member data but also 
+	*	1)	static member function 
+	*	2)	static member data
+	*	3)	unscoped enumerator
+	*	can be substituted to MEMBER.
+	*/
+	#define SGM_HAS_MEMBER(MEMBER)	\
+		SGM_INTERFACE_CHECK(class..., Has_Member_##MEMBER, sgm::Declval<_QCLASS>().MEMBER)
+	
+#else
+	#error SGM_HAS_MEMBER was already defined somewhere else.
+#endif
+
+
+#ifndef SGM_HAS_NESTED_TYPE
+	#define SGM_HAS_NESTED_TYPE(TYPE)	\
+		SGM_INTERFACE_CHECK	\
+		(	class..., Has_NestedType_##TYPE, sgm::Declval<typename _QCLASS::TYPE>()		\
+		)
 
 #else
-	#error SGM_HAS_MEMDATA was already defined somewhere else.
+	#error SGM_HAS_NESTED_TYPE was already defined somewhere else.
 #endif
 	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class T> struct is_Comparable : Has_Operator_Same<T>{};
+	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
+
+
 
 
 } // end of namespace sgm
