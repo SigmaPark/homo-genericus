@@ -1,9 +1,55 @@
 #include "Matrix_interface.hpp"
-#include <cassert>
 #include "..\Reform\ReformEigen.h"
 
-template<class T, int R, int C, int STRG>
-struct Matrix_impl : Eigen::Map< Eigen::Matrix<T, R, C, STRG> >{};
+#include <vector>
+#include <array>
+
+namespace sgm::mxi
+{
+	
+	template<class T, int R, int C, int STRG>
+	struct Matrix_impl : No_Making
+	{
+		template<class PDATA> static decltype(auto) calc
+		(	PDATA pdata, [[maybe_unused]]size_t r, [[maybe_unused]]size_t c
+		)
+		{
+			if constexpr(R != MatSize::DYNAMIC && C != MatSize::DYNAMIC)
+				return
+				Eigen::Map
+				<	std::conditional_t
+					<	is_immutable<PDATA>::value
+					,	Eigen::Matrix<T, R, C, STRG> const
+					,	Eigen::Matrix<T, R, C, STRG>
+					>
+				>
+				(pdata);
+			else
+				return
+				Eigen::Map
+				<	std::conditional_t
+					<	is_immutable<PDATA>::value
+					,	Eigen::Matrix<T, -1, -1, STRG> const
+					,	Eigen::Matrix<T, -1, -1, STRG>
+					>
+				>
+				(pdata, r, c);
+		}
+	};
+
+
+	template<class T, int R, int C>
+	struct internalData
+	{
+		using type 
+		=	std::conditional_t
+			<	R == MatSize::DYNAMIC || C == MatSize::DYNAMIC
+			,	std::vector<T>, std::array<T, R*C>
+			>;
+	};
+
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 class Tutorial : sgm::No_Making
@@ -53,21 +99,26 @@ public:
 		&&	mat.row(0)(2) == Eigen::Vector3f(1, 3, 5)(2)
 		);
 
-		//vec.~vector();
+		mat = mat * mat;
 
-		//assert
-		//(	mat(0, 1) == 3
-		//&&	mat(1, 0) == 7
-		//&&	mat.row(0)(0) == Eigen::Vector3f(1, 3, 5)(0)
-		//&&	mat.row(0)(1) == Eigen::Vector3f(1, 3, 5)(1)
-		//&&	mat.row(0)(2) == Eigen::Vector3f(1, 3, 5)(2)
-		//);
-
+		assert(vec.front() == 87);
 	}
 
 	template<> static void Case<3>()
 	{
-	
+		using namespace sgm::mxi;
+
+		Matrix_<float> const M1
+		(	std::vector<float>
+			{	1, 2
+			,	3, 4
+			}
+		,	2, 2
+		);
+
+		Matrix<float> r0 = M1.row(0);
+
+		assert(r0.rows() == 2 && r0.cols() == 1);
 	}
 
 
@@ -82,3 +133,4 @@ int main()
 
 	return 0;
 }
+
