@@ -76,6 +76,14 @@ namespace sgm
 	};
 
 	template<bool B, class T> using Provided_t = typename _Provided<B, T>::type;
+
+
+#ifndef SGM_COMPILE_FAILED
+	#define SGM_COMPILE_FAILED(message) \
+		static_assert([]() constexpr{  return false;  }(), #message)
+#else
+	#error SGM_COMPILE_FAILED was already defined somewhere else.
+#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

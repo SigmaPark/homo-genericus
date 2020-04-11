@@ -72,12 +72,6 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	#ifndef SGM_COMPILE_ERROR
-	#define SGM_COMPILE_ERROR(message) static_assert([]() constexpr{  return false;  }(), #message)
-	#endif
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
 	template<unsigned DP, typename T1, typename T2 = T1>
 	static bool is_close(T1 t1, T2 t2)
 	{
