@@ -33,7 +33,7 @@ namespace sgm::mxi
 		public:
 			impl(PDATA pdata, SIZES...sizes) : _core(pdata, sizes...){}
 
-			auto core() const-> decltype(_core) const&{  return _core;  }
+			auto operator()() &&-> decltype(_core) const&{  return _core;  }
 
 			decltype(auto) element(int i, int j) &&{  return _core(i, j);  } 
 
@@ -54,6 +54,8 @@ namespace sgm::mxi
 		(	PDATA pdata, [[maybe_unused]]size_t r, [[maybe_unused]]size_t c
 		)
 		{
+			static_assert(std::is_pointer_v<PDATA>, "PDATA is not pointer type.");
+
 			if constexpr(is_DynamicMatSize_v<R, C>)
 				return impl(pdata, r, c);
 			else
@@ -62,9 +64,73 @@ namespace sgm::mxi
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
+	template<class T, int SIZE>
+	struct Vector_impl : No_Making
+	{
+	private:
+		template<class PDATA, class..._SIZES>
+		struct impl
+		{
+		private:
+			using Vec_t = Eigen::Matrix<T, SIZE, 1>;
+
+			Eigen::Map
+			<	std::conditional_t< is_immutable<PDATA>::value, Vec_t const, Vec_t >
+			>
+			_core;
+
+
+		public:
+			impl(PDATA pdata, _SIZES..._sizes) : _core(pdata, _sizes...){}
+
+			auto operator()() &&-> decltype(_core) const&{  return _core;  }
+
+			decltype(auto) element(int d) &&{  return _core(d);  }
+
+			decltype(auto) head(int n) &&{  return _core.head(n);  }
+
+			decltype(auto) tail(int n) &&{  return _core.tail(n);  }
+
+			decltype(auto) norm() &&{  return _core.norm();  }
+
+			decltype(auto) norm_sqr() &&{  return _core.squaredNorm();  }
+
+
+			template<class Q>
+			decltype(auto) dot(Q&& q) &&{  return _core.dot( std::forward<Q>(q) );  }
+
+
+			template<class Q>
+			decltype(auto) cross(Q&& q) &&
+			{  
+				using V3 = Eigen::Matrix<T, 1, 3>;
+
+				return V3(_core).cross( static_cast<V3>(q) );  
+			}
+
+			decltype(auto) rowvec() &&{  return _core.adjoint();  }
+
+			decltype(auto) colvec() &&{  return _core;  }
+		};
+
+	public:
+		template<class PDATA> static decltype(auto) calc
+		(	PDATA pdata, [[maybe_unused]]size_t s
+		)
+		{
+			static_assert(std::is_pointer_v<PDATA>, "PDATA is not pointer type.");
+
+			if constexpr(SIZE == MatSize::DYNAMIC)
+				return impl(pdata, s, 1);
+			else
+				return impl(pdata);
+		}
+
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	template<class T, int R, int C>
-	struct internalData
+	struct internalData : No_Making
 	{
 		using type 
 		=	std::conditional_t
@@ -77,6 +143,8 @@ namespace sgm::mxi
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
+
+
 class Tutorial : sgm::No_Making
 {
 private:
@@ -87,7 +155,7 @@ private:
 			return t1 == t2;
 		else if constexpr(std::is_floating_point_v<T>)
 			return abs(t1- t2) < T(1e-5); 
-		else SGM_COMPILE_FAILED(no method to compare them.);
+		else SGM_COMPILE_FAILED(undefined comparison.);
 	}
 
 
@@ -105,6 +173,11 @@ public:
 		};
 
 		assert(mat1.data()[1] == 4 && mat1.data()[2] == 2);
+
+		assert
+		(	_Equal( mat1(0, 2), 3 )
+		&&	_Equal( mat1(1, 2), 6 )
+		);
 
 		Matrix<float> const mat2(std::vector<float>{1, 2, 3, 4}, 2, 2);
 
@@ -151,9 +224,35 @@ public:
 			,	3, 4
 			};
 
+		assert
+		(	_Equal( M1(0, 0), 1 )
+		&&	_Equal( M1(0, 1), 2 )
+		&&	_Equal( M1(1, 0), 3 )
+		&&	_Equal( M1(1, 1), 4 )
+		);
+
 		Matrix<float> r0 = M1.row(0);
 
-		assert( _Equal(r0.rows(), 2) && _Equal(r0.cols(), 1) );
+		Eigen::Matrix<float, 2, 2> EM;
+		
+		EM	
+		<<	1, 2,
+			3, 4;
+
+		assert
+		(	_Equal( EM(0, 0), 1 )
+		&&	_Equal( EM(0, 1), 2 )
+		&&	_Equal( EM(1, 0), 3 )
+		&&	_Equal( EM(1, 1), 4 )
+		);
+
+		Eigen::MatrixXf r1 = EM.block(0,0,2,1);
+
+		assert( _Equal(r1(0, 0), 1) && _Equal(r1(1, 0), 3) );
+
+		assert( _Equal(r0.rows(), 1) && _Equal(r0.cols(), 2) );
+
+		assert( _Equal(r0(0, 0), 1) && _Equal(r0(0, 1), 2) );
 	}
 
 	template<> static void Case<4>()
@@ -221,10 +320,74 @@ public:
 		,	1, 0
 		};
 
-		Matrix<float, 2, 2> const M3 = 3.0*M1*M2;
+		Matrix<float, 2, 2> const M3 = 3.0*(M1*M2);
 
 		assert(  _Equal( M3(0, 0), 2*3 ) && _Equal( M3(1, 1), 3*3 )  );
 	}
+
+
+	template<> static void Case<7>()
+	{
+		using namespace sgm::mxi;
+
+		Vector<float, 3> V1{3, 2, 1};
+
+		assert(  _Equal( V1(0), 3 ) && _Equal( V1(2), 1 )  );
+
+		V1(2) = 4;
+
+		assert(  _Equal( V1(2), 4 )  );
+
+		Vector<float> V2 = V1.head(2), V3;
+
+		V3 = V1.tail(2);
+
+		assert(  _Equal( V2(0), 3 ) && _Equal( V3(0), 2 )  );
+	}
+
+	template<> static void Case<8>()
+	{
+		using namespace sgm::mxi;
+
+		Vector<float> V1{1, 2, 3}, V2{1, 0, 0}, V3{0, 1, 0};
+
+		assert
+		(	_Equal<float>(V1.norm_sqr(), 14) 
+		&&	_Equal<float>( V1.norm_sqr(), V1.dot(V1) )
+		&&	_Equal<float>( V2.cross(V3)(2), 1 )
+		);
+	}
+
+	template<> static void Case<9>()
+	{
+		using namespace sgm::mxi;
+
+		Vector<float> const V1{1, 2, 3}, V2{4, 5, 6};
+
+		Matrix<float, 3, 2> M3;
+
+		M3.col(1) = V1.colvec();
+		M3.col(0) = V2.colvec();
+
+		assert
+		(	_Equal<float>( M3(0, 1), 1 )
+		&&	_Equal<float>( M3(1, 1), 2 ) 
+		&&	_Equal<float>( M3(2, 1), 3 )
+		);
+
+		assert
+		(	_Equal<float>( M3(0, 0), 4 )
+		&&	_Equal<float>( M3(1, 0), 5 ) 
+		&&	_Equal<float>( M3(2, 0), 6 )
+		);
+
+		M3.row(2) = V1.rowvec().head(2);
+
+		assert(  _Equal<float>( M3(2, 1), 2 )  );
+
+		//M3.col(0).head(2);	// OperatorGuard should have all member functions!!
+	}
+
 
 };
 
@@ -237,6 +400,9 @@ int main()
 	Tutorial::Case<4>();
 	Tutorial::Case<5>();
 	Tutorial::Case<6>();
+	Tutorial::Case<7>();
+	Tutorial::Case<8>();
+	Tutorial::Case<9>();
 
 	return 0;
 }

@@ -16,8 +16,8 @@ namespace sgm::mxi
 {
 
 
-	struct MatSize : No_Making{  static int constexpr DYNAMIC = -1;  };
-	struct Storage : No_Making{  static int constexpr ColMajor = 0, RowMajor = 1;  };
+	struct MatSize;
+	struct Storage; 
 
 
 	template
@@ -25,6 +25,9 @@ namespace sgm::mxi
 	,	int STRG = Storage::ColMajor
 	> 
 	struct Matrix_impl;							// should be defined later.
+
+
+	template<class, int> struct Vector_impl;	// should be defined later.
 
 
 	template<class, int, int> struct internalData;	// should be defined later.
@@ -39,6 +42,49 @@ namespace sgm::mxi
 	class Matrix;
 
 
+	template<class T> struct _OperatorGuard;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	struct MatSize : No_Making
+	{
+		static int constexpr DYNAMIC = -1;
+	
+	private:	
+		template<class> 
+		struct is_Dynamic : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
+
+		template<class T, int R, int C, int STRG>
+		struct is_Dynamic< Matrix<T, R, C, STRG> > : No_Making
+		{
+			static bool constexpr value = R == MatSize::DYNAMIC || C == MatSize::DYNAMIC;
+		};
+
+	public:
+		template<class M>
+		static bool constexpr is_Dynamic_v = is_Dynamic< std::decay_t<M> >::value;
+	};
+
+
+	struct Storage : No_Making 
+	{
+		static int constexpr ColMajor = 0, RowMajor = 1; 
+
+	private:
+		template<class> struct Major : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
+
+		template<class T, int R, int C, int STRG>
+		struct Major< Matrix<T, R, C, STRG> > : No_Making
+		{  
+			static int constexpr value = STRG;
+		};
+
+	public:
+		template<class M> static bool constexpr is_ColMajor_v = Major<M>::value == ColMajor;
+		template<class M> static bool constexpr is_RowMajor_v = Major<M>::value == RowMajor;
+	};
+
+
 	template
 	<	class T, int STRG = Storage::ColMajor
 	,	class MatOperator = Matrix_impl<T, MatSize::DYNAMIC, MatSize::DYNAMIC, STRG>
@@ -46,9 +92,6 @@ namespace sgm::mxi
 	>
 	using Matrix_
 	=	Matrix<T, MatSize::DYNAMIC, MatSize::DYNAMIC, STRG, MatOperator, internalData_t>;
-
-
-	template<class T> struct _OperatorGuard;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -65,10 +108,10 @@ namespace sgm::mxi
 		&&	Has_MemFunc_cols< std::decay_t<MAT> >::value
 		);
 
+
 	SGM_HAS_NESTED_TYPE(elem_t);
 	SGM_HAS_NESTED_TYPE(impl_t);
 	SGM_HAS_NESTED_TYPE(container_t);
-
 
 	template<class MAT>
 	static bool constexpr is_mxiMatrix_v
@@ -79,11 +122,40 @@ namespace sgm::mxi
 		);
 
 
-	template<class MAT> static decltype(auto) _impl_cast(MAT&& data);
+	SGM_HAS_MEMFUNC(size);
 
-	template<class T> static auto _makeOpGuard(T&& t)-> _OperatorGuard< std::decay_t<T> >;
+	template<class VEC>
+	static bool constexpr Has_Vector_interface_v
+	=	(	Has_MemFunc_size<VEC>::value
+		&&	std::is_function_v<VEC(int)>
+		);
 
-	template<class M> static auto _RHS_cast(M&& m);
+	template<class VEC>
+	static bool constexpr is_mxiVector_v
+	=	(	Has_Vector_interface_v<VEC>
+		&&	Has_NestedType_elem_t<VEC>::value	
+		&&	Has_NestedType_impl_t<VEC>::value
+		&&	Has_NestedType_container_t<VEC>::value
+		);
+
+
+	SGM_HAS_MEMFUNC(data);
+	SGM_HAS_MEMFUNC(resize);
+
+
+	template<class> struct is_OpGuard : std::false_type{};
+	template<class T> struct is_OpGuard< _OperatorGuard<T> > : std::true_type{};
+
+	template<class T>
+	static bool constexpr is_OpGuard_v = is_OpGuard< std::decay_t<T> >::value;
+
+
+	template<class Q> static decltype(auto) _impl_cast(Q&&);
+
+	template<class Q> static auto _RHS_cast(Q&&);
+
+	template<class T> 
+	static auto _OpGuard(T&& t)-> _OperatorGuard< std::remove_reference_t<T> >;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 #if 0
@@ -103,17 +175,11 @@ namespace sgm::mxi
 
 
 
+
 	template<class T, int R, int C, int STRG, class MatOperator, class internalData_t>
 	class Matrix
 	{
-	private:
 		static_assert(std::is_scalar_v<T>, "Matrix element should be scalar type");
-
-
-		SGM_HAS_MEMFUNC(data);
-
-		SGM_HAS_MEMFUNC(resize);
-
 
 	public:
 		using elem_t = std::decay_t<T>;
@@ -122,7 +188,7 @@ namespace sgm::mxi
 		using container_t 
 		=	Provided_t< Has_MemFunc_data<internalData_t>::value, internalData_t >;
 
-		static int constexpr RSIZE = R, CSIZE = C, MAJOR = STRG;
+		//static int constexpr RSIZE = R, CSIZE = C;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 		Matrix() : _data(), _rsize(R), _csize(C){}
@@ -131,17 +197,15 @@ namespace sgm::mxi
 		template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
 		Matrix(std::initializer_list<Q>&& iL) 
 		:	_data
-			(	[&iL]()-> decltype(_data)
+			(	[&iL]()-> container_t
 				{
 					static_assert
-					(	!is_DynamicMatSize_v<R, C>
+					(	!MatSize::is_Dynamic_v<Matrix>
 					,	"initializer_listing is not available when dynamic."
 					);
 
 					return 
-					_init_by_iterable<STRG, elem_t>
-					(	std::move(iL), R, C, container_t()
-					);
+					_init_by_iterable<STRG, elem_t>( std::move(iL), R, C, container_t() );
 				}()
 			)
 		,	_rsize(R), _csize(C)
@@ -151,10 +215,10 @@ namespace sgm::mxi
 		template<  class CON, class = std::enable_if_t< is_iterable<CON, elem_t>::value >  >
 		Matrix(CON const& con, int r = R, int c = C)
 		:	_data
-			(	[&con, &r, &c]()-> decltype(_data)
+			(	[&con, &r, &c]()-> container_t
 				{
 					assert
-					(	( is_DynamicMatSize_v<R, C> || (r == R && c == C) )
+					(	( MatSize::is_Dynamic_v<Matrix> || (r == R && c == C) )
 					&&	L"size dismatched."
 					);
 
@@ -186,7 +250,7 @@ namespace sgm::mxi
 					int const mr = (int)m.rows(), mc = (int)m.cols(), ms = mr*mc;
 
 					assert
-					(	( is_DynamicMatSize_v<R, C> || (R == mr && C == mc) ) 
+					(	( MatSize::is_Dynamic_v<Matrix> || (R == mr && C == mc) ) 
 					&&	L"size dismatched."
 					);
 
@@ -211,7 +275,7 @@ namespace sgm::mxi
 
 
 		template<class MAT> 
-		Matrix(_OperatorGuard<MAT>&& opg) : Matrix( opg.value() ){}
+		Matrix(_OperatorGuard<MAT>&& opg) : Matrix(opg.value()){}
 
 
 		Matrix(Matrix const&) = default;
@@ -232,7 +296,7 @@ namespace sgm::mxi
 		>
 		auto operator=(MAT&& m)-> Matrix&
 		{
-			if constexpr(is_DynamicMatSize_v<R, C>)
+			if constexpr(MatSize::is_Dynamic_v<Matrix>)
 				resize( (int)m.rows(), (int)m.cols() );
 			else
 				assert(rows() == (size_t)m.rows() && cols() == (size_t)m.cols());
@@ -252,9 +316,9 @@ namespace sgm::mxi
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto rows() const-> size_t{  return _rsize;  }
-		auto cols() const-> size_t{  return _csize;  }
-		auto size() const-> size_t{  return _rsize*_csize;  }
+		auto rows() const-> int{  return _rsize;  }
+		auto cols() const-> int{  return _csize;  }
+		auto size() const-> int{  return _rsize*_csize;  }
 
 		auto data() const-> elem_t const*	{  return _data.data();  }
 		auto data()-> elem_t*				{  return _data.data();  }
@@ -263,7 +327,7 @@ namespace sgm::mxi
 		auto resize(int r, int c)-> Matrix_<elem_t, STRG>&
 		{
 			static_assert
-			(	is_DynamicMatSize_v<R, C> && Has_MemFunc_resize<container_t, size_t>::value
+			(	MatSize::is_Dynamic_v<Matrix> && Has_MemFunc_resize<container_t, size_t>::value
 			,	"cannot resize static-sized Matrix"
 			);
 
@@ -303,23 +367,25 @@ namespace sgm::mxi
 
 		auto operator()(int i, int j)-> elem_t&{  return _impl_cast(*this).element(i, j);  }
 
+		auto operator()(int) = delete;
+
 
 		decltype(auto) block(int i, int j, int r, int c) const
 		{  
-			return _impl_cast(*this).block(i, j, r, c);
+			return _OpGuard( _impl_cast(*this).block(i, j, r, c) );
 		}
 
 		decltype(auto) block(int i, int j, int r, int c)
 		{
-			return _impl_cast(*this).block(i, j, r, c);
+			return _OpGuard( _impl_cast(*this).block(i, j, r, c) );
 		}
 
 
-		decltype(auto) row(int i) const	{  return block(i, 0, _csize, 1);  }
-		decltype(auto) row(int i)		{  return block(i, 0, _csize, 1);  }
+		decltype(auto) row(int i) const	{  return block(i, 0, 1, _csize);  }
+		decltype(auto) row(int i)		{  return block(i, 0, 1, _csize);  }
 
-		decltype(auto) col(int j) const {  return block(0, j, 1, _rsize);  }
-		decltype(auto) col(int j)		{  return block(0, j, 1, _rsize);  }
+		decltype(auto) col(int j) const {  return block(0, j, _rsize, 1);  }
+		decltype(auto) col(int j)		{  return block(0, j, _rsize, 1);  }
 
 
 		template< class = std::enable_if_t<R == C> >
@@ -327,45 +393,42 @@ namespace sgm::mxi
 		{
 			assert(_rsize == _csize && L"undefined inverse matrix");
 
-			return _impl_cast(*this).inverse();
+			return _OpGuard( _impl_cast(*this).inverse() );
 		}
 		
 
-		decltype(auto) transpose() const{  return _impl_cast(*this).transpose();  }	
+		decltype(auto) transpose() const
+		{  
+			return _OpGuard( _impl_cast(*this).transpose() );  
+		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		decltype(auto) operator-() const
-		{
-			return _makeOpGuard( -_impl_cast(*this).core() );
-		}
+		decltype(auto) operator-() const{  return _OpGuard( -_impl_cast(*this)() );  }
 
 
 		template<  class MAT, class = std::enable_if_t< std::is_convertible_v<MAT, Matrix> >  >
 		decltype(auto) operator+(MAT&& mat) const
 		{
-			return 
-			_makeOpGuard(  _impl_cast(*this).core() + _RHS_cast( std::forward<MAT>(mat) )  );
+			return _OpGuard(  _impl_cast(*this)() + _RHS_cast( std::forward<MAT>(mat) )  );
 		}
 
 		template<  class MAT, class = std::enable_if_t< std::is_convertible_v<MAT, Matrix> >  >
 		decltype(auto) operator-(MAT&& mat) const
 		{
-			return 
-			_makeOpGuard(  _impl_cast(*this).core() - _RHS_cast( std::forward<MAT>(mat) )  );
+			return _OpGuard(  _impl_cast(*this)() - _RHS_cast( std::forward<MAT>(mat) )  );
 		}
 
 		template<  class MAT, class = std::enable_if_t< std::is_convertible_v<MAT, Matrix> >  >
 		decltype(auto) operator*(MAT&& mat) const
 		{
-			return 
-			_makeOpGuard(  _impl_cast(*this).core() * _RHS_cast( std::forward<MAT>(mat) )  );
+			return _OpGuard(  _impl_cast(*this)() * _RHS_cast( std::forward<MAT>(mat) )  );
 		}
 
 		template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
 		decltype(auto) operator*(S s) const
 		{
-			return _makeOpGuard( _impl_cast(*this).core() * s );
+			return _OpGuard( _impl_cast(*this)() * s );
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
@@ -393,7 +456,7 @@ namespace sgm::mxi
 
 
 		template<int _STRG, class T, class res_t, class CON>
-		static auto _init_by_iterable(CON&& con, int r, int c, res_t&& res)
+		static decltype(auto) _init_by_iterable(CON&& con, int r, int c, res_t&& res)
 		{
 			for
 			(	auto[itr, idx] = std::pair(con.begin(), 0)
@@ -405,9 +468,9 @@ namespace sgm::mxi
 				
 			return std::move(res);
 		}
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+	
 
-	};
+	};//	end of class Matrix
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -416,84 +479,315 @@ namespace sgm::mxi
 	>
 	static decltype(auto) operator*(S s, Matrix<T, R, C> const& m){  return m*s;  }
 
-	template<  class T, class S = T, class = std::enable_if_t< std::is_scalar_v<S> >  >
-	static decltype(auto) operator*(S s, _OperatorGuard<T>&& m){  return std::move(m)*s;  }
+	template
+	<	class T, class S, class = std::enable_if_t< std::is_scalar_v<S> >  
+	>
+	static decltype(auto) operator*(S s, _OperatorGuard<T>&& t){  return std::move(t)*s;  }
 
 
 
 	template<class T>
 	struct _OperatorGuard
 	{
-		auto value() const-> T const&{  return _t;  }
+		auto value()-> T&{  return _t;  }
 
 
-		template<  class M, class = std::enable_if_t< Has_Matrix_interface_v<M> >  >
-		decltype(auto) operator+(M&& mat) const
+		template
+		<	class Q
+		,	class = std::enable_if_t< Has_Matrix_interface_v<Q> || Has_Vector_interface_v<Q> >
+		>
+		decltype(auto) operator=(Q&& q)
+		{
+			static_assert(!is_immutable<T>::value, "cannot write over immutable value.");
+
+			_t = _RHS_cast( std::forward<Q>(q) );
+
+			return *this;
+		}
+
+
+		template
+		<	class Q
+		,	class = std::enable_if_t< Has_Matrix_interface_v<Q> || Has_Vector_interface_v<Q> >
+		>
+		decltype(auto) operator+(Q&& q) const
 		{  
-			return _makeOpGuard(  _t + _RHS_cast( std::forward<M>(mat) )  );
+			return _OpGuard(  _t + _RHS_cast( std::forward<Q>(q) )  );
 		}
 
 
-		template<  class M, class = std::enable_if_t< Has_Matrix_interface_v<M> >  >
-		decltype(auto) operator-(M&& mat) const
-		{
-			return _makeOpGuard(  _t - _RHS_cast( std::forward<M>(mat) )  );
+		template
+		<	class Q
+		,	class = std::enable_if_t< Has_Matrix_interface_v<Q> || Has_Vector_interface_v<Q> >
+		>
+		decltype(auto) operator-(Q&& q) const
+		{  
+			return _OpGuard(  _t - _RHS_cast( std::forward<Q>(q) )  );
 		}
 
 
-		template<  class M, class = std::enable_if_t< Has_Matrix_interface_v<M> >  >
-		decltype(auto) operator*(M&& mat) const
-		{
-			return _makeOpGuard(  _t * _RHS_cast( std::forward<M>(mat) )  );
+		template
+		<	class Q
+		,	class = std::enable_if_t< Has_Matrix_interface_v<Q> || Has_Vector_interface_v<Q> >
+		>
+		decltype(auto) operator*(Q&& q) const
+		{  
+			return _OpGuard(  _t * _RHS_cast( std::forward<Q>(q) )  );
 		}
 
 		template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
 		decltype(auto) operator*(S s) const
 		{
-			return _makeOpGuard(_t * s);
+			return _OpGuard(_t * s);
 		}
 
 
 	private:
 		template<class T> 
-		friend auto _makeOpGuard(T&& t)-> _OperatorGuard< std::decay_t<T> >;
+		friend auto _OpGuard(T&& t)-> _OperatorGuard< std::remove_reference_t<T> >;
 
-		_OperatorGuard(T const& t) : _t(t){}
+		_OperatorGuard(T& t) : _t(t){}
+		_OperatorGuard(T&& t) : _t( std::move(t) ){}
 
-		T const _t;
+		T _t;	// should be fixed to use perface forwarding
 	};
 
 
 	template<class T> 
-	static auto _makeOpGuard(T&& t)-> _OperatorGuard< std::decay_t<T> >
+	static auto _OpGuard(T&& t)-> _OperatorGuard< std::remove_reference_t<T> >
 	{
-		return 
-		_OperatorGuard< std::decay_t<T> >( std::forward<T>(t) );
+		return _OperatorGuard< std::remove_reference_t<T> >( std::forward<T>(t) );
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class MAT> 
-	static decltype(auto) _impl_cast(MAT&& mat)
+	template<class Q> 
+	static decltype(auto) _impl_cast(Q&& q)
 	{
-		static_assert(Has_NestedType_impl_t<MAT>::value, "implementation class was not found.");
-
-		return std::remove_reference_t<MAT>::impl_t::calc(mat.data(), mat.rows(), mat.cols());
+		if constexpr(is_mxiMatrix_v<Q>)
+			return std::remove_reference_t<Q>::impl_t::calc(q.data(), q.rows(), q.cols());
+		else if constexpr(is_mxiVector_v<Q>)
+			return std::remove_reference_t<Q>::impl_t::calc(q.data(), q.size());
+		else SGM_COMPILE_FAILED(no implementation available.);
 	}
 
 
-	template<class M> static auto _RHS_cast(M&& m)
+	template<class Q> 
+	static auto _RHS_cast(Q&& q)	// should be re-considered for perfact forwarding
 	{
-		static_assert(Has_Matrix_interface_v<M>, "rhs does not have Matrix interface.");
-
-		if constexpr(is_mxiMatrix_v<M>)
-			return _impl_cast( std::forward<M>(m) ).core();
+		if constexpr(is_mxiMatrix_v<Q> || is_mxiVector_v<Q>)
+			return _impl_cast( std::forward<Q>(q) )();
+		else if constexpr(is_OpGuard_v<Q>)
+			return q.value();
 		else
-			return std::forward<M>(m);
+			return std::forward<Q>(q);
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+
+	template
+	<	class T, int SIZE = MatSize::DYNAMIC
+	,	class VectorOperator = Vector_impl<T, SIZE>
+	,	class internalData_t = typename internalData<T, SIZE, 1>::type
+	>
+	class Vector
+	{
+		static_assert(std::is_scalar_v<T>, "Matrix element should be scalar type");
+
+	public:
+		using elem_t = std::decay_t<T>;
+		using impl_t = VectorOperator;
+
+		using container_t 
+		=	Provided_t< Has_MemFunc_data<internalData_t>::value, internalData_t >;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		Vector() : _data(){}
+
+
+		Vector(elem_t const* pdata, [[maybe_unused]]int size = SIZE)
+		:	_data
+			(	[pdata, size]()-> container_t
+				{
+					return 
+					_init_by_pointer
+					(	pdata, size, _resized_data<container_t>( (size_t)size ) 
+					);
+				}()
+			)
+		{}
+
+
+		template
+		<	class CON
+		,	class
+			=	std::enable_if_t
+				<	!std::is_same_v< std::decay_t<CON>, Vector >
+				&&	(is_iterable<CON, elem_t>::value || Has_Vector_interface_v<CON>)
+				>
+		>
+		Vector(CON&& con)
+		:	_data
+			(	[&con]()-> container_t
+				{
+					auto res = _resized_data<container_t>(con.size());
+
+					return _copied_data( std::forward<CON>(con), std::move(res) );
+				}()
+			)
+		{}
+
+
+		template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
+		Vector(std::initializer_list<Q>&& iL)
+		:	_data
+			(	[&iL]()-> container_t
+				{
+					auto res = _resized_data<container_t>(iL.size());
+
+					return _copied_data( std::move(iL), std::move(res) );
+				}()
+			)
+		{}
+
+
+		template<class VEC> 
+		Vector(_OperatorGuard<VEC>&& opg) : Vector(opg.value()){}
+
+
+		Vector(Vector const&) = default;
+		Vector(Vector&&) noexcept = default;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		
+
+		auto operator=(Vector const&)-> Vector& = default;
+		auto operator=(Vector&&) noexcept-> Vector& = default;
+
+
+		template
+		<	class VEC
+		,	class
+			=	std::enable_if_t
+				<	!std::is_same_v< std::decay_t<VEC>, Vector > && Has_Vector_interface_v<VEC>
+				>
+		>
+		auto operator=(VEC&& v)-> Vector&
+		{
+			auto res = _resized_data<container_t>(v.size());
+
+			_data = _copied_data( std::forward<VEC>(v), std::move(res) );
+
+			return *this;
+		}
+
+
+		template<class VEC>
+		auto operator=(_OperatorGuard<VEC>&& opg)-> Vector&{  return *this = opg.value();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto size() const-> int			
+		{  
+			return 
+			SIZE == MatSize::DYNAMIC && _data.size() != 0
+			?	(int)_data.size()
+			:	SIZE;
+		}
+
+
+		auto data() const-> elem_t const*	{  return _data.data();  }
+		auto data()-> elem_t*				{  return _data.data();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto operator()(int d) const-> elem_t	{  return _impl_cast(*this).element(d);  }
+		auto operator()(int d)-> elem_t&			{  return _impl_cast(*this).element(d);  }
+
+		decltype(auto) head(int n) const		{  return _impl_cast(*this).head(n);  }
+		decltype(auto) head(int n)			{  return _impl_cast(*this).head(n);  }
+
+		decltype(auto) tail(int n) const		{  return _impl_cast(*this).tail(n);  }
+		decltype(auto) tail(int n)			{  return _impl_cast(*this).tail(n);  }
+
+		decltype(auto) norm() const		{  return _impl_cast(*this).norm();  }
+		decltype(auto) norm_sqr() const	{  return _impl_cast(*this).norm_sqr();  }
+
+
+		template<class VEC>
+		decltype(auto) dot(VEC&& v) const
+		{  
+			assert(v.size() == size() && L"size dismatched");
+
+			return _impl_cast(*this).dot(  _RHS_cast( std::forward<VEC>(v) )  );
+		}
+
+
+		template<class VEC>
+		decltype(auto) cross(VEC&& v) const
+		{
+			assert(v.size() == 3 && size() == 3 && L"cross product is defined in R^3");
+
+			return _impl_cast(*this).cross(  _RHS_cast( std::forward<VEC>(v) )  );
+		}
+
+		decltype(auto) rowvec() const{  return _impl_cast(*this).rowvec();  }
+		decltype(auto) colvec() const{  return _impl_cast(*this).colvec();  }
+
+
+	private:
+		container_t _data;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<class CON>
+		static auto _resized_data(size_t n)-> CON
+		{
+			CON res{};
+
+			if constexpr (Has_MemFunc_resize<CON, size_t>::value)
+				assert(n > 0 && L"invalid size."),
+				res.resize(n);
+			else
+				assert(n == SIZE && L"invalid size.");
+
+			return res;
+		}
+
+
+		template<class res_t, class CON>
+		static decltype(auto) _copied_data(CON&& con, res_t&& res)
+		{
+			if constexpr(is_iterable<CON>::value)
+				for
+				(	auto[itr, res_itr] = std::pair(con.begin(), res.begin())
+				;	itr != con.end()
+				;	*res_itr++ = static_cast<elem_t>(*itr++)
+				);
+			else if constexpr(Has_Vector_interface_v<CON>)
+				for(int idx = 0; idx < res.size(); ++idx)
+					res[idx] = static_cast<elem_t>( con(idx) );
+				
+			return std::move(res);
+		}
+
+
+		template<class P, class res_t>
+		static decltype(auto) _init_by_pointer(P p, int s, res_t&& res)
+		{
+			for(auto itr = res.begin(); s-->0; *itr++ = *p++);
+
+			return std::move(res);
+		}
+
+	};//	end of class Vector
 
 
 } // end of namespace sgm::mxi
 
 #endif // end of #ifndef _SGM_MATRIX_INTERFACE_
 
+#if 0
+
+#endif
