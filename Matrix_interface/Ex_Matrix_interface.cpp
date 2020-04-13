@@ -13,7 +13,7 @@ namespace sgm::mxi
 	struct Matrix_impl : No_Making
 	{
 	private:
-		template<class PDATA, class...SIZES>
+		template<class DATA, class...SIZES>
 		struct impl
 		{
 		private:
@@ -25,13 +25,13 @@ namespace sgm::mxi
 				>;
 
 			Eigen::Map
-			<	std::conditional_t< is_immutable<PDATA>::value, Mat_t const, Mat_t >  
+			<	std::conditional_t< is_immutable<DATA>::value, Mat_t const, Mat_t >  
 			>
 			_core;
 
 
 		public:
-			impl(PDATA pdata, SIZES...sizes) : _core(pdata, sizes...){}
+			impl(DATA* pdata, SIZES...sizes) : _core(pdata, sizes...){}
 
 			auto operator()() &&-> decltype(_core) const&{  return _core;  }
 
@@ -50,12 +50,10 @@ namespace sgm::mxi
 
 
 	public:
-		template<class PDATA> static decltype(auto) calc
-		(	PDATA pdata, [[maybe_unused]]size_t r, [[maybe_unused]]size_t c
+		template<class DATA> static decltype(auto) calc
+		(	DATA* pdata, [[maybe_unused]]size_t r, [[maybe_unused]]size_t c
 		)
 		{
-			static_assert(std::is_pointer_v<PDATA>, "PDATA is not pointer type.");
-
 			if constexpr(is_DynamicMatSize_v<R, C>)
 				return impl(pdata, r, c);
 			else
@@ -68,20 +66,20 @@ namespace sgm::mxi
 	struct Vector_impl : No_Making
 	{
 	private:
-		template<class PDATA, class..._SIZES>
+		template<class DATA, class..._SIZES>
 		struct impl
 		{
 		private:
 			using Vec_t = Eigen::Matrix<T, SIZE, 1>;
 
 			Eigen::Map
-			<	std::conditional_t< is_immutable<PDATA>::value, Vec_t const, Vec_t >
+			<	std::conditional_t< is_immutable<DATA>::value, Vec_t const, Vec_t >
 			>
 			_core;
 
 
 		public:
-			impl(PDATA pdata, _SIZES..._sizes) : _core(pdata, _sizes...){}
+			impl(DATA* pdata, _SIZES..._sizes) : _core(pdata, _sizes...){}
 
 			auto operator()() &&-> decltype(_core) const&{  return _core;  }
 
@@ -114,12 +112,10 @@ namespace sgm::mxi
 		};
 
 	public:
-		template<class PDATA> static decltype(auto) calc
-		(	PDATA pdata, [[maybe_unused]]size_t s
+		template<class DATA> static decltype(auto) calc
+		(	DATA* pdata, [[maybe_unused]]size_t s
 		)
 		{
-			static_assert(std::is_pointer_v<PDATA>, "PDATA is not pointer type.");
-
 			if constexpr(SIZE == MatSize::DYNAMIC)
 				return impl(pdata, s, 1);
 			else

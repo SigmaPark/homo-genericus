@@ -16,8 +16,8 @@ namespace sgm::mxi
 {
 
 
-	struct MatSize;
-	struct Storage; 
+	struct MatSize : No_Making{  static int constexpr DYNAMIC = -1;  };
+	struct Storage : No_Making{  static int constexpr ColMajor = 0, RowMajor = 1;  };
 
 
 	template
@@ -27,7 +27,7 @@ namespace sgm::mxi
 	struct Matrix_impl;							// should be defined later.
 
 
-	template<class, int> struct Vector_impl;	// should be defined later.
+	template<class, int> struct Vector_impl;			// should be defined later.
 
 
 	template<class, int, int> struct internalData;	// should be defined later.
@@ -42,47 +42,15 @@ namespace sgm::mxi
 	class Matrix;
 
 
+	template
+	<	class T, int SIZE = MatSize::DYNAMIC
+	,	class VectorOperator = Vector_impl<T, SIZE>
+	,	class internalData_t = typename internalData<T, SIZE, 1>::type
+	>
+	class Vector;
+
+
 	template<class T> struct _OperatorGuard;
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	struct MatSize : No_Making
-	{
-		static int constexpr DYNAMIC = -1;
-	
-	private:	
-		template<class> 
-		struct is_Dynamic : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
-
-		template<class T, int R, int C, int STRG>
-		struct is_Dynamic< Matrix<T, R, C, STRG> > : No_Making
-		{
-			static bool constexpr value = R == MatSize::DYNAMIC || C == MatSize::DYNAMIC;
-		};
-
-	public:
-		template<class M>
-		static bool constexpr is_Dynamic_v = is_Dynamic< std::decay_t<M> >::value;
-	};
-
-
-	struct Storage : No_Making 
-	{
-		static int constexpr ColMajor = 0, RowMajor = 1; 
-
-	private:
-		template<class> struct Major : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
-
-		template<class T, int R, int C, int STRG>
-		struct Major< Matrix<T, R, C, STRG> > : No_Making
-		{  
-			static int constexpr value = STRG;
-		};
-
-	public:
-		template<class M> static bool constexpr is_ColMajor_v = Major<M>::value == ColMajor;
-		template<class M> static bool constexpr is_RowMajor_v = Major<M>::value == RowMajor;
-	};
 
 
 	template
@@ -92,6 +60,67 @@ namespace sgm::mxi
 	>
 	using Matrix_
 	=	Matrix<T, MatSize::DYNAMIC, MatSize::DYNAMIC, STRG, MatOperator, internalData_t>;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	struct Matrix_Traits : No_Making
+	{
+	private:
+		template<class> 
+		struct is_Dynamic : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
+
+		template<class T, int R, int C, int STRG>
+		struct is_Dynamic< Matrix<T, R, C, STRG> > : No_Making
+		{
+			static bool constexpr value = R == MatSize::DYNAMIC || C == MatSize::DYNAMIC;
+		};
+
+
+		template<class> struct Major : No_Making{  SGM_COMPILE_FAILED(is not a Matrix.);  };
+
+		template<class T, int R, int C, int STRG>
+		struct Major< Matrix<T, R, C, STRG> > : No_Making
+		{  
+			static int constexpr value = STRG;
+		};
+
+
+		template<class> struct is_Temporary_data : std::true_type{};
+
+		template<class T, int R, int C>
+		struct is_Temporary_data< internalData<T, R, C> > : std::false_type{};
+
+
+		template<class> struct is_Temporary;
+
+		template<class T, int R, int C, int STRG, class MOP, class DATA>
+		struct is_Temporary< Matrix<T, R, C, STRG, MOP, DATA> >
+		:	is_Temporary_data< std::decay_t<DATA> >
+		{};
+
+		template<class T, int SIZE, class VOP, class DATA>
+		struct is_Temporary< Vector<T, SIZE, VOP, DATA> >
+		:	is_Temporary_data< std::decay_t<DATA> >
+		{};
+
+
+	public:
+		template<class M> static bool constexpr is_Dynamic_v 
+		=	is_Dynamic< std::decay_t<M> >::value;
+		
+		template<class M> 
+		static bool constexpr is_ColMajor_v 
+		=	Major< std::decay_t<M> >::value == Storage::ColMajor;
+		
+		template<class M> static bool constexpr is_RowMajor_v 
+		=	Major< std::decay_t<M> >::value == Storage::RowMajor;
+
+		template<class DATA> static bool constexpr is_Temporary_data_v
+		=	is_Temporary_data< std::decay_t<DATA> >::value;
+
+		template<class M> static bool constexpr is_Temporary_v 
+		=	is_Temporary< std::decay_t<M> >::value;
+	};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -158,23 +187,6 @@ namespace sgm::mxi
 	static auto _OpGuard(T&& t)-> _OperatorGuard< std::remove_reference_t<T> >;
 	//========//========//========//========//=======#//========//========//========//========//===
 
-#if 0
-	template<class T, int SIZE = MatSize::DYNAMIC, class MatrixOperator = void>
-	using ColVec = Matrix<T, SIZE, 1, Storage::ColMajor, MatrixOperator>;
-
-	template<class T, class MatrixOperator = void>
-	using ColVec_ = Matrix<T, MatSize::DYNAMIC, 1, Storage::ColMajor, MatrixOperator>;
-
-	template<class T, int SIZE = MatSize::DYNAMIC, class MatrixOperator = void>
-	using RowVec = Matrix<T, 1, SIZE, Storage::RowMajor, MatrixOperator>;
-
-	template<class T, class MatrixOperator = void>
-	using RowVec_ = Matrix<T, 1, MatSize::DYNAMIC, Storage::RowMajor, MatrixOperator>;
-#endif
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-
 
 	template<class T, int R, int C, int STRG, class MatOperator, class internalData_t>
 	class Matrix
@@ -200,7 +212,7 @@ namespace sgm::mxi
 			(	[&iL]()-> container_t
 				{
 					static_assert
-					(	!MatSize::is_Dynamic_v<Matrix>
+					(	!Matrix_Traits::is_Dynamic_v<Matrix>
 					,	"initializer_listing is not available when dynamic."
 					);
 
@@ -218,7 +230,7 @@ namespace sgm::mxi
 			(	[&con, &r, &c]()-> container_t
 				{
 					assert
-					(	( MatSize::is_Dynamic_v<Matrix> || (r == R && c == C) )
+					(	( Matrix_Traits::is_Dynamic_v<Matrix> || (r == R && c == C) )
 					&&	L"size dismatched."
 					);
 
@@ -250,7 +262,7 @@ namespace sgm::mxi
 					int const mr = (int)m.rows(), mc = (int)m.cols(), ms = mr*mc;
 
 					assert
-					(	( MatSize::is_Dynamic_v<Matrix> || (R == mr && C == mc) ) 
+					(	( Matrix_Traits::is_Dynamic_v<Matrix> || (R == mr && C == mc) ) 
 					&&	L"size dismatched."
 					);
 
@@ -296,7 +308,7 @@ namespace sgm::mxi
 		>
 		auto operator=(MAT&& m)-> Matrix&
 		{
-			if constexpr(MatSize::is_Dynamic_v<Matrix>)
+			if constexpr(Matrix_Traits::is_Dynamic_v<Matrix>)
 				resize( (int)m.rows(), (int)m.cols() );
 			else
 				assert(rows() == (size_t)m.rows() && cols() == (size_t)m.cols());
@@ -327,7 +339,7 @@ namespace sgm::mxi
 		auto resize(int r, int c)-> Matrix_<elem_t, STRG>&
 		{
 			static_assert
-			(	MatSize::is_Dynamic_v<Matrix> && Has_MemFunc_resize<container_t, size_t>::value
+			(	Matrix_Traits::is_Dynamic_v<Matrix> && Has_MemFunc_resize<container_t, size_t>::value
 			,	"cannot resize static-sized Matrix"
 			);
 
@@ -586,11 +598,7 @@ namespace sgm::mxi
 
 
 
-	template
-	<	class T, int SIZE = MatSize::DYNAMIC
-	,	class VectorOperator = Vector_impl<T, SIZE>
-	,	class internalData_t = typename internalData<T, SIZE, 1>::type
-	>
+	template<class T, int SIZE,	 class VectorOperator, class internalData_t>
 	class Vector
 	{
 		static_assert(std::is_scalar_v<T>, "Matrix element should be scalar type");

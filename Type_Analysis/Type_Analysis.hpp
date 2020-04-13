@@ -79,8 +79,8 @@ namespace sgm
 
 
 #ifndef SGM_COMPILE_FAILED
-	#define SGM_COMPILE_FAILED(message) \
-		static_assert([]() constexpr{  return false;  }(), #message)
+	#define SGM_COMPILE_FAILED(...) \
+		static_assert([]() constexpr{  return false;  }(), #__VA_ARGS__)
 #else
 	#error SGM_COMPILE_FAILED was already defined somewhere else.
 #endif
