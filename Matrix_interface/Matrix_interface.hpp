@@ -14,6 +14,62 @@
 
 namespace sgm::mxi
 {
+	
+	
+	struct MxSize : No_Making { static int constexpr DYNAMIC = -1; };
+
+
+	template<class T, int R = MxSize::DYNAMIC, int C = MxSize::DYNAMIC> 
+	class Matrix_implementation;
+
+
+	template<class T, int R = MxSize::DYNAMIC, int C = MxSize::DYNAMIC>
+	class Matrix : Matrix_implementation<T, R, C>
+	{
+	private:
+		using impl_t = Matrix_implementation<T, R, C>;
+
+		static bool constexpr _is_Dynamic = R == MxSize::DYNAMIC || C == MxSize::DYNAMIC;
+
+
+
+	public:
+		Matrix() : impl_t(){}
+
+		Matrix(int r, int c) : impl_t(r, c)
+		{	
+			static_assert(_is_Dynamic, "static size Matrix cannot be resized.");
+		}
+
+		template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
+		Matrix(std::initializer_list<Q>&& iL) : impl_t()
+		{
+			static_assert(!_is_Dynamic, "initializer_listing is not available when dynamic.");
+
+			for
+			(	auto[ptr, itr] = std::pair(impl_t::data(), iL.begin()) 
+			;	itr != iL.end()
+			;	*ptr++ = static_cast<T>(*itr++)
+			);
+		}
+
+		template
+		<	class MAT
+		,	class
+			=	std::enable_if_t
+				<	!std::is_same_v< Matrix, std::decay_t<MAT> > 
+				&&	std::is_convertible_v<MAT, decltype(impl_t::core())>
+				>
+		>
+		Matrix(MAT&& m) : Matrix_implementation<MAT, R, C>( std::forward<MAT>(m) ){}
+	};
+
+
+} // end of namespace sgm::mxi
+
+#if 0
+namespace sgm::mxi
+{
 
 
 	struct MatSize : No_Making{  static int constexpr DYNAMIC = -1;  };
@@ -793,6 +849,9 @@ namespace sgm::mxi
 
 
 } // end of namespace sgm::mxi
+#endif
+
+
 
 #endif // end of #ifndef _SGM_MATRIX_INTERFACE_
 
