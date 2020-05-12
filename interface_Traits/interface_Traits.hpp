@@ -165,8 +165,6 @@ namespace sgm
 	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
 
 
-
-
 } // end of namespace sgm
 
 #endif // end of #ifndef _SGM_INTERFACE_TRAITS_

@@ -16,56 +16,140 @@ namespace sgm::mxi
 {
 	
 	
-	struct MxSize : No_Making { static int constexpr DYNAMIC = -1; };
+	struct MxSize : No_Making 
+	{ 
+		using type = size_t;
+
+		static auto constexpr DYNAMIC = static_cast<type>(-1);
+		
+		template<type N> static bool constexpr is_dynamic_v = N == DYNAMIC;
+		template<type N> static bool constexpr is_static_v = !is_dynamic_v<N>;
+	};
+
+	using MxSize_t = typename MxSize::type;
+	using index_t = MxSize_t;
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class T, int R = MxSize::DYNAMIC, int C = MxSize::DYNAMIC> 
-	class Matrix_implementation;
+	template<class elem_t, MxSize_t ROW_SIZE, MxSize_t COLUMN_SIZE>
+	class Mx_implementation;	// should be defined later
 
 
-	template<class T, int R = MxSize::DYNAMIC, int C = MxSize::DYNAMIC>
-	class Matrix : Matrix_implementation<T, R, C>
+	template
+	<	class elem_t = float
+	,	MxSize_t ROW_SIZE = MxSize::DYNAMIC, MxSize_t COLUMN_SIZE = MxSize::DYNAMIC
+	>
+	class Matrix;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	struct MxTraits : No_Making
 	{
 	private:
-		using impl_t = Matrix_implementation<T, R, C>;
+		template<class> struct is_Dynamic{  SGM_COMPILE_FAILED(is not a Matrix); };
 
-		static bool constexpr _is_Dynamic = R == MxSize::DYNAMIC || C == MxSize::DYNAMIC;
-
+		template<class T, MxSize_t R, MxSize_t C>
+		struct is_Dynamic< Matrix<T, R, C> > : No_Making
+		{
+			static bool constexpr value = MxSize::is_dynamic_v<R> || MxSize::is_dynamic_v<C>;
+		};
 
 
 	public:
+		template<class M>
+		static bool constexpr is_DynamicMx_v = is_Dynamic< std::decay_t<M> >::value;
+
+		template<class M> static bool constexpr is_StaticMx_v = is_DynamicMx_v<M>;
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class element_t, MxSize_t R, MxSize_t C>
+	class Matrix : Mx_implementation< std::decay_t<element_t>, R, C >
+	{
+		using impl_t = Mx_implementation< std::decay_t<element_t>, R, C >;
+
+
+	public:
+		using elem_t = std::decay_t<element_t>;
+		static MxSize_t constexpr ROW_SIZE = R, COL_SIZE = C;
+
+
 		Matrix() : impl_t(){}
 
-		Matrix(int r, int c) : impl_t(r, c)
-		{	
-			static_assert(_is_Dynamic, "static size Matrix cannot be resized.");
-		}
 
-		template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-		Matrix(std::initializer_list<Q>&& iL) : impl_t()
+		template
+		<	class T
+		,	class 
+			=	std::enable_if_t
+				<	std::is_scalar_v<T> && (MxSize::is_static_v<R> || MxSize::is_static_v<C>)
+				>
+		>
+		Matrix(std::initializer_list<T>&& iL) : impl_t( std::move(iL) ){}
+
+
+		template
+		<	class CON
+		,	class
+			=	std::enable_if_t
+				<	is_iterable<CON, elem_t>::value && MxTraits::is_DynamicMx_v<Matrix>
+				>
+		>
+		Matrix(CON&& con, MxSize_t r = R, MxSize_t c = C) 
+		:	impl_t( std::forward<CON>(con), r, c )
 		{
-			static_assert(!_is_Dynamic, "initializer_listing is not available when dynamic.");
-
-			for
-			(	auto[ptr, itr] = std::pair(impl_t::data(), iL.begin()) 
-			;	itr != iL.end()
-			;	*ptr++ = static_cast<T>(*itr++)
+			assert
+			(	(MxSize::is_dynamic_v<R> || R == r) && (MxSize::is_dynamic_v<C> || C == c)
+			&&	L"static size cannot be modified.\n"
 			);
 		}
 
-		template
-		<	class MAT
-		,	class
-			=	std::enable_if_t
-				<	!std::is_same_v< Matrix, std::decay_t<MAT> > 
-				&&	std::is_convertible_v<MAT, decltype(impl_t::core())>
-				>
-		>
-		Matrix(MAT&& m) : Matrix_implementation<MAT, R, C>( std::forward<MAT>(m) ){}
-	};
+
+		template<class M>
+		Matrix(M&& m) : impl_t( std::forward<M>(m) ){}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto operator()(index_t i, index_t j)-> elem_t&
+		{
+			return impl_t::element(i, j);
+		}
+
+		auto operator()(index_t i, index_t j) const-> elem_t const&
+		{
+			return impl_t::element(i, j);
+		}
+
+		
+		auto rows() const-> MxSize_t{  return impl_t::rows();  }
+		auto cols() const-> MxSize_t{  return impl_t::cols();  }
+		auto size() const-> MxSize_t{  return impl_t::size();  }
+
+
+		auto resize(MxSize_t r, MxSize_t c)-> Matrix&
+		{
+			static_assert
+			(	MxTraits::is_DynamicMx_v<Matrix>, "static size Matrix cannot be resized."
+			);
+
+			assert
+			(	(MxSize::is_dynamic_v<R> || R == r) && (MxSize::is_dynamic_v<C> || C == c)
+			&&	L"static size cannot be modified.\n"
+			);
+
+			impl_t::resize(r, c);
+
+			return *this;
+		}
+
+
+	};// end of Matrix class
+	//========//========//========//========//=======#//========//========//========//========//===
+
 
 
 } // end of namespace sgm::mxi
+
 
 #if 0
 namespace sgm::mxi

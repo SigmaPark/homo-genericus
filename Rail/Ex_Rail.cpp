@@ -9,7 +9,8 @@ struct Tutorial : sgm::No_Making
 	public:
 		static void method1(){}
 
-		static std::enable_if_t<(N > 2)> method2(){}
+		template< class = std::enable_if_t<(N > 2)> >
+		static void method2(){}
 	};
 
 	template<unsigned N> static void Case();
