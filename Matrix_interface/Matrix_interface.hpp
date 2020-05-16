@@ -21,9 +21,11 @@ namespace sgm::mxi
 		using type = size_t;
 
 		static auto constexpr DYNAMIC = static_cast<type>(-1);
+		static auto constexpr TEMPORARY = DYNAMIC - 1;
 		
 		template<type N> static bool constexpr is_dynamic_v = N == DYNAMIC;
 		template<type N> static bool constexpr is_static_v = !is_dynamic_v<N>;
+		template<type N> static bool constexpr is_temporary_v = N == TEMPORARY;
 	};
 
 	using MxSize_t = typename MxSize::type;
@@ -61,17 +63,36 @@ namespace sgm::mxi
 
 		template<class M> static bool constexpr is_StaticMx_v = is_DynamicMx_v<M>;
 	};
+
+	SGM_HAS_NESTED_TYPE(elem_t);
+	SGM_HAS_MEMBER(ROW_SIZE);
+	SGM_HAS_MEMBER(COL_SIZE);
+
+	template<class M>
+	static bool constexpr is_mxiMatrix_v
+	=	(	Has_NestedType_elem_t<M>::value
+		&&	Has_Member_ROW_SIZE<M>::value
+		&&	Has_Member_COL_SIZE<M>::value
+		);
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class element_t, MxSize_t R, MxSize_t C>
-	class Matrix : Mx_implementation< std::decay_t<element_t>, R, C >
+	template<class T>
+	static auto _temporary(T&& t)
 	{
-		using impl_t = Mx_implementation< std::decay_t<element_t>, R, C >;
+		return Matrix<T, MxSize::TEMPORARY, MxSize::TEMPORARY>( std::move(t) );
+	}
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class T, MxSize_t R, MxSize_t C>
+	class Matrix : Mx_implementation<T, R, C>
+	{
+		using impl_t = Mx_implementation<T, R, C>;
 
 
 	public:
-		using elem_t = std::decay_t<element_t>;
+		using elem_t = typename impl_t::elem_t;
 		static MxSize_t constexpr ROW_SIZE = R, COL_SIZE = C;
 
 
@@ -79,13 +100,13 @@ namespace sgm::mxi
 
 
 		template
-		<	class T
+		<	class Q
 		,	class 
 			=	std::enable_if_t
-				<	std::is_scalar_v<T> && (MxSize::is_static_v<R> || MxSize::is_static_v<C>)
+				<	std::is_scalar_v<Q> && (MxSize::is_static_v<R> || MxSize::is_static_v<C>)
 				>
 		>
-		Matrix(std::initializer_list<T>&& iL) : impl_t( std::move(iL) ){}
+		Matrix(std::initializer_list<Q>&& iL) : impl_t( std::move(iL), R, C ){}
 
 
 		template
@@ -105,25 +126,29 @@ namespace sgm::mxi
 		}
 
 
-		template<class M>
-		Matrix(M&& m) : impl_t( std::forward<M>(m) ){}
+		template<class Q>
+		Matrix(Q&& q) : impl_t( std::forward<Q>(q) ){}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto operator()(index_t i, index_t j)-> elem_t&
+		template<  class Q, class = std::enable_if_t< is_mxiMatrix_v<Q> >  >
+		auto operator=(Q&& q)-> Matrix&
 		{
-			return impl_t::element(i, j);
-		}
+			impl_t::core() = q.core();
 
-		auto operator()(index_t i, index_t j) const-> elem_t const&
-		{
-			return impl_t::element(i, j);
+			return *this;
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-		
+
+		decltype(auto) operator()(index_t i, index_t j){  return impl_t::element(i, j);  }
+		auto operator()(index_t i, index_t j) const-> elem_t{  return impl_t::element(i, j);  }
+
 		auto rows() const-> MxSize_t{  return impl_t::rows();  }
 		auto cols() const-> MxSize_t{  return impl_t::cols();  }
 		auto size() const-> MxSize_t{  return impl_t::size();  }
+
+		decltype(auto) core() const	{  return impl_t::core();  }
 
 
 		auto resize(MxSize_t r, MxSize_t c)-> Matrix&
@@ -141,9 +166,52 @@ namespace sgm::mxi
 
 			return *this;
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto block(index_t i, index_t j, MxSize_t r, MxSize_t c) const
+		{
+			return _temporary( impl_t::block(i, j, r, c) );
+		}
+
+		auto block(index_t i, index_t j, MxSize_t r, MxSize_t c)
+		{
+			return _temporary( impl_t::block(i, j, r, c) );
+		}
+
+		auto row(index_t idx) const	{  return _temporary( impl_t::row(idx) );  }
+		auto row(index_t idx)		{  return _temporary( impl_t::row(idx) );  }
+		auto col(index_t idx) const	{  return _temporary( impl_t::col(idx) );  }
+		auto col(index_t idx)		{  return _temporary( impl_t::col(idx) );  }
+
+		auto transposed() const{  return _temporary(impl_t::transposed());  }
+		auto inversed() const{  return _temporary(impl_t::inversed());  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		auto operator-() const{  return _temporary(-impl_t::core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiMatrix_v<Q> >  >
+		auto operator+(Q&& q) const{  return _temporary(impl_t::core() + q.core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiMatrix_v<Q> >  >
+		auto operator-(Q&& q) const{  return _temporary(impl_t::core() - q.core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiMatrix_v<Q> >  >
+		auto operator*(Q&& q) const{  return _temporary(impl_t::core() * q.core());  }
+
+		template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
+		auto operator*(S s) const{  return _temporary(impl_t::core() * s);  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
 	};// end of Matrix class
+
+
+	template
+	<	class S, class T, MxSize_t R, MxSize_t C
+	,	class = std::enable_if_t< std::is_scalar_v<S> >
+	>
+	auto operator*(S s, Matrix<T, R, C> const& m){  return m * s;  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
