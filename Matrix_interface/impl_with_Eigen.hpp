@@ -3,6 +3,7 @@
 #include "Matrix_interface/Matrix_interface.hpp"
 
 #include "Reform/ReformEigen.h"
+#include <cmath>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm::mxi
@@ -15,7 +16,7 @@ namespace sgm::mxi
 	template<class Q>
 	using Maybe_reference_t
 	=	std::conditional_t< is_immutable<Q>::value, std::decay_t<Q>, std::decay_t<Q>& >;
-
+	//========//========//========//========//=======#//========//========//========//========//===
 
 	template<class T, MxSize_t R, MxSize_t C>
 	class Mx_implementation
@@ -118,6 +119,7 @@ namespace sgm::mxi
 		auto col(index_t idx)		{  return _core.col(idx);  }
 
 	};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	template<class elem_t, egnSize_t S>
@@ -138,6 +140,7 @@ namespace sgm::mxi
 			>;
 
 		core_t _core;
+
 
 	protected:
 		using elem_t = std::decay_t< decltype( _core(0) ) >;
@@ -184,7 +187,7 @@ namespace sgm::mxi
 						for
 						(	auto[itr, p] = std::pair( q.begin(), &res(0) )
 						;	itr != q.end()
-						;	*p++ = static_cast<elem_t>(*itr++);
+						;	*p++ = static_cast<elem_t>(*itr++)
 						);
 							
 						return res;
@@ -201,13 +204,56 @@ namespace sgm::mxi
 		auto core()-> Maybe_reference_t<core_t>	{  return _core;  }
 		auto core() const-> core_t const&		{  return _core;  }
 
-		decltype(auto) element(index_t idx)		{  return _core(idx);  }
 		auto element(index_t idx) const-> elem_t	{  return _core(idx);  }
+		decltype(auto) element(index_t idx)		{  return _core(idx);  }
 
 		auto size() const{  return _core.size();  }
 
 		void resize(MxSize_t size){  _core.resize(size, 1);  }
+
+		auto head(MxSize_t n) const		{  return _core.head(n);  }
+		decltype(auto) head(MxSize_t n)	{  return _core.head(n);  }
+
+		auto tail(MxSize_t n) const		{  return _core.tail(n);  }
+		decltype(auto) tail(MxSize_t n)	{  return _core.tail(n);  }
+
+
+		template<MxSize_t L>
+		auto norm() const
+		{
+			if constexpr(L == 2)
+				return _core.norm();
+			else if constexpr(L == 0)
+				SGM_COMPILE_FAILED(L0 norm is undefined);
+			else
+			{
+				auto res = elem_t(0);
+
+				for(auto idx = size(); idx-->0;)
+					res += static_cast<elem_t>(   pow(  abs( _core(idx) ), L  )   );
+
+				return pow<elem_t>( res, float(1)/float(L) );
+			}
+		}
+
+
+		auto normalized() const{  return _core.normalized();  }
+
+
+		template<class Q>
+		auto dot(Q&& q) const{  return _core.dot( std::forward<Q>(q) );  }
+
+
+		template<class Q>
+		decltype(auto) cross(Q&& q) const
+		{  
+			return
+			static_cast< egnVector_t<elem_t, 3> >(_core)
+			.	cross( static_cast< egnVector_t<elem_t, 3> >(q) );
+		}
+
 	};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 }

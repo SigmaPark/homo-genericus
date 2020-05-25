@@ -106,13 +106,14 @@ namespace sgm::mxi
 		template<class, MxSize_t, MxSize_t>		friend class Matrix;
 		template<class, MxSize_t>				friend class Vector;
 
-		template<class T>
+
+		template< class T>
 		static auto Mx(T&& t)
 		{
 			return Matrix<T, MxSize::TEMPORARY, MxSize::TEMPORARY>( std::move(t) );
 		}
 
-		template<class T>
+		template< class T>
 		static auto Vt(T&& t)
 		{
 			return Vector<T, MxSize::TEMPORARY>( std::move(t) );
@@ -264,9 +265,7 @@ namespace sgm::mxi
 		Vector() : impl_t(){}
 
 
-		template
-		<	class Q, class = std::enable_if_t< std::is_scalar_v<Q> >
-		>
+		template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
 		Vector(std::initializer_list<Q>&& iL) : impl_t( std::move(iL) ){}
 
 
@@ -301,10 +300,37 @@ namespace sgm::mxi
 			(	(MxSize::is_dynamic_v<S> || size == S)  && L"static size cannot be modified.\n"
 			);
 
-			impl_t::resize(size, 1);
+			impl_t::resize(size);
 
 			return *this;
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto head(MxSize_t n) const	{  return _Temporary::Vt( impl_t::head(n) );  }
+		auto head(MxSize_t n)		{  return _Temporary::Vt( impl_t::head(n) );  }
+		auto tail(MxSize_t n) const	{  return _Temporary::Vt( impl_t::tail(n) );  }
+		auto tail(MxSize_t n)		{  return _Temporary::Vt( impl_t::tail(n) );  }
+
+		template<MxSize_t L = 2>
+		auto norm() const{  return impl_t::norm<L>();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		auto normalized() const{  return _Temporary::Vt(impl_t::normalized());  }
+
+		auto operator-() const{  return _Temporary::Vt(-impl_t::core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiVector_v<Q> >  >
+		auto operator+(Q&& q) const{  return _Temporary::Vt(impl_t::core() + q.core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiVector_v<Q> >  >
+		auto operator-(Q&& q) const{  return _Temporary::Vt(impl_t::core() - q.core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiVector_v<Q> >  >
+		auto dot(Q&& q) const{  return impl_t::dot(q.core());  }
+
+		template<  class Q, class = std::enable_if_t< is_mxiVector_v<Q> >  >
+		auto cross(Q&& q) const{  return _Temporary::Vt( impl_t::cross(q.core()) );  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
