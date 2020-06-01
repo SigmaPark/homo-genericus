@@ -1,22 +1,148 @@
 #pragma once
 
-#ifndef _SGM_RAIL_
-#define _SGM_RAIL_
+#ifndef _SGM_INDEXABLE_
+#define _SGM_INDEXABLE_
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 
 
 namespace sgm
 {
 	
 
-	struct RailSize : No_Making{  enum : size_t{DYNAMIC = size_t(-1)};  };
+	struct DxSize : No_Making
+	{
+		using type = size_t;
 
-	template<class T, size_t SIZE = RailSize::DYNAMIC> class Rail;
+		enum : type{DYNAMIC = -1};
+	};
 
-	template<class T, size_t SIZE> class Static_Rail_impl;
-	template<class T> class Dynamic_Rail_impl;
+	using DxSize_t =  DxSize::type;
+
+	template<class T, DxSize_t SIZE = DxSize::DYNAMIC> class indexable;
+
+	//	should be defined later
+	template<class T, DxSize_t SIZE> class indexable_impl;
 	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class T, DxSize_t SIZE>
+	class indexable : indexable_impl<T, SIZE>
+	{
+		using impl_t = indexable_impl<T, SIZE>;
+
+	public:
+		indexable() = default;
+		indexable(indexable const&) = default;
+
+
+		template
+		<	class ITR
+		,	class 
+			=	std::enable_if_t
+				<	is_iterator<ITR>::value 
+				&&	std::is_same< T, std::decay_t<decltype(*Declval<ITR>())> >::value
+				>
+		>
+		indexable(ITR bi, ITR ei) : impl_t(bi, ei){}
+
+
+		template
+		<	class S, class...ARGS
+		,	class = std::enable_if_t< std::is_integral<S>::value && SIZE == DxSize::DYNAMIC >
+		>
+		explicit indexable(S size, ARGS const&...args) : impl_t(size, args...){}
+
+
+		template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
+		indexable(std::initializer_list<Q>&& con) : impl_t( std::move(con) ){}
+
+
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON>::value
+				&&	!std::is_same< std::decay_t<CON>, indexable >::value  
+				>
+		>
+		indexable(CON&& con) : impl_t( std::forward<CON>(con) ){}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		auto operator=(indexable const&)-> indexable& = default;
+
+
+
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON>::value
+				&&	!std::is_same< std::decay_t<CON>, indexable >::value  
+				>  
+		>
+		auto operator=(CON&& con)-> indexable&
+		{
+			return *this = indexable(con.begin(), con.end());
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+
+		auto size() const-> DxSize_t{  return impl_t::size();  }
+		auto empty() const-> bool{  return impl_t::empty();  }
+
+		auto cdata() const-> T const*{  return impl_t::data();  }
+		auto data() const-> T const*{  return cdata();  }
+		auto data()-> T*{  return impl_t::data();  }
+
+		auto operator[](size_t idx) const-> T const&{  return impl_t::at(idx);  }
+		auto operator[](size_t idx)-> T&{  return impl_t::at(idx);  } 
+
+
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON>::value
+				&&	!std::is_same< std::decay_t<CON>, indexable >::value  
+				>
+		> 
+		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+	#ifndef _WHEN_DYNAMIC
+		#define _WHEN_DYNAMIC class = std::enable_if_t<SIZE == DxSize::DYNAMIC>
+
+		template<_WHEN_DYNAMIC>
+		auto capacity() const-> DxSize_t;
+
+		template<class...ARGS, _WHEN_DYNAMIC>
+		auto emplace_back(ARGS&&...args)-> indexable&;
+
+		template<_WHEN_DYNAMIC>
+		auto pop_back(DxSize_t n = 1)-> indexable&;
+
+		template<_WHEN_DYNAMIC>
+		auto clear()-> indexable&;
+
+		template<class Q, _WHEN_DYNAMIC>
+		auto operator>>(Q&& q)-> indexable&{  return emplace_back( std::forward<Q>(q) );  }
+
+
+
+	#else
+		#error _WHEN_DYNAMIC was already defined somewhere else.
+	#endif
+	#undef _WHEN_DYNAMIC
+	};
+
+
+
+
+#if 1
+#else
 
 
 	template<class T, size_t SIZE>
@@ -189,7 +315,7 @@ namespace sgm
 
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
-
+#endif
 
 }
 

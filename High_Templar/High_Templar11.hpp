@@ -24,7 +24,7 @@ namespace sgm
 
 	struct CONST : Flag<CONST>{};
 	struct PWT : Flag<PWT>{};
-	struct AVT : Flag<AVT>{};
+	struct AVT : Flag<AVT>{}; 
 
 #ifdef _OMPIMP
 	struct PAR : Flag<PAR>{};

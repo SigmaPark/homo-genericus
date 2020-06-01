@@ -410,7 +410,7 @@ namespace sgm
 
 
 		auto operator=(Carrier const& ca)-> Carrier&{  return _equal(ca);  }
-
+		 
 		auto operator=(Carrier&& ca)-> Carrier&
 		{
 			this->~Carrier();

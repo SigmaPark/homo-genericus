@@ -15,13 +15,39 @@ namespace sgm
 {
 	
 
-	enum : size_t{DYNAMIC = -1};
+	struct _SequanceSize : No_Making
+	{
+		using type = size_t;
 
-	template<class T, size_t N = DYNAMIC> class _Sequance_t;
+		enum : type{DYNAMIC = -1};  
+	};
+
+	using SeqSize_t = typename _SequanceSize::type;
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<  class T = size_t, class = std::enable_if_t< std::is_scalar<T>::value >  >
-	static auto indices(size_t N, T offset = 0)-> _Sequance_t<T>
+	/**	Should be defined later
+	*/
+	template<class T, SeqSize_t N = _SequanceSize::DYNAMIC> class _Sequance_t;
+
+
+	/**	Flag which should be defined later
+	*/
+	struct HT_Flag : No_Making
+	{
+		struct IMMUTABLE;
+		struct SHARED;
+		struct REFERRED;
+	};
+
+	/**	Should be defined later
+	*/
+	struct HT_impl;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<  class T = SeqSize_t, class = std::enable_if_t< std::is_scalar<T>::value >  >
+	static auto indices(SeqSize_t N, T offset = 0)-> _Sequance_t<T>
 	{
 		_Sequance_t<T> res(N);
 
@@ -30,10 +56,101 @@ namespace sgm
 
 		return res;
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
 
+
+	template
+	<	class...FLAGS, class CON, class FUNC
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Morph<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+
+	template
+	<	class...ARGS, class FLAG_SET, class CON, class FUNC
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Morph(FLAG_SET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Morph<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template
+	<	class...FLAGS, class CON, class FUNC
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Filter<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+
+	template
+	<	class...ARGS, class FLAG_SET, class CON, class FUNC
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Filter(FLAG_SET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Filter<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
+	)
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template
+	<	class...FLAGS, class CON, class FUNC
+	,	class res_t = std::nullptr_t
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Fold(CON&& con, FUNC&& func, res_t&& init = nullptr) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Fold<FLAGS...>
+		(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
+		)
+	)
+
+	template
+	<	class...ARGS, class FLAG_SET, class CON, class FUNC
+	,	class res_t = std::nullptr_t
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto Fold(FLAG_SET fset, CON&& con, FUNC&& func, res_t&& init = nullptr) 
+	SGM_DECLTYPE_AUTO
+	(
+		HT_impl::Fold<ARGS...>
+		(	fset, std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
+		)
+	)
+
+	template
+	<	class...FLAGS, class CON, class FUNC
+	,	class res_t = std::nullptr_t
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto rFold(CON&& con, FUNC&& func, res_t&& init = nullptr) SGM_DECLTYPE_AUTO
+	(
+		HT_impl::rFold<FLAGS...>
+		(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
+		)
+	)
+
+	template
+	<	class...ARGS, class FLAG_SET, class CON, class FUNC
+	,	class res_t = std::nullptr_t
+	,	class = std::enable_if_t< is_iterable<CON>::value >
+	>
+	static auto rFold(FLAG_SET fset, CON&& con, FUNC&& func, res_t&& init = nullptr) 
+	SGM_DECLTYPE_AUTO
+	(
+		HT_impl::rFold<ARGS...>
+		(	fset, std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
+		)
+	)
+	//========//========//========//========//=======#//========//========//========//========//===
 
 	
-
 
 }
 
