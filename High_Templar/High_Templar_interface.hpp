@@ -7,7 +7,7 @@
 	#error C++11 or higher version language support is required.
 #endif
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 

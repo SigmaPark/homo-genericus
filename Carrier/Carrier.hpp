@@ -6,7 +6,8 @@
 #include <cstdlib>
 #include <cassert>
 #include <new>
-#include "..\Type_Analysis\Type_Analysis.hpp" 
+#include "..\interface_Traits\interface_Traits.hpp"
+
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -348,10 +349,7 @@ namespace sgm
 		<	class ITR
 		,	class 
 			=	std::enable_if_t
-				<	!std::is_integral<ITR>::value
-	#ifdef _ITERATOR_
-				&&	is_iterator<ITR>::value 
-	#endif
+				<	!std::is_integral<ITR>::value && is_iterator<ITR>::value 
 				>
 		>
 		Carrier(ITR bi, ITR ei) : Carrier(  static_cast<size_t>( std::distance(bi, ei) )  )

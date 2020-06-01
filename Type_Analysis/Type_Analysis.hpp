@@ -87,16 +87,16 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-#ifdef _ITERATOR_
-	template<class> using _Void_t = void;
-
-	template <class T, class = void> struct is_iterator : public std::false_type{};
-
-	template <class T>
-	struct is_iterator<  T, _Void_t< typename std::iterator_traits<T>::iterator_category >  > 
-	:	public std::true_type 
-	{};
-#endif
+//#ifdef _ITERATOR_
+//	template<class> using _Void_t = void;
+//
+//	template <class T, class = void> struct is_iterator : public std::false_type{};
+//
+//	template <class T>
+//	struct is_iterator<  T, _Void_t< typename std::iterator_traits<T>::iterator_category >  > 
+//	:	public std::true_type 
+//	{};
+//#endif
 
 
 	template<class CON, class T = void> 

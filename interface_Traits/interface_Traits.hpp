@@ -164,14 +164,20 @@ namespace sgm
 	template<class T> struct is_Comparable : Has_Operator_Same<T>{};
 	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
 
-#ifndef _ITERATOR_
-	template<  class T, class = std::enable_if_t< !std::is_pointer<T>::value >  > 
-	struct is_iterator
-	:	Has_Operator_Deref<T>
-	,	Has_Operator_Post_increase<T>
-	,	Has_Operator_NotSame<T>
-	{};
-#endif
+
+	template<class T> 
+	struct is_iterator : No_Making
+	{
+		enum : bool
+		{	value 
+			=	(	Has_Operator_Deref<T>::value 
+				&&	Has_Operator_Post_increase<T>::value
+				&&	Has_Operator_NotSame<T>::value
+				)
+		};
+	};
+
+
 
 
 } // end of namespace sgm
