@@ -14,10 +14,10 @@ public:
 		double const cx = 6;
 
 		{
-			//sgm::Avatar<double> avt = x;
+			
 			auto avt = sgm::make_Avatar(x);
 
-			avt = 30;
+			x = 30.0;
 
 			assert(avt == x && x == 30.0);
 		}
@@ -52,14 +52,16 @@ public:
 		&&	!std::is_convertible
 			<	Avatar<double const>, Avatar<double>
 			>::value
-		&&	!std::is_convertible
-			<	Avatar< Avatar<double> const>, Avatar<double>
-			>::value
-		&&	std::is_convertible
-			<	Avatar<int>, Avatar< Avatar<int const> >
-			>::value
 		,	""
 		);
+
+		Avatar<double const> cavt = Avatar<double>();
+
+		//cavt = Avatar<double>();
+
+		static_assert( decltype(cavt)::IS_CONST, " cavt is not constant." );
+		assert(cavt.is_yet());
+
 	}
 
 

@@ -1,4 +1,5 @@
- #include "Pinweight.hpp"
+#include "Pinweight.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 #include <cassert>
 
 
@@ -91,8 +92,9 @@ public:
 		Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
 		Pinweight<int const> cpw = 53;
 
-		//cpw = pw;	//	should NOT be compiled!
-		//cpw = 32;	//	should NOT be compiled!
+
+	//	cpw = pw;	// Compile Failed because it is deleted
+	//	cpw = 32;	// Compile Failed because it is deleted
 
 		ppw = cpw;
 
@@ -109,7 +111,7 @@ public:
 	{
 		using namespace sgm;
 
-		Pinweight<double> const pw = 3;
+		Pinweight<double const> pw = 3;
 
 		{
 			Pinweight<double> pw2;
