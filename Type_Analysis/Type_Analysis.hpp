@@ -290,9 +290,9 @@ namespace sgm
 	:	public PROXYNAME##_T_Helper<T, M, BS...>::Parent_t	\
 	{	\
 	public:		\
-		template<class Q>	\
-		PROXYNAME##_t(Q&& q) \
-		:	PROXYNAME##_T_Helper<T, M, BS...>::Parent_t( std::forward<Q>(q) ){}	\
+		template<class...QS>	\
+		PROXYNAME##_t(QS&&...qs) \
+		:	PROXYNAME##_T_Helper<T, M, BS...>::Parent_t( std::forward<QS>(qs)... ){}	\
 	}
 
 #else

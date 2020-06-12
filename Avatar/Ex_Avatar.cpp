@@ -14,7 +14,6 @@ public:
 		double const cx = 6;
 
 		{
-			
 			auto avt = sgm::make_Avatar(x);
 
 			x = 30.0;
@@ -69,26 +68,60 @@ public:
 	{
 		using namespace sgm;
 
-		int dx = 3;
+		Avatar< Avatar<int const> > avt1;
 
-		Carrier< Avatar<int> > crravt(10);
+		int x = 9;
 
-		crravt.emplace_back(dx);
-		//crravt >> dx;
+		avt1(x);
 
+		x = 4;
 
+		assert(avt1 == 4);
+
+		avt1.~Avatar_t();
+
+		assert(avt1.has_gone());
 	}
 
 
 	static void Test4()
 	{
+		using namespace sgm;
 
+		int x = 3;
+
+		Avatar<int const> avt1;
+
+		avt1(x);
+
+		assert(avt1 == 3);
+
+		int const cx = 4;
+
+		avt1(cx);
+
+		Avatar<int> avt2;
+
+		assert(avt1 == 4 && avt2.is_yet());
 	}
 
 
 	static void Test5()
 	{
+		using namespace sgm;
 
+		int x = 3;
+
+		Avatar<  Avatar< Avatar<int> const >  > avt1 = x;
+
+		static_assert
+		(	(	Avatar<  Avatar< Avatar<int> const >  >::IS_CONST
+			&&	Avatar<  Avatar< Avatar<int const> >  >::IS_CONST
+			//&&	constAvatar< Avatar<int> >::IS_CONST
+			//&&	Avatar<  Avatar< Avatar<int> > const  >::IS_CONST
+			)
+		,	""
+		);
 	}
 
 

@@ -25,10 +25,11 @@ namespace sgm
 
 	public:
 		enum : bool{IS_CONST = std::is_same<M, invar>::value || is_immutable<T>::value};
+
 		using value_t = std::conditional_t< IS_CONST, std::add_const_t<T>, T >;
 
 
-		bool is_yet() const	{  return _state == State::YET;  }
+		bool is_yet() const		{  return _state == State::YET;  }
 		bool is_owning() const	{  return _state == State::OWNING;  }
 		bool has_gone() const	{  return _state == State::GONE;  }
 
@@ -52,28 +53,34 @@ namespace sgm
 		template< class = std::enable_if_t<!IS_CONST> >
 		auto value()-> T&{  return *_pval;  }
 
-		
 
 		auto operator=(Avatar_t const& avt)-> Avatar_t&
 		{
 			static_assert(!IS_CONST, "cannot bind to const Avatar_t");
 
-			*_pval = avt.value();
-			_state = avt._state;
+			assert(is_yet() && !avt.has_gone() || is_owning() && avt.is_owning());
+
+			*_pval = avt.value(), _state = avt._state;
 
 			return *this;
 		}
 
-		//template
-		//<	class Q
-		//,	class = std::enable_if_t< !IS_CONST && !is_Avatar<Q>::value >  >
-		//auto operator=(Q&& q)-> Avatar_t&
-		//{
-		//	assert(is_owning() && L"Avatar_t has nothing");
 
-		//	*_pval = std::forward<Q>(q),
-		//	_state = 
-		//}
+		template
+		<	class Q
+		,	class 
+			=	std::enable_if_t
+				<	!IS_CONST && !is_Avatar<Q>::value && std::is_convertible<Q, T>::value
+				>  
+		>
+		auto operator=(Q&& q)-> Avatar_t&
+		{
+			assert(is_owning() && L"Avatar_t has nothing");
+
+			*_pval = std::forward<Q>(q);
+
+			return *this;
+		}
 
 
 		template<class M>
@@ -91,6 +98,12 @@ namespace sgm
 		template< class Q, class = std::enable_if_t< !is_Avatar<Q>::value >  >
 		auto operator()(Q& q)-> Avatar_t
 		{
+			static_assert
+			(	IS_CONST || !is_immutable<decltype(q)>::value, "cannot bind to const Avatar_t"
+			);
+
+			assert(!has_gone() && L"Avatar_t was released already");
+
 			_pval = &q, _state = State::OWNING;
 
 			return *this;
