@@ -16,12 +16,6 @@ namespace sgm
 {
 
 
-#ifdef _CSTDDEF_
-	using std::size_t;
-#endif
-
-
-
 	template<class T, class Host_t, bool MUTABLE, bool REVERSE> class CArr_iterator;
 
 
@@ -455,7 +449,7 @@ namespace sgm
 		auto size() const-> size_t		{  return _size;  }
 
 		bool no_capacity() const	{  return _capa == 0;  }
-		bool no_element() const	{  return _size ==0;  }
+		bool no_element() const	{  return _size == 0;  }
 
 
 		template<class...ARGS>
@@ -549,6 +543,13 @@ namespace sgm
 
 	#undef _DECL_CARR_ITERATOR
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+		auto cdata() const-> value_t const*	{  return _arr;  }
+		
+		auto data() const-> value_t const*	{  return cdata();  }
+		auto data()-> value_t*				{  return _arr;  }
+
+
 
 	private:
 		size_t _capa, _size;

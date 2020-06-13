@@ -21,7 +21,6 @@ public:
 			assert(avt == x && x == 30.0);
 		}
 		{
-			//sgm::Avatar<double const> cavt = cx;
 			auto cavt = sgm::make_Avatar(cx);
 
 			//cavt = 23;	// error
@@ -54,11 +53,12 @@ public:
 		,	""
 		);
 
+
 		Avatar<double const> cavt = Avatar<double>();
 
-		//cavt = Avatar<double>();
+		//cavt = Avatar<double>();	// Compile Failed.
 
-		static_assert( decltype(cavt)::IS_CONST, " cavt is not constant." );
+		static_assert( is_constAvatar<decltype(cavt)>::value, " cavt is not constant." );
 		assert(cavt.is_yet());
 
 	}
@@ -115,13 +115,22 @@ public:
 		Avatar<  Avatar< Avatar<int> const >  > avt1 = x;
 
 		static_assert
-		(	(	Avatar<  Avatar< Avatar<int> const >  >::IS_CONST
-			&&	Avatar<  Avatar< Avatar<int const> >  >::IS_CONST
-			//&&	constAvatar< Avatar<int> >::IS_CONST
-			//&&	Avatar<  Avatar< Avatar<int> > const  >::IS_CONST
+		(	(	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
+			&&	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
+			&&	is_constAvatar<  constAvatar< Avatar<int> >  >::value
+			&&	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
+			&&	is_constAvatar< Avatar< Avatar<int> > const  >::value
 			)
 		,	""
 		);
+
+	//	int const cx = 40;
+
+	//	constAvatar< Avatar<int> > avt_ = cx;	// Compile Fails.
+
+		auto avt2 = make_Avatar(avt1);
+
+		assert(avt1 == 3 && avt2 == 3);
 	}
 
 

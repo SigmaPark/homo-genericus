@@ -128,8 +128,7 @@ namespace sgm
 		{
 			_my_pcount_down();
 
-			_cpval =	new T const( std::forward<Q>(q) ), 
-			_pcount = new count_t(1);
+			_cpval = new T const( std::forward<Q>(q) ), _pcount = new count_t(1);
 
 			return *this; 			
 		}

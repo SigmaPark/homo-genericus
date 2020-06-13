@@ -1,6 +1,6 @@
 #pragma once
 
-#include "indexable.hpp"
+#include "indexable_interface.hpp"
 #include <vector>
 #include <array>
 
