@@ -66,7 +66,7 @@ namespace sgm
 		using value_t = std::conditional_t< IS_CONST, std::add_const_t<T>, T >;
 
 
-		bool is_yet() const		{  return _state == State::YET;  }
+		bool is_yet() const	{  return _state == State::YET;  }
 		bool is_owning() const	{  return _state == State::OWNING;  }
 		bool has_gone() const	{  return _state == State::GONE;  }
 
