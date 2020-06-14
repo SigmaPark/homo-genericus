@@ -1,190 +1,210 @@
 #pragma once
 
-
-
 #include "indexable_interface.hpp"
-#include <vector>
-#include <array>
+
+#include <cstdlib>
+#include <cassert>
+#include <new>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 
 namespace sgm
 {
+	
+
+	template
+	<	class T, ixSize_t S = ixSize::DYNAMIC
+	,	bool IS_MUTABLE = true, bool IS_FORWARD = true
+	>
+	class indexable_iterator;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-#ifndef _DX_ITERATOR_METHOD
-	#define _DX_ITERATOR_METHOD(C1, R1, C2, R2)	\
-		template<class T, DxSize_t S>	\
-		struct Dx_##C1##R1##iterator : No_Making	\
-		{	\
-			using type = typename std::array<T, S>::C2##R2##iterator;	\
-		};	\
-		\
-		template<class T>	\
-		struct Dx_##C1##R1##iterator<T, DxSize::DYNAMIC> : No_Making	\
-		{	\
-			using type = typename std::vector<T>::C2##R2##iterator;		\
-		}
-
-
-		_DX_ITERATOR_METHOD(,,,);
-		_DX_ITERATOR_METHOD(const_,,const_,);
-		_DX_ITERATOR_METHOD(,r,,reverse_);
-		_DX_ITERATOR_METHOD(const_,r,const_,reverse_);
-
-
-	#undef _DX_ITERATOR_METHOD
-#else
-	#error _DX_ITERATOR_METHOD was already defined somewhere else.
-#endif
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template<class T, DxSize_t SIZE>
-	class indexable_impl
+	template<class T>
+	class _ix_iterator_Helper : No_Making
 	{
-		using core_t 
-		=	std::conditional_t
-			<	SIZE == DxSize::DYNAMIC, std::vector<T>, std::array<T, SIZE>
-			>;
-
-		core_t _core;
-
-
-	protected:
-		indexable_impl() = default;
-		indexable_impl(indexable_impl const&) = default;
-		indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl.core()) ){}
-
-
-		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-		indexable_impl(ITR bi, ITR ei) : _core( _init<SIZE>::calc(bi, ei) ){}
+		template<class, ixSize_t, bool, bool> friend class indexable_iterator;
 
 
 		template
-		<	class S
-		,	class = std::enable_if_t< std::is_integral<S>::value && SIZE == DxSize::DYNAMIC >
+		<	ixSize_t S, bool M1, bool M2, bool F1, bool F2
+		,	class itr1_t = indexable_iterator<T, S, M1, F1>
+		,	class itr2_t = indexable_iterator<T, S, M2, F2>
 		>
-		indexable_impl(S capa) 
-		:	_core
-			(	[capa]()-> core_t
-				{
-					core_t res;
-
-					res.reserve(capa);
-
-					return res;
-				}()
-			)
-		{}
-
-
-		template
-		<	class S, class...ARGS
-		,	class 
-			=	std::enable_if_t
-				<	std::is_integral<S>::value && SIZE == DxSize::DYNAMIC 
-				&&	sizeof...(ARGS) != 0
-				>
-		>
-		indexable_impl(S size, ARGS const&...args) : _core( size, T(args...) ){}
-
-
-		auto operator=(indexable_impl const&)-> indexable_impl& = default;
-
-		auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
+		static auto Substitution
+		(	indexable_iterator<T, S, M1, F1>& itr1, indexable_iterator<T, S, M2, F2> itr2
+		)->	itr1_t&
 		{
-			_core = std::move(ix_impl._core);
-
-			return *this;
-		}
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		auto size() const-> DxSize_t{  return _core.size();  }
-		auto empty() const-> bool{  return _core.empty();  }
-
-		auto data() const-> T const*	{  return _core.data();  }
-		auto data()-> T*				{  return _core.data();  }
-
-		auto front() const-> T const&	{  return _core.front();  }
-		auto front()-> T&				{  return _core.front();  }
-		auto back() const-> T const&	{  return _core.back();  }
-		auto back()-> T&				{  return _core.back();  }
-
-		auto at(DxSize_t idx) const-> T const&	{  return _core.at(idx);  }
-		auto at(DxSize_t idx)-> T&				{  return _core.at(idx);  } 
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+			static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
+			
+			itr1._arr = itr2._arr, itr1._idx = itr2._idx;
 		
-		
-		auto begin() const		SGM_DECLTYPE_AUTO(  _core.begin()  )
-		auto begin()			SGM_DECLTYPE_AUTO(  _core.begin()  )
-		auto cbegin() const	SGM_DECLTYPE_AUTO(  _core.cbegin()  )
-
-		auto end() const		SGM_DECLTYPE_AUTO(  _core.end()  )
-		auto end()			SGM_DECLTYPE_AUTO(  _core.end()  )
-		auto cend() const		SGM_DECLTYPE_AUTO(  _core.cend()  )
-
-		auto rbegin() const	SGM_DECLTYPE_AUTO(  _core.rbegin()  )
-		auto rbegin()			SGM_DECLTYPE_AUTO(  _core.rbegin()  )
-		auto crbegin() const	SGM_DECLTYPE_AUTO(  _core.crbegin()  )
-
-		auto rend() const		SGM_DECLTYPE_AUTO(  _core.rend()  )
-		auto rend()			SGM_DECLTYPE_AUTO(  _core.rend()  )
-		auto crend() const		SGM_DECLTYPE_AUTO(  _core.crend()  )
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		template< class = std::enable_if_t<SIZE == DxSize::DYNAMIC> >
-		auto capacity() const-> DxSize_t{  return _core.capacity();  }
-
-
-		template< class...ARGS, class = std::enable_if_t<SIZE == DxSize::DYNAMIC> >
-		void emplace_back(ARGS&&...args)
-		{  
-			_core.emplace_back( std::forward<ARGS>(args)... );  
+			return itr1;
 		}
 
+
+		template<bool IS_FORWARD> 
+		static ixSize_t shifted(ixSize_t idx, bool plus_dir, ixSize_t interval);
+
+		template<>
+		static ixSize_t shifted<true>(ixSize_t idx, bool plus_dir, ixSize_t interval)
+		{
+			return plus_dir ? idx + interval : idx - interval;
+		}
+
+		template<>
+		static ixSize_t shifted<false>(ixSize_t idx, bool plus_dir, ixSize_t interval)
+		{
+			return plus_dir ? idx - interval : idx + interval;
+		}
+
+
+		template<bool IS_FOWARD> static bool Less(ixSize_t idx1, ixSize_t idx2);
+
+		template<>
+		static bool Less<true>(ixSize_t idx1, ixSize_t idx2){  return idx1 < idx2;  }
+
+		template<>
+		static bool Less<false>(ixSize_t idx1, ixSize_t idx2){  return idx1 > idx2;;  }
+
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<class T, ixSize_t S, bool IS_MUTABLE, bool IS_FORWARD>
+	class indexable_iterator
+	{
+		static_assert(!std::is_const<T>::value, "T should be mutable here");
+
+		using iter_t = indexable_iterator;
+		enum : ixSize_t{SIZE = S};
+
+
+	public:
+		indexable_iterator(T* arr, ixSize_t idx) : _arr(arr), _idx(idx){}
+		indexable_iterator(iter_t const&) = default;
+
+
+		auto operator=(iter_t const&)-> iter_t& = default;
 
 		template
-		<	class ITR
-		,	class = std::enable_if_t< is_iterator<ITR>::value && SIZE == DxSize::DYNAMIC >
+		<	bool _M, bool _F
+		,	class = std::enable_if_t<_M != IS_MUTABLE || _F != IS_FORWARD>
 		>
-		void pop_back_from(ITR itr){  _core.erase(itr, end());  }
+		auto operator=(indexable_iterator<T, SIZE, _M, _F> itr)-> iter_t&
+		{
+			return _ix_iterator_Helper<T>::Substitution(*this, itr);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		template< class = std::enable_if_t<SIZE == DxSize::DYNAMIC> >
-		void clear(){  _core.clear();  }
+		//	itr++	(rvalue) 
+		auto operator++(int) const-> iter_t
+		{
+			iter_t const itr = *this;
+			
+			_idx = shifted(_idx);
+			
+			return itr;		
+		}
+
+		//	itr--	(rvalue)
+		auto operator--(int) const-> iter_t
+		{
+			iter_t const itr = *this;
+
+			_idx = shifted(_idx, false);
+
+			return itr;
+		}
+
+		auto operator+(ixSize_t interval) const-> iter_t
+		{
+			return iter_t( _arr, shifted(_idx, true, interval) );
+		}
+
+		auto operator-(ixSize_t interval) const-> iter_t
+		{
+			return iter_t( _arr, shifted(_idx, false, interval) );
+		}
+
+
+		auto operator-(iter_t itr) const-> signed long long
+		{
+			bool const has_greater_idx = _idx > itr._idx;
+			ixSize_t const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
+
+			assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.");
+
+			return 
+			IS_FORWARD == has_greater_idx
+			?	static_cast<signed long long>(du)
+			:	-static_cast<signed long long>(du);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+	#ifndef _RW_MEMBERS
+		#define _RW_MEMBERS(NAME, ARGS, RES, ...)		\
+			auto NAME (ARGS)	\
+			->	std::conditional_t<IS_MUTABLE, RES, const RES>		{__VA_ARGS__}	\
+			\
+			auto NAME (ARGS) const-> const RES					{__VA_ARGS__}
+
+
+		_RW_MEMBERS(operator++, , iter_t&, return *this += 1;)
+		_RW_MEMBERS(operator--, , iter_t&, return *this -= 1;)
+
+		_RW_MEMBERS
+		(	operator[], ixSize_t interval, T&
+		,	return *( _arr _ shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		)
+
+		_RW_MEMBERS(operator*, , T&, return (*this)[0];)
+
+		_RW_MEMBERS
+		(	operator+=, ixSize_t interval, iter_t&
+		,	_idx = shifted(_idx, true, interval);  return *this;
+		)
+
+		_RW_MEMBERS
+		(	operator-=, ixSize_t interval, iter_t&
+		,	idx = shifted(_idx, false, interval);  return *this;
+		)
+
+
+		#undef _RW_MEMBERS
+	#else
+		#error _RW_MEMBERS was already defined somewhere else.
+	#endif
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		bool operator!=(iter_t itr) const{  return _idx != itr._idx;  }	
+		bool operator==(iter_t itr) const{  return _idx == itr._idx;  }	
+		
+		bool operator<(iter_t itr) const{  return Less(*this, itr);  }
+		bool operator>(iter_t itr) const{  return Less(itr, *this);  }
+
+		bool operator<=(iter_t itr) const{  return *this < itr || *this == itr;  }
+		bool operator>=(iter_t itr) const{  return *this > itr || *this == itr;  }
 
 
 	private:
-		template<DxSize_t S>
-		struct _init
+		T* _arr;
+		ixSize_t mutable _idx;
+
+
+		static ixSize_t shifted(ixSize_t idx, bool plus_dir = true, ixSize_t interval = 1)
 		{
-			template<class ITR>
-			static auto calc(ITR bi, ITR ei)-> core_t
-			{
-				core_t res;
+			return _ix_iterator_Helper<T>::shifted<IS_FORWARD>(idx, plus_dir, interval);
+		}
 
-				for
-				(	auto itr = res.begin()
-				;	bi != ei
-				;	*itr++ = *bi++
-				);
-
-				return res;
-			}
-		};
-
-		template<>
-		struct _init<DxSize::DYNAMIC>
+		static bool Less(iter_t itr1, iter_t itr2)
 		{
-			template<class ITR>
-			static auto calc(ITR bi, ITR ei)-> core_t{  return core_t(bi, ei);  }
-		};
+			return _ix_iterator_Helper<T>::Less<IS_FORWARD>(itr1._idx, itr2._idx);
+		}
+	};
 
 
-	};// end of class indexable_impl
-
-
-}// end of namespace sgm
+}

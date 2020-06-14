@@ -11,37 +11,37 @@ namespace sgm
 {
 	
 
-	struct DxSize : No_Making
+	struct ixSize : No_Making
 	{
 		using type = size_t;
 
 		enum : type{DYNAMIC = -1};
 	};
 
-	using DxSize_t =  DxSize::type;
+	using ixSize_t =  ixSize::type;
 
-	template<class, DxSize_t = DxSize::DYNAMIC> class indexable;
+	template<class, ixSize_t = ixSize::DYNAMIC> class indexable;
 
-
-	//	should be defined later
-	template<class, DxSize_t> class indexable_impl;
 
 	//	should be defined later
-	template<class, DxSize_t> struct Dx_iterator;
-	template<class, DxSize_t> struct Dx_const_iterator;
-	template<class, DxSize_t> struct Dx_riterator;
-	template<class, DxSize_t> struct Dx_const_riterator;
+	template<class, ixSize_t> class indexable_impl;
+
+	//	should be defined later
+	template<class, ixSize_t> struct ix_iterator;
+	template<class, ixSize_t> struct ix_const_iterator;
+	template<class, ixSize_t> struct ix_riterator;
+	template<class, ixSize_t> struct ix_const_riterator;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class T, DxSize_t S>
+	template<class T, ixSize_t S>
 	class indexable : indexable_impl<T, S>
 	{
 		using impl_t = indexable_impl<T, S>;
 
 
 	public:
-		enum : DxSize_t{SIZE = S};
+		enum : ixSize_t{SIZE = S};
 
 
 		indexable() = default;
@@ -62,7 +62,7 @@ namespace sgm
 
 		template
 		<	class S, class...ARGS
-		,	class = std::enable_if_t< std::is_integral<S>::value && SIZE == DxSize::DYNAMIC >
+		,	class = std::enable_if_t< std::is_integral<S>::value && SIZE == ixSize::DYNAMIC >
 		>
 		explicit indexable(S size, ARGS const&...args) : impl_t(size, args...){}
 
@@ -108,7 +108,7 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto size() const-> DxSize_t{  return impl_t::size();  }
+		auto size() const-> ixSize_t{  return impl_t::size();  }
 		auto empty() const-> bool{  return impl_t::empty();  }
 
 		auto cdata() const-> T const*{  return impl_t::data();  }
@@ -120,8 +120,8 @@ namespace sgm
 		auto back() const-> T const&	{  return impl_t::back();  }
 		auto back()-> T&				{  return impl_t::back();  }
 
-		auto operator[](DxSize_t idx) const-> T const&{  return impl_t::at(idx);  }
-		auto operator[](DxSize_t idx)-> T&{  return impl_t::at(idx);  } 
+		auto operator[](ixSize_t idx) const-> T const&{  return impl_t::at(idx);  }
+		auto operator[](ixSize_t idx)-> T&{  return impl_t::at(idx);  } 
 
 
 		template
@@ -136,10 +136,10 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		using iter_t = typename Dx_iterator<T, SIZE>::type;
-		using citer_t = typename Dx_const_iterator<T, SIZE>::type;
-		using riter_t = typename Dx_riterator<T, SIZE>::type;
-		using criter_t = typename Dx_const_riterator<T, SIZE>::type;
+		using iter_t = typename ix_iterator<T, SIZE>::type;
+		using citer_t = typename ix_const_iterator<T, SIZE>::type;
+		using riter_t = typename ix_riterator<T, SIZE>::type;
+		using criter_t = typename ix_const_riterator<T, SIZE>::type;
 
 
 		auto begin() const-> iter_t		{  return impl_t::begin();  }
@@ -161,11 +161,11 @@ namespace sgm
 
 
 	#ifndef _WHEN_DYNAMIC
-		#define _WHEN_DYNAMIC class = std::enable_if_t<SIZE == DxSize::DYNAMIC>
+		#define _WHEN_DYNAMIC class = std::enable_if_t<SIZE == ixSize::DYNAMIC>
 
 
 		template<_WHEN_DYNAMIC>
-		auto capacity() const-> DxSize_t{  return impl_t::capacity();  }
+		auto capacity() const-> ixSize_t{  return impl_t::capacity();  }
 
 
 		template<class...ARGS, _WHEN_DYNAMIC>
@@ -178,7 +178,7 @@ namespace sgm
 
 
 		template<_WHEN_DYNAMIC>
-		auto pop_back(DxSize_t n = 1)-> indexable&
+		auto pop_back(ixSize_t n = 1)-> indexable&
 		{
 			return pop_back_from(end() - n);
 		}
@@ -186,7 +186,7 @@ namespace sgm
 
 		template
 		<	class ITR
-		,	class = std::enable_if_t< is_iterator<ITR>::value && SIZE == DxSize::DYNAMIC >
+		,	class = std::enable_if_t< is_iterator<ITR>::value && SIZE == ixSize::DYNAMIC >
 		>
 		auto pop_back_from(ITR itr)-> indexable&
 		{

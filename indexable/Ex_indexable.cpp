@@ -43,11 +43,27 @@ public:
 		);
 	}
 
+
+	template<> static void Case<2>()
+	{
+		float sarr[] = {12, 34, 56};
+
+		static_assert
+		(	(	std::is_same<decltype(sarr), float[3]>::value
+			&&	!std::is_same<decltype(sarr), float*>::value
+			)
+		,	""
+		);
+	}
+
+
 };
+
 
 int main()
 {
 	Tutorial::Case<1>();
+	Tutorial::Case<2>();
 
 	return 0;
 }

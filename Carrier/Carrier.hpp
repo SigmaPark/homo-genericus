@@ -523,22 +523,22 @@ namespace sgm
 
 		_DECL_CARR_ITERATOR( , begin, , 0)
 		_DECL_CARR_ITERATOR( , begin, const, 0)
-		_DECL_CARR_ITERATOR( c, begin, , 0)
+
 		_DECL_CARR_ITERATOR( c, begin, const, 0)
 
 		_DECL_CARR_ITERATOR( , end, , _size)
 		_DECL_CARR_ITERATOR( , end, const, _size)
-		_DECL_CARR_ITERATOR( c, end, , _size)
+
 		_DECL_CARR_ITERATOR( c, end, const, _size)
 
 		_DECL_CARR_ITERATOR( r, begin, , _size)
 		_DECL_CARR_ITERATOR( r, begin, const, _size)
-		_DECL_CARR_ITERATOR( cr, begin, , _size)
+
 		_DECL_CARR_ITERATOR( cr, begin, const, _size)
 
 		_DECL_CARR_ITERATOR( r, end, , 0)
 		_DECL_CARR_ITERATOR( r, end, const, 0)
-		_DECL_CARR_ITERATOR( cr, end, , 0)
+
 		_DECL_CARR_ITERATOR( cr, end, const, 0)
 
 	#undef _DECL_CARR_ITERATOR
