@@ -68,7 +68,7 @@ namespace sgm
 
 
 		template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
-		indexable(std::initializer_list<Q>&& con) : impl_t(con.begin(), con.end()) {}
+		indexable(std::initializer_list<Q>&& con) : impl_t(con.begin(), con.end()){}
 
 
 		template
@@ -115,13 +115,13 @@ namespace sgm
 		auto data() const-> T const*{  return cdata();  }
 		auto data()-> T*{  return impl_t::data();  }
 
-		auto front() const-> T const&	{  return impl_t::front();  }
-		auto front()-> T&				{  return impl_t::front();  }
-		auto back() const-> T const&	{  return impl_t::back();  }
-		auto back()-> T&				{  return impl_t::back();  }
+		auto front() const-> T const&	{  return *cbegin();  }
+		auto front()-> T&				{  return *begin();	}
+		auto back() const-> T const&	{  return *crbegin();  }
+		auto back()-> T&				{  return *rbegin();  }
 
-		auto operator[](ixSize_t idx) const-> T const&{  return impl_t::at(idx);  }
-		auto operator[](ixSize_t idx)-> T&{  return impl_t::at(idx);  } 
+		auto operator[](ixSize_t idx) const-> T const&	{  return impl_t::at(idx);  }
+		auto operator[](ixSize_t idx)-> T&				{  return impl_t::at(idx);  } 
 
 
 		template
@@ -142,21 +142,21 @@ namespace sgm
 		using criter_t = typename ix_const_riterator<T, SIZE>::type;
 
 
-		auto begin() const-> iter_t		{  return impl_t::begin();  }
-		auto begin()-> iter_t			{  return impl_t::begin();  }
 		auto cbegin() const-> citer_t	{  return impl_t::cbegin();  }
+		auto begin() const-> citer_t	{  return cbegin();  }
+		auto begin()-> iter_t			{  return impl_t::begin();  }
 
-		auto end() const-> iter_t		{  return impl_t::end();  }
-		auto end()-> iter_t			{  return impl_t::end();  }
 		auto cend() const-> citer_t		{  return impl_t::cend();  }
+		auto end() const-> citer_t		{  return cend();  }
+		auto end()-> iter_t			{  return impl_t::end();  }
 
-		auto rbegin() const-> riter_t	{  return impl_t::rbegin();  }
-		auto rbegin()-> riter_t		{  return impl_t::rbegin();  }
 		auto crbegin() const-> criter_t	{  return impl_t::crbegin();  }
+		auto rbegin() const-> criter_t	{  return crbegin();  }
+		auto rbegin()-> riter_t		{  return impl_t::rbegin();  }
 
-		auto rend() const-> riter_t		{  return impl_t::rend()  }
-		auto rend()-> riter_t			{  return impl_t::rend()  }
-		auto crend() const-> criter_t	{  return impl_t::crend()  }
+		auto crend() const-> criter_t	{  return impl_t::crend();  }
+		auto rend() const-> criter_t	{  return crend();  }
+		auto rend()-> riter_t			{  return impl_t::rend();  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
