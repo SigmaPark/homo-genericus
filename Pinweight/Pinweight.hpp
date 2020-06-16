@@ -126,9 +126,10 @@ namespace sgm
 		template<class Q>
 		auto _substitute(Q&& q)-> Pinweight_t&
 		{
-			_my_pcount_down();
+			impl_t::_my_pcount_down();
 
-			_cpval = new T const( std::forward<Q>(q) ), _pcount = new count_t(1);
+			this->_cpval = new T const( std::forward<Q>(q) ), 
+			this->_pcount = new typename impl_t::count_t(1);
 
 			return *this; 			
 		}
@@ -155,25 +156,25 @@ namespace sgm
 	
 		auto operator=(Pinweight_t<T, invar> const& pw)-> Pinweight_t&
 		{
-			if(_cpval == pw._cpval)
+			if(this->_cpval == pw._cpval)
 				return *this;
 
-			_my_pcount_down(), _pcount_up(pw._pcount);
+			impl_t::_my_pcount_down(), impl_t::_pcount_up(pw._pcount);
 
-			_cpval = pw._cpval, _pcount = pw._pcount;
+			this->_cpval = pw._cpval, this->_pcount = pw._pcount;
 
 			return *this;
 		}
 
 		auto operator=(Pinweight_t<T, invar>&& pw)-> Pinweight_t&
 		{
-			if(_cpval == pw._cpval)
+			if(this->_cpval == pw._cpval)
 				return *this;
 
-			_my_pcount_down();
+			impl_t::_my_pcount_down();
 
-			_cpval = pw._cpval, pw._cpval = nullptr,
-			_pcount = pw._pcount, pw._pcount = nullptr;
+			this->_cpval = pw._cpval, pw._cpval = nullptr,
+			this->_pcount = pw._pcount, pw._pcount = nullptr;
 
 			return *this;
 		}

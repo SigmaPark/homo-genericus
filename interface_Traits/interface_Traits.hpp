@@ -170,9 +170,11 @@ namespace sgm
 	{
 		enum : bool
 		{	value 
-			=	(	Has_Operator_Deref<T>::value 
-				&&	Has_Operator_Post_increase<T>::value
-				&&	Has_Operator_NotSame<T>::value
+			=	(	(	Has_Operator_Deref<T>::value 
+					&&	Has_Operator_Post_increase<T>::value
+					&&	Has_Operator_NotSame<T>::value
+					)
+				||	std::is_pointer<T>::value
 				)
 		};
 	};

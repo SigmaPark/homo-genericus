@@ -57,6 +57,26 @@ public:
 	}
 
 
+	template<> static void Case<3>()
+	{
+		using namespace sgm;
+
+		std::vector<double> vec1 = indexable<double>{1, 3};
+		
+		assert( same_iterables(vec1, indexable<double>{1, 3}) );
+
+		indexable<float> ix1{1, 2, 3}, ix2 = ix1, ix3 = ix1;
+
+		ix1.~indexable();
+
+		assert
+		(	ix1.size() == 0 && ix2.size() != 0
+		&&	same_iterables(ix2, ix3)
+		);
+
+	}
+
+
 };
 
 
@@ -67,6 +87,7 @@ int main()
 {
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
+	Tutorial::Case<3>();
 
 	return 0;
 }

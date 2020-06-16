@@ -16,12 +16,17 @@ namespace sgm::mxi
 	template<class Q>
 	using Maybe_reference_t
 	=	std::conditional_t< is_immutable<Q>::value, std::decay_t<Q>, std::decay_t<Q>& >;
+
+
+	template<class T>
+	using egnDynamicMatrix = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 	//========//========//========//========//=======#//========//========//========//========//===
+
 
 	template<class T, MxSize_t R, MxSize_t C>
 	class Mx_implementation
 	{
-		using core_t 
+		using core_t
 		=	std::conditional_t
 			<	MxSize::is_temporary_v<R>
 			,	std::remove_reference_t<T>
@@ -41,7 +46,8 @@ namespace sgm::mxi
 
 		template
 		<	class CON
-		,	class = std::enable_if_t< is_iterable<CON>::value && !is_mxiMatrix_v<CON> >
+		,	class 
+			=	std::enable_if_t< is_iterable<CON>::value && !MxTraits::is_mxiMatrix_v<CON> >
 		>
 		Mx_implementation(CON&& con, MxSize_t r, MxSize_t c)
 		:	_core
@@ -69,7 +75,7 @@ namespace sgm::mxi
 		:	_core
 			(	[&q]()-> core_t
 				{
-					if constexpr(is_mxiMatrix_v<Q>)
+					if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 						return q.core();
 					else if constexpr(MxSize::is_temporary_v<R>)
 						return
@@ -83,14 +89,15 @@ namespace sgm::mxi
 		{}
 
 
-		Mx_implementation() : _core(){}
+		Mx_implementation() = default;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto core()-> Maybe_reference_t<core_t>	{  return _core;  }
 		auto core() const-> core_t const&		{  return _core;  }
+		auto core()-> Maybe_reference_t<core_t>	{  return _core;  }
 
-		decltype(auto) element(index_t i, index_t j)		{  return _core(i, j);  }
 		auto element(index_t i, index_t j) const-> elem_t	{  return _core(i, j);  }
+		decltype(auto) element(index_t i, index_t j)		{  return _core(i, j);  }
 
 		auto rows() const{  return _core.rows();  }
 		auto cols() const{  return _core.cols();  }
@@ -99,6 +106,8 @@ namespace sgm::mxi
 		void resize(MxSize_t r, MxSize_t c){  _core.resize(r, c);  }
 
 		auto transposed() const{  return _core.adjoint();  }
+		decltype(auto) transposed(){  return _core.transpose();  }
+
 		auto inversed() const{  return _core.inverse();  }
 
 
@@ -118,7 +127,23 @@ namespace sgm::mxi
 		auto col(index_t idx) const	{  return _core.col(idx);  }
 		auto col(index_t idx)		{  return _core.col(idx);  }
 
-	};
+
+		static auto identity(){  return core_t::Identity();  }
+
+		static auto identity(MxSize_t s)
+		{	
+			return egnDynamicMatrix<elem_t>(s, s).setIdentity();
+		}
+
+
+		static auto zero(){  return core_t::Zero();  }
+
+		static auto zero(MxSize_t r, MxSize_t c)
+		{
+			return egnDynamicMatrix<elem_t>(r, c).setZero();
+		}
+
+	};// end of class Mx_implementation
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -129,7 +154,7 @@ namespace sgm::mxi
 	template<class T, MxSize_t S>
 	class Vt_implementation
 	{
-		using core_t 
+		using core_t
 		=	std::conditional_t
 			<	MxSize::is_temporary_v<S>
 			,	std::remove_reference_t<T>
@@ -151,7 +176,7 @@ namespace sgm::mxi
 		:	_core
 			(	[&q]()-> core_t
 				{
-					if constexpr(is_mxiMatrix_v<Q>)
+					if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 					{
 						assert
 						(	(q.rows() == 1 || q.cols() == 1)
@@ -163,7 +188,7 @@ namespace sgm::mxi
 						?	static_cast<core_t>(q.core().adjoint())
 						:	static_cast<core_t>(q.core());
 					}
-					else if constexpr(is_mxiVector_v<Q>)
+					else if constexpr(MxTraits::is_mxiVector_v<Q>)
 						return q.core();
 					else if constexpr(MxSize::is_temporary_v<S>)
 						return
@@ -198,7 +223,8 @@ namespace sgm::mxi
 		{}
 
 
-		Vt_implementation() : _core(){}
+		Vt_implementation() = default;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
 		auto core()-> Maybe_reference_t<core_t>	{  return _core;  }
@@ -216,6 +242,11 @@ namespace sgm::mxi
 
 		auto tail(MxSize_t n) const		{  return _core.tail(n);  }
 		decltype(auto) tail(MxSize_t n)	{  return _core.tail(n);  }
+
+		decltype(auto) rowVec() const	{  return _core.adjoint();  }
+		decltype(auto) rowVec()			{  return _core.transpose();  }
+		decltype(auto) colVec() const	{  return _core;  }
+		decltype(auto) colVec()			{  return _core;  }
 
 
 		template<MxSize_t L>
@@ -252,8 +283,19 @@ namespace sgm::mxi
 			.	cross( static_cast< egnVector_t<elem_t, 3> >(q) );
 		}
 
-	};
+		template<class Q>
+		auto dyad(Q&& q) const{  return _core * q.adjoint();  }
+
+
+		static auto zero(){  return core_t::Zero();  }
+		static auto zero(MxSize_t s){  return egnDynamicMatrix<elem_t>(s, 1).setZero();  }
+
+		static auto ones(){  return core_t::Ones();  }
+		static auto ones(MxSize_t s){  return egnDynamicMatrix<elem_t>(s, 1).setOnes();  }
+
+
+	};// end of class Vt_implementation
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-}
+}// end of namespace sgm::mxi

@@ -52,11 +52,13 @@ namespace sgm
 	protected:
 		indexable_impl() = default;
 		indexable_impl(indexable_impl const&) = default;
-		indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl.core()) ){}
+		indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl._core) ){}
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-		indexable_impl(ITR bi, ITR ei) : _core( _init<SIZE>::calc(bi, ei) ){}
+		indexable_impl(ITR bi, ITR ei) 
+		:	_core( _init<SIZE, ITR>::calc(bi, ei) )
+		{}
 
 
 		template
@@ -105,11 +107,6 @@ namespace sgm
 		auto data() const-> T const*	{  return _core.data();  }
 		auto data()-> T*				{  return _core.data();  }
 
-		auto front() const-> T const&	{  return _core.front();  }
-		auto front()-> T&				{  return _core.front();  }
-		auto back() const-> T const&	{  return _core.back();  }
-		auto back()-> T&				{  return _core.back();  }
-
 		auto at(ixSize_t idx) const-> T const&	{  return _core.at(idx);  }
 		auto at(ixSize_t idx)-> T&				{  return _core.at(idx);  } 
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -156,10 +153,17 @@ namespace sgm
 
 
 	private:
-		template<ixSize_t S>
+		template
+		<	ixSize_t S, class ITR
+		,	bool 
+			=	(	S == ixSize::DYNAMIC
+				&&	std::is_same
+					<	std::decay_t< decltype(*Declval<ITR>()) >, std::decay_t<T>
+					>::value
+				) 
+		>
 		struct _init
 		{
-			template<class ITR>
 			static auto calc(ITR bi, ITR ei)-> core_t
 			{
 				core_t res;
@@ -167,17 +171,16 @@ namespace sgm
 				for
 				(	auto itr = res.begin()
 				;	bi != ei
-				;	*itr++ = *bi++
+				;	*itr++ = static_cast<T>(*bi++)
 				);
 
 				return res;
 			}
 		};
 
-		template<>
-		struct _init<ixSize::DYNAMIC>
+		template<class ITR>
+		struct _init<ixSize::DYNAMIC, ITR, true>
 		{
-			template<class ITR>
 			static auto calc(ITR bi, ITR ei)-> core_t{  return core_t(bi, ei);  }
 		};
 
