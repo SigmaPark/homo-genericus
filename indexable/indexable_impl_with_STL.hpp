@@ -3,6 +3,7 @@
 #include "indexable_interface.hpp"
 #include <vector>
 #include <array>
+#include <cassert>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 
@@ -156,16 +157,16 @@ namespace sgm
 		template
 		<	ixSize_t S, class ITR
 		,	bool 
-			=	(	S == ixSize::DYNAMIC
-				&&	std::is_same
-					<	std::decay_t< decltype(*Declval<ITR>()) >, std::decay_t<T>
-					>::value
-				) 
+			=	std::is_same
+				<	std::decay_t< decltype(*Declval<ITR>()) >, std::decay_t<T>
+				>::value
 		>
 		struct _init
 		{
 			static auto calc(ITR bi, ITR ei)-> core_t
 			{
+				assert( S == std::distance(bi, ei) && L"array size dismatched.\n" );
+
 				core_t res;
 
 				for
@@ -176,6 +177,23 @@ namespace sgm
 
 				return res;
 			}
+		};
+
+		template<class ITR>
+		struct _init<ixSize::DYNAMIC, ITR, false>
+		{
+			static auto calc(ITR bi, ITR ei)-> core_t
+			{
+				core_t res;
+				
+				for
+				(	res.reserve( std::distance(bi, ei) )
+				;	bi != ei
+				;	res.emplace_back( static_cast<T>(*bi++) )
+				);
+
+				return res;
+			}			
 		};
 
 		template<class ITR>

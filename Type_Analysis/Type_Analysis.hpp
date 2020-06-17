@@ -19,6 +19,8 @@ namespace sgm
 	#error SGM_DECLTYPE_AUTO was already defined somewhere else.
 #endif
 
+
+
 	struct No_Making{  No_Making() = delete;  };
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -44,11 +46,14 @@ namespace sgm
 	};
 
 
+	template<int N, class...TYPES>
+	using Nth_t = typename Nth_Type<N, TYPES...>::type;
+
 	template<class...TYPES> 
-	using First_t = typename Nth_Type<0, TYPES...>::type;
+	using First_t = Nth_t<0, TYPES...>;
 	
 	template<class...TYPES> 
-	using Last_t = typename Nth_Type<sizeof...(TYPES) - 1, TYPES...>::type;
+	using Last_t = Nth_t<sizeof...(TYPES) - 1, TYPES...>;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -75,7 +80,7 @@ namespace sgm
 		using type = T;
 	};
 
-	template<bool B, class T> using Provided_t = typename _Provided<B, T>::type;
+	template<bool B, class T = void> using Provided_t = typename _Provided<B, T>::type;
 
 
 #ifndef SGM_COMPILE_FAILED
@@ -85,18 +90,6 @@ namespace sgm
 	#error SGM_COMPILE_FAILED was already defined somewhere else.
 #endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-//#ifdef _ITERATOR_
-//	template<class> using _Void_t = void;
-//
-//	template <class T, class = void> struct is_iterator : public std::false_type{};
-//
-//	template <class T>
-//	struct is_iterator<  T, _Void_t< typename std::iterator_traits<T>::iterator_category >  > 
-//	:	public std::true_type 
-//	{};
-//#endif
 
 
 	template<class CON, class T = void> 

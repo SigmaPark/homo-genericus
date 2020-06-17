@@ -1,60 +1,95 @@
-#include <iostream>
-#include <vector>
-#include <list>
-#include <forward_list>
-#include <set>
-#include <map>
-#include <unordered_set>
-#include <unordered_map>
-#include <array>
-#include "High_Templar.h"
 
+#include "High_Templar.hpp"
+
+#include "..\Pinweight\Pinweight.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-class Show
+using namespace sgm;
+
+
+class Tutorial : No_Making
 {
-public:
-	Show() = delete;
-
-	template<typename CON>
-	static void Container(CON&& con, size_t row_size = 20)
+private:
+	template<class C1, class C2>
+	static bool is_Equal(C1 c1, C2 c2)
 	{
-		auto d = row_size;
+		bool res = c1.size() == c2.size();
 
-		for(auto const& t : con)
-		{
-			if(d == 0)
-				std::cout << std::endl,
-				d = row_size;
-			
+		for
+		(	auto Pa = std::make_pair(c1.begin(), c2.begin())
+		;	res && Pa.first != c1.end()
+		;	res = *Pa.first++ == *Pa.second++
+		);
 
-			std::cout << t << ' ',
-			d--;
-		}
-
-		std::cout << "\n\n";
+		return res;
 	}
+
+
+	struct SHARE{  template<class T> using type = Pinweight<T>;  };
+
+
+public:
+	template<unsigned> static void Case();
+
+	template<> static void Case<1>()
+	{
+		assert
+		(	is_Equal( indices(5, 1), std::vector<int>{1, 2, 3, 4, 5} )
+		&&	is_Equal( indices<unsigned>(4), std::array<unsigned, 4>{0, 1, 2, 3} )
+		);
+	}
+
+
+	template<> static void Case<2>()
+	{
+		auto negate = [](int x)-> int{  return -x;  };
+		auto answer = std::vector<int>{ -1, -2, -3, -4, -5 };
+
+		assert
+		(	is_Equal(  Morph( indices(5, 1), negate ), answer  )
+		&&	is_Equal(	  Morph( SHARE(), indices(5, 1), negate ), answer  )
+		&&	is_Equal(  Morph<SHARE>( indices(5, 1), negate ), answer  )
+		);
+	}
+
+
+	template<> static void Case<3>()
+	{
+		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
+		auto answer = std::vector<int>{2, 4, 6, 8, 10};
+
+		assert
+		(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
+		&&	is_Equal(  Filter( SHARE(), indices(10, 1), is_even ), answer  )
+		&&	is_Equal(  Filter<SHARE>( indices(10, 1), is_even ), answer  )
+		);
+	}
+
+
+	template<> static void Case<4>()
+	{
+		auto minus = [](int res, int const& x)-> int{  return res - x;  };
+
+		assert
+		(	Fold( indices(3, 1), minus, 10 ) == 4
+		&&	Fold( indices(3, 1), minus ) == -4
+		&&	Fold<SHARE>( indices(3, 1), minus ) == -4
+		&&	rFold( indices(3, 1), minus, 10 ) == 4
+		&&	rFold( indices(3, 1), minus ) == 0
+		&&	rFold( SHARE(), indices(3, 1), minus, 10 ) == 4
+		);
+	}
+
+
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 int main()
 {
-	using namespace sgm;
-
-	auto constexpr i_arr = indices_v<20, 1>;
-	auto const c1 = Repack<std_list>(i_arr);
-	auto const c2 = Filter(c1, [](auto const& x){  return x % 2 == 0;  });
-	auto const c3 = Morph(c2, [](auto const& x) {  return double(3*x / 2);  });
-	auto const c4 = Rankers(c3, 3, [](auto x, auto y){  return abs(x - 10) < abs(y - 10);  });
-	auto const c5 = Sort(c4, std::less<>());
-	auto const val = Fold(c5, std::multiplies<>(), -1.0);
-
-	Show::Container(c1);
-	Show::Container(c2);
-	Show::Container(c3);
-	Show::Container(c4);
-	Show::Container(c5);
-	std::cout << val << '\n';
+	Tutorial::Case<1>();
+	Tutorial::Case<2>();
+	Tutorial::Case<3>();
+	Tutorial::Case<4>();
 
 	return 0;
 }

@@ -15,142 +15,141 @@ namespace sgm
 {
 	
 
-	struct _SequanceSize : No_Making
-	{
-		using type = size_t;
-
-		enum : type{DYNAMIC = -1};  
-	};
-
-	using SeqSize_t = typename _SequanceSize::type;
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	/**	Should be defined later
-	*/
-	template<class T, SeqSize_t N = _SequanceSize::DYNAMIC> class _Sequance_t;
-
-
-	/**	Flag which should be defined later
-	*/
-	struct HT_Flag : No_Making
-	{
-		struct IMMUTABLE;
-		struct SHARED;
-		struct REFERRED;
-	};
-
-	/**	Should be defined later
-	*/
-	struct HT_impl;
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template<  class T = SeqSize_t, class = std::enable_if_t< std::is_scalar<T>::value >  >
-	static auto indices(SeqSize_t N, T offset = 0)-> _Sequance_t<T>
-	{
-		_Sequance_t<T> res(N);
-
-		while(N-->0)
-			res >> offset++;
-
-		return res;
-	}
-	//========//========//========//========//=======#//========//========//========//========//===
+	class HT_implementation;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template
-	<	class...FLAGS, class CON, class FUNC
-	,	class = std::enable_if_t< is_iterable<CON>::value >
+	<	class T = size_t, class IMPL = HT_implementation
+	,	class = Provided_t< std::is_integral<T>::value >
 	>
-	static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	static auto indices( size_t size, T offset = size_t(0) ) SGM_DECLTYPE_AUTO
 	(
-		HT_impl::Morph<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
+		IMPL::indices(size, offset)
 	)
 
-	template
-	<	class...ARGS, class FLAG_SET, class CON, class FUNC
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto Morph(FLAG_SET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-	(
-		HT_impl::Morph<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
-	)
-	//========//========//========//========//=======#//========//========//========//========//===
 
-
-	template
-	<	class...FLAGS, class CON, class FUNC
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-	(
-		HT_impl::Filter<FLAGS...>( std::forward<CON>(con), std::forward<FUNC>(func) )
-	)
-
-	template
-	<	class...ARGS, class FLAG_SET, class CON, class FUNC
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto Filter(FLAG_SET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-	(
-		HT_impl::Filter<ARGS...>( fset, std::forward<CON>(con), std::forward<FUNC>(func) )
-	)
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template
-	<	class...FLAGS, class CON, class FUNC
-	,	class res_t = std::nullptr_t
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto Fold(CON&& con, FUNC&& func, res_t&& init = nullptr) SGM_DECLTYPE_AUTO
-	(
-		HT_impl::Fold<FLAGS...>
-		(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
-		)
-	)
-
-	template
-	<	class...ARGS, class FLAG_SET, class CON, class FUNC
-	,	class res_t = std::nullptr_t
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto Fold(FLAG_SET fset, CON&& con, FUNC&& func, res_t&& init = nullptr) 
-	SGM_DECLTYPE_AUTO
-	(
-		HT_impl::Fold<ARGS...>
-		(	fset, std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
-		)
-	)
-
-	template
-	<	class...FLAGS, class CON, class FUNC
-	,	class res_t = std::nullptr_t
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto rFold(CON&& con, FUNC&& func, res_t&& init = nullptr) SGM_DECLTYPE_AUTO
-	(
-		HT_impl::rFold<FLAGS...>
-		(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
-		)
-	)
-
-	template
-	<	class...ARGS, class FLAG_SET, class CON, class FUNC
-	,	class res_t = std::nullptr_t
-	,	class = std::enable_if_t< is_iterable<CON>::value >
-	>
-	static auto rFold(FLAG_SET fset, CON&& con, FUNC&& func, res_t&& init = nullptr) 
-	SGM_DECLTYPE_AUTO
-	(
-		HT_impl::rFold<ARGS...>
-		(	fset, std::forward<CON>(con), std::forward<FUNC>(func), std::forward<res_t>(init)
-		)
-	)
-	//========//========//========//========//=======#//========//========//========//========//===
-
+	struct No_Deco{  template<class T> using type = T;  };
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
+	
+#ifndef _SGM_MORPH_AND_FILTER_INTERFACE
+	#define _SGM_MORPH_AND_FILTER_INTERFACE(NAME)	\
+		template		\
+		<	class DECO = No_Deco, class CON, class FUNC, class IMPL = HT_implementation	\
+		,	class = Provided_t< is_iterable<CON>::value >	\
+		>	\
+		static auto NAME(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO		\
+		(	\
+			IMPL::template NAME<DECO>( std::forward<CON>(con), std::forward<FUNC>(func) )	\
+		)	\
+		\
+		\
+		template		\
+		<	class...ARGS, class DECO, class CON, class FUNC	\
+		,	class = Provided_t< sizeof...(ARGS) <= 2 >	\
+		>	\
+		static auto NAME(DECO, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO	\
+		(	\
+			NAME<DECO>	\
+			(	std::conditional_t		\
+				<	sizeof...(ARGS) >= 1, First_t<ARGS...>, decltype(con)	\
+				>	\
+				(con)	\
+			,	std::conditional_t		\
+				<	sizeof...(ARGS) >= 2, Nth_t<1, ARGS...>, decltype(func) \
+				>	\
+				(func)	\
+			)	\
+		)
+
+		_SGM_MORPH_AND_FILTER_INTERFACE(Morph)
+		_SGM_MORPH_AND_FILTER_INTERFACE(Filter)
+
+	#undef _SGM_MORPH_AND_FILTER_INTERFACE
+#else
+	#error _SGM_MORPH_AND_FILTER_INTERFACE was already defined somewhere else.
+#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+#ifndef _SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE
+	#define _SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE(NAME)	\
+		template		\
+		<	class DECO = No_Deco, class CON, class FUNC, class init_t	\
+		,	class IMPL = HT_implementation	\
+		,	class = std::enable_if_t< is_iterable<CON>::value >	\
+		>	\
+		static auto NAME(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO		\
+		(	\
+			IMPL::template NAME<DECO>	\
+			(	std::forward<CON>(con), std::forward<FUNC>(func)	\
+			,	std::forward<init_t>(init)	\
+			)	\
+		)	\
+		\
+		\
+		template<class DECO = No_Deco, class CON, class FUNC>	\
+		static auto NAME(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO	\
+		(	\
+			NAME<DECO>	\
+			(	std::forward<CON>(con), std::forward<FUNC>(func), std::nullptr_t()	\
+			)	\
+		)	\
+		\
+		\
+		template		\
+		<	class...ARGS, class DECO	\
+		,	class CON, class FUNC, class init_t	\
+		,	class = std::enable_if_t< !is_iterable<DECO>::value && sizeof...(ARGS) <= 3 >	\
+		>	\
+		static auto NAME(DECO, CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO	\
+		(	\
+			NAME<DECO>	\
+			(	std::conditional_t		\
+				<	sizeof...(ARGS) >= 1, First_t<ARGS...>, decltype(con)		\
+				>	\
+				(con)	\
+			,	std::conditional_t		\
+				<	sizeof...(ARGS) >= 2, Nth_t<1, ARGS...>, decltype(func)		\
+				>	\
+				(func)	\
+			,	std::conditional_t		\
+				<	sizeof...(ARGS) >= 3, Nth_t<2, ARGS...>, decltype(init)		\
+				>	\
+				(init)	\
+			)	\
+		)	\
+		\
+		\
+		template		\
+		<	class...ARGS, class DECO, class CON, class FUNC	\
+		,	class = std::enable_if_t< !is_iterable<DECO>::value && sizeof...(ARGS) <= 2 >	\
+		>	\
+		static auto NAME(DECO, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO		\
+		(	\
+			NAME<DECO>	\
+			(	std::conditional_t		\
+				<	sizeof...(ARGS) >= 1, First_t<ARGS...>, decltype(con)	\
+				>	\
+				(con)	\
+			,	std::conditional_t		\
+				<	sizeof...(ARGS) >= 2, Nth_t<1, ARGS...>, decltype(func)		\
+				>	\
+				(func)	\
+			,	std::nullptr_t()	\
+			)	\
+		)
+
+		_SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE(Fold)
+		_SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE(rFold)
+
+	#undef _SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE
+#else
+	#error _SGM_FORWARD_AND_REVERSE_FOLD_INTERFACE was already defined somewhere else.
+#endif
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
 
 }
 
