@@ -4,6 +4,7 @@
 #define _SGM_INDEXABLE_INTERFACE_
 
 #include "..\interface_Traits\interface_Traits.hpp"
+
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 

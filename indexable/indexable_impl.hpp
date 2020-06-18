@@ -182,7 +182,7 @@ namespace sgm
 
 		_RW_MEMBERS
 		(	operator[], ixSize_t interval, T&
-		,	return *( _arr _ shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		,	return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 		)
 
 		_RW_MEMBERS(operator*, , T&, return (*this)[0];)
@@ -286,6 +286,20 @@ namespace sgm
 		auto get_capa() const-> ixSize_t{  return get_size();  }
 
 
+		template<class X, class A>
+		static void copy(X const& ximpl_in, A& arr_out)
+		{	
+			for(ixSize_t idx = 0; idx < SIZE; ++idx)
+				arr_out[idx] = ximpl_in.at(idx);
+		}
+
+		template<class X, class A>
+		static void move(X&& ximpl_in, A& arr_out)
+		{
+			for(ixSize_t idx = 0; idx < SIZE; ++idx)
+				arr_out[idx] = std::move( ximpl_in.at(idx) );
+		}
+
 	};
 
 
@@ -297,7 +311,7 @@ namespace sgm
 	public:
 		ixSize_t size, capa;
 
-		_ixMemory_Helper(ixSize_t s = 0, ixSize_t c = s) : size(s), capa(c){}
+		_ixMemory_Helper(ixSize_t s = 0, ixSize_t c = 0) : size(s), capa(c){}
 
 
 		static auto alloc(ixSize_t capa)-> value_t*
@@ -319,19 +333,73 @@ namespace sgm
 		auto get_capa() const-> ixSize_t{  return capa;  }
 
 		
+		template<class X, class A>
+		static void copy(X const& ximpl_in, A& arr_out)
+		{
+			if(ximpl_in.capacity() == 0)
+				arr_out = nullptr;
+			else
+			{
+				arr_out = alloc(ximpl_in.capacity());
+
+				for(ixSize_t idx = 0; idx < ximpl_in.size(); ++idx)
+					new(arr_out + idx) value_t( ximpl_in.at(idx) );
+			}
+		}
+
+		template<class X, class A>
+		static void move(X&& ximpl_in, A& arr_out)
+		{
+			arr_out =  ximpl_in.data(), ximpl_in.data() = nullptr;
+		}
+
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class T, ixSize_t S> struct ixData : No_Making{  using type = T[S];  };
+	template<class T> struct ixData<T, ixSize::DYNAMIC> : No_Making{  using type = T*;  };
 
 
 	template<class T, ixSize_t SIZE>
 	class indexable_impl
 	{
-		using arr_t = std::conditional_t<SIZE == ixSize::DYNAMIC, T*, T[SIZE]>;
+		using arr_t = typename ixData<T, SIZE>::type;
 		using Helper = _ixMemory_Helper<T, SIZE>;
 
+		friend class Helper;
 
-		_ixMemory_Helper<SIZE> _memory_info;
+
+		Helper _memory_info;
 		arr_t _arr;
+
+
+		template< ixSize_t S, class = std::enable_if_t<SIZE != ixSize::DYNAMIC> >
+		void _copy_from(indexable_impl<T, S> const& ix_impl)
+		{
+			static_assert(S == SIZE, "size dismatched");
+
+			Helper::copy(ix_impl, _arr);
+		}
+
+
+		void _copy_from(indexable_impl<T, ixSize::DYNAMIC> const& ix_impl)
+		{
+			if( capacity() < ix_impl.capacity())
+				clear(),
+				_arr = Helper::alloc(ix_impl.capacity()),
+				_memory_info.size = 0,
+				_memory_info.capa = ix_impl.capacity();
+
+			ixSize_t idx = 0;
+			auto itr = ix_impl.cbegin();
+
+			for(; idx < size() && itr != ix_impl.cend(); ++idx, ++itr)
+				_arr[idx] = *itr;
+
+			for(; idx < capacity() && itr != ix_impl.cend(); ++idx, ++itr)
+				emplace_back(*itr);
+		}
 
 
 	protected:
@@ -340,23 +408,17 @@ namespace sgm
 		:	_memory_info( Helper(0, capa) ), _arr( Helper::alloc(capa) )
 		{}
 
-
+		template< class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
 		indexable_impl() : indexable_impl( ixSize_t(0) ){}
 
 
 		template<class...ARGS, class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
-		indexable_impl(ixSize_t size, ARGS const&...args) 
-		:	_memory_info( Helper(size) )
-		,	_arr
-			(	[size, &args...](T* const arr)-> T*
-				{
-					for(ixSize_t idx = 0; idx < size; ++idx)
-						new(arr + idx) T(args...);
-
-					return arr;
-				}( Helper::alloc(size) )
-			)
-		{}
+		indexable_impl(ixSize_t size, ARGS const&... args) 
+		:	_memory_info( Helper(size, size) ), _arr( Helper::alloc(size) )
+		{
+			for(ixSize_t idx = 0; idx < size; ++idx)
+				new(_arr + idx) T(args...);
+		}
 
 
 		template
@@ -367,8 +429,10 @@ namespace sgm
 				&&	SIZE != ixSize::DYNAMIC
 				>
 		>
-		indexable_impl( ITR bi, decltype(bi) ) : _memory_info(Helper()), _arr()
+		indexable_impl( ITR bi, decltype(bi) ei ) : _memory_info(Helper()), _arr()
 		{
+			assert( SIZE == _itrDist_Helper<ITR>::calc(bi, ei) && L"range dismatched.\n" );
+
 			for(ixSize_t idx = 0; idx < SIZE; ++idx)
 				_arr[idx] = static_cast<T>(*bi++);
 		}
@@ -411,25 +475,44 @@ namespace sgm
 		indexable_impl(std::initializer_list<Q>&& iL) : indexable_impl(iL.begin(), iL.end()){}
 
 
-		//indexable_impl(indexable_impl const& ix_impl)
-		//:	_memory_info(ix_impl._memory_info)
-		//,	_arr
-		//	(	!ix_impl.empty()
-		//		?	Helper::copy(ix_impl.size(), ix_impl._arr)
-		//		:
-		//		ix_impl.capacity() > 0
-		//		?	Helper::alloc(ix_impl.capacity())
-		//		:	nullptr
-		//	)
-		//{}
+		indexable_impl(indexable_impl const& ix_impl) 
+		:	_memory_info(ix_impl._memory_info), _arr()
+		{
+			Helper::copy(ix_impl, _arr);
+		}
+
+		indexable_impl(indexable_impl&& ix_impl)
+		:	_memory_info(ix_impl._memory_info), _arr()
+		{
+			Helper::move( std::move(ix_impl), _arr )
+		}
 
 
 		~indexable_impl(){  clear();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		
 
+		auto operator=(indexable_impl const& ix_impl)-> indexable_impl&
+		{
+			_copy_from(ix_impl);
+
+			return *this;
+		}
+
+
+		auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
+		{
+			_memory_info = ix_impl._memory_info;
+
+			Helper::move( std::move(ix_impl), _arr );
+
+			return *this;
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
 		auto size() const-> ixSize_t{  return _memory_info.get_size();  }
-		bool empty() const-> ixSize_t{  return size() == 0;  }
+		bool empty() const{  return size() == 0;  }
 
 		auto data() const-> T const*	{  return _arr;  }
 		auto data()-> T*				{  return _arr;  }
@@ -441,22 +524,26 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		using iterator = indexable_iterator<T, S, true, true>;
-		using const_iterator = indexable_iterator<T, S, false, true>;
-		using riterator = indexable_iterator<T, S, true, false>;
-		using const_riterator = indexable_iterator<T, S, false, false>;
+		using iterator = indexable_iterator<T, SIZE, true, true>;
+		using const_iterator = indexable_iterator<T, SIZE, false, true>;
+		using riterator = indexable_iterator<T, SIZE, true, false>;
+		using const_riterator = indexable_iterator<T, SIZE, false, false>;
 
 
 		auto cbegin() const	SGM_DECLTYPE_AUTO(  const_iterator(_arr, 0)  )
+		auto begin() const		SGM_DECLTYPE_AUTO(  cbegin()  )
 		auto begin()			SGM_DECLTYPE_AUTO(  iterator(_arr, 0)  )
 
 		auto cend() const		SGM_DECLTYPE_AUTO(  const_iterator(_arr, size())  )
+		auto end() const		SGM_DECLTYPE_AUTO(  cend()  )
 		auto end()			SGM_DECLTYPE_AUTO(  iterator(_arr, size())  )
 
 		auto crbegin() const	SGM_DECLTYPE_AUTO(  const_riterator(_arr, size())  )
+		auto rbegin() const	SGM_DECLTYPE_AUTO(  crbegin()  )
 		auto rbegin()			SGM_DECLTYPE_AUTO(  riterator(_arr, size())  )
 
 		auto crend() const		SGM_DECLTYPE_AUTO(  const_riterator(_arr, 0)  )
+		auto rend() const		SGM_DECLTYPE_AUTO(  crend()  )
 		auto rend()			SGM_DECLTYPE_AUTO(  riterator(_arr, 0)  )
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 

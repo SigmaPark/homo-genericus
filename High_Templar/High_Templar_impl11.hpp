@@ -8,7 +8,10 @@
 #endif
 
 #include "High_Templar_interface.hpp"
+
+#define USE_STL_VECTOR_AND_ARRAY
 #include "..\indexable\indexable.hpp"
+#undef USE_STL_VECTOR_AND_ARRAY
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
