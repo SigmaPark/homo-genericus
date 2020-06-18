@@ -73,14 +73,14 @@ namespace sgm
 
 
 	template<bool B, class T> 
-	struct _Provided : No_Making
+	struct _Guaranteed : No_Making
 	{
-		static_assert(B, "type condition failed.");
+		static_assert(B, "type guarantee failed.");
 
 		using type = T;
 	};
 
-	template<bool B, class T = void> using Provided_t = typename _Provided<B, T>::type;
+	template<bool B, class T = void> using Guaranteed_t = typename _Guaranteed<B, T>::type;
 
 
 #ifndef SGM_COMPILE_FAILED

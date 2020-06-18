@@ -21,7 +21,7 @@ namespace sgm
 
 	template
 	<	class T = size_t, class IMPL = HT_implementation
-	,	class = Provided_t< std::is_integral<T>::value >
+	,	class = Guaranteed_t< std::is_integral<T>::value >
 	>
 	static auto indices( size_t size, T offset = size_t(0) ) SGM_DECLTYPE_AUTO
 	(
@@ -29,7 +29,13 @@ namespace sgm
 	)
 
 
-	struct No_Deco{  template<class T> using type = T;  };
+	struct No_Deco
+	{
+		template<class T> using type = T;  
+
+		template<class T>
+		static auto cast(T&& t) SGM_DECLTYPE_AUTO(  static_cast< type<decltype(t)> >(t)  )
+	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 	
@@ -37,7 +43,7 @@ namespace sgm
 	#define _SGM_MORPH_AND_FILTER_INTERFACE(NAME)	\
 		template		\
 		<	class DECO = No_Deco, class CON, class FUNC, class IMPL = HT_implementation	\
-		,	class = Provided_t< is_iterable<CON>::value >	\
+		,	class = Guaranteed_t< is_iterable<CON>::value >	\
 		>	\
 		static auto NAME(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO		\
 		(	\
@@ -47,7 +53,7 @@ namespace sgm
 		\
 		template		\
 		<	class...ARGS, class DECO, class CON, class FUNC	\
-		,	class = Provided_t< sizeof...(ARGS) <= 2 >	\
+		,	class = Guaranteed_t< sizeof...(ARGS) <= 2 >	\
 		>	\
 		static auto NAME(DECO, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO	\
 		(	\

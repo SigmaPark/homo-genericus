@@ -18,9 +18,8 @@ namespace sgm
 	class HT_implementation : No_Making
 	{
 		
-		struct _Accumulation_impl : No_Making
+		struct _Fold_Helper : No_Making
 		{
-		protected:
 			template<class ITR, class FUNC, class res_t>
 			static auto calc(ITR itr, ITR const ei, FUNC&& func, res_t&& res)-> res_t
 			{
@@ -29,53 +28,63 @@ namespace sgm
 
 				return res;
 			}
+
+
+			template<bool FORWARD> struct itrMethod;
+
+			template<>
+			struct itrMethod<true>
+			{
+				template<class CON>
+				static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.begin()  )
+
+				template<class CON>
+				static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.end()  )
+			};
+
+			template<>
+			struct itrMethod<false>
+			{
+				template<class CON>
+				static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.rbegin()  )
+
+				template<class CON>
+				static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.rend()  )
+			};
+
 		};
 
-		template<class>
-		struct _Fold_impl : _Accumulation_impl
+
+		template<bool HAS_INIT, bool FORWARD> struct _Fold_impl;
+
+		template<bool FWD>
+		struct _Fold_impl<true, FWD> : _Fold_Helper
 		{
 			template<class CON, class FUNC, class res_t>
 			static auto fold(CON&& con, FUNC&& func, res_t&& res)-> res_t
 			{
 				return
 				calc
-				(	con.begin(), con.end(), std::forward<FUNC>(func)
-				,	std::forward<res_t>(res)
-				);
-			}
-
-			template<class CON, class FUNC, class res_t>
-			static auto rfold(CON&& con, FUNC&& func, res_t&& res)-> res_t
-			{
-				return
-				calc
-				(	con.rbegin(), con.rend(), std::forward<FUNC>(func)
+				(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
+				,	std::forward<FUNC>(func)
 				,	std::forward<res_t>(res)
 				);
 			}
 		};
 
-		template<>
-		struct _Fold_impl<std::nullptr_t> : _Accumulation_impl
+		template<bool FWD>
+		struct _Fold_impl<false, FWD> : _Fold_Helper
 		{
 			template<class CON, class FUNC>
 			static auto fold(CON&& con, FUNC&& func, std::nullptr_t)
-			->	std::decay_t< decltype(*Declval<CON>().begin()) >
+			->	std::decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
 			{
-				assert(con.begin() != con.end() && L"the container has nothing to fold.\n");
+				auto bi = itrMethod<FWD>::begin(con);
+				auto ei = itrMethod<FWD>::end(con);
 
-				return 
-				calc( ++con.begin(), con.end(), std::forward<FUNC>(func), *con.begin() );
-			}
+				assert(bi != ei && L"the container has nothing to fold.\n");
 
-			template<class CON, class FUNC>
-			static auto rfold(CON&& con, FUNC&& func, std::nullptr_t)
-			->	std::decay_t< decltype(*Declval<CON>().rbegin()) >
-			{
-				assert(con.rbegin() != con.rend() && L"the container has nothing to fold.\n");
-
-				return
-				calc( ++con.rbegin(), con.rend(), std::forward<FUNC>(func), *con.rbegin() );
+				return calc( ++bi, ei, std::forward<FUNC>(func), *bi );
 			}
 		};
 
@@ -127,29 +136,30 @@ namespace sgm
 
 
 	#ifndef _SGM_FORWARD_AND_REVERSE_IMPL
-		#define _SGM_FORWARD_AND_REVERSE_IMPL(NAME, IMPL_NAME, BEGIN)	\
+		#define _SGM_FORWARD_AND_REVERSE_IMPL(NAME, IS_FORWARD_DIRECTION, BEGIN)	\
 			template		\
 			<	class DECO, class CON, class FUNC, class init_t	\
+			,	class No_init_t = std::is_same< std::decay_t<init_t>, std::nullptr_t >	\
 			,	class res_t	\
 				=	typename DECO::template type	\
 					<	std::conditional_t		\
-						<	std::is_same< std::decay_t<init_t>, std::nullptr_t >::value	\
-						,	std::remove_reference_t< decltype(*Declval<CON>().BEGIN()) >		\
+						<	No_init_t::value	\
+						,	std::remove_reference_t< decltype(*Declval<CON>().BEGIN()) >	\
 						,	init_t	\
 						>	\
 					>	\
 			>	\
-			static auto NAME(CON&& con, FUNC&& func, init_t&& init)-> res_t		\
+			static auto NAME(CON&& con, FUNC&& func, init_t&& init)-> res_t	\
 			{	\
 				return	\
-				_Fold_impl<init_t>::IMPL_NAME	\
+				_Fold_impl<!No_init_t::value, IS_FORWARD_DIRECTION>::fold	\
 				(	std::forward<CON>(con), std::forward<FUNC>(func)	\
 				,	std::forward<init_t>(init)	\
 				);	\
-			}		
+			}
 			
-			_SGM_FORWARD_AND_REVERSE_IMPL(Fold, fold, begin)
-			_SGM_FORWARD_AND_REVERSE_IMPL(rFold, rfold, rbegin)
+			_SGM_FORWARD_AND_REVERSE_IMPL(Fold, true, begin)
+			_SGM_FORWARD_AND_REVERSE_IMPL(rFold, false, rbegin)
 
 		#undef _SGM_FORWARD_AND_REVERSE_IMPL
 	#else
