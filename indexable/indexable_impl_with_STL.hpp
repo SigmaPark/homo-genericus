@@ -117,21 +117,21 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 		
 		
-		auto begin() const		SGM_DECLTYPE_AUTO(  _core.begin()  )
-		auto begin()			SGM_DECLTYPE_AUTO(  _core.begin()  )
 		auto cbegin() const	SGM_DECLTYPE_AUTO(  _core.cbegin()  )
+		auto begin() const	SGM_DECLTYPE_AUTO(  cbegin()  )
+		auto begin()			SGM_DECLTYPE_AUTO(  _core.begin()  )
 
-		auto end() const		SGM_DECLTYPE_AUTO(  _core.end()  )
-		auto end()			SGM_DECLTYPE_AUTO(  _core.end()  )
 		auto cend() const		SGM_DECLTYPE_AUTO(  _core.cend()  )
+		auto end() const		SGM_DECLTYPE_AUTO(  cend()  )
+		auto end()			SGM_DECLTYPE_AUTO(  _core.end()  )
 
-		auto rbegin() const	SGM_DECLTYPE_AUTO(  _core.rbegin()  )
-		auto rbegin()			SGM_DECLTYPE_AUTO(  _core.rbegin()  )
 		auto crbegin() const	SGM_DECLTYPE_AUTO(  _core.crbegin()  )
+		auto rbegin() const	SGM_DECLTYPE_AUTO(  crbegin()  )
+		auto rbegin()			SGM_DECLTYPE_AUTO(  _core.rbegin()  )
 
-		auto rend() const		SGM_DECLTYPE_AUTO(  _core.rend()  )
+		auto crend() const	SGM_DECLTYPE_AUTO(  _core.crend()  )
+		auto rend() const		SGM_DECLTYPE_AUTO(  crend()  )
 		auto rend()			SGM_DECLTYPE_AUTO(  _core.rend()  )
-		auto crend() const		SGM_DECLTYPE_AUTO(  _core.crend()  )
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -153,6 +153,8 @@ namespace sgm
 		void pop_back_from(ITR itr){  _core.erase(itr, end());  }
 
 
+		/**	size() becomes 0 but capacity() is unchanged.
+		*/
 		template< class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
 		void clear(){  _core.clear();  }
 

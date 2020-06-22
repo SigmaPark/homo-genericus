@@ -1,4 +1,6 @@
+//#define USE_STL_VECTOR_AND_ARRAY
 #include "indexable.hpp"
+//#undef USE_STL_VECTOR_AND_ARRAY
 
 #include <cassert>
 #include <vector>
@@ -24,26 +26,61 @@ private:
 	}
 
 
+	template<class T, ixSize_t S> struct ARR
+	{
+		using type = T[S];
+	};
+
+	template<class T>
+	static void FF(T*){}
+
 public:
 	template<unsigned> static void Case();
 
 
 	template<> static void Case<1>()
 	{
-		indexable<double> ix1, ix2 = ix1;
-		indexable<double, 5> ix3/*{1, 3, 5, 7, 9}*/ /*, ix4 = ix3*/ ;
+		indexable<double> ix1, ix2 = ix1, ix1_{4, 3}, ix2_(ix1_.begin(), ix1_.end());
+
+		assert
+		(	ix1.empty() && ix2.empty() && ix1_.size() == 2
+		&&	same_iterables(ix1_, ix2_)
+		);
+
 		indexable<float> ix5(4), ix6(4, 7.f);
-		//indexable<double> ix7 = ix3, ix8(ix3.begin(), ix3.end());
+
+		assert
+		(	ix5.capacity() == 4 && ix5.size() == 0 
+		&&	same_iterables(ix6, indexable<float>{7.f, 7.f, 7.f, 7.f})
+		);
+
+
+		int aa[3] = {3,2,1};
+
+		ARR<int, 3>::type bb;
+
+		bb[0] = 3;
+		bb[1] = 2;
+		bb[2] = 1;
+
+		assert
+		(	aa[0] == bb[0] && aa[2] == *(bb+2)
+		);
+
+		FF(bb);
+
+
+		//indexable<double, 5> ix3{1, 3, 5, 7, 9}, ix4 = ix3 ;
 
 		//ix1 = indexable<double>{10, 9, 8, 7};
 
-		assert
-		(/*	same_iterables(ix3, ix4)
-		&&*/	ix5.capacity() == 4 && ix5.size() == 0 
+		//assert
+		//(	same_iterables(ix3, ix4)
+		//&&	ix5.capacity() == 4 && ix5.size() == 0 
 		//&&	same_iterables(ix6, indexable<float>{7.f, 7.f, 7.f, 7.f})
 		//&&	same_iterables(ix3, ix7) && same_iterables(ix3, ix8)
 		//&&	same_iterables(ix1, indexable<double, 4>{10, 9, 8, 7})
-		);
+		//);
 	}
 
 
@@ -74,7 +111,6 @@ public:
 		//(	ix1.size() == 0 && ix2.size() != 0
 		//&&	same_iterables(ix2, ix3)
 		//);
-
 	}
 
 
@@ -85,10 +121,11 @@ public:
 int main()
 {
 	Tutorial::Case<1>();
-	Tutorial::Case<2>();
-	Tutorial::Case<3>();
+//	Tutorial::Case<2>();
+//	Tutorial::Case<3>();
 
-	
+
+
 
 	return 0;
 }

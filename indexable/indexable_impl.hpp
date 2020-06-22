@@ -124,17 +124,17 @@ namespace sgm
 
 
 		//	itr++	(rvalue) 
-		auto operator++(int) const-> iter_t
+		auto operator++(int)-> iter_t
 		{
 			iter_t const itr = *this;
 			
 			_idx = shifted(_idx);
 			
-			return itr;		
+			return itr;
 		}
 
 		//	itr--	(rvalue)
-		auto operator--(int) const-> iter_t
+		auto operator--(int)-> iter_t
 		{
 			iter_t const itr = *this;
 
@@ -169,39 +169,45 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-	#ifndef _RW_MEMBERS
-		#define _RW_MEMBERS(NAME, ARGS, RES, ...)		\
-			auto NAME (ARGS)	\
-			->	std::conditional_t<IS_MUTABLE, RES, const RES>		{__VA_ARGS__}	\
-			\
-			auto NAME (ARGS) const-> const RES					{__VA_ARGS__}
+		auto operator+=(ixSize_t interval)-> iter_t&
+		{
+			_idx = shifted(_idx, true, interval);  
+			
+			return *this;
+		}
+
+		auto operator-=(ixSize_t interval)-> iter_t&
+		{
+			_idx = shifted(_idx, false, interval);  
+			
+			return *this;
+		}
 
 
-		_RW_MEMBERS(operator++, , iter_t&, return *this += 1;)
-		_RW_MEMBERS(operator--, , iter_t&, return *this -= 1;)
-
-		_RW_MEMBERS
-		(	operator[], ixSize_t interval, T&
-		,	return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
-		)
-
-		_RW_MEMBERS(operator*, , T&, return (*this)[0];)
-
-		_RW_MEMBERS
-		(	operator+=, ixSize_t interval, iter_t&
-		,	_idx = shifted(_idx, true, interval);  return *this;
-		)
-
-		_RW_MEMBERS
-		(	operator-=, ixSize_t interval, iter_t&
-		,	idx = shifted(_idx, false, interval);  return *this;
-		)
+		auto operator++()-> iter_t&			{  return *this += 1;  }
+		auto operator--()-> iter_t&			{  return *this -= 1;  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		#undef _RW_MEMBERS
-	#else
-		#error _RW_MEMBERS was already defined somewhere else.
-	#endif
+		auto operator[](ixSize_t interval) const	-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		}
+
+		auto operator[](ixSize_t interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		}
+
+		auto operator*() const-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return (*this)[0];
+		}
+
+		auto operator*()-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return (*this)[0];
+		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -217,7 +223,7 @@ namespace sgm
 
 	private:
 		T* _arr;
-		ixSize_t mutable _idx;
+		ixSize_t _idx;
 
 
 		static ixSize_t shifted(ixSize_t idx, bool plus_dir = true, ixSize_t interval = 1)
@@ -242,7 +248,7 @@ namespace sgm
 	{
 		static_assert(is_iterator<ITR>::value, "ITR doesn't have iterator interface");
 
-		static auto calc(ITR bi, ITR ei)-> ixSize_t
+		static auto calc(ITR bi, ITR const ei)-> ixSize_t
 		{	
 			return static_cast<ixSize_t>(ei - bi);
 		}
@@ -254,16 +260,9 @@ namespace sgm
 	{
 		static_assert(is_iterator<ITR>::value, "ITR doesn't have iterator interface");
 
-		static auto calc(ITR bi, ITR ei, ixSize_t dist = 0)-> ixSize_t
+		static auto calc(ITR bi, ITR const ei, ixSize_t dist = 0)-> ixSize_t
 		{
-		#if 1
 			return bi == ei ? dist : calc(++bi, ei, ++dist);
-		#else
-			while(bi++ != ei)
-				++dist;
-
-			return dist;
-		#endif
 		}
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
@@ -284,6 +283,23 @@ namespace sgm
 
 		auto get_size() const-> ixSize_t{  return SIZE;  }
 		auto get_capa() const-> ixSize_t{  return get_size();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<class X>
+		static void construction(X&){}
+
+
+		template<class X, class ITR>
+		static void range_construction(ITR bi, ITR const ei, X& ximpl)
+		{
+			assert( SIZE == _itrDist_Helper<ITR>::calc(bi, ei) && L"range dismatched.\n" );
+
+			using elem_t = std::decay_t<decltype( ximpl.at(0) )>;
+
+			for(ixSize_t idx = 0; idx < SIZE; ++idx)
+				ximpl._arr[idx] = static_cast<elem_t>(*bi++);			
+		}
 
 
 		template<class X, class A>
@@ -331,8 +347,30 @@ namespace sgm
 
 		auto get_size() const-> ixSize_t{  return size;  }
 		auto get_capa() const-> ixSize_t{  return capa;  }
-
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 		
+		
+		template<class X>
+		static void construction(X& ximpl)
+		{
+			ximpl._memory_info = _ixMemory_Helper(0, 0),
+			ximpl._arr = nullptr;
+		}
+
+
+		template<class X, class ITR>
+		static void range_construction(ITR bi, ITR const ei, X& ximpl)
+		{
+			ixSize_t const range_size = _itrDist_Helper<ITR>::calc(bi, ei);
+
+			ximpl._memory_info = _ixMemory_Helper(range_size, range_size),
+			ximpl._arr = alloc(range_size);
+			
+			for(ixSize_t idx = 0; bi != ei; ++idx, ++bi)
+				new(ximpl._arr + idx) value_t(*bi);
+		}
+
+
 		template<class X, class A>
 		static void copy(X const& ximpl_in, A& arr_out)
 		{
@@ -403,22 +441,7 @@ namespace sgm
 
 
 	protected:
-		template< class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
-		explicit indexable_impl(ixSize_t capa) 
-		:	_memory_info( Helper(0, capa) ), _arr( Helper::alloc(capa) )
-		{}
-
-		template< class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
-		indexable_impl() : indexable_impl( ixSize_t(0) ){}
-
-
-		template<class...ARGS, class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
-		indexable_impl(ixSize_t size, ARGS const&... args) 
-		:	_memory_info( Helper(size, size) ), _arr( Helper::alloc(size) )
-		{
-			for(ixSize_t idx = 0; idx < size; ++idx)
-				new(_arr + idx) T(args...);
-		}
+		indexable_impl(){  Helper::construction(*this);  }
 
 
 		template
@@ -426,38 +449,12 @@ namespace sgm
 		,	class 
 			=	std::enable_if_t
 				<	!std::is_integral<ITR>::value && is_iterator<ITR>::value 
-				&&	SIZE != ixSize::DYNAMIC
-				>
-		>
-		indexable_impl( ITR bi, decltype(bi) ei ) : _memory_info(Helper()), _arr()
-		{
-			assert( SIZE == _itrDist_Helper<ITR>::calc(bi, ei) && L"range dismatched.\n" );
-
-			for(ixSize_t idx = 0; idx < SIZE; ++idx)
-				_arr[idx] = static_cast<T>(*bi++);
-		}
-
-
-		template
-		<	class ITR
-		,	class 
-			=	std::enable_if_t
-				<	!std::is_integral<ITR>::value && is_iterator<ITR>::value 
-				&&	SIZE == ixSize::DYNAMIC
 				>
 		>
 		indexable_impl(ITR bi, ITR ei) 
-		:	_memory_info(  Helper( 0, _itrDist_Helper<ITR>::calc(bi, ei) )  )
-		,	_arr
-			(	[bi, ei](T* const arr) mutable-> T*
-				{
-					for(ixSize_t idx = 0; bi != ei; ++idx, ++bi)
-						new(arr + idx) T(*bi);
-
-					return arr;
-				}( Helper::alloc(_memory_info.capa) )
-			)
-		{}
+		{
+			Helper::range_construction(bi, ei, *this);
+		}
 
 
 		template
@@ -485,6 +482,21 @@ namespace sgm
 		:	_memory_info(ix_impl._memory_info), _arr()
 		{
 			Helper::move( std::move(ix_impl), _arr )
+		}
+
+
+		template< class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
+		explicit indexable_impl(ixSize_t capa) 
+		:	_memory_info( Helper(0, capa) ), _arr( Helper::alloc(capa) )
+		{}
+
+
+		template<class...ARGS, class = std::enable_if_t<SIZE == ixSize::DYNAMIC> >
+		indexable_impl(ixSize_t size, ARGS const&... args) 
+		:	_memory_info( Helper(size, size) ), _arr( Helper::alloc(size) )
+		{
+			for(ixSize_t idx = 0; idx < size; ++idx)
+				new(_arr + idx) T(args...);
 		}
 
 

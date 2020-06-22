@@ -152,7 +152,7 @@ namespace sgm
 		auto begin() const-> citer_t	{  return cbegin();  }
 		auto begin()-> iter_t			{  return impl_t::begin();  }
 
-		auto cend() const-> citer_t		{  return impl_t::cend();  }
+		auto cend() const-> citer_t	{  return impl_t::cend();  }
 		auto end() const-> citer_t		{  return cend();  }
 		auto end()-> iter_t			{  return impl_t::end();  }
 

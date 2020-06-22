@@ -47,7 +47,7 @@ public:
 
 		assert
 		(	is_Equal(  Morph( indices(5, 1), negate ), answer  )
-		&&	is_Equal(	  Morph( SHARE(), indices(5, 1), negate ), answer  )
+		&&	is_Equal(  Morph( SHARE(), indices(5, 1), negate ), answer  )
 		&&	is_Equal(  Morph<SHARE>( indices(5, 1), negate ), answer  )
 		&&	is_Equal
 			(	Morph( indices(100000, 1), negate )
