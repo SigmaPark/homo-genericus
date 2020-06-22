@@ -62,7 +62,7 @@ public:
 		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 		auto answer = std::vector<int>{2, 4, 6, 8, 10};
 		
-		Filter<Parallel_Proc>( indices(100000, 1), is_even );
+		//Filter<Parallel_Proc>( indices(100000, 1), is_even );
 
 		assert
 		(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
@@ -124,13 +124,6 @@ int main()
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
 	Tutorial::Case<4>();
-
-	Derived<int> x(3);
-	Derived<int> const x2(2);
-
-	x[3];
-	x2[3];
-
 
 	return 0;
 }

@@ -125,8 +125,8 @@ namespace sgm
 			>
 			static auto Filter(CON&& con, FUNC&& func)-> indexable<elem_t>
 			{
-				indexable<bool> const truth_table
-				=	_Morph_Helper<Parallel_Proc>::Morph( con, std::forward<FUNC>(func) );
+				//indexable<bool> const truth_table
+				//=	_Morph_Helper<Parallel_Proc>::Morph( con, std::forward<FUNC>(func) );
 
 				//auto const nof_true
 				//=	[](indexable<bool> const& tt)-> ixSize_t

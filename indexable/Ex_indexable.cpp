@@ -47,6 +47,7 @@ public:
 		&&	same_iterables(ix1_, ix2_)
 		);
 
+
 		indexable<float> ix5(4), ix6(4, 7.f);
 
 		assert
@@ -55,31 +56,11 @@ public:
 		);
 
 
-		int aa[3] = {3,2,1};
-
-		ARR<int, 3>::type bb;
-
-		bb[0] = 3;
-		bb[1] = 2;
-		bb[2] = 1;
-
-		assert
-		(	aa[0] == bb[0] && aa[2] == *(bb+2)
-		);
-
-		FF(bb);
-
-
 		//indexable<double, 5> ix3{1, 3, 5, 7, 9}, ix4 = ix3 ;
-
-		//ix1 = indexable<double>{10, 9, 8, 7};
 
 		//assert
 		//(	same_iterables(ix3, ix4)
-		//&&	ix5.capacity() == 4 && ix5.size() == 0 
-		//&&	same_iterables(ix6, indexable<float>{7.f, 7.f, 7.f, 7.f})
-		//&&	same_iterables(ix3, ix7) && same_iterables(ix3, ix8)
-		//&&	same_iterables(ix1, indexable<double, 4>{10, 9, 8, 7})
+		//&&	ix3.size() == 5
 		//);
 	}
 
@@ -117,14 +98,11 @@ public:
 };
 
 
-
 int main()
 {
 	Tutorial::Case<1>();
 //	Tutorial::Case<2>();
 //	Tutorial::Case<3>();
-
-
 
 
 	return 0;
