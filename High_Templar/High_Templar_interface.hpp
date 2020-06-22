@@ -29,13 +29,8 @@ namespace sgm
 	)
 
 
-	struct No_Deco
-	{
-		template<class T> using type = T;  
-
-		template<class T>
-		static auto cast(T&& t) SGM_DECLTYPE_AUTO(  static_cast< type<decltype(t)> >(t)  )
-	};
+	struct No_Deco{  template<class T> using type = T;  };
+	struct Parallel_Proc{  template<class T> using type = T;  };
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 	

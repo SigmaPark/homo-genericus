@@ -47,7 +47,10 @@ namespace sgm
 
 		indexable() = default;
 		indexable(indexable const&) = default;
-		indexable(indexable&& ix) : impl_t( std::move(ix) ){}
+		indexable(indexable&& ix)// : impl_t( std::move(ix) ){}
+		{
+			impl_t::core() = std::move(ix.core());
+		}
 
 
 		template
@@ -88,7 +91,9 @@ namespace sgm
 		
 		auto operator=(indexable&& ix)-> indexable&
 		{
-			impl_t::operator=( std::move(ix) );
+			//impl_t::operator=( std::move(ix) );
+
+			impl_t::core() = std::move(ix.core());
 
 			return *this;
 		}

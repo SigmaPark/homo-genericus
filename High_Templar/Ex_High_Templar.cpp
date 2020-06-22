@@ -49,6 +49,10 @@ public:
 		(	is_Equal(  Morph( indices(5, 1), negate ), answer  )
 		&&	is_Equal(	  Morph( SHARE(), indices(5, 1), negate ), answer  )
 		&&	is_Equal(  Morph<SHARE>( indices(5, 1), negate ), answer  )
+		&&	is_Equal
+			(	Morph( indices(100000, 1), negate )
+			,	Morph<Parallel_Proc>( indices(100000, 1), negate )
+			)
 		);
 	}
 
@@ -57,11 +61,17 @@ public:
 	{
 		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 		auto answer = std::vector<int>{2, 4, 6, 8, 10};
+		
+		Filter<Parallel_Proc>( indices(100000, 1), is_even );
 
 		assert
 		(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
 		&&	is_Equal(  Filter( SHARE(), indices(10, 1), is_even ), answer  )
 		&&	is_Equal(  Filter<SHARE>( indices(10, 1), is_even ), answer  )
+		//&&	is_Equal
+		//	(	Filter( indices(100000, 1), is_even )
+		//	,	Filter<Parallel_Proc>( indices(100000, 1), is_even )
+		//	)
 		);
 	}
 
@@ -84,12 +94,43 @@ public:
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
+template<class T>
+struct Base
+{
+	Base(T t) : val(t){}
+	T val;
+
+	auto get()-> T&{  return val;  }
+	auto get() const-> T const&{  return val;  }
+};
+
+
+template<class T>
+struct Derived : Base<T>
+{
+	using BB = Base<T>;
+
+	Derived(T t) : BB(t){}
+
+	auto operator[](int)-> T&{  return BB::get();  }
+	auto operator[](int) const-> T const&{  return BB::get();  }
+};
+
+
+
 int main()
 {
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
 	Tutorial::Case<4>();
+
+	Derived<int> x(3);
+	Derived<int> const x2(2);
+
+	x[3];
+	x2[3];
+
 
 	return 0;
 }

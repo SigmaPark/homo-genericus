@@ -51,9 +51,13 @@ namespace sgm
 
 
 	protected:
+		auto core()-> core_t&				{  return _core;  }
+		auto core() const-> core_t const&	{  return _core;  }
+
+
 		indexable_impl() = default;
 		indexable_impl(indexable_impl const&) = default;
-		indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl._core) ){}
+		//indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl._core) ){}
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
@@ -82,7 +86,7 @@ namespace sgm
 
 		template
 		<	class S, class...ARGS
-		,	class 
+		,	class
 			=	std::enable_if_t
 				<	std::is_integral<S>::value && SIZE == ixSize::DYNAMIC 
 				&&	sizeof...(ARGS) != 0
@@ -93,12 +97,12 @@ namespace sgm
 
 		auto operator=(indexable_impl const&)-> indexable_impl& = default;
 
-		auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
-		{
-			_core = std::move(ix_impl._core);
+		//auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
+		//{
+		//	_core = std::move(ix_impl._core);
 
-			return *this;
-		}
+		//	return *this;
+		//}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
