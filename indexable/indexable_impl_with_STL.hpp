@@ -51,13 +51,9 @@ namespace sgm
 
 
 	protected:
-		auto core()-> core_t&				{  return _core;  }
-		auto core() const-> core_t const&	{  return _core;  }
-
-
 		indexable_impl() = default;
 		indexable_impl(indexable_impl const&) = default;
-		//indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl._core) ){}
+		indexable_impl(indexable_impl&& ix_impl) : _core( std::move(ix_impl._core) ){}
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
@@ -97,12 +93,12 @@ namespace sgm
 
 		auto operator=(indexable_impl const&)-> indexable_impl& = default;
 
-		//auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
-		//{
-		//	_core = std::move(ix_impl._core);
+		auto operator=(indexable_impl&& ix_impl)-> indexable_impl&
+		{
+			_core = std::move(ix_impl._core);
 
-		//	return *this;
-		//}
+			return *this;
+		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -118,19 +114,15 @@ namespace sgm
 		
 		
 		auto cbegin() const	SGM_DECLTYPE_AUTO(  _core.cbegin()  )
-		auto begin() const	SGM_DECLTYPE_AUTO(  cbegin()  )
 		auto begin()			SGM_DECLTYPE_AUTO(  _core.begin()  )
 
 		auto cend() const		SGM_DECLTYPE_AUTO(  _core.cend()  )
-		auto end() const		SGM_DECLTYPE_AUTO(  cend()  )
 		auto end()			SGM_DECLTYPE_AUTO(  _core.end()  )
 
 		auto crbegin() const	SGM_DECLTYPE_AUTO(  _core.crbegin()  )
-		auto rbegin() const	SGM_DECLTYPE_AUTO(  crbegin()  )
 		auto rbegin()			SGM_DECLTYPE_AUTO(  _core.rbegin()  )
 
-		auto crend() const	SGM_DECLTYPE_AUTO(  _core.crend()  )
-		auto rend() const		SGM_DECLTYPE_AUTO(  crend()  )
+		auto crend() const		SGM_DECLTYPE_AUTO(  _core.crend()  )
 		auto rend()			SGM_DECLTYPE_AUTO(  _core.rend()  )
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 

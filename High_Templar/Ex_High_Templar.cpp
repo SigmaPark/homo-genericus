@@ -1,6 +1,7 @@
 
 #include "High_Templar.hpp"
-
+#include <vector>
+#include <array>
 #include "..\Pinweight\Pinweight.hpp"
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -11,15 +12,15 @@ class Tutorial : No_Making
 {
 private:
 	template<class C1, class C2>
-	static bool is_Equal(C1 c1, C2 c2)
+	static bool is_Equal(C1 con1, C2 con2)
 	{
-		bool res = c1.size() == c2.size();
+		auto itr1 = con1.cbegin();
+		auto itr2 = con2.cbegin();
 
-		for
-		(	auto Pa = std::make_pair(c1.begin(), c2.begin())
-		;	res && Pa.first != c1.end()
-		;	res = *Pa.first++ == *Pa.second++
-		);
+		bool res = con1.size() == con2.size();
+
+		while(itr1 != con1.cend() && res)
+			res = *itr1++ == *itr2++;
 
 		return res;
 	}
@@ -62,16 +63,16 @@ public:
 		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 		auto answer = std::vector<int>{2, 4, 6, 8, 10};
 		
-		//Filter<Parallel_Proc>( indices(100000, 1), is_even );
+		Filter<Parallel_Proc>( indices(100000, 1), is_even );
 
 		assert
 		(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
 		&&	is_Equal(  Filter( SHARE(), indices(10, 1), is_even ), answer  )
 		&&	is_Equal(  Filter<SHARE>( indices(10, 1), is_even ), answer  )
-		//&&	is_Equal
-		//	(	Filter( indices(100000, 1), is_even )
-		//	,	Filter<Parallel_Proc>( indices(100000, 1), is_even )
-		//	)
+		&&	is_Equal
+			(	Filter( indices(100000, 1), is_even )
+			,	Filter<Parallel_Proc>( indices(100000, 1), is_even )
+			)
 		);
 	}
 
@@ -93,29 +94,6 @@ public:
 
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
-
-template<class T>
-struct Base
-{
-	Base(T t) : val(t){}
-	T val;
-
-	auto get()-> T&{  return val;  }
-	auto get() const-> T const&{  return val;  }
-};
-
-
-template<class T>
-struct Derived : Base<T>
-{
-	using BB = Base<T>;
-
-	Derived(T t) : BB(t){}
-
-	auto operator[](int)-> T&{  return BB::get();  }
-	auto operator[](int) const-> T const&{  return BB::get();  }
-};
-
 
 
 int main()

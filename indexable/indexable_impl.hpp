@@ -2,7 +2,6 @@
 
 #include "indexable_interface.hpp"
 
-#include <cstdlib>
 #include <cassert>
 #include <new>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -101,20 +100,24 @@ namespace sgm
 	{
 		static_assert(!std::is_const<T>::value, "T should be mutable here");
 
+		using value_t = std::conditional_t<IS_MUTABLE, T, T const>;
 		using iter_t = indexable_iterator;
+		
 		enum : ixSize_t{SIZE = S};
 
 
 	public:
-		indexable_iterator(T* arr, ixSize_t idx) : _arr(arr), _idx(idx){}
+		indexable_iterator(value_t* arr, ixSize_t idx) : _arr(arr), _idx(idx){}
 		indexable_iterator(iter_t const&) = default;
 
 
 		auto operator=(iter_t const&)-> iter_t& = default;
 
+
 		template
 		<	bool _M, bool _F
-		,	class = std::enable_if_t<_M != IS_MUTABLE || _F != IS_FORWARD>
+		,	class 
+			=	std::enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 		>
 		auto operator=(indexable_iterator<T, SIZE, _M, _F> itr)-> iter_t&
 		{
@@ -222,7 +225,7 @@ namespace sgm
 
 
 	private:
-		T* _arr;
+		value_t* _arr;
 		ixSize_t _idx;
 
 
@@ -268,9 +271,11 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class, ixSize_t SIZE = ixSize::DYNAMIC> 
+	template<class T, ixSize_t SIZE = ixSize::DYNAMIC> 
 	class _ixMemory_Helper
 	{
+		using value_t = std::remove_reference_t<T>;
+
 	public: 
 		_ixMemory_Helper(...){}  
 
@@ -332,7 +337,7 @@ namespace sgm
 
 		static auto alloc(ixSize_t capa)-> value_t*
 		{
-			return static_cast<value_t*>(  std::malloc( sizeof(value_t) * capa )  );
+			return static_cast<value_t*>(  ::operator new( sizeof(value_t) * capa )  );
 		}
 
 		template<class Q>
@@ -342,7 +347,7 @@ namespace sgm
 				(arr + idx)->~value_t();
 
 			size = capa = 0,
-			std::free(arr), arr = nullptr;
+			::operator delete(arr), arr = nullptr;
 		}
 
 		auto get_size() const-> ixSize_t{  return size;  }
@@ -367,7 +372,7 @@ namespace sgm
 			ximpl._arr = alloc(range_size);
 			
 			for(ixSize_t idx = 0; bi != ei; ++idx, ++bi)
-				new(ximpl._arr + idx) value_t(*bi);
+				new(ximpl._arr + idx) value_t( static_cast<value_t>(*bi) );
 		}
 
 
@@ -381,14 +386,16 @@ namespace sgm
 				arr_out = alloc(ximpl_in.capacity());
 
 				for(ixSize_t idx = 0; idx < ximpl_in.size(); ++idx)
-					new(arr_out + idx) value_t( ximpl_in.at(idx) );
+					new(arr_out + idx) value_t(  static_cast<value_t>( ximpl_in.at(idx) )  );
 			}
 		}
 
 		template<class X, class A>
 		static void move(X&& ximpl_in, A& arr_out)
 		{
-			arr_out =  ximpl_in.data(), ximpl_in.data() = nullptr;
+			arr_out = ximpl_in.data(),
+			ximpl_in._memory_info = _ixMemory_Helper(0, 0),
+			ximpl_in._arr = nullptr;
 		}
 
 	};
@@ -472,16 +479,14 @@ namespace sgm
 		indexable_impl(std::initializer_list<Q>&& iL) : indexable_impl(iL.begin(), iL.end()){}
 
 
-		indexable_impl(indexable_impl const& ix_impl) 
-		:	_memory_info(ix_impl._memory_info), _arr()
+		indexable_impl(indexable_impl const& ix_impl) : _memory_info(ix_impl._memory_info)
 		{
 			Helper::copy(ix_impl, _arr);
 		}
 
-		indexable_impl(indexable_impl&& ix_impl)
-		:	_memory_info(ix_impl._memory_info), _arr()
+		indexable_impl(indexable_impl&& ix_impl) : _memory_info(ix_impl._memory_info)
 		{
-			Helper::move( std::move(ix_impl), _arr )
+			Helper::move( std::move(ix_impl), _arr );
 		}
 
 
@@ -543,19 +548,15 @@ namespace sgm
 
 
 		auto cbegin() const	SGM_DECLTYPE_AUTO(  const_iterator(_arr, 0)  )
-		auto begin() const		SGM_DECLTYPE_AUTO(  cbegin()  )
 		auto begin()			SGM_DECLTYPE_AUTO(  iterator(_arr, 0)  )
 
 		auto cend() const		SGM_DECLTYPE_AUTO(  const_iterator(_arr, size())  )
-		auto end() const		SGM_DECLTYPE_AUTO(  cend()  )
 		auto end()			SGM_DECLTYPE_AUTO(  iterator(_arr, size())  )
 
 		auto crbegin() const	SGM_DECLTYPE_AUTO(  const_riterator(_arr, size())  )
-		auto rbegin() const	SGM_DECLTYPE_AUTO(  crbegin()  )
 		auto rbegin()			SGM_DECLTYPE_AUTO(  riterator(_arr, size())  )
 
 		auto crend() const		SGM_DECLTYPE_AUTO(  const_riterator(_arr, 0)  )
-		auto rend() const		SGM_DECLTYPE_AUTO(  crend()  )
 		auto rend()			SGM_DECLTYPE_AUTO(  riterator(_arr, 0)  )
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
@@ -599,5 +600,24 @@ namespace sgm
 	};
 
 
+}// end of namespace sgm
+
+
+#ifdef _ITERATOR_
+namespace std
+{
+
+
+	template<class T, sgm::ixSize_t S, bool M, bool F>
+	struct iterator_traits< sgm::indexable_iterator<T, S, M, F> >
+	{
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = signed long long;
+		using pointer = std::conditional_t<M, T*, T const*>;
+		using reference = std::conditional_t<M, T&, T const&>;
+	};
+
 
 }
+#endif

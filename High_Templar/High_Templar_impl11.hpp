@@ -8,10 +8,7 @@
 #endif
 
 #include "High_Templar_interface.hpp"
-
-#define USE_STL_VECTOR_AND_ARRAY
 #include "..\indexable\indexable.hpp"
-#undef USE_STL_VECTOR_AND_ARRAY
 
 #include <omp.h>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -125,27 +122,27 @@ namespace sgm
 			>
 			static auto Filter(CON&& con, FUNC&& func)-> indexable<elem_t>
 			{
-				//indexable<bool> const truth_table
-				//=	_Morph_Helper<Parallel_Proc>::Morph( con, std::forward<FUNC>(func) );
+				indexable<bool> const truth_table
+				=	_Morph_Helper<Parallel_Proc>::Morph( con, std::forward<FUNC>(func) );
 
-				//auto const nof_true
-				//=	[](indexable<bool> const& tt)-> ixSize_t
-				//	{
-				//		int res = 0, i = 0;
+				auto const nof_true
+				=	[](indexable<bool> const& tt)-> ixSize_t
+					{
+						int res = 0, i = 0;
 
-				//	#pragma omp parallel for default(shared) private(i) reduction(+:res)
-				//		for(i = 0; i < tt.size(); i++)
-				//			if(tt[i])
-				//				res = res + 1;
+					#pragma omp parallel for default(shared) private(i) reduction(+:res)
+						for(i = 0; i < tt.size(); i++)
+							if(tt[i])
+								res = res + 1;
 
-				//		return static_cast<ixSize_t>(res);
-				//	}(truth_table);
+						return static_cast<ixSize_t>(res);
+					}(truth_table);
 
-				indexable<elem_t> res/*(nof_true)*/;
+				indexable<elem_t> res(nof_true);
 
-				//for(ixSize_t idx = 0; idx < con.size(); ++idx)
-				//	if(truth_table[idx])
-				//		res >> con.begin()[idx];
+				for(ixSize_t idx = 0; idx < con.size(); ++idx)
+					if(truth_table[idx])
+						res >> con.begin()[idx];
 
 				return res;
 			}
