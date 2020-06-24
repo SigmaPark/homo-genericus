@@ -2,9 +2,11 @@
 //#include <array>
 //#include <vector>
 
-//#define USE_STL_VECTOR_AND_ARRAY
+#include "..\Avatar\Avatar.hpp"
+
+#define USE_STL_VECTOR_AND_ARRAY
 #include "indexable.hpp"
-//#undef USE_STL_VECTOR_AND_ARRAY
+#undef USE_STL_VECTOR_AND_ARRAY
 
 
 
@@ -36,15 +38,6 @@ public:
 
 	template<> static void Case<0>()
 	{
-		float sarr[] = {12, 34, 56};
-
-		static_assert
-		(	(	std::is_same<decltype(sarr), float[3]>::value
-			&&	!std::is_same<decltype(sarr), float*>::value
-			)
-		,	""
-		);
-
 		indexable<float> const ix{5, 2, 1};
 
 		assert( same_iterables(ix, indexable<float, 3>{5, 2, 1}) );
@@ -80,24 +73,14 @@ public:
 
 	template<> static void Case<2>()
 	{
-		//std::vector<double> const vec1 = indexable<double>{1, 3};
+		indexable<float> ix1{1, 2, 3}, ix2 = ix1, ix3 = ix1;
 
-		//indexable<float, 3> const cix{3, 2, 1}, cix2 = cix;
+		ix1.~indexable();
 
-		//assert
-		//(	same_iterables(vec1, indexable<double>{1, 3}) 
-		//&&	same_iterables(cix, std::vector<float>{3, 2, 1})
-		//);
-
-
-		//indexable<float> ix1{1, 2, 3}, ix2 = ix1, ix3 = ix1;
-
-		//ix1.~indexable();
-
-		//assert
-		//(	ix1.size() == 0 && ix2.size() != 0
-		//&&	same_iterables(ix2, ix3)
-		//);
+		assert
+		(	ix1.size() == 0 && ix2.size() != 0
+		&&	same_iterables(ix2, ix3)
+		);
 	}
 
 

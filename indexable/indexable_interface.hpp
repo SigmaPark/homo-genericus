@@ -39,7 +39,7 @@ namespace sgm
 	class indexable : indexable_impl<T, S>
 	{
 		using impl_t = indexable_impl<T, S>;
-
+		using impl_t::at;
 
 	public:
 		enum : ixSize_t{SIZE = S};
@@ -109,34 +109,6 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto size() const-> ixSize_t{  return impl_t::size();  }
-		auto empty() const-> bool{  return impl_t::empty();  }
-
-		auto cdata() const-> T const*{  return impl_t::data();  }
-		auto data() const-> T const*{  return cdata();  }
-		auto data()-> T*{  return impl_t::data();  }
-
-		auto front() const-> T const&	{  return *cbegin();  }
-		auto front()-> T&				{  return *begin();	}
-		auto back() const-> T const&	{  return *crbegin();  }
-		auto back()-> T&				{  return *rbegin();  }
-
-		auto operator[](ixSize_t idx) const-> T const&	{  return impl_t::at(idx);  }
-		auto operator[](ixSize_t idx)-> T&				{  return impl_t::at(idx);  } 
-
-
-		template
-		<	class CON
-		,	class 
-			=	std::enable_if_t
-				<	is_iterable<CON>::value
-				&&	!std::is_same< std::decay_t<CON>, indexable >::value  
-				>
-		> 
-		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
 		using iter_t = typename ix_iterator<T, SIZE>::type;
 		using citer_t = typename ix_const_iterator<T, SIZE>::type;
 		using riter_t = typename ix_riterator<T, SIZE>::type;
@@ -158,6 +130,35 @@ namespace sgm
 		auto crend() const-> criter_t	{  return impl_t::crend();  }
 		auto rend() const-> criter_t	{  return crend();  }
 		auto rend()-> riter_t			{  return impl_t::rend();  }
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		auto size() const-> ixSize_t{  return impl_t::size();  }
+		auto empty() const-> bool{  return impl_t::empty();  }
+
+		auto cdata() const-> T const*{  return impl_t::data();  }
+		auto data() const-> T const*{  return cdata();  }
+		auto data()-> T*{  return impl_t::data();  }
+
+		auto front() const		SGM_DECLTYPE_AUTO(  *cbegin()  )
+		auto front()			SGM_DECLTYPE_AUTO(  *begin()  )
+		auto back() const		SGM_DECLTYPE_AUTO(  *crbegin()  )
+		auto back()			SGM_DECLTYPE_AUTO(  *rbegin()  )
+
+		auto operator[](ixSize_t idx) const	SGM_DECLTYPE_AUTO(  at(idx)  )
+		auto operator[](ixSize_t idx)		SGM_DECLTYPE_AUTO(  at(idx)  )
+
+
+
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON>::value
+				&&	!std::is_same< std::decay_t<CON>, indexable >::value  
+				>
+		> 
+		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 

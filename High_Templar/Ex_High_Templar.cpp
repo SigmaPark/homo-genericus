@@ -1,8 +1,10 @@
-
-#include "High_Templar.hpp"
 #include <vector>
 #include <array>
 #include "..\Pinweight\Pinweight.hpp"
+
+#define USE_STL_VECTOR_AND_ARRAY
+#include "High_Templar.hpp"
+#undef USE_STL_VECTOR_AND_ARRAY
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 using namespace sgm;
@@ -63,8 +65,6 @@ public:
 		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 		auto answer = std::vector<int>{2, 4, 6, 8, 10};
 		
-		Filter<Parallel_Proc>( indices(100000, 1), is_even );
-
 		assert
 		(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
 		&&	is_Equal(  Filter( SHARE(), indices(10, 1), is_even ), answer  )

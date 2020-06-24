@@ -34,7 +34,7 @@ namespace sgm
 		template<class F>
 		struct has : No_Making
 		{
-			enum : bool{value = Has_Type<F>:: template among<FLAGS...>::value};
+			enum : bool{value = Has_Type<F>::template among<FLAGS...>::value};
 		};
 
 

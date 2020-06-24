@@ -180,6 +180,11 @@ namespace sgm
 	};
 
 
+	template<class T>
+	struct is_random_access_iterator : No_Making
+	{
+		enum : bool{value = is_iterator<T>::value && Has_Operator_index<T>::value};
+	};
 
 
 } // end of namespace sgm

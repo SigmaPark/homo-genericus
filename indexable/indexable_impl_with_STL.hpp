@@ -108,8 +108,8 @@ namespace sgm
 		auto data() const-> T const*	{  return _core.data();  }
 		auto data()-> T*				{  return _core.data();  }
 
-		auto at(ixSize_t idx) const-> T const&	{  return _core.at(idx);  }
-		auto at(ixSize_t idx)-> T&				{  return _core.at(idx);  } 
+		auto at(ixSize_t idx) const		SGM_DECLTYPE_AUTO(  _core.at(idx)  )
+		auto at(ixSize_t idx)			SGM_DECLTYPE_AUTO(  _core.at(idx)  )
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 		
 		

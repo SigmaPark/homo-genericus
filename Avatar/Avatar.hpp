@@ -186,6 +186,14 @@ namespace sgm
 
 	template<  class T, class = std::enable_if_t< is_Avatar<T>::value >  >
 	static auto make_Avatar(T t) SGM_DECLTYPE_AUTO(  Avatar<typename T::value_t>(t.value())  )
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class A, class B, class C>
+	struct is_immutable< Avatar_t<A, B, C> > : No_Making
+	{
+		enum : bool{value = is_constAvatar< Avatar_t<A, B, C> >::value};
+	};
 
 
 } // end of namespace sgm
