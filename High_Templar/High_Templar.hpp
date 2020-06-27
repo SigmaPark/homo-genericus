@@ -6,3 +6,4 @@
 //#ifdef IMPORT_SGM_HIGH_TEMPLAR_VER11
 	#include "High_Templar_impl11.hpp" 
 //#endif
+

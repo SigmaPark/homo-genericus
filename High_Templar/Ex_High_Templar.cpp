@@ -1,6 +1,7 @@
 #include <vector>
 #include <array>
 #include "..\Pinweight\Pinweight.hpp"
+#include "Countable.hpp"
 
 #define USE_STL_VECTOR_AND_ARRAY
 #include "High_Templar.hpp"
@@ -92,6 +93,14 @@ public:
 	}
 
 
+	template<> static void Case<5>()
+	{
+		assert
+		(	is_Equal( Countable<size_t>(5), indexable<size_t>{0, 1, 2, 3, 4} )
+		);
+	}
+
+
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -102,6 +111,7 @@ int main()
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
 	Tutorial::Case<4>();
+	Tutorial::Case<5>();
 
 	return 0;
 }
