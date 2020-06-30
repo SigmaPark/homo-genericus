@@ -126,6 +126,28 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
+		auto operator[](ixSize_t interval) const	-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		}
+
+		auto operator[](ixSize_t interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
+		}
+
+		auto operator*() const-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return (*this)[0];
+		}
+
+		auto operator*()-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		{
+			return (*this)[0];
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
 		//	itr++	(rvalue) 
 		auto operator++(int)-> iter_t
 		{
@@ -189,28 +211,6 @@ namespace sgm
 
 		auto operator++()-> iter_t&			{  return *this += 1;  }
 		auto operator--()-> iter_t&			{  return *this -= 1;  }
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		auto operator[](ixSize_t interval) const	-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
-		}
-
-		auto operator[](ixSize_t interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
-		}
-
-		auto operator*() const-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return (*this)[0];
-		}
-
-		auto operator*()-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return (*this)[0];
-		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 

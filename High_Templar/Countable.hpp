@@ -143,15 +143,15 @@ namespace sgm
 		using iterator_t = Count_iterator<N, true>;
 		using riterator_t = Count_iterator<N, false>;
 
-		auto cbegin()const SGM_DECLTYPE_AUTO(  iterator_t(_offset)  )
-		auto cend()const SGM_DECLTYPE_AUTO(  iterator_t(_offset + size())  )
-		auto begin()const SGM_DECLTYPE_AUTO(  cbegin()  )
-		auto end()const SGM_DECLTYPE_AUTO(  cend()  )
+		auto cbegin() const SGM_DECLTYPE_AUTO(  iterator_t(_offset)  )
+		auto cend() const SGM_DECLTYPE_AUTO(  iterator_t(_offset + size())  )
+		auto begin() const SGM_DECLTYPE_AUTO(  cbegin()  )
+		auto end() const SGM_DECLTYPE_AUTO(  cend()  )
 
-		auto crbegin()const SGM_DECLTYPE_AUTO(  riterator_t(_offset + size() - 1)  )
-		auto crend()const SGM_DECLTYPE_AUTO(  riterator_t(_offset - 1)  )
-		auto rbegin()const SGM_DECLTYPE_AUTO(  crbegin()  )
-		auto rend()const SGM_DECLTYPE_AUTO(  crend()  )
+		auto crbegin() const SGM_DECLTYPE_AUTO(  riterator_t(_offset + size() - 1)  )
+		auto crend() const SGM_DECLTYPE_AUTO(  riterator_t(_offset - 1)  )
+		auto rbegin() const SGM_DECLTYPE_AUTO(  crbegin()  )
+		auto rend() const SGM_DECLTYPE_AUTO(  crend()  )
 	};
 
 

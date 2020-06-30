@@ -1,12 +1,12 @@
-//#include <cassert>
-//#include <array>
-//#include <vector>
+#include <cassert>
+#include <array>
+#include <vector>
 
 #include "..\Avatar\Avatar.hpp"
 
-#define USE_STL_VECTOR_AND_ARRAY
+//#define USE_STL_VECTOR_AND_ARRAY
 #include "indexable.hpp"
-#undef USE_STL_VECTOR_AND_ARRAY
+//#undef USE_STL_VECTOR_AND_ARRAY
 
 
 
@@ -86,6 +86,29 @@ public:
 
 };
 
+#include <future>
+
+//template<class T>
+//class Foo
+//{
+//	T _t;
+//
+//public:
+//	explicit Foo(T&& t = T()) : _t( std::move(t) ){};
+//
+//	Foo(Foo const& foo) : _t(foo._t){}
+//
+//	auto operator=(Foo const& foo)-> Foo&
+//	{
+//		_t = foo._t;
+//
+//		return *this;
+//	}
+//
+//	auto value()-> T&{  return _t;  }
+//	auto value() const-> T const&{  return _t;  }
+//};
+
 
 int main()
 {
@@ -93,6 +116,12 @@ int main()
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
 
+	//Foo< std::future<int> > 
+	//	foo1,
+	//	foo2( std::async([]()->int{  return 2;  }) );
+
+	indexable< std::future<double> > ix;
+	
 
 	return 0;
 }
