@@ -301,7 +301,7 @@ namespace sgm
 			static auto Filter(FLAG flag, CON&& con, FUNC&& func)-> indexable<elem_t>
 			{
 				indexable<bool> const truth_table
-				=	_Morph_Helper<Parallel>::Morph( con, std::forward<FUNC>(func) );
+				=	Morph( flag, con, std::forward<FUNC>(func) );
 
 				auto const nof_true
 				=	[](indexable<bool> const& tt)-> ixSize_t

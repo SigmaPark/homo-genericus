@@ -4,11 +4,10 @@
 
 #include "..\Avatar\Avatar.hpp"
 
-//#define USE_STL_VECTOR_AND_ARRAY
+#define USE_STL_VECTOR_AND_ARRAY
 #include "indexable.hpp"
-//#undef USE_STL_VECTOR_AND_ARRAY
-
-
+#undef USE_STL_VECTOR_AND_ARRAY
+////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 
 using namespace sgm;
@@ -85,29 +84,117 @@ public:
 
 
 };
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 #include <future>
 
-//template<class T>
-//class Foo
-//{
-//	T _t;
-//
-//public:
-//	explicit Foo(T&& t = T()) : _t( std::move(t) ){};
-//
-//	Foo(Foo const& foo) : _t(foo._t){}
-//
-//	auto operator=(Foo const& foo)-> Foo&
-//	{
-//		_t = foo._t;
-//
-//		return *this;
-//	}
-//
-//	auto value()-> T&{  return _t;  }
-//	auto value() const-> T const&{  return _t;  }
-//};
+
+template<unsigned N>
+struct Static_Par
+{
+	template<class F>
+	static void For(F&& f)
+	{
+		auto fut = std::async(f, N - 1);
+
+		Static_Par<N - 1>::For(f);
+
+		fut.get();
+	}
+};
+
+template<>
+struct Static_Par<0>
+{
+	template<class F> static void For(F&&){}
+};
+
+
+template<class F>
+static void Dynamic_Par_For(F&& f, unsigned d)
+{
+	auto fut = std::async(f, --d);
+
+	if(d > 0)
+		Dynamic_Par_For(f, d);
+
+	fut.get();
+}
+
+
+struct _Concurrent_Helper : No_Making
+{
+protected:
+	struct _Ranger
+	{
+		_Ranger(size_t idx_begin, size_t idx_end, unsigned nof_task)
+		:	_idx_begin(idx_begin), _idx_end(idx_end), _nof_task( static_cast<size_t>(nof_task) )
+		{
+			assert(idx_begin <= idx_end && L"invalid index range.\n");
+
+			_total_size = idx_end - idx_begin,
+			_loop_q = _total_size / _nof_task,
+			_loop_r = _total_size % _nof_task;
+		}
+
+
+		indexable<size_t, 2> operator()(unsigned task_id) const
+		{
+			auto const 
+				d = static_cast<size_t>(task_id),
+				begin0 = d * _loop_q + (d < _loop_r ? d : _loop_r),
+				end0 = begin0 + _loop_q + (d < _loop_r ? 1 : 0);
+
+			return indexable<size_t, 2>{begin0 + _idx_begin, end0 + _idx_begin};
+		}
+
+
+	private:
+		size_t _idx_begin, _idx_end, _nof_task, _total_size, _loop_q, _loop_r;
+	};
+};
+
+
+template<unsigned NOF_TASK = unsigned(-1)>
+struct Concurrent : _Concurrent_Helper
+{
+	template<class F>
+	static void Loop(size_t const idx_begin, size_t const idx_end, F&& func)
+	{
+		Static_Par<NOF_TASK>::For
+		(	[&func, idx_begin, idx_end](unsigned d)
+			{
+				_Ranger const ranger(idx_begin, idx_end, NOF_TASK);
+				auto const range = ranger(d);
+
+				func(range[0], range[1]);
+			}
+		);
+	}
+};
+
+
+template<>
+struct Concurrent<unsigned(-1)> : _Concurrent_Helper
+{
+	template<class F>
+	static void Loop
+	(	size_t const idx_begin, size_t const idx_end, F&& func
+	,	unsigned const nof_task = std::thread::hardware_concurrency()
+	)
+	{
+		Dynamic_Par_For
+		(	[&func, idx_begin, idx_end, nof_task](unsigned d)
+			{
+				_Ranger const ranger(idx_begin, idx_end, nof_task);
+				auto const range = ranger(d);
+
+				func(range[0], range[1]);
+			}
+		,	nof_task
+		);
+	}
+};
 
 
 int main()
@@ -116,12 +203,22 @@ int main()
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
 
-	//Foo< std::future<int> > 
-	//	foo1,
-	//	foo2( std::async([]()->int{  return 2;  }) );
+	indexable<size_t, 998> ix;
 
-	indexable< std::future<double> > ix;
-	
+	auto func
+	=	[&ix](size_t const idx_begin, size_t idx_end)
+		{
+			while(idx_end-->idx_begin)
+				ix[idx_end] = idx_end;
+		};
+
+	//enum : size_t{NOF_TASK = 4};
+	//Concurrent<NOF_TASK>::Loop(0, ix.size(), func);
+
+	Concurrent<>::Loop(0, ix.size(), func, 4);
+
+	for(size_t idx = 0; idx < ix.size(); ++idx)
+		assert(ix[idx] == idx);
 
 	return 0;
 }
