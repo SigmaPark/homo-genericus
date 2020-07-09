@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "..\Avatar\Avatar.hpp"
+#include <future>
 
 #define USE_STL_VECTOR_AND_ARRAY
 #include "indexable.hpp"
@@ -81,12 +82,107 @@ public:
 		&&	same_iterables(ix2, ix3)
 		);
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
 
+	template
+	<	class T, class _raw_t = std::remove_reference_t<T>
+	,	bool DEFAULT_CONSTRUCTABLE = std::is_default_constructible<_raw_t>::value
+	,	bool COPY_CONSTRUCTABLE = std::is_copy_constructible<_raw_t>::value
+	,	bool MOVE_CONSTRUCTABLE = std::is_move_constructible<_raw_t>::value
+	,	bool COPY_ASSIGNABLE = std::is_copy_assignable<_raw_t>::value
+	,	bool MOVE_ASSIGNABLE = std::is_move_assignable<_raw_t>::value
+	>
+	struct Special_Member_info
+	{
+		enum : bool
+		{	IS_DEFAULT_CONSTRUCTABLE = DEFAULT_CONSTRUCTABLE
+		,	IS_COPY_CONSTRUCTABLE = COPY_CONSTRUCTABLE
+		,	IS_MOVE_CONSTRUCTABLE = MOVE_CONSTRUCTABLE
+		,	IS_COPY_ASSIGNABLE = COPY_ASSIGNABLE
+		,	IS_MOVE_ASSIGNABLE = MOVE_ASSIGNABLE
+		};
+	};
+
+	template<bool...> struct BinaryFlags : No_Making{};
+
+
+	template<class T>
+	struct _core_part
+	{
+		T* _core;
+		size_t _size;
+	};
+
+
+	template<class T>
+	struct iterative_methods : _core_part<T>
+	{
+		auto cbegin() const-> T const&{  return _core[0];  };
+		auto cend() const-> T const&{  return _core[_size - 1];  }
+		
+		auto begin() const-> T const&{  return cbegin();  };
+		auto end() const-> T const&{  return cend();  }
+
+		auto begin()-> T&{  return _core[0];  };
+		auto end()-> T&{  return _core[_size - 1];  }
+	};
+
+
+	//template<class T, size_t SIZE>
+	//class _Core
+	//{
+	//private:
+	//	template<class T, size_t S> struct ixData : No_Making{  using type = T[S];  };
+	//	template<class T> struct ixData<T, 0> : No_Making{  using type = T*;  };
+
+	//public:
+	//	using core_t = typename ixData<T, SIZE>::type;
+
+	//	core_t _core;
+	//};
+
+	
+	template<class T>
+	class _CommonMethods
+	{
+	public:
+		//
+
+		//auto operator[](size_t idx)-> T&{  return _core[idx];  }
+		//auto operator[](size_t idx) const-> T const&{  return _core[idx];  }
+
+		//auto cdata() const-> T const*{  return _core;  }
+		//auto data() const-> T const*{  return cdata();  }
+		//auto data()-> T*{  return _core;  }
+	};
+
+
+	template<class T, size_t SIZE = 0>
+	class Container// : public _CommonMethods< Container<T, SIZE> >
+	{
+	private:
+		template<class T, size_t S> struct ixData : No_Making{  using type = T[S];  };
+		template<class T> struct ixData<T, 0> : No_Making{  using type = T*;  };
+
+	public:
+		using core_t = typename ixData<T, SIZE>::type;
+
+		core_t _core;
+
+		Container() = default;
+	};
+
+
+	template<> static void Case<3>()
+	{
+		Container<int, 3> con{1, 2, 3};
+
+		
+	}
 
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
-#include <future>
 
 
 template<unsigned N>
@@ -202,6 +298,7 @@ int main()
 	Tutorial::Case<0>();
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
+	Tutorial::Case<3>();
 
 	indexable<size_t, 998> ix;
 

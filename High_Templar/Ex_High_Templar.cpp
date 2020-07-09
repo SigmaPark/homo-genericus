@@ -1,6 +1,7 @@
 #include <vector>
 #include <array>
 #include "..\Pinweight\Pinweight.hpp"
+#include "..\Avatar\Avatar.hpp"
 #include "Countable.hpp"
 
 
@@ -104,6 +105,8 @@ public:
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 
+
+
 int main()
 {
 	Tutorial::Case<1>();
@@ -112,6 +115,7 @@ int main()
 	Tutorial::Case<4>();
 	Tutorial::Case<5>();
 
+	
 
 	return 0;
 }
