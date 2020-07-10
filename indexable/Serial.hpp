@@ -3,7 +3,7 @@
 
 #include <new>
 #include <cassert>
-#include <iterator>
+
 #include "..\interface_Traits\interface_Traits.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -24,7 +24,7 @@ namespace sgm
 		,	class itr2_t = Serial_iterator<T, S, M2, F2>
 		>
 		static auto Substitution
-		(	Serial_iterator<T, S, M1, F1>& itr1, Serial_iterator<T, S, M2, F2> itr2
+		(	Serial_iterator<T, S, M1, F1>& itr1, Serial_iterator<T, S, M2, F2> const itr2
 		)->	itr1_t&
 		{
 			static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
@@ -36,28 +36,32 @@ namespace sgm
 
 
 		template<bool IS_FORWARD> 
-		static size_t shifted(size_t idx, bool plus_dir, size_t interval);
+		static size_t shifted(size_t const idx, bool const plus_dir, size_t const interval);
 
 		template<>
-		static size_t shifted<true>(size_t idx, bool plus_dir, size_t interval)
+		static size_t shifted<true>
+		(	size_t const idx, bool const plus_dir, size_t const interval
+		)
 		{
 			return plus_dir ? idx + interval : idx - interval;
 		}
 
 		template<>
-		static size_t shifted<false>(size_t idx, bool plus_dir, size_t interval)
+		static size_t shifted<false>
+		(	size_t const idx, bool const plus_dir, size_t const interval
+		)
 		{
 			return plus_dir ? idx - interval : idx + interval;
 		}
 
 
-		template<bool IS_FOWARD> static bool Less(size_t idx1, size_t idx2);
+		template<bool IS_FOWARD> static bool Less(size_t const idx1, size_t const idx2);
 
 		template<>
-		static bool Less<true>(size_t idx1, size_t idx2){  return idx1 < idx2;  }
+		static bool Less<true>(size_t const idx1, size_t const idx2){  return idx1 < idx2;  }
 
 		template<>
-		static bool Less<false>(size_t idx1, size_t idx2){  return idx1 > idx2;;  }
+		static bool Less<false>(size_t const idx1, size_t const idx2){  return idx1 > idx2;;  }
 
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -116,19 +120,20 @@ namespace sgm
 		,	class 
 			=	std::enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 		>
-		auto operator=(Serial_iterator<T, SIZE, _M, _F> itr)-> iter_t&
+		auto operator=(Serial_iterator<T, SIZE, _M, _F> const itr)-> iter_t&
 		{
 			return _sr_iterator_Helper<T>::Substitution(*this, itr);
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto operator[](size_t interval) const	-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		auto operator[](size_t const interval) const
+		->	std::conditional_t<IS_MUTABLE, T&, T const&>
 		{
 			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 		}
 
-		auto operator[](size_t interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		auto operator[](size_t const interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
 		{
 			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 		}
@@ -165,18 +170,18 @@ namespace sgm
 			return itr;
 		}
 
-		auto operator+(size_t interval) const-> iter_t
+		auto operator+(size_t const interval) const-> iter_t
 		{
 			return iter_t( _arr, shifted(_idx, true, interval) );
 		}
 
-		auto operator-(size_t interval) const-> iter_t
+		auto operator-(size_t const interval) const-> iter_t
 		{
 			return iter_t( _arr, shifted(_idx, false, interval) );
 		}
 
 
-		auto operator-(iter_t itr) const-> signed long long
+		auto operator-(iter_t const itr) const-> signed long long
 		{
 			bool const has_greater_idx = _idx > itr._idx;
 			size_t const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
@@ -191,14 +196,14 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto operator+=(size_t interval)-> iter_t&
+		auto operator+=(size_t const interval)-> iter_t&
 		{
 			_idx = shifted(_idx, true, interval);  
 			
 			return *this;
 		}
 
-		auto operator-=(size_t interval)-> iter_t&
+		auto operator-=(size_t const interval)-> iter_t&
 		{
 			_idx = shifted(_idx, false, interval);  
 			
@@ -211,14 +216,14 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		bool operator!=(iter_t itr) const{  return _idx != itr._idx;  }
-		bool operator==(iter_t itr) const{  return _idx == itr._idx;  }
+		bool operator!=(iter_t const itr) const{  return _idx != itr._idx;  }
+		bool operator==(iter_t const itr) const{  return _idx == itr._idx;  }
 		
-		bool operator<(iter_t itr) const{  return Less(*this, itr);  }
-		bool operator>(iter_t itr) const{  return Less(itr, *this);  }
+		bool operator<(iter_t const itr) const{  return Less(*this, itr);  }
+		bool operator>(iter_t const itr) const{  return Less(itr, *this);  }
 
-		bool operator<=(iter_t itr) const{  return *this < itr || *this == itr;  }
-		bool operator>=(iter_t itr) const{  return *this > itr || *this == itr;  }
+		bool operator<=(iter_t const itr) const{  return *this < itr || *this == itr;  }
+		bool operator>=(iter_t const itr) const{  return *this > itr || *this == itr;  }
 
 
 	private:
@@ -226,12 +231,14 @@ namespace sgm
 		size_t _idx;
 
 
-		static size_t shifted(size_t idx, bool plus_dir = true, size_t interval = 1)
+		static size_t shifted
+		(	size_t const idx, bool const plus_dir = true, size_t const interval = 1
+		)
 		{
 			return _sr_iterator_Helper<T>::shifted<IS_FORWARD>(idx, plus_dir, interval);
 		}
 
-		static bool Less(iter_t itr1, iter_t itr2)
+		static bool Less(iter_t const itr1, iter_t const itr2)
 		{
 			return _sr_iterator_Helper<T>::Less<IS_FORWARD>(itr1._idx, itr2._idx);
 		}
@@ -259,8 +266,8 @@ namespace sgm
 		auto data() const-> T const*	{  return cdata();  }
 		auto data()-> T*				{  return _core;  }
 
-		auto operator[](size_t idx) const-> T const&	{  return _core[idx];  }
-		auto operator[](size_t idx)-> T&				{  return _core[idx];  }
+		auto operator[](size_t const idx) const-> T const&		{  return _core[idx];  }
+		auto operator[](size_t const idx)-> T&				{  return _core[idx];  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -331,7 +338,7 @@ namespace sgm
 		size_t _capacity, _size;
 
 
-		static auto _alloc(size_t capa)-> value_t*
+		static auto _alloc(size_t const capa)-> value_t*
 		{
 			return static_cast<value_t*>(  ::operator new( sizeof(value_t) * capa )  );
 		}
@@ -349,7 +356,7 @@ namespace sgm
 				<	!std::is_integral<ITR>::value && is_iterator<ITR>::value 
 				>
 		>
-		Serial(ITR bi, ITR ei) 
+		Serial(ITR bi, ITR const ei) 
 		:	_capacity( _iterator_Distance<ITR>::calc(bi, ei) ), _size( _capacity )
 		{
 			_core = _alloc(_size);
@@ -395,15 +402,14 @@ namespace sgm
 		}
 
 
-		explicit Serial(size_t capa) : _capacity(capa), _size(0)
+		explicit Serial(size_t const capa) : _capacity(capa), _size(0)
 		{
 			_core = _alloc(capa);
 		}
 
 
 		template<class...ARGS>
-		Serial(size_t size, ARGS const&... args) 
-		:	_capacity(size), _size(size)
+		Serial(size_t const size, ARGS const&... args) : _capacity(size), _size(size)
 		{
 			_core = _alloc(size);
 
@@ -414,10 +420,7 @@ namespace sgm
 
 		~Serial()
 		{
-			for(size_t idx = 0; idx < size(); ++idx)
-				(_core + idx)->~value_t();
-
-			_size = _capacity = 0,
+			clear(),
 			::operator delete(_core), _core = nullptr;
 		}
 
@@ -487,7 +490,7 @@ namespace sgm
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-		auto pop_back_from(ITR itr)-> Serial&
+		auto pop_back_from(ITR const itr)-> Serial&
 		{
 			for
 			(	auto d = end() - itr
@@ -498,9 +501,18 @@ namespace sgm
 			return *this;
 		}
 
-		auto pop_back(size_t n = 1)-> Serial&
+		auto pop_back(size_t const n = 1)-> Serial&
 		{
 			return pop_back_from(end() - n);
+		}
+
+
+		auto clear()-> Serial&
+		{
+			for(;_size > 0; --_size)
+				(_core + _size - 1)->~value_t();
+			
+			return *this;
 		}
 
 
@@ -536,6 +548,8 @@ namespace sgm
 
 }// end of namespace sgm
 
+
+#include <iterator>
 
 
 namespace std

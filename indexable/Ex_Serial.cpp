@@ -1,6 +1,5 @@
 #include <vector>
 #include "Serial.hpp"
-#include <future>
 
 using namespace sgm;
 
@@ -75,23 +74,39 @@ public:
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
+	struct No_Copy_No_Assign
+	{
+		No_Copy_No_Assign() = default;
+
+		No_Copy_No_Assign(No_Copy_No_Assign const&) = delete;
+		No_Copy_No_Assign(No_Copy_No_Assign&&){}
+		
+		auto operator=(No_Copy_No_Assign const&)->No_Copy_No_Assign& = delete;
+	};
+
 
 	template<> static void Case<3>()
 	{
-		using type = std::thread;
+		using type = No_Copy_No_Assign;
 
-		Serial<type> sr(2);
+		Serial<type> sr(4);
 
-		sr >> std::thread() >> std::thread();
+		sr >> type() >> type() >> type() >> type();
 
-		assert(sr.size() == 2);
+		assert(sr.size() == 4);
 
 		sr = Serial<type>(3);
 
-		sr >> std::thread() >> std::thread() >> std::thread();
+		for
+		(	sr = Serial<type>(3)
+		;	sr.size() != sr.capacity()
+		;	sr >> type()
+		);
 
 		assert(sr.size() == 3);
 	}
+	//========//========//========//========//=======#//========//========//========//========//===
+
 
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
