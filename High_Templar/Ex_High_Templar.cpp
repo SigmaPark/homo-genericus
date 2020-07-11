@@ -115,7 +115,5 @@ int main()
 	Tutorial::Case<4>();
 	Tutorial::Case<5>();
 
-	
-
 	return 0;
 }

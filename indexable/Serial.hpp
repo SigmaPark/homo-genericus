@@ -3,7 +3,6 @@
 
 #include <new>
 #include <cassert>
-
 #include "..\interface_Traits\interface_Traits.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
@@ -29,7 +28,7 @@ namespace sgm
 		{
 			static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
 			
-			itr1._arr = itr2._arr, itr1._idx = itr2._idx;
+			itr1._arr = itr2._arr,  itr1._idx = itr2._idx;
 		
 			return itr1;
 		}
@@ -127,26 +126,18 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		auto operator[](size_t const interval) const
-		->	std::conditional_t<IS_MUTABLE, T&, T const&>
+		auto operator[](size_t const interval) const-> value_t const&
 		{
 			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 		}
 
-		auto operator[](size_t const interval)-> std::conditional_t<IS_MUTABLE, T&, T const&>
+		auto operator[](size_t const interval)-> value_t&
 		{
 			return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 		}
 
-		auto operator*() const-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return (*this)[0];
-		}
-
-		auto operator*()-> std::conditional_t<IS_MUTABLE, T&, T const&>
-		{
-			return (*this)[0];
-		}
+		auto operator*() const-> value_t const&	{  return (*this)[0];  }
+		auto operator*()-> value_t&			{  return (*this)[0];  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -319,6 +310,18 @@ namespace sgm
 		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
 
 
+		_WHEN_STATIC auto swap(Serial& sr)-> Serial&
+		{
+			for 
+			(	auto itr = begin(), sitr = sr.begin()
+			;	itr != end()
+			;	std::swap(*itr++, *sitr++) 
+			);
+
+			return *this;
+		}
+
+
 		#undef _WHEN_STATIC
 	#else
 		#error _WHEN_STATIC was already defined somewhere else.
@@ -335,34 +338,46 @@ namespace sgm
 		using Helper = Serial<T, srSize::INTERFACE>;
 		using value_t = std::remove_reference_t<T>;
 
+
 		size_t _capacity, _size;
 
 
 		static auto _alloc(size_t const capa)-> value_t*
 		{
-			return static_cast<value_t*>(  ::operator new( sizeof(value_t) * capa )  );
+			return 
+			static_cast<value_t*>
+			(	capa == 0 
+				?	nullptr 
+				:	::operator new( sizeof(value_t) * capa )  
+			);
 		}
 
+
+		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+		auto _cloning(ITR bi, ITR const ei)-> Serial&
+		{
+			assert
+			(	capacity() >= _iterator_Distance<ITR>::calc(bi, ei) 
+			&&	L"out of capacity.\n" 
+			);
+
+			auto itr = begin();
+
+			for ( ;  bi != ei && itr != end();  *itr++ = static_cast<value_t>(*bi++) );
+
+			return bi != ei ? merge_back(bi, ei) : pop_back_from(itr);
+		}
 
 
 	public:
 		Serial() : _capacity(0), _size(0){  _core = nullptr;  }
 
 
-		template
-		<	class ITR
-		,	class 
-			=	std::enable_if_t
-				<	!std::is_integral<ITR>::value && is_iterator<ITR>::value 
-				>
-		>
+		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
 		Serial(ITR bi, ITR const ei) 
-		:	_capacity( _iterator_Distance<ITR>::calc(bi, ei) ), _size( _capacity )
+		:	_capacity( _iterator_Distance<ITR>::calc(bi, ei) ), _size(0)
 		{
-			_core = _alloc(_size);
-
-			for(size_t idx = 0; bi != ei; ++idx, ++bi)
-				new(_core + idx) value_t( static_cast<value_t>(*bi) );
+			_core = _alloc(capacity()),  merge_back(bi, ei);
 		}
 
 
@@ -381,31 +396,16 @@ namespace sgm
 		Serial(std::initializer_list<Q>&& iL) : Serial(iL.begin(), iL.end()){}
 
 
-		Serial(Serial const& sr) : _capacity(sr._capacity), _size(sr._size)
-		{
-			if(sr._capacity == 0)
-				_core = nullptr;
-			else
-			{
-				_core = _alloc(sr._capacity);
+		Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
 
-				for(size_t idx = 0; idx < sr._size; ++idx)
-					new(_core + idx) value_t(  static_cast<value_t>(sr[idx])  );
-			}
-		}
 
-		Serial(Serial&& sr)  : _capacity(sr._capacity), _size(sr._size)
+		Serial(Serial&& sr) : _capacity(sr.capacity()), _size(sr.size())
 		{
-			_core = sr._core,
-			sr._capacity = sr._size = 0,
-			sr._core = nullptr;
+			_core = sr._core,  sr._capacity = sr._size = 0,  sr._core = nullptr;
 		}
 
 
-		explicit Serial(size_t const capa) : _capacity(capa), _size(0)
-		{
-			_core = _alloc(capa);
-		}
+		explicit Serial(size_t const capa) : _capacity(capa), _size(0){  _core = _alloc(capa);  }
 
 
 		template<class...ARGS>
@@ -413,43 +413,26 @@ namespace sgm
 		{
 			_core = _alloc(size);
 
-			for(size_t idx = 0; idx < size; ++idx)
-				new(_core + idx) value_t(args...);
+			for ( size_t idx = 0;  idx < size;  new(_core + idx++) value_t(args...) );
 		}
 
 
-		~Serial()
-		{
-			clear(),
-			::operator delete(_core), _core = nullptr;
-		}
+		~Serial(){  clear(),  ::operator delete(_core),  _core = nullptr;  }
 
 
 		auto operator=(Serial const& sr)-> Serial&
 		{
-			if( capacity() < sr.capacity())
-				this->~Serial(),
-				_core = _alloc(sr.capacity()),
-				_size = 0,
-				_capacity = sr.capacity();
-
-			size_t idx = 0;
-			auto itr = sr.cbegin();
-
-			for(; idx < size() && itr != sr.cend(); ++idx, ++itr)
-				_core[idx] = *itr;
-
-			for(; idx < capacity() && itr != sr.cend(); ++idx, ++itr)
-				emplace_back(*itr);
-
-			return *this
+			return 
+			capacity() < sr.capacity()
+			?	*this = Serial(sr.cbegin(), sr.cend())
+			:	_cloning(sr.cbegin(), sr.cend());
 		}
 
 
 		auto operator=(Serial&& sr)-> Serial&
 		{
-			_capacity = sr.capacity(), _size = sr.size(), _core = sr._core,
-			sr._capacity = sr._size = 0, sr._core = nullptr;
+			_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
+			sr._capacity = sr._size = 0,  sr._core = nullptr;
 
 			return *this;
 		}
@@ -465,7 +448,10 @@ namespace sgm
 		>
 		auto operator=(CON&& con)-> Serial&
 		{
-			return *this = Serial(con.begin(), con.end());
+			return 
+			capacity() < con.size()
+			?	*this = Serial(con.begin(), con.end())
+			:	_cloning(con.begin(), con.end());
 		}
 
 
@@ -486,32 +472,42 @@ namespace sgm
 
 
 		template<class Q>
-		auto operator>>(Q&& q)-> Serial&{  return emplace_back( std::forward<Q>(q) );  }		
+		auto operator>>(Q&& q)-> Serial&{  return emplace_back( std::forward<Q>(q) );  }
+
+
+		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+		auto merge_back(ITR bi, ITR const ei)-> Serial&
+		{
+			assert
+			(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
+			&&	L"can't merge_back : out of index"
+			);
+
+			for ( ;  bi != ei;  *this >> static_cast<value_t>(*bi++) );
+
+			return *this;
+		}
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
 		auto pop_back_from(ITR const itr)-> Serial&
 		{
-			for
-			(	auto d = end() - itr
-			;	d-->0
-			;	(_core + --_size)->~value_t()
-			);
+			for(auto d = end() - itr;  d-->0;  _core[--_size].~value_t());
 
 			return *this;
 		}
 
-		auto pop_back(size_t const n = 1)-> Serial&
-		{
-			return pop_back_from(end() - n);
-		}
+
+		auto pop_back(size_t const n = 1)-> Serial&{  return pop_back_from(end() - n);  }
+		auto clear()-> Serial&{  return pop_back_from(begin());  }
 
 
-		auto clear()-> Serial&
+		auto swap(Serial& sr)-> Serial&
 		{
-			for(;_size > 0; --_size)
-				(_core + _size - 1)->~value_t();
-			
+			using std::swap;
+
+			swap(_capacity, sr._capacity),  swap(_size, sr._size),  swap(_core, sr._core);
+
 			return *this;
 		}
 
@@ -522,7 +518,7 @@ namespace sgm
 		using riter_t = typename Helper::riter_t;
 
 		auto cend() const-> citer_t{  return citer_t(_core, size());  }
-		auto end() const-> typename Helper::citer_t{  return cend();  }
+		auto end() const-> citer_t{  return cend();  }
 		auto end()-> iter_t{  return iter_t(_core, size());  }
 
 		auto crbegin() const-> criter_t{  return criter_t(_core, size());  }

@@ -25,41 +25,41 @@ namespace sgm
 		template<>
 		struct Direction<true, true>
 		{
-			static N shifted(N n, N interval){  return n + interval;  }
+			static N shifted(N const n, N const interval){  return n + interval;  }
 		};
 
 		template<>
 		struct Direction<true, false>
 		{
-			static N shifted(N n, N interval){  return n - interval;  }
+			static N shifted(N const n, N const interval){  return n - interval;  }
 		};
 
 		template<bool PLUS>
-		static N _shifted(N n, N interval = 1)
+		static N _shifted(N const n, N const interval = 1)
 		{
-			return n = Direction<INCREASING, PLUS>::shifted(n, interval);
+			return Direction<INCREASING, PLUS>::shifted(n, interval);
 		}
 
 
 		template<bool FORWARD> struct Order;
 
 		template<>
-		struct Order<true>{  static bool less(N n1, N n2){  return n1 < n2;  }  };
+		struct Order<true>{  static bool less(N const n1, N const n2){  return n1 < n2;  }  };
 
 		template<>
-		struct Order<false>{  static bool less(N n1, N n2){  return n1 > n2;  }  };
+		struct Order<false>{  static bool less(N const n1, N const n2){  return n1 > n2;  }  };
 
-		static bool _less(N n1, N n2){  return Order<INCREASING>::less(n1, n2);  }
+		static bool _less(N const n1, N const n2){  return Order<INCREASING>::less(n1, n2);  }
 
 
 	public:
-		Count_iterator(N number) : _number(number){}
+		Count_iterator(N const number) : _number(number){}
 
 
 		auto operator*() const-> N{  return _number;  }
 
 
-		auto operator=(Count_iterator<N, !INCREASING> itr)-> iter_t
+		auto operator=(Count_iterator<N, !INCREASING> const itr)-> iter_t
 		{
 			_number = *itr;
 
@@ -85,17 +85,17 @@ namespace sgm
 			return iter;
 		}
 
-		auto operator+(N interval) const-> iter_t
+		auto operator+(N const interval) const-> iter_t
 		{	
 			return iter_t( _shifted<true>(**this, interval) );
 		}
 
-		auto operator-(N interval) const-> iter_t
+		auto operator-(N const interval) const-> iter_t
 		{
 			return iter_t( _shifted<false>(**this, interval) );
 		}
 
-		auto operator-(iter_t itr) const-> signed long long
+		auto operator-(iter_t const itr) const-> signed long long
 		{
 			bool const greater_mine = **this > *itr;
 			N const du = greater_mine ? **this - *itr : *itr - **this;
@@ -109,22 +109,22 @@ namespace sgm
 		}
 
 
-		auto operator+=(N interval)-> iter_t&{  return *this = *this + interval;  }
-		auto operator-=(N interval)-> iter_t&{  return *this = *this - interval;  }
+		auto operator+=(N const interval)-> iter_t&{  return *this = *this + interval;  }
+		auto operator-=(N const interval)-> iter_t&{  return *this = *this - interval;  }
 		auto operator++()-> iter_t&{  return *this += 1;  }
 		auto operator--()-> iter_t&{  return *this -= 1;  }
 
 
-		auto operator[](N interval) const-> N{  return *(*this + interval);  }
+		auto operator[](N const interval) const-> N{  return *(*this + interval);  }
 
 
-		bool operator==(iter_t itr) const{  return **this == *itr;  }
-		bool operator!=(iter_t itr) const{  return !(*this == itr);  }
+		bool operator==(iter_t const itr) const{  return **this == *itr;  }
+		bool operator!=(iter_t const itr) const{  return !(*this == itr);  }
 
-		bool operator<(iter_t itr) const{  return _less(*this, itr);  }
-		bool operator>(iter_t itr) const{  return _less(itr, *this);  }
-		bool operator<=(iter_t itr) const{  return !(*this > itr);  }
-		bool operator>=(iter_t itr) const{  return !(*this < itr);  }
+		bool operator<(iter_t const itr) const{  return _less(*this, itr);  }
+		bool operator>(iter_t const itr) const{  return _less(itr, *this);  }
+		bool operator<=(iter_t const itr) const{  return !(*this > itr);  }
+		bool operator>=(iter_t const itr) const{  return !(*this < itr);  }
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -136,7 +136,7 @@ namespace sgm
 
 
 	public:
-		Countable(N length, N offset = 0) : _length(length), _offset(offset){}
+		Countable(N const length, N const offset = 0) : _length(length), _offset(offset){}
 
 		N size() const{  return _length;  }
 

@@ -1,5 +1,5 @@
-#include <vector>
 #include "Serial.hpp"
+#include <vector>
 
 using namespace sgm;
 
@@ -15,7 +15,7 @@ private:
 
 		bool res = con1.size() == con2.size();
 
-		while(itr1 != con1.cend() && res)
+		while (itr1 != con1.cend() && res)
 			res = *itr1++ == *itr2++;
 
 		return res;
@@ -52,7 +52,7 @@ public:
 		);
 
 
-		Serial<double, 5> sr3{1, 3, 5, 7, 9}, sr4 = sr3 ;
+		Serial<double, 5> sr3{1, 3, 5, 7, 9}, sr4 = sr3;
 
 		assert
 		(	same_iterables(sr3, sr4)
@@ -65,8 +65,7 @@ public:
 	{
 		Serial<float> sr1{1, 2, 3}, sr2 = sr1, sr3 = sr1;
 
-		sr1.~Serial();
-
+		sr1.~Serial(),
 		assert
 		(	sr1.size() == 0 && sr2.size() != 0
 		&&	same_iterables(sr2, sr3)
@@ -91,11 +90,11 @@ public:
 
 		Serial<type> sr(4);
 
-		sr >> type() >> type() >> type() >> type();
+		sr >> type() >> type() >> type() >> type(),  assert(sr.size() == 4);
 
-		assert(sr.size() == 4);
+		sr.pop_back().pop_back(),  assert(sr.size() == 4 - 2);
 
-		sr = Serial<type>(3);
+		sr = Serial<type>(3),  assert(sr.size() == 0 && sr.capacity() == 3);
 
 		for
 		(	sr = Serial<type>(3)
@@ -104,6 +103,43 @@ public:
 		);
 
 		assert(sr.size() == 3);
+
+		sr.clear(),  assert(sr.size() == 0 && sr.capacity() == 3 && sr.empty());
+	}
+	//========//========//========//========//=======#//========//========//========//========//===
+	
+	
+	template<> static void Case<4>()
+	{
+		Serial<float> sr1{4, 2}, sr2{9, 7, 5, 3, 1}, sr3{3, 0, -3};
+
+		sr1 = sr2,  assert( same_iterables(sr1, sr2) );
+		sr2 = sr3,  assert( same_iterables(sr2, sr3) && sr2.capacity() == 5 );
+
+		sr3 = {7, 5},  
+		assert( same_iterables(sr3, Serial<float>{7, 5}) && sr3.capacity() == 2 );
+
+		Serial<int> sr4{12, 3, 45}, sr5{6789};
+
+		sr4.swap(sr5),
+		assert
+		(	same_iterables(sr4, Serial<int>{6789})
+		&&	same_iterables(sr5, Serial<int>{12, 3, 45})
+		);
+
+		std::swap(sr4, sr5),
+		assert
+		(	same_iterables(sr5, Serial<int>{6789})
+		&&	same_iterables(sr4, Serial<int>{12, 3, 45})
+		);
+
+		Serial<int, 2> sr6{2, 4}, sr7{6, 8};
+
+		sr6.swap(sr7),
+		assert
+		(	same_iterables(sr6, Serial<int>{6, 8}) 
+		&&	same_iterables(sr7, Serial<int>{2, 4})
+		);
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
@@ -119,6 +155,7 @@ int main()
 	Tutorial::Case<1>();
 	Tutorial::Case<2>();
 	Tutorial::Case<3>();
+	Tutorial::Case<4>();
 
 	return 0;
 }
