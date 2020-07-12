@@ -1,9 +1,15 @@
 #pragma once
 
+#ifndef _SGM_SERIAL_
+#define _SGM_SERIAL_
 
 #include <new>
 #include <cassert>
 #include "..\interface_Traits\interface_Traits.hpp"
+
+#ifndef _SGM_NOEXCEPT
+	#define _SGM_NOEXCEPT throw()
+
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -172,17 +178,19 @@ namespace sgm
 		}
 
 
-		auto operator-(iter_t const itr) const-> signed long long
+		auto operator-(iter_t const itr) const-> long long
 		{
-			bool const has_greater_idx = _idx > itr._idx;
-			size_t const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
+			auto const has_greater_idx = _idx > itr._idx;
+			auto const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
-			assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.");
+			assert
+			(	du <= static_cast<size_t>(std::numeric_limits<long long>::max()) 
+			&&	L"the difference exceeds maximum capacity."
+			);
 
-			return 
-			IS_FORWARD == has_greater_idx
-			?	static_cast<signed long long>(du)
-			:	-static_cast<signed long long>(du);
+			auto const LL_du = static_cast<long long>(du);
+
+			return IS_FORWARD == has_greater_idx ? LL_du : -LL_du;
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
@@ -274,28 +282,28 @@ namespace sgm
 
 		_WHEN_STATIC auto size() const-> size_t { return SIZE; }
 
-		auto cbegin() const-> citer_t{  return citer_t(_core, 0);  }
-		auto begin() const-> citer_t{  return cbegin();  }
-		auto begin()-> iter_t{  return iter_t(_core, 0);  }
+		auto cbegin() const-> citer_t	{  return citer_t(_core, 0);  }
+		auto begin() const-> citer_t	{  return cbegin();  }
+		auto begin()-> iter_t			{  return iter_t(_core, 0);  }
 
-		auto crend() const-> criter_t{  return criter_t(_core, 0);  }
-		auto rend() const-> criter_t{  return crend();  }
-		auto rend()-> riter_t{  return riter_t(_core, 0);  }
+		auto crend() const-> criter_t	{  return criter_t(_core, 0);  }
+		auto rend() const-> criter_t	{  return crend();  }
+		auto rend()-> riter_t			{  return riter_t(_core, 0);  }
 
-		_WHEN_STATIC auto cend() const-> citer_t{  return citer_t(_core, SIZE);  }
-		_WHEN_STATIC auto end() const-> citer_t{  return cend();  }
-		_WHEN_STATIC auto end()-> iter_t{  return iter_t(_core, SIZE);  }
+		_WHEN_STATIC auto cend() const-> citer_t		{  return citer_t(_core, SIZE);  }
+		_WHEN_STATIC auto end() const-> citer_t			{  return cend();  }
+		_WHEN_STATIC auto end()-> iter_t				{  return iter_t(_core, SIZE);  }
 
-		_WHEN_STATIC auto crbegin() const-> criter_t{  return criter_t(_core, SIZE);  }
-		_WHEN_STATIC auto rbegin() const-> criter_t{  return crbegin();  }
-		_WHEN_STATIC auto rbegin()-> riter_t{  return riter_t(_core, SIZE);  }
+		_WHEN_STATIC auto crbegin() const-> criter_t		{  return criter_t(_core, SIZE);  }
+		_WHEN_STATIC auto rbegin() const-> criter_t		{  return crbegin();  }
+		_WHEN_STATIC auto rbegin()-> riter_t			{  return riter_t(_core, SIZE);  }
 
 
-		auto front() const-> T const&{  return *cbegin();  }
-		auto front()-> T&{  return *begin();  }
+		auto front() const-> T const&	{  return *cbegin();  }
+		auto front()-> T&				{  return *begin();  }
 
-		_WHEN_STATIC auto back() const-> T const&{  return *crbegin();  }
-		_WHEN_STATIC auto back()-> T&{  return *rbegin();  }
+		_WHEN_STATIC auto back() const-> T const&	{  return *crbegin();  }
+		_WHEN_STATIC auto back()-> T&				{  return *rbegin();  }
 
 
 		template
@@ -310,7 +318,7 @@ namespace sgm
 		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
 
 
-		_WHEN_STATIC auto swap(Serial& sr)-> Serial&
+		_WHEN_STATIC auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
 		{
 			for 
 			(	auto itr = begin(), sitr = sr.begin()
@@ -354,12 +362,13 @@ namespace sgm
 
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-		auto _cloning(ITR bi, ITR const ei)-> Serial&
+		auto _cloning
+		(	ITR bi, ITR const ei
+		,	size_t const length = _iterator_Distance<ITR>::calc(bi, ei)
+		)-> Serial&
 		{
-			assert
-			(	capacity() >= _iterator_Distance<ITR>::calc(bi, ei) 
-			&&	L"out of capacity.\n" 
-			);
+			if(capacity() < length)
+				return *this = Serial(bi, ei);
 
 			auto itr = begin();
 
@@ -399,13 +408,16 @@ namespace sgm
 		Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
 
 
-		Serial(Serial&& sr) : _capacity(sr.capacity()), _size(sr.size())
+		Serial(Serial&& sr) _SGM_NOEXCEPT : _capacity(sr.capacity()), _size(sr.size())
 		{
 			_core = sr._core,  sr._capacity = sr._size = 0,  sr._core = nullptr;
 		}
 
 
-		explicit Serial(size_t const capa) : _capacity(capa), _size(0){  _core = _alloc(capa);  }
+		explicit Serial(size_t const capa) : _capacity(capa), _size(0)
+		{
+			_core = _alloc(capa);  
+		}
 
 
 		template<class...ARGS>
@@ -422,14 +434,11 @@ namespace sgm
 
 		auto operator=(Serial const& sr)-> Serial&
 		{
-			return 
-			capacity() < sr.capacity()
-			?	*this = Serial(sr.cbegin(), sr.cend())
-			:	_cloning(sr.cbegin(), sr.cend());
+			return _cloning(sr.cbegin(), sr.cend(), sr.capacity());
 		}
 
 
-		auto operator=(Serial&& sr)-> Serial&
+		auto operator=(Serial&& sr) _SGM_NOEXCEPT-> Serial&
 		{
 			_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
 			sr._capacity = sr._size = 0,  sr._core = nullptr;
@@ -442,16 +451,12 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value
-				&&	!std::is_same< std::decay_t<CON>, Serial >::value  
+				<	is_iterable<CON>::value && !std::is_same< std::decay_t<CON>, Serial >::value  
 				>  
 		>
 		auto operator=(CON&& con)-> Serial&
 		{
-			return 
-			capacity() < con.size()
-			?	*this = Serial(con.begin(), con.end())
-			:	_cloning(con.begin(), con.end());
+			return _cloning(con.begin(), con.end(), con.size());
 		}
 
 
@@ -502,7 +507,7 @@ namespace sgm
 		auto clear()-> Serial&{  return pop_back_from(begin());  }
 
 
-		auto swap(Serial& sr)-> Serial&
+		auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
 		{
 			using std::swap;
 
@@ -517,16 +522,16 @@ namespace sgm
 		using criter_t = typename Helper::criter_t;
 		using riter_t = typename Helper::riter_t;
 
-		auto cend() const-> citer_t{  return citer_t(_core, size());  }
-		auto end() const-> citer_t{  return cend();  }
-		auto end()-> iter_t{  return iter_t(_core, size());  }
+		auto cend() const-> citer_t		{  return citer_t(_core, size());  }
+		auto end() const-> citer_t			{  return cend();  }
+		auto end()-> iter_t				{  return iter_t(_core, size());  }
 
-		auto crbegin() const-> criter_t{  return criter_t(_core, size());  }
-		auto rbegin() const-> criter_t{  return crbegin();  }
-		auto rbegin()-> riter_t{  return riter_t(_core, size());  }
+		auto crbegin() const-> criter_t		{  return criter_t(_core, size());  }
+		auto rbegin() const-> criter_t		{  return crbegin();  }
+		auto rbegin()-> riter_t			{  return riter_t(_core, size());  }
 
-		auto back() const-> T const&{  return *crbegin();  }
-		auto back()-> T&{  return *rbegin();  }
+		auto back() const-> T const&	{  return *crbegin();  }
+		auto back()-> T&				{  return *rbegin();  }
 
 
 		template
@@ -544,9 +549,13 @@ namespace sgm
 
 }// end of namespace sgm
 
+	#undef _SGM_NOEXCEPT
+#else
+	#error _SGM_NOEXCEPT was already defined somewhere else.
+#endif
+
 
 #include <iterator>
-
 
 namespace std
 {
@@ -557,10 +566,13 @@ namespace std
 	{
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
-		using difference_type = signed long long;
+		using difference_type = long long;
 		using pointer = std::conditional_t<M, T*, T const*>;
 		using reference = std::conditional_t<M, T&, T const&>;
 	};
 
 
 }
+
+
+#endif
