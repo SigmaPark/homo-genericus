@@ -221,8 +221,8 @@ namespace sgm
 		bool operator<(iter_t const itr) const{  return Less(*this, itr);  }
 		bool operator>(iter_t const itr) const{  return Less(itr, *this);  }
 
-		bool operator<=(iter_t const itr) const{  return *this < itr || *this == itr;  }
-		bool operator>=(iter_t const itr) const{  return *this > itr || *this == itr;  }
+		bool operator<=(iter_t const itr) const{  return !(*this > itr);  }
+		bool operator>=(iter_t const itr) const{  return !(*this < itr);  }
 
 
 	private:
@@ -350,31 +350,48 @@ namespace sgm
 		size_t _capacity, _size;
 
 
-		static auto _alloc(size_t const capa)-> value_t*
+		void _alloc(size_t const capa)
 		{
-			return 
-			static_cast<value_t*>
-			(	capa == 0 
-				?	nullptr 
-				:	::operator new( sizeof(value_t) * capa )  
-			);
+			_core
+			=	static_cast<value_t*>
+				(	capa != 0 ? ::operator new( sizeof(value_t) * capa ) : nullptr  
+				);
+
+			_capacity = capa, _size = 0;
 		}
 
+		
+		template<bool TEMP_HOST> struct _Move;
 
-		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-		auto _cloning
-		(	ITR bi, ITR const ei
-		,	size_t const length = _iterator_Distance<ITR>::calc(bi, ei)
-		)-> Serial&
+		template<>
+		struct _Move<false>
+		{
+			template<class T>
+			static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::forward<T>(t) )
+		};
+
+		template<>
+		struct _Move<true>
+		{
+			template<class T>
+			static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::move(t) )
+		};
+
+
+		template
+		<	bool TEMP_HOST = false, class ITR
+		,	class = std::enable_if_t< is_iterator<ITR>::value >  
+		>
+		auto _cloning(ITR bi, ITR const ei, size_t const length)-> Serial&
 		{
 			if(capacity() < length)
-				return *this = Serial(bi, ei);
+				this->~Serial(),  _alloc(length);
 
 			auto itr = begin();
 
-			for ( ;  bi != ei && itr != end();  *itr++ = static_cast<value_t>(*bi++) );
+			for ( ;  bi != ei && itr != end();  *itr++ = _Move<TEMP_HOST>::cast(*bi++) );
 
-			return bi != ei ? merge_back(bi, ei) : pop_back_from(itr);
+			return bi != ei ? merge_back<TEMP_HOST>(bi, ei) : pop_back_from(itr);
 		}
 
 
@@ -384,9 +401,9 @@ namespace sgm
 
 		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
 		Serial(ITR bi, ITR const ei) 
-		:	_capacity( _iterator_Distance<ITR>::calc(bi, ei) ), _size(0)
 		{
-			_core = _alloc(capacity()),  merge_back(bi, ei);
+			_alloc( _iterator_Distance<ITR>::calc(bi, ei) ), 
+			_cloning(bi, ei, capacity());
 		}
 
 
@@ -394,15 +411,23 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value
-				&&	!std::is_same< Serial, std::decay_t<CON> >::value
+				<	is_iterable<CON>::value && !std::is_same< Serial, std::decay_t<CON> >::value
 				>
 		>
-		Serial(CON&& con) : Serial(con.begin(), con.end()){}
+		Serial(CON&& con)
+		{
+			_alloc(con.size()), 
+			_cloning< std::is_rvalue_reference<decltype(con)>::value >
+			(	con.begin(), con.end(), capacity()
+			);
+		}
 
 
 		template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
-		Serial(std::initializer_list<Q>&& iL) : Serial(iL.begin(), iL.end()){}
+		Serial(std::initializer_list<Q>&& iL)
+		{
+			_alloc(iL.size()),  _cloning<true>(iL.begin(), iL.end(), capacity());
+		}
 
 
 		Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
@@ -414,18 +439,13 @@ namespace sgm
 		}
 
 
-		explicit Serial(size_t const capa) : _capacity(capa), _size(0)
-		{
-			_core = _alloc(capa);  
-		}
+		explicit Serial(size_t const capa){  _alloc(capa);  }
 
 
 		template<class...ARGS>
-		Serial(size_t const size, ARGS const&... args) : _capacity(size), _size(size)
+		Serial(size_t const size, ARGS const&... args)
 		{
-			_core = _alloc(size);
-
-			for ( size_t idx = 0;  idx < size;  new(_core + idx++) value_t(args...) );
+			for ( _alloc(size);  _size < size;  new(_core + _size++) value_t(args...) );
 		}
 
 
@@ -456,13 +476,18 @@ namespace sgm
 		>
 		auto operator=(CON&& con)-> Serial&
 		{
-			return _cloning(con.begin(), con.end(), con.size());
+			return 
+			_cloning< std::is_rvalue_reference<decltype(con)>::value >
+			(	con.begin(), con.end(), con.size()
+			);
 		}
 
 
-		auto size() const-> size_t{  return _size;  }
-		auto empty() const-> bool{  return size() == 0;  }
 		auto capacity() const-> size_t{  return _capacity;  }
+		auto size() const-> size_t{  return _size;  }
+
+		bool is_null() const{  return cdata() == nullptr;  }
+		bool is_empty() const{  return size() == 0;  }
 
 
 		template<class...ARGS>
@@ -480,15 +505,20 @@ namespace sgm
 		auto operator>>(Q&& q)-> Serial&{  return emplace_back( std::forward<Q>(q) );  }
 
 
-		template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+		template
+		<	bool TEMP_HOST = false, class ITR
+		,	class = std::enable_if_t< is_iterator<ITR>::value >  
+		>
 		auto merge_back(ITR bi, ITR const ei)-> Serial&
 		{
-			assert
-			(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
-			&&	L"can't merge_back : out of index"
+			for 
+			(	assert
+				(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
+				&&	L"cannot merge_back : out of index"
+				)	
+			;	bi != ei
+			;	*this >> _Move<TEMP_HOST>::cast(*bi++) 
 			);
-
-			for ( ;  bi != ei;  *this >> static_cast<value_t>(*bi++) );
 
 			return *this;
 		}
@@ -538,8 +568,7 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value
-				&&	!std::is_same< std::decay_t<CON>, Serial >::value  
+				<	is_iterable<CON>::value && !std::is_same< std::decay_t<CON>, Serial >::value
 				>
 		> 
 		operator CON() const{  return std::decay_t<CON>(Helper::begin(), end());  }
