@@ -195,6 +195,23 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	template<bool TEMP_HOST> struct Move_if;
+
+	template<>
+	struct Move_if<false> : No_Making
+	{
+		template<class T>
+		static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::forward<T>(t) )
+	};
+
+	template<>
+	struct Move_if<true> : No_Making
+	{
+		template<class T>
+		static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::move(t) )
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
 
 	struct Mutability : No_Making{};
 	struct invariable : Mutability{};		using invar = invariable;

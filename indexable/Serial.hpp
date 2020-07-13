@@ -109,9 +109,7 @@ namespace sgm
 		using value_t = std::conditional_t<IS_MUTABLE, T, T const>;
 		using iter_t = Serial_iterator;
 		
-		enum : size_t{SIZE = S};
-
-
+	
 	public:
 		Serial_iterator(value_t* arr, size_t idx) : _arr(arr), _idx(idx){}
 		Serial_iterator(iter_t const&) = default;
@@ -125,7 +123,7 @@ namespace sgm
 		,	class 
 			=	std::enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 		>
-		auto operator=(Serial_iterator<T, SIZE, _M, _F> const itr)-> iter_t&
+		auto operator=(Serial_iterator<T, S, _M, _F> const itr)-> iter_t&
 		{
 			return _sr_iterator_Helper<T>::Substitution(*this, itr);
 		}
@@ -254,12 +252,55 @@ namespace sgm
 		template<class Q, size_t _S> struct _Core : No_Making{  using type = Q[S];  };
 		template<class Q> struct _Core<Q, srSize::INTERFACE> : No_Making{  using type = Q*;  };
 
+
+	protected:
+		template<class ITR1, class ITR2> struct _coupled_iterators{  ITR1 _1;  ITR2 _2;  };
+		
+		template<class ITR1, class ITR2>
+		static auto _zip_iterator(ITR1 itr1, ITR2 itr2) SGM_DECLTYPE_AUTO
+		(
+			_coupled_iterators<ITR1, ITR2>{itr1, itr2}
+		)
+
+
+		template
+		<	bool TEMP_HOST = false, class ITR, class CON
+		,	class RES_ITR = decltype(Declval<CON>().begin())
+		,	class = std::enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
+		>
+		static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> _coupled_iterators<ITR, RES_ITR>
+		{
+			RES_ITR itr = con.begin();
+
+			for ( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
+
+			return _zip_iterator(bi, itr);
+		}
+
+
 	public:
 		enum : size_t{SIZE = S};
 		using core_t = typename _Core<T, S>::type;
 		
 		core_t _core;
 
+
+		Serial() = default;
+		Serial(Serial const&) = default;
+
+
+		auto operator=(Serial const&)-> Serial& = default;
+
+		auto operator=(Serial&& sr) _SGM_NOEXCEPT-> Serial&
+		{
+			for 
+			(	auto itr = begin(), sitr = sr.begin()
+			;	itr != end()
+			;	*itr++ = std::move(*sitr++)
+			);
+
+			return *this;
+		}
 
 		auto cdata() const-> T const*	{  return _core;  }
 		auto data() const-> T const*	{  return cdata();  }
@@ -270,17 +311,17 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		using iter_t = Serial_iterator<T, SIZE, true, true>;
-		using citer_t = Serial_iterator<T, SIZE, false, true>;
-		using riter_t = Serial_iterator<T, SIZE, true, false>;
-		using criter_t = Serial_iterator<T, SIZE, false, false>;
-
-
 	#ifndef _WHEN_STATIC 
 		#define _WHEN_STATIC template< class = std::enable_if_t<S != srSize::INTERFACE> >
 
 
 		_WHEN_STATIC auto size() const-> size_t { return SIZE; }
+
+
+		using iter_t = Serial_iterator<T, S, true, true>;
+		using citer_t = Serial_iterator<T, S, false, true>;
+		using riter_t = Serial_iterator<T, S, true, false>;
+		using criter_t = Serial_iterator<T, S, false, false>;
 
 		auto cbegin() const-> citer_t	{  return citer_t(_core, 0);  }
 		auto begin() const-> citer_t	{  return cbegin();  }
@@ -316,6 +357,33 @@ namespace sgm
 				>
 		> 
 		operator CON() const{  return std::decay_t<CON>(begin(), end());  }
+
+
+		template
+		<	class CON
+		,	class 
+			=	std::enable_if_t
+				<	is_iterable<CON>::value && S != srSize::INTERFACE
+				&&	!std::is_same< std::decay_t<CON>, Serial >::value  
+				>
+		> 
+		auto operator=(CON&& con)-> Serial&
+		{
+			_copy_AMAP< std::is_rvalue_reference<decltype(con)>::value >
+			(	con.begin(), con.end(), *this
+			);
+
+			return *this;
+		}
+
+
+		template< class Q, class = std::enable_if_t<S != srSize::INTERFACE> >
+		auto operator=(std::initializer_list<Q>&& iL)-> Serial&
+		{
+			_copy_AMAP<true>(iL.begin(), iL.end(), *this);
+
+			return *this;
+		}
 
 
 		_WHEN_STATIC auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
@@ -360,38 +428,19 @@ namespace sgm
 			_capacity = capa, _size = 0;
 		}
 
-		
-		template<bool TEMP_HOST> struct _Move;
-
-		template<>
-		struct _Move<false>
-		{
-			template<class T>
-			static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::forward<T>(t) )
-		};
-
-		template<>
-		struct _Move<true>
-		{
-			template<class T>
-			static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::move(t) )
-		};
-
 
 		template
 		<	bool TEMP_HOST = false, class ITR
 		,	class = std::enable_if_t< is_iterator<ITR>::value >  
 		>
-		auto _cloning(ITR bi, ITR const ei, size_t const length)-> Serial&
+		auto _cloning(ITR const bi, ITR const ei, size_t const length)-> Serial&
 		{
 			if(capacity() < length)
 				this->~Serial(),  _alloc(length);
 
-			auto itr = begin();
+			auto const itrs = _copy_AMAP<TEMP_HOST>(bi, ei, *this);
 
-			for ( ;  bi != ei && itr != end();  *itr++ = _Move<TEMP_HOST>::cast(*bi++) );
-
-			return bi != ei ? merge_back<TEMP_HOST>(bi, ei) : pop_back_from(itr);
+			return itrs._1 != ei ? merge_back<TEMP_HOST>(itrs._1, ei) : pop_back_from(itrs._2);
 		}
 
 
@@ -527,7 +576,7 @@ namespace sgm
 				&&	L"cannot merge_back : out of index"
 				)	
 			;	bi != ei
-			;	*this >> _Move<TEMP_HOST>::cast(*bi++) 
+			;	*this >> Move_if<TEMP_HOST>::cast(*bi++) 
 			);
 
 			return *this;

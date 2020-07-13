@@ -109,6 +109,21 @@ public:
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	struct Destruction_Check
+	{
+		Serial<Specimen const*> ptrs;
+		
+		Destruction_Check(size_t const capa) : ptrs(capa){}
+
+		~Destruction_Check()
+		{
+			for(auto const& p : ptrs)
+				assert(*p == Specimen::State::DESTRUCTED	);
+		}
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
 	struct Dynamic : No_Making
 	{
 		static void Construction()
@@ -480,7 +495,9 @@ public:
 			assert(sr1.is_empty() && sr1.capacity() == INITIAL_CAPACITY);
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 	};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 	struct Static : No_Making
@@ -502,6 +519,7 @@ public:
 			&&	have_the_same(sr2, sr3)
 			);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
 		static void No_Move_Construction()
@@ -517,7 +535,165 @@ public:
 			&&	have_the_same(sr1, Serial<type>{4, 8, 12})
 			);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Assignment()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> sr1{2, 4, 6}, sr2;
+
+			sr2 = sr1,
+			assert
+			(	have_the_same(sr2, sr1) && are_all_same_to(sr2, type::State::COPY_ASSIGNMENT)
+			);
+
+			std::vector<type> vec1{10}, vec2{-2, -4, -6, -8};
+
+			sr1 = vec1,  sr2 = vec2,
+			assert
+			(	sr1.size() != vec1.size() && have_the_same(sr1, std::vector<type>{10, 4, 6})
+			&&	sr2.size() != vec2.size() && have_the_same(sr2, std::vector<type>{-2, -4, -6})
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Move_Assignment()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> _sr{2, 5, 8}, sr1;
+
+			sr1 = std::move(_sr),
+			assert
+			(	have_the_same(sr1, std::vector<type>{2, 5, 8})
+			&&	are_all_same_to(sr1, type::State::MOVE_ASSIGNMENT)
+			&&	_sr.size() != 0 && are_all_same_to(_sr, type::State::DESTRUCTED)
+			);
+
+
+			Serial<type, 3> sr2{3, 6, 9};
+
+			sr2 = {30, 60, 90},
+			assert
+			(	have_the_same(sr2, std::vector<type>{30, 60, 90})
+			&&	are_all_same_to(sr2, type::State::MOVE_ASSIGNMENT)
+			);
+
+
+			Serial<type, 3> sr3;
+			std::vector<type> vec2{10}, vec3{-2, -4, -6, -8};
+
+			sr2 = std::move(vec2),  sr3 = std::move(vec3),
+			assert
+			(	have_the_same(sr2, std::vector<type>{10, 60, 90})
+			&&	are_all_same_to(sr2, type::State::MOVE_ASSIGNMENT)
+			&&	have_the_same(sr3, std::vector<type>{-2, -4, -6})
+			&&	are_all_same_to(sr3, type::State::MOVE_ASSIGNMENT)
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Destruction()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> sr1{1, -2, 3};
+			
+			sr1.~Serial(),
+			assert( sr1.size() != 0 && are_all_same_to(sr1, type::State::DESTRUCTED) );
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Type_Conversion_into_iterable()
+		{
+			using type = Specimen;
+			using iterable_t = std::vector<type>;
+
+			Serial<type, 3> sr1{0, 5, 10}, sr2{10, 20, 30};
+			iterable_t itb = sr1;
+
+			assert
+			(	have_the_same(itb, sr1)
+			&&	are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
+			);
+
+			itb = static_cast<iterable_t>(sr2),
+			assert
+			(	have_the_same(itb, sr2)
+			&&	are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Swap()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> sr1{12, 3, 45}, sr2{6, 78, 910};
+
+			sr1.swap(sr2),
+			assert
+			(	have_the_same(sr1, Serial<type>{6, 78, 910})
+			&&	have_the_same(sr2, Serial<type>{12, 3, 45})
+			);
+
+			std::swap(sr1, sr2),
+			assert
+			(	have_the_same(sr1, Serial<type>{12, 3, 45})
+			&&	have_the_same(sr2, Serial<type>{6, 78, 910})
+			);	
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Element()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> sr1{2, 4, 6};
+
+			assert( sr1[0] == type(2) && sr1[1] == type(4) && sr1[2] == type(6) );
+
+			sr1[1] = sr1[0],  sr1[2] = type(60),
+			assert
+			(	sr1[1] == type(2) && sr1[1] == type::State::COPY_ASSIGNMENT
+			&&	sr1[2] == type(60) && sr1[2] == type::State::MOVE_ASSIGNMENT
+			);
+
+			assert(sr1.front() == *sr1.begin() && sr1.back() == *sr1.rbegin());
+
+
+			Serial<type, 3> const sr2{3, 6, 9};
+
+			static_assert
+			(	(	is_immutable<decltype(sr2[1])>::value
+				&&	is_immutable<decltype(sr2.front())>::value
+				&&	is_immutable<decltype(sr2.back())>::value
+				&&	is_immutable<decltype(*sr2.begin())>::value
+				&&	is_immutable<decltype(*sr2.rbegin())>::value	
+				)
+			,	"access interface may cause unexpected modification."
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 	};
+
+
+	static void DestructionCheckCheck()
+	{
+		Destruction_Check dcheck(3);
+
+		Specimen s1(3), s2 = s1, s3;
+
+		dcheck.ptrs >> &s1 >> &s2 >> &s3;
+	}
 
 
 };
@@ -541,6 +717,14 @@ int main()
 
 	Tutorial::Static::Construction();
 	Tutorial::Static::No_Move_Construction();
+	Tutorial::Static::Assignment();
+	Tutorial::Static::Move_Assignment();
+	Tutorial::Static::Destruction();
+	Tutorial::Static::Type_Conversion_into_iterable();
+	Tutorial::Static::Swap();
+	Tutorial::Static::Element();
+
+	Tutorial::DestructionCheckCheck();
 
 	return 0;
 }
