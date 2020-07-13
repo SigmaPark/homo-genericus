@@ -449,7 +449,10 @@ namespace sgm
 		}
 
 
-		~Serial(){  clear(),  ::operator delete(_core),  _core = nullptr;  }
+		~Serial()
+		{	
+			clear(),  ::operator delete(_core),  _core = nullptr,  _capacity = 0;  
+		}
 
 
 		auto operator=(Serial const& sr)-> Serial&
@@ -480,6 +483,13 @@ namespace sgm
 			_cloning< std::is_rvalue_reference<decltype(con)>::value >
 			(	con.begin(), con.end(), con.size()
 			);
+		}
+
+
+		template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
+		auto operator=(std::initializer_list<Q>&& iL)-> Serial&
+		{
+			return _cloning<true>(iL.begin(), iL.end(), iL.size());
 		}
 
 

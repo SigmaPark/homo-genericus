@@ -1,6 +1,7 @@
 #include "Serial.hpp"
 #include <vector>
-#include <array>
+//========//========//========//========//=======#//========//========//========//========//=======#
+
 
 using namespace sgm;
 
@@ -8,8 +9,11 @@ using namespace sgm;
 struct Tutorial : No_Making
 {
 private:
-	template<class CON1, class CON2>
-	static bool same_iterables(CON1&& con1, CON2&& con2)
+	template
+	<	class CON1, class CON2
+	,	class = std::enable_if_t< is_iterable<CON1>::value && is_iterable<CON2>::value >
+	>
+	static bool have_the_same(CON1&& con1, CON2&& con2)
 	{
 		auto itr1 = con1.begin();
 		auto itr2 = con2.begin();
@@ -21,17 +25,35 @@ private:
 
 		return res;
 	}
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
-	
-	struct NoCopy_NoSubstitution
+
+	template<  class ITR, class T, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	static bool are_all_same_to(ITR const bi, size_t const n, T const& t)
 	{
-		NoCopy_NoSubstitution() = default;
+		return
+		(	n == 0
+		||	*bi == t && are_all_same_to( std::next(bi), n - 1, t )
+		);
+	}
 
-		NoCopy_NoSubstitution(NoCopy_NoSubstitution const&) = delete;
-		NoCopy_NoSubstitution(NoCopy_NoSubstitution&&){}
-		
-		auto operator=(NoCopy_NoSubstitution const&)->NoCopy_NoSubstitution& = delete;
-	};
+
+	template< class CON, class T, class = std::enable_if_t< is_iterable<CON>::value >  >
+	static bool are_all_same_to(CON const& con, T const& t)
+	{
+		return are_all_same_to(con.begin(), con.size(), t);
+	}
+
+
+	template<  class ITR, class T, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	static bool are_all_same_to(ITR const bi, ITR const ei, T const& t)
+	{
+		return
+		(	bi == ei
+		||	*bi == t && are_all_same_to( std::next(bi), ei, t )
+		);
+	}
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 public:
@@ -51,7 +73,7 @@ public:
 
 
 		Specimen() : state(DEFAULT_CONSTRUCTION), val(0){}
-		Specimen(int n) : state(MANUAL_CONSTRUCTION), val(n){}
+		Specimen(int n, int n2 = 0) : state(MANUAL_CONSTRUCTION), val(n + n2){}
 		Specimen(Specimen const& spec) : state(COPY_CONSTRUCTION), val(spec.val){}
 		
 		Specimen(Specimen&& spec) throw() : state(MOVE_CONSTRUCTION), val(spec.val)
@@ -84,83 +106,380 @@ public:
 		template<class T>
 		bool operator!=(T const& t) const{  return !(*this == t);  }
 	};
-	//========//========//========//========//=======#//========//========//========//========//===
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	struct Dynamic : No_Making
 	{
-		static void Construction1()
+		static void Construction()
 		{
 			using type = Specimen;
+			using iterable_t = std::initializer_list<type>;
 
 			Serial<type>
 				sr1,
 				sr2(3),
 				sr3(3, 180),
 				sr4{3, 6, 9},
-				sr5 = sr4,
-				sr6 = std::vector<type>{type(2), type(5), type(8)},
-				sr7(sr6.begin(), sr6.end());
+				sr5(sr4.begin(), sr4.end()),
+				sr6(sr4.rbegin(), sr4.rend());
 
 			assert
 			(	sr1.is_null()
 			&&	sr2.capacity() == 3 && sr2.is_empty()
-			&&	sr3.capacity() == 3 && sr3.size() == 3
-			&&	same_iterables( sr3, std::array<type, 3>{type(180), type(180), type(180)} )
-			&&	same_iterables( sr4, std::array<type, 3>{type(3), type(6), type(9)} )
-			&&	same_iterables(sr5, sr4)
-			&&	same_iterables( sr5, Serial<type::State>(3, type::State::COPY_CONSTRUCTION) )
-			&&	same_iterables( sr6, std::array<type, 3>{type(2), type(5), type(8)} )
-			&&	same_iterables( sr6, Serial<type::State>(3, type::State::MOVE_CONSTRUCTION) )
-			&&	same_iterables(sr7, sr6)
-			&&	same_iterables( sr7, Serial<type::State>(3, type::State::COPY_CONSTRUCTION) )
+			&&	sr3.capacity() == 3 && sr3.size() == 3 && are_all_same_to( sr3, type(180) )
+			&&	have_the_same( sr4, iterable_t{type(3), type(6), type(9)} )
+			&&	have_the_same(sr5, sr4) && are_all_same_to(sr5, type::State::COPY_CONSTRUCTION)
+			&&	have_the_same( sr6, iterable_t{type(9), type(6), type(3)} )
 			);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+		
+
+		static void Copy_Construction()
+		{
+			using type = Specimen;
+
+			std::vector<type> Lvalue_iterable{-2, 1, 4};
+
+			Serial<type>
+				sr1{-1, 2, 5},
+				sr2 = sr1,
+				sr3 = Lvalue_iterable;
+
+			assert
+			(	have_the_same(sr2, sr1) && are_all_same_to(sr2, type::State::COPY_CONSTRUCTION)
+			&&	have_the_same(sr3, Lvalue_iterable) 
+			&&	are_all_same_to(sr3, type::State::COPY_CONSTRUCTION)
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		static void Construction2()
+		static void Move_Construction()
 		{	
 			using type = Specimen;
+			using iterable_t = std::initializer_list<type>;
 
 			Serial<type> _sr1{3, 6, 9};
 
-			assert
-			(	same_iterables( _sr1, Serial<type::State>(3, type::State::MANUAL_CONSTRUCTION) )
-			);
+			assert( are_all_same_to(_sr1, type::State::MANUAL_CONSTRUCTION) );
 
-			auto sr1 = std::move(_sr1);
+			type::State const _prev_sr1_state = _sr1.front().state;
+			auto* const internal_data_address = _sr1.cdata();
+
+			Serial<type>
+				sr1 = std::move(_sr1),
+				sr2 = std::vector<type>{type(-2), type(-5), type(-8)};
 
 			assert
-			(	!same_iterables( sr1, Serial<type::State>(3, type::State::MOVE_CONSTRUCTION) )
-			&&	same_iterables( sr1, Serial<type::State>(3, type::State::MANUAL_CONSTRUCTION) )
-			&&	same_iterables( sr1, std::array<type, 3>{type(3), type(6), type(9)} )
+			(	!are_all_same_to(sr1, type::State::MOVE_CONSTRUCTION)
+			&&	are_all_same_to(sr1, _prev_sr1_state) && sr1.cdata() == internal_data_address
+			&&	have_the_same( sr1, iterable_t{type(3), type(6), type(9)} )
 			&&	_sr1.is_null()
-			);			
+			&&	have_the_same( sr2, iterable_t{type(-2), type(-5), type(-8)} )
+			&&	are_all_same_to(sr2, type::State::MOVE_CONSTRUCTION)
+			);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
 		static void Assignment()
 		{
 			using type = Specimen;
 
-			Serial<type> 
-				sr1{2, 5, 8}, 
-				sr2, 
-				sr3( 3, type(10) );
+			std::vector<type> vec{2, 5, 8, 11};
+			Serial<type> sr1( 2, type(1) ),  sr2( 6, type(-3) );
 
-			sr2 = sr1,
-			sr3 = sr1;
-
+			sr1 = vec,  sr2 = vec,
 			assert
-			(	same_iterables(sr2, sr1)
-			&&	!same_iterables( sr2, Serial<type::State>(3, type::State::COPY_ASSIGNMENT) )
-			&&	same_iterables( sr2, Serial<type::State>(3, type::State::COPY_CONSTRUCTION) )
-			&&	same_iterables(sr3, sr1)
-			&&	same_iterables( sr3, Serial<type::State>(3, type::State::COPY_ASSIGNMENT) )
+			(	have_the_same(sr1, vec) && have_the_same(sr2, vec)
+			&&	!are_all_same_to(sr1, type::State::COPY_ASSIGNMENT)
+			&&	are_all_same_to(sr1, type::State::COPY_CONSTRUCTION)
+			&&	are_all_same_to(sr2, type::State::COPY_ASSIGNMENT)
+			&&	sr2.capacity() == 6
+			);
+
+
+			Serial<type> sr3(6);
+
+			sr3 = {type(1), type(4)},
+			assert(sr3.capacity() == 6 && sr3.size() == 2);
+
+			sr3 = vec,
+			assert
+			(	have_the_same(sr3, vec)
+			&&	are_all_same_to(sr3.cbegin(), 2, type::State::COPY_ASSIGNMENT)
+			&&	are_all_same_to(sr3.crbegin(), 2, type::State::COPY_CONSTRUCTION)
+			&&	sr3.capacity() == 6
+			);
+
+
+			Serial<type> sr4(10), sr5(6);
+			
+			sr4 = {type(3), type(6)},
+			sr5 = {type(-4), type(6), type(-8), type(10)},
+			assert
+			(	sr4.capacity() == 10 && sr4.size() == 2
+			&&	sr5.capacity() == 6 && sr5.size() == 4
+			);
+
+			sr5 = sr4,
+			assert
+			(	have_the_same(sr5, sr4)
+			&&	sr5.capacity() == 10 && sr5.size() == 2
+			&&	are_all_same_to(sr5, type::State::COPY_CONSTRUCTION)
+			&&	!are_all_same_to(sr5, type::State::COPY_ASSIGNMENT)
 			);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
+		static void Move_Assignment()
+		{
+			using type = Specimen;
+
+			Serial<type> sr1(10), sr2(6);
+			
+			sr1 = {type(3), type(6)},
+			sr2 = {type(-4), type(6), type(-8), type(10)},
+			assert
+			(	sr1.capacity() == 10 && sr1.size() == 2
+			&&	sr2.capacity() == 6 && sr2.size() == 4
+			);
+
+			auto* const internal_data_address = sr1.cdata();
+
+			sr2 = std::move(sr1),
+			assert
+			(	sr2.capacity() == 10 && sr2.size() == 2
+			&&	sr2.cdata() == internal_data_address
+			&&	sr1.is_null()
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Type_Conversion_into_iterable()
+		{
+			using type = Specimen;
+			using iterable_t = std::vector<type>;
+
+			Serial<type> sr1{0, 5, 10}, sr2{10, 20, 30};
+			iterable_t itb = sr1;
+
+			assert
+			(	have_the_same(itb, sr1)
+			&&	are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
+			);
+
+			itb = static_cast<iterable_t>(sr2),
+			assert
+			(	have_the_same(itb, sr2)
+			&&	are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Clear_and_Destruction()
+		{
+			using type = Specimen;
+
+			Serial<type> sr1{1, -2, 3, -4}, sr2 = sr1;
+			
+			sr1.clear(),  sr2.~Serial(),
+			assert
+			(	sr1.size() == 0 && sr1.is_empty() && sr1.capacity() == 4 && !sr1.is_null()
+			&&	sr2.size() == 0 && sr2.is_empty() && sr2.capacity() == 0 && sr2.is_null()
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Swap()
+		{
+			using type = Specimen;
+
+			Serial<type> sr1{12, 3, 45}, sr2{6789};
+
+			auto
+				*const internal_data_address1 = sr1.cdata(),
+				*const internal_data_address2 = sr2.cdata();
+
+			sr1.swap(sr2),
+			assert
+			(	have_the_same(sr1, Serial<type>{6789})
+			&&	have_the_same(sr2, Serial<type>{12, 3, 45})
+			&&	sr1.cdata() == internal_data_address2 && sr2.cdata() == internal_data_address1
+			);
+
+			std::swap(sr1, sr2),
+			assert
+			(	have_the_same(sr1, Serial<type>{12, 3, 45})
+			&&	have_the_same(sr2, Serial<type>{6789})
+			&&	sr1.cdata() == internal_data_address1 && sr2.cdata() == internal_data_address2
+			);	
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Element()
+		{
+			using type = Specimen;
+
+			Serial<type> sr1{2, 4, 6};
+
+			assert( sr1[0] == type(2) && sr1[1] == type(4) && sr1[2] == type(6) );
+
+			sr1[1] = sr1[0],  sr1[2] = type(60),
+			assert
+			(	sr1[1] == type(2) && sr1[1] == type::State::COPY_ASSIGNMENT
+			&&	sr1[2] == type(60) && sr1[2] == type::State::MOVE_ASSIGNMENT
+			);
+
+			assert(sr1.front() == *sr1.begin() && sr1.back() == *sr1.rbegin());
+
+
+			Serial<type> const sr2{3, 6, 9};
+
+			static_assert
+			(	(	is_immutable<decltype(sr2[1])>::value
+				&&	is_immutable<decltype(sr2.front())>::value
+				&&	is_immutable<decltype(sr2.back())>::value
+				&&	is_immutable<decltype(*sr2.begin())>::value
+				&&	is_immutable<decltype(*sr2.rbegin())>::value	
+				)
+			,	"access interface may cause unexpected modification."
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Push()
+		{
+			using type = Specimen; 
+
+			type Lvalue = type(77);
+			Serial<type> sr1(20);
+			auto current_size = sr1.size(); 
+
+			assert(current_size == 0);
+
+			sr1.emplace_back(1, 2),
+			assert
+			(	sr1.size() == (current_size += 1)
+			&&	sr1.back() == type(1, 2) && sr1.back() == type::State::MANUAL_CONSTRUCTION 
+			);
+
+			sr1.emplace_back(2, 3).emplace_back(7).emplace_back(Lvalue).emplace_back( type(99) ),
+			assert
+			(	sr1.size() == (current_size += 4)
+			&&	have_the_same
+				(	sr1, std::vector<type>{type(1, 2), type(2, 3), type(7), Lvalue, type(99)}
+				)
+			&&	sr1.rbegin()[0] == type::State::MOVE_CONSTRUCTION
+			&&	sr1.rbegin()[1] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[2] == type::State::MANUAL_CONSTRUCTION
+			);
+
+			sr1 >> Lvalue, 
+			assert
+			(	sr1.size() == (current_size += 1)
+			&&	sr1.back() == Lvalue
+			);
+
+			sr1 >> type(-1) >> Lvalue,
+			assert
+			(	sr1.size() == (current_size += 2)
+			&&	sr1.rbegin()[0] == Lvalue && sr1.rbegin()[0] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[1] == -1 && sr1.rbegin()[1] == type::State::MOVE_CONSTRUCTION
+			);
+
+
+			Serial<type> 
+				sr2{type(-1), type(-3), type(-5), type(-7)},
+				sr3{type(11), type(22)};
+
+			sr1.merge_back(sr2.begin(), sr2.end()),
+			assert
+			(	sr1.size() == (current_size += sr2.size())
+			&&	sr1.rbegin()[0] == -7 && sr1.rbegin()[0] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[1] == -5 && sr1.rbegin()[1] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[2] == -3 && sr1.rbegin()[2] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[3] == -1 && sr1.rbegin()[3] == type::State::COPY_CONSTRUCTION
+			);
+
+			sr1.merge_back(sr3.begin(), sr3.end()).merge_back(sr3.rbegin(), sr3.rend()),
+			assert
+			(	sr1.size() == (current_size += 2*sr3.size())
+			&&	sr1.rbegin()[0] == 11 && sr1.rbegin()[0] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[1] == 22 && sr1.rbegin()[1] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[2] == 22 && sr1.rbegin()[2] == type::State::COPY_CONSTRUCTION
+			&&	sr1.rbegin()[3] == 11 && sr1.rbegin()[3] == type::State::COPY_CONSTRUCTION
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		static void Pop()
+		{
+			using type = Specimen;
+			enum{INITIAL_CAPACITY = 40};
+
+			Serial<type> sr1(INITIAL_CAPACITY);
+			auto fn = [](size_t const x)-> int{  return 2*static_cast<int>(x) + 1;  };
+
+			for(size_t n = 0;  n < sr1.capacity();  sr1 >> fn(n + 1),  ++n);
+
+
+			size_t current_size = sr1.size();
+
+			assert(current_size == INITIAL_CAPACITY);
+
+			sr1.pop_back(),
+			assert
+			(	sr1.size() == (current_size -= 1) && sr1.back() == fn(current_size)
+			);
+
+			sr1.pop_back().pop_back(),
+			assert
+			(	sr1.size() == (current_size -= 2) && sr1.back() == fn(current_size)
+			);
+
+			sr1.pop_back(3),
+			assert
+			(	sr1.size() == (current_size -= 3) && sr1.back() == fn(current_size)
+			);
+
+			sr1.pop_back(3).pop_back(2).pop_back(1),
+			assert
+			(	sr1.size() == (current_size -= 3 + 2 + 1) && sr1.back() == fn(current_size)
+			);
+
+
+			auto itr = sr1.end() - 4;
+
+			sr1.pop_back_from(itr), 
+			assert
+			(	sr1.size() == (current_size -= 4) && sr1.back() == fn(current_size)
+			);
+
+
+			auto 
+				itr1 = sr1.end() - 2, 
+				itr2 = itr1 - 3, 
+				itr3 = itr2 - 1;
+
+			sr1.pop_back_from(itr1).pop_back_from(itr2).pop_back_from(itr3),
+			assert
+			(	sr1.size() == (current_size -= 2 + 3 + 1) && sr1.back() == fn(current_size)
+			);
+
+			sr1.clear(),
+			assert(sr1.is_empty() && sr1.capacity() == INITIAL_CAPACITY);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 	};
 
 
@@ -176,134 +495,29 @@ public:
 				sr3 = sr2;
 
 			assert
-			(	same_iterables( sr1, Serial<type::State>(3, type::State::DEFAULT_CONSTRUCTION) )
-			&&	same_iterables( sr2, Serial<type::State>(3, type::State::MANUAL_CONSTRUCTION) )
-			&&	same_iterables(sr2, Serial<int>{4, 8, 12})
-			&&	same_iterables( sr3, Serial<type::State>(3, type::State::COPY_CONSTRUCTION) )
-			&&	same_iterables(sr2, sr3)
+			(	are_all_same_to(sr1, type::State::DEFAULT_CONSTRUCTION)
+			&&	are_all_same_to(sr2, type::State::MANUAL_CONSTRUCTION)
+			&&	have_the_same(sr2, Serial<type>{4, 8, 12})
+			&&	are_all_same_to(sr3, type::State::COPY_CONSTRUCTION)
+			&&	have_the_same(sr2, sr3)
 			);
+		}
 
-			Serial<type, 3> _sr4{4, 8, 12}, sr4 = std::move(_sr4);
+
+		static void No_Move_Construction()
+		{
+			using type = Specimen;
+
+			Serial<type, 3> _sr1{4, 8, 12}, sr1 = std::move(_sr1);
 
 			assert
-			(	!same_iterables( sr4, Serial<type::State>(3, type::State::MOVE_CONSTRUCTION) )
-			&&	!same_iterables( _sr4, Serial<type::State>(3, type::State::DESTRUCTED) )
-			&&	same_iterables( sr4, Serial<type::State>(3, type::State::COPY_CONSTRUCTION) )
-			&&	same_iterables(sr4, Serial<int>{4, 8, 12})
+			(	!are_all_same_to(sr1, type::State::MOVE_CONSTRUCTION)
+			&&	!are_all_same_to(_sr1, type::State::DESTRUCTED)
+			&&	are_all_same_to(sr1, type::State::COPY_CONSTRUCTION)
+			&&	have_the_same(sr1, Serial<type>{4, 8, 12})
 			);
 		}
 	};
-
-
-	template<unsigned> static void Case();
-
-
-	template<> static void Case<0>()
-	{
-		Serial<float> const sr{5, 2, 1};
-
-		assert( same_iterables(sr, Serial<float, 3>{5, 2, 1}) );
-	}
-
-
-	template<> static void Case<1>()
-	{
-		Serial<double> sr1, sr2 = sr1, sr1_{4, 3}, sr2_(sr1_.begin(), sr1_.end());
-
-		assert
-		(	sr1.is_empty() && sr2.is_empty() && sr1_.size() == 2
-		&&	same_iterables(sr1_, sr2_)
-		);
-
-
-		Serial<float> sr5(4), sr6(4, 7.f);
-
-		assert
-		(	sr5.capacity() == 4 && sr5.size() == 0 
-		&&	same_iterables(sr6, Serial<float>{7.f, 7.f, 7.f, 7.f})
-		);
-
-
-		Serial<double, 5> sr3{1, 3, 5, 7, 9}, sr4 = sr3;
-
-		assert
-		(	same_iterables(sr3, sr4)
-		&&	sr3.size() == 5
-		);
-	}
-
-
-	template<> static void Case<2>()
-	{
-		Serial<float> sr1{1, 2, 3}, sr2 = sr1, sr3 = sr1;
-
-		sr1.~Serial(),
-		assert
-		(	sr1.size() == 0 && sr2.size() != 0
-		&&	same_iterables(sr2, sr3)
-		);
-	}
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template<> static void Case<3>()
-	{
-		using type = NoCopy_NoSubstitution;
-
-		Serial<type> sr(4);
-
-		sr >> type() >> type() >> type() >> type(),  assert(sr.size() == 4);
-
-		sr.pop_back().pop_back(),  assert(sr.size() == 4 - 2);
-
-		sr = Serial<type>(3),  assert(sr.size() == 0 && sr.capacity() == 3);
-
-		for
-		(	sr = Serial<type>(3)
-		;	sr.size() != sr.capacity()
-		;	sr >> type()
-		);
-
-		assert(sr.size() == 3);
-
-		sr.clear(),  assert(sr.size() == 0 && sr.capacity() == 3 && sr.is_empty());
-	}
-	//========//========//========//========//=======#//========//========//========//========//===
-	
-	
-	template<> static void Case<4>()
-	{
-		Serial<float> sr1{4, 2}, sr2{9, 7, 5, 3, 1}, sr3{3, 0, -3};
-
-		sr1 = sr2,  assert( same_iterables(sr1, sr2) );
-		sr2 = sr3,  assert( same_iterables(sr2, sr3) && sr2.capacity() == 5 );
-
-		sr3 = {7, 5},  
-		assert( same_iterables(sr3, Serial<float>{7, 5}) && sr3.capacity() == 2 );
-
-		Serial<int> sr4{12, 3, 45}, sr5{6789};
-
-		sr4.swap(sr5),
-		assert
-		(	same_iterables(sr4, Serial<int>{6789})
-		&&	same_iterables(sr5, Serial<int>{12, 3, 45})
-		);
-
-		std::swap(sr4, sr5),
-		assert
-		(	same_iterables(sr5, Serial<int>{6789})
-		&&	same_iterables(sr4, Serial<int>{12, 3, 45})
-		);
-
-		Serial<int, 2> sr6{2, 4}, sr7{6, 8};
-
-		sr6.swap(sr7),
-		assert
-		(	same_iterables(sr6, Serial<int>{6, 8}) 
-		&&	same_iterables(sr7, Serial<int>{2, 4})
-		);
-	}
-	//========//========//========//========//=======#//========//========//========//========//===
 
 
 };
@@ -313,17 +527,20 @@ public:
 
 int main()
 {
-	Tutorial::Case<0>();
-	Tutorial::Case<1>();
-	Tutorial::Case<2>();
-	Tutorial::Case<3>();
-	Tutorial::Case<4>();
-
-	Tutorial::Dynamic::Construction1();
-	Tutorial::Dynamic::Construction2();
+	Tutorial::Dynamic::Construction();
+	Tutorial::Dynamic::Copy_Construction();
+	Tutorial::Dynamic::Move_Construction();
 	Tutorial::Dynamic::Assignment();
+	Tutorial::Dynamic::Move_Assignment();
+	Tutorial::Dynamic::Type_Conversion_into_iterable();
+	Tutorial::Dynamic::Clear_and_Destruction();
+	Tutorial::Dynamic::Swap();
+	Tutorial::Dynamic::Element();
+	Tutorial::Dynamic::Push();
+	Tutorial::Dynamic::Pop();
 
 	Tutorial::Static::Construction();
+	Tutorial::Static::No_Move_Construction();
 
 	return 0;
 }
