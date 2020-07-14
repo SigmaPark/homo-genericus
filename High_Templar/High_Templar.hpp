@@ -4,4 +4,4 @@
 
 #include "Countable.hpp"
 
-#include "High_Templar11.hpp" 
+#include "High_Templar11.hpp"

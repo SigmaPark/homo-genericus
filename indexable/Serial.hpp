@@ -72,15 +72,13 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template< class ITR, bool = sgm::Has_Operator_index<ITR>::value > 
+	template< class ITR, bool = sgm::is_random_access_iterator<ITR>::value > 
 	struct _iterator_Distance;
 
 	
 	template<class ITR>
 	struct _iterator_Distance<ITR, true> : No_Making
 	{
-		static_assert(is_iterator<ITR>::value, "ITR doesn't have iterator interface");
-
 		static auto calc(ITR bi, ITR const ei)-> size_t
 		{	
 			return static_cast<size_t>(ei - bi);
@@ -243,7 +241,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	struct srSize : No_Making{  enum : size_t{INTERFACE = 0, DYNAMIC = -1};  };
+	struct srSize : No_Making{  enum : size_t{INTERFACE = -1, DYNAMIC = 0};  };
 
 
 	template<class T, size_t S = srSize::DYNAMIC>
@@ -254,12 +252,12 @@ namespace sgm
 
 
 	protected:
-		template<class ITR1, class ITR2> struct _coupled_iterators{  ITR1 _1;  ITR2 _2;  };
+		template<class ITR1, class ITR2> struct _dual_iterator{  ITR1 _1;  ITR2 _2;  };
 		
 		template<class ITR1, class ITR2>
 		static auto _zip_iterator(ITR1 itr1, ITR2 itr2) SGM_DECLTYPE_AUTO
 		(
-			_coupled_iterators<ITR1, ITR2>{itr1, itr2}
+			_dual_iterator<ITR1, ITR2>{itr1, itr2}
 		)
 
 
@@ -268,7 +266,7 @@ namespace sgm
 		,	class RES_ITR = decltype(Declval<CON>().begin())
 		,	class = std::enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
 		>
-		static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> _coupled_iterators<ITR, RES_ITR>
+		static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> _dual_iterator<ITR, RES_ITR>
 		{
 			RES_ITR itr = con.begin();
 
@@ -377,7 +375,11 @@ namespace sgm
 		}
 
 
-		template< class Q, class = std::enable_if_t<S != srSize::INTERFACE> >
+		template
+		<	class Q
+		,	class 
+			=	std::enable_if_t< S != srSize::INTERFACE && std::is_convertible<Q, T>::value >
+		>
 		auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 		{
 			_copy_AMAP<true>(iL.begin(), iL.end(), *this);

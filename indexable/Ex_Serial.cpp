@@ -109,21 +109,6 @@ public:
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	struct Destruction_Check
-	{
-		Serial<Specimen const*> ptrs;
-		
-		Destruction_Check(size_t const capa) : ptrs(capa){}
-
-		~Destruction_Check()
-		{
-			for(auto const& p : ptrs)
-				assert(*p == Specimen::State::DESTRUCTED	);
-		}
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
 	struct Dynamic : No_Making
 	{
 		static void Construction()
@@ -275,6 +260,21 @@ public:
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
+		static void Clear_and_Destruction()
+		{
+			using type = Specimen;
+
+			Serial<type> sr1{1, -2, 3, -4}, sr2 = sr1;
+
+			sr1.clear(),  sr2.~Serial(),
+			assert
+			(	sr1.size() == 0 && sr1.is_empty() && sr1.capacity() == 4 && !sr1.is_null()
+			&&	sr2.size() == 0 && sr2.is_empty() && sr2.capacity() == 0 && sr2.is_null()
+			);
+		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
 		static void Type_Conversion_into_iterable()
 		{
 			using type = Specimen;
@@ -292,21 +292,6 @@ public:
 			assert
 			(	have_the_same(itb, sr2)
 			&&	are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
-			);
-		}
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		static void Clear_and_Destruction()
-		{
-			using type = Specimen;
-
-			Serial<type> sr1{1, -2, 3, -4}, sr2 = sr1;
-			
-			sr1.clear(),  sr2.~Serial(),
-			assert
-			(	sr1.size() == 0 && sr1.is_empty() && sr1.capacity() == 4 && !sr1.is_null()
-			&&	sr2.size() == 0 && sr2.is_empty() && sr2.capacity() == 0 && sr2.is_null()
 			);
 		}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -686,16 +671,6 @@ public:
 	};
 
 
-	static void DestructionCheckCheck()
-	{
-		Destruction_Check dcheck(3);
-
-		Specimen s1(3), s2 = s1, s3;
-
-		dcheck.ptrs >> &s1 >> &s2 >> &s3;
-	}
-
-
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -708,8 +683,8 @@ int main()
 	Tutorial::Dynamic::Move_Construction();
 	Tutorial::Dynamic::Assignment();
 	Tutorial::Dynamic::Move_Assignment();
-	Tutorial::Dynamic::Type_Conversion_into_iterable();
 	Tutorial::Dynamic::Clear_and_Destruction();
+	Tutorial::Dynamic::Type_Conversion_into_iterable();
 	Tutorial::Dynamic::Swap();
 	Tutorial::Dynamic::Element();
 	Tutorial::Dynamic::Push();
@@ -724,7 +699,6 @@ int main()
 	Tutorial::Static::Swap();
 	Tutorial::Static::Element();
 
-	Tutorial::DestructionCheckCheck();
 
 	return 0;
 }
