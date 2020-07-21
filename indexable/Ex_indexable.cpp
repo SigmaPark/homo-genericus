@@ -248,6 +248,7 @@ protected:
 	private:
 		size_t _idx_begin, _idx_end, _nof_task, _total_size, _loop_q, _loop_r;
 	};
+
 };
 
 
@@ -266,6 +267,12 @@ struct Concurrent : _Concurrent_Helper
 				func(range[0], range[1]);
 			}
 		);
+	}
+
+	template<  class CON, class F, class = std::enable_if_t< is_iterable<CON>::value >  >
+	static void Loop(CON&& con, F&& func)
+	{
+		Loop( 0, con.size(), std::forward<F>(func) );
 	}
 };
 
@@ -289,6 +296,15 @@ struct Concurrent<unsigned(-1)> : _Concurrent_Helper
 			}
 		,	nof_task
 		);
+	}
+
+	template<  class CON, class F, class = std::enable_if_t< is_iterable<CON>::value >  >
+	static void Loop
+	(	CON&& con, F&& func
+	,	unsigned const nof_task = std::thread::hardware_concurrency()
+	)
+	{
+		Loop( 0, con.size(), std::forward<F>(func), nof_task );
 	}
 };
 

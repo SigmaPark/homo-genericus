@@ -5,9 +5,8 @@
 #include "Countable.hpp"
 
 
-#define USE_STL_VECTOR_AND_ARRAY
 #include "High_Templar.hpp"
-#undef USE_STL_VECTOR_AND_ARRAY
+
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 using namespace sgm;
@@ -32,34 +31,47 @@ private:
 
 
 	struct SHARE{  template<class T> using type = Pinweight<T>;  };
+	struct CREFER{  template<class T> using type = constAvatar<T>;  };
 
 
 public:
-	template<unsigned> static void Case();
-
-	template<> static void Case<1>()
+	static void CountableClass()
 	{
 		assert
 		(	is_Equal( Countable<int>(5, 1), std::vector<int>{1, 2, 3, 4, 5} )
 		&&	is_Equal( Countable<unsigned>(4), std::array<unsigned, 4>{0, 1, 2, 3} )
+		);		
+	}
+
+#if 0
+	static void MorphTest()
+	{
+		auto negate = [](int x)-> int{  return -x;  };
+		auto answer = std::vector<int>{ -1, -2, -3, -4, -5 };
+
+		assert
+		(	is_Equal(  ht::Morph( Countable<int>(5, 1), negate ), answer  )
+		&&	is_Equal(  ht::Morph( SHARE(), Countable(5, 1), negate ), answer  )
+		&&	is_Equal(  ht::Morph<SHARE>( Countable(5, 1), negate ), answer  )
+		&&	is_Equal
+			(	ht::Morph( Countable(100000, 1), negate )
+			,	ht::Morph<Parallel_Proc>( Countable(100000, 1), negate )
+			)
 		);
+		
+	}
+#endif
+
+
+	template<unsigned> static void Case();
+
+	template<> static void Case<1>()
+	{
 	}
 
 
 	template<> static void Case<2>()
 	{
-		auto negate = [](int x)-> int{  return -x;  };
-		auto answer = std::vector<int>{ -1, -2, -3, -4, -5 };
-
-		//assert
-		//(	is_Equal(  Morph( indices(5, 1), negate ), answer  )
-		//&&	is_Equal(  Morph( SHARE(), indices(5, 1), negate ), answer  )
-		//&&	is_Equal(  Morph<SHARE>( indices(5, 1), negate ), answer  )
-		//&&	is_Equal
-		//	(	Morph( indices(100000, 1), negate )
-		//	,	Morph<Parallel_Proc>( indices(100000, 1), negate )
-		//	)
-		//);
 	}
 
 
@@ -109,11 +121,13 @@ public:
 
 int main()
 {
-	Tutorial::Case<1>();
-	Tutorial::Case<2>();
-	Tutorial::Case<3>();
-	Tutorial::Case<4>();
-	Tutorial::Case<5>();
+	Tutorial::CountableClass();
+
+	//Tutorial::Case<1>();
+	//Tutorial::Case<2>();
+	//Tutorial::Case<3>();
+	//Tutorial::Case<4>();
+	//Tutorial::Case<5>();
 
 	return 0;
 }

@@ -7,15 +7,61 @@
 	#error C++11 or higher version language support is required.
 #endif
 
-#include "..\interface_Traits\interface_Traits.hpp"
-#include "..\indexable\indexable.hpp"
-
+#include "..\indexable\Serial.hpp"
 #include <future>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-/**	Flag System Design and Implement
-*	using <thread> library and replace openMP
-*/
+
+namespace sgm
+{
+	namespace ht
+	{
+		
+		
+
+	#if 0
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		(
+			HT_implementation<>
+		)
+
+
+		template
+		<	class...ARGS, class FLAGSET, class CON, class FUNC
+		,	class = Guaranteed_t< sizeof...(ARGS) <= 2 >
+		>
+		static auto Morph(FLAGSET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		(
+
+		)
+
+
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto Filter(CON&& con, FUNC&& func);
+
+
+		template
+		<	class...ARGS, class FLAGSET, class CON, class FUNC
+		,	class = Guaranteed_t< sizeof...(ARGS) <=2 >
+		>
+		static auto Filter(FLAGSET fset, CON&& con, FUNC&& func);
+	#endif
+
+
+
+
+	}
+}
+
+
+#if 0
 
 namespace sgm
 {
@@ -472,6 +518,6 @@ namespace sgm
 
 
 }// end of namespace sgm
-
+#endif
 
 #endif// end of #ifndef _SGM_HIGH_TEMPLAR11_

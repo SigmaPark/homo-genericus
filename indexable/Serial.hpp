@@ -415,7 +415,7 @@ namespace sgm
 	{
 		using Helper = Serial<T, srSize::INTERFACE>;
 		using value_t = std::remove_reference_t<T>;
-
+		using Helper::_core;
 
 		size_t _capacity, _size;
 
@@ -440,7 +440,7 @@ namespace sgm
 			if(capacity() < length)
 				this->~Serial(),  _alloc(length);
 
-			auto const itrs = _copy_AMAP<TEMP_HOST>(bi, ei, *this);
+			auto const itrs = Helper::_copy_AMAP<TEMP_HOST>(bi, ei, *this);
 
 			return itrs._1 != ei ? merge_back<TEMP_HOST>(itrs._1, ei) : pop_back_from(itrs._2);
 		}
@@ -547,7 +547,7 @@ namespace sgm
 		auto capacity() const-> size_t{  return _capacity;  }
 		auto size() const-> size_t{  return _size;  }
 
-		bool is_null() const{  return cdata() == nullptr;  }
+		bool is_null() const{  return Helper::cdata() == nullptr;  }
 		bool is_empty() const{  return size() == 0;  }
 
 
@@ -595,7 +595,7 @@ namespace sgm
 
 
 		auto pop_back(size_t const n = 1)-> Serial&{  return pop_back_from(end() - n);  }
-		auto clear()-> Serial&{  return pop_back_from(begin());  }
+		auto clear()-> Serial&{  return pop_back_from(Helper::begin());  }
 
 
 		auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&

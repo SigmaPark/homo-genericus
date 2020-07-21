@@ -675,7 +675,6 @@ public:
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-
 int main()
 {
 	Tutorial::Dynamic::Construction();
@@ -698,7 +697,6 @@ int main()
 	Tutorial::Static::Type_Conversion_into_iterable();
 	Tutorial::Static::Swap();
 	Tutorial::Static::Element();
-
 
 	return 0;
 }
