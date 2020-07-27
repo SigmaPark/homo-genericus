@@ -18,6 +18,76 @@ namespace sgm
 	{
 		
 		
+		struct _Parallel_Helper
+		{
+			template<class T> using type = T;
+
+			struct Nof_HW_Core{  enum : unsigned{DYNAMIC = unsigned(-1)};  };
+		protected:
+			struct _Ranger
+			{
+				_Ranger(size_t idx_begin, size_t idx_end, unsigned nof_task)
+				:	_idx_begin(idx_begin), _idx_end(idx_end)
+				,	_nof_task( static_cast<size_t>(nof_task) )
+				{
+					assert(idx_begin <= idx_end && L"invalid index range.\n");
+		
+					_total_size = idx_end - idx_begin,
+					_loop_q = _total_size / _nof_task,
+					_loop_r = _total_size % _nof_task;
+				}
+		
+		
+				Serial<size_t, 2> operator()(unsigned task_id) const
+				{
+					auto const 
+						d = static_cast<size_t>(task_id),
+						begin0 = d * _loop_q + (d < _loop_r ? d : _loop_r),
+						end0 = begin0 + _loop_q + (d < _loop_r ? 1 : 0);
+		
+					return {begin0 + _idx_begin, end0 + _idx_begin};
+				}
+		
+		
+			private:
+				size_t _idx_begin, _idx_end, _nof_task, _total_size, _loop_q, _loop_r;
+			};
+		};
+
+
+		template<unsigned NOF_THREAD = _Parallel_Helper::Nof_HW_Core::DYNAMIC>
+		struct Parallel : _Parallel_Helper
+		{
+		private:
+			template<unsigned N>
+			struct Static_Par
+			{
+				template<class F>
+				static void For(F&& f)
+				{
+					auto fut = std::async(f, N - 1);
+			
+					Static_Par<N - 1>::For(f);
+			
+					fut.get();
+				}
+			};
+
+			template<>
+			struct Static_Par<0>
+			{
+				template<class F> static void For(F&&){}
+			};
+
+
+		public:
+			enum : unsigned{NUMBER_OF_THREAD = NOF_THREAD};
+	
+			auto nof_thread() const-> unsigned{  return NUMBER_OF_THREAD;  }
+
+
+		};
+
 
 	#if 0
 		template

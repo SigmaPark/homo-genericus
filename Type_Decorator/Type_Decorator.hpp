@@ -9,10 +9,7 @@ namespace sgm
 {
 
 
-	struct Type_Decorator
-	{
-		template<class...> using type = void;
-	};
+	struct Type_Decorator{  template<class...> using type = void;  };
 
 
 	template<class T> 

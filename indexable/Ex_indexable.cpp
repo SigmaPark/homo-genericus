@@ -308,7 +308,7 @@ struct Concurrent<unsigned(-1)> : _Concurrent_Helper
 	}
 };
 
-
+#if 0
 int main()
 {
 	Tutorial::Case<0>();
@@ -335,3 +335,4 @@ int main()
 
 	return 0;
 }
+#endif
