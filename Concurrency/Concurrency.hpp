@@ -3,7 +3,6 @@
 #ifndef _SGM_CONCURRENCY_
 #define _SGM_CONCURRENCY_
 
-#include "..\interface_Traits\interface_Traits.hpp"
 #include <future>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -109,12 +108,10 @@ namespace sgm
 				);				
 			}
 
-			template
-			<	class CON, class F, class = std::enable_if_t< is_iterable<CON>::value >  
-			>
-			void operator()(CON&& con, F&& func) const
+			template<class F>
+			void operator()(size_t const nof_of_iteration, F&& func) const
 			{
-				(*this)( 0, con.size(), std::forward<F>(func) );
+				(*this)( 0, nof_of_iteration, std::forward<F>(func) );
 			}
 		};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -183,14 +180,11 @@ namespace sgm
 				);				
 			}
 
-			template
-			<	class CON, class F, class = std::enable_if_t< is_iterable<CON>::value >  
-			>
-			void operator()(CON&& con, F&& func) const
+			template<class F>
+			void operator()(size_t const nof_of_iteration, F&& func) const
 			{
-				(*this)( 0, con.size(), std::forward<F>(func) );
+				(*this)( 0, nof_of_iteration, std::forward<F>(func) );
 			}
-		
 		};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 

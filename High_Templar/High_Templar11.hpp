@@ -9,6 +9,7 @@
 
 #include "..\indexable\Serial.hpp"
 #include "..\Concurrency\Concurrency.hpp"
+#include "..\Type_Decorator\Type_Decorator.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -17,19 +18,21 @@ namespace sgm
 {
 	namespace ht
 	{
-		
-		
-
+		struct _implementation : No_Making
+		{
+			
+		};
 
 
 	#if 0
+
 		template
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			HT_implementation<>
+			_implementation<>
 		)
 
 
