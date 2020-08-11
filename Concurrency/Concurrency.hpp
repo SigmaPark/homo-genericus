@@ -17,7 +17,10 @@ namespace sgm
 		{
 			template<class T> using type = T;
 
-			struct Nof_HW_Core{  enum : unsigned{DYNAMIC = unsigned(-1)};  };
+			struct Nof_HW_Core
+			{  
+				enum : unsigned{DYNAMIC = unsigned(-1)};  
+			};
 
 
 		protected:
@@ -133,14 +136,14 @@ namespace sgm
 			}
 
 
-			size_t const _nof_task;
+			unsigned const _nof_task;
 
 
 		public:
 			enum : unsigned{NUMBER_OF_TASK = _Parallel_Helper::Nof_HW_Core::DYNAMIC};
 
 
-			Parallel(size_t const nof_task) : _nof_task(nof_task){}
+			Parallel(unsigned const nof_task) : _nof_task(nof_task){}
 
 
 			Parallel(bool const throw_when_core_detection_fails = false)

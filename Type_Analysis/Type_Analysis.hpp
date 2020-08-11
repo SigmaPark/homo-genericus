@@ -160,7 +160,13 @@ namespace sgm
 		template<class Q, class...TYPES>
 		class among<Q, TYPES...>
 		{
-		public: enum : bool{value = std::is_same<T, Q>::value ? true : among<TYPES...>::value};
+		public: 
+			enum : bool
+			{	value 
+				=	std::is_base_of<T, Q>::value || std::is_same<T, Q>::value 
+					?	true 
+					:	among<TYPES...>::value
+			};
 		};
 
 		template<> class among<> {  public: enum : bool{value = false}; };

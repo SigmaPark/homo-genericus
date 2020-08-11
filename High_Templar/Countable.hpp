@@ -115,7 +115,10 @@ namespace sgm
 		auto operator--()-> iter_t&{  return *this -= 1;  }
 
 
-		auto operator[](N const interval) const-> N{  return *(*this + interval);  }
+		auto operator[](size_t const interval) const-> N
+		{
+			return *( *this + static_cast<N>(interval) );  
+		}
 
 
 		bool operator==(iter_t const itr) const{  return **this == *itr;  }
@@ -138,17 +141,17 @@ namespace sgm
 	public:
 		Countable(N const length, N const offset = 0) : _length(length), _offset(offset){}
 
-		N size() const{  return _length;  }
+		size_t size() const{  return static_cast<size_t>(_length);  }
 
 		using iterator_t = Count_iterator<N, true>;
 		using riterator_t = Count_iterator<N, false>;
 
 		auto cbegin() const SGM_DECLTYPE_AUTO(  iterator_t(_offset)  )
-		auto cend() const SGM_DECLTYPE_AUTO(  iterator_t(_offset + size())  )
+		auto cend() const SGM_DECLTYPE_AUTO(  iterator_t(_offset + _length)  )
 		auto begin() const SGM_DECLTYPE_AUTO(  cbegin()  )
 		auto end() const SGM_DECLTYPE_AUTO(  cend()  )
 
-		auto crbegin() const SGM_DECLTYPE_AUTO(  riterator_t(_offset + size() - 1)  )
+		auto crbegin() const SGM_DECLTYPE_AUTO(  riterator_t(_offset + _length - 1)  )
 		auto crend() const SGM_DECLTYPE_AUTO(  riterator_t(_offset - 1)  )
 		auto rbegin() const SGM_DECLTYPE_AUTO(  crbegin()  )
 		auto rend() const SGM_DECLTYPE_AUTO(  crend()  )

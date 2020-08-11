@@ -10,6 +10,7 @@
 #include "..\indexable\Serial.hpp"
 #include "..\Concurrency\Concurrency.hpp"
 #include "..\Type_Decorator\Type_Decorator.hpp"
+#include "..\Flags\Flags.hpp"
 
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
@@ -18,32 +19,159 @@ namespace sgm
 {
 	namespace ht
 	{
-		struct _implementation : No_Making
+
+
+		template<unsigned NOF_TASK = par::_Parallel_Helper::Nof_HW_Core::DYNAMIC>
+		struct Par : Flag< Par<NOF_TASK> >, par::Parallel<NOF_TASK>{};
+
+		template<class maybe_Par>
+		struct is_Par : std::is_base_of<par::_Parallel_Helper, maybe_Par>{};
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<class T, class>
+		struct _Decorated{  using type = T;  };
+
+		template<class T, class...FLAGS>
+		struct _Decorated< T, Flag<FLAGS...> >
 		{
-			
+			using type = typename Decorated<T>::template by<FLAGS...>::type;
 		};
 
+		template<class T, class FLAGSET>
+		using _Decorated_t = typename _Decorated<T, FLAGSET>::type;
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
-	#if 0
+
+		struct _implementation : No_Making
+		{	
+			enum class Mode{SEQUANCIAL, MULTI_THREAD};
+
+
+			template
+			<	class FS
+			,	Mode
+				=	FS::template has<par::_Parallel_Helper>::value
+					?	Mode::MULTI_THREAD
+					:	Mode::SEQUANCIAL
+			>
+			struct Morph_impl;
+
+
+			template<class FS>
+			struct Morph_impl<FS, Mode::SEQUANCIAL>
+			{
+				template
+				<	class CON, class FUNC
+				,	class y_t = decltype( Declval<FUNC>()(*Declval<CON>().begin()) )
+				,	class elem_t = _Decorated_t<y_t, FS>
+				>
+				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+				{
+					Serial<elem_t> res(con.size());
+
+					for(auto const& x : con)
+						res >> func(x);
+
+					return res;
+				}
+			};
+
+
+			template<class FS>
+			struct Morph_impl<FS, Mode::MULTI_THREAD>
+			{
+			private:
+				template<class MUL, bool = MUL::NUMBER_OF_TASK != 1> struct Tasker;
+
+				template<class MUL>
+				struct Tasker<MUL, true>
+				{
+					template<class elem_t, class CON, class FUNC>
+					static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+					{
+						Serial<elem_t> res( con.size(), func(*con.begin()) );
+
+						MUL()
+						(	res.size()
+						,	[&con, &res, &func](size_t const idx_begin, size_t idx_end)
+							{
+								while(idx_end-->idx_begin)
+									res[idx_end] = func(con.begin()[idx_end]);
+							}
+						);
+
+						return res;						
+					}
+				};
+
+				template<class MUL>
+				struct Tasker<MUL, false>
+				{
+					template<class elem_t, class CON, class FUNC>
+					static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+					{
+						return
+						Morph_impl<FS, Mode::SEQUANCIAL>::calc
+						(	std::forward<CON>(con), std::forward<FUNC>(func)
+						);						
+					}
+				};
+
+
+			public:
+				template
+				<	class CON, class FUNC
+				,	class y_t = decltype( Declval<FUNC>()(*Declval<CON>().begin()) )
+				,	class elem_t = _Decorated_t<y_t, FS>
+				>
+				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+				{
+					static_assert
+					(	sgm::is_random_access_iterator<decltype(con.begin())>::value
+					,	"the iterable should have random-access iterator for parallelization."
+					);
+
+					if(con.size() == 0)
+						return Serial<elem_t>{};
+
+					//using Multi_Tasker = Satisfying_flag<is_Par, FS>;
+
+					return 
+					Tasker< Satisfying_flag<is_Par, FS> >::calc<elem_t>
+					(	std::forward<CON>(con), std::forward<FUNC>(func)
+					);
+				}
+			};
+
+
+		};// end of struct _implementation
+		//========//========//========//========//=======#//========//========//========//========
+
 
 		template
 		<	class...FLAGS, class CON, class FUNC
-		,	class = Guaranteed_t< is_iterable<CON>::value >
+		,	class = std::enable_if_t< is_iterable<CON>::value >
 		>
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			_implementation<>
+			_implementation::Morph_impl< Flag<FLAGS...> >::calc
+			(	std::forward<CON>(con), std::forward<FUNC>(func)
+			)
 		)
 
 
 		template
 		<	class...ARGS, class FLAGSET, class CON, class FUNC
-		,	class = Guaranteed_t< sizeof...(ARGS) <= 2 >
+		,	class = std::enable_if_t< sizeof...(ARGS) <= 2 >
 		>
-		static auto Morph(FLAGSET fset, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		static auto Morph(FLAGSET, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-
+			_implementation::Morph_impl<FLAGSET>::calc
+			(	std::forward<CON>(con), std::forward<FUNC>(func)
+			)
 		)
+	#if 0
 
 
 		template

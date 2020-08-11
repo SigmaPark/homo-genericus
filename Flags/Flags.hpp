@@ -98,6 +98,25 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	template< template<class...> class, class >
+	struct _Satisfying{  using flag = void;  };
+
+	template< template<class...> class CONDITION, class F, class...FLAGS >
+	struct _Satisfying< CONDITION, Flag<F, FLAGS...> >
+	{
+		using flag 
+		=	std::conditional_t
+			<	CONDITION<F>::value
+			,	F
+			,	typename _Satisfying< CONDITION, Flag<FLAGS...> >::flag
+			>;
+	};
+
+	template< template<class...> class CONDITION, class FLAGSET >
+	using Satisfying_flag = typename _Satisfying<CONDITION, FLAGSET>::flag;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
 	template<class, class...> struct FlagMatching;
 
 	template<class Q> struct FlagMatching<Q> : No_Making{  enum{number = 0};  };

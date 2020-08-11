@@ -30,7 +30,7 @@ private:
 	}
 
 
-	struct SHARE{  template<class T> using type = Pinweight<T>;  };
+	struct SHARE : Flag<SHARE>{  template<class T> using type = Pinweight<T>;  };
 	struct CREFER{  template<class T> using type = constAvatar<T>;  };
 
 
@@ -43,7 +43,7 @@ public:
 		);		
 	}
 
-#if 0
+
 	static void MorphTest()
 	{
 		auto negate = [](int x)-> int{  return -x;  };
@@ -51,16 +51,14 @@ public:
 
 		assert
 		(	is_Equal(  ht::Morph( Countable<int>(5, 1), negate ), answer  )
-		&&	is_Equal(  ht::Morph( SHARE(), Countable(5, 1), negate ), answer  )
-		&&	is_Equal(  ht::Morph<SHARE>( Countable(5, 1), negate ), answer  )
+		&&	is_Equal(  ht::Morph( SHARE(), Countable<int>(5, 1), negate ), answer  )
+		&&	is_Equal(  ht::Morph<SHARE>( Countable<int>(5, 1), negate ), answer  )
 		&&	is_Equal
-			(	ht::Morph( Countable(100000, 1), negate )
-			,	ht::Morph<Parallel_Proc>( Countable(100000, 1), negate )
+			(	ht::Morph( Countable<int>(100000, 1), negate )
+			,	ht::Morph< ht::Par<> >( Countable<int>(100000, 1), negate )
 			)
 		);
-		
 	}
-#endif
 
 
 	template<unsigned> static void Case();
@@ -122,6 +120,7 @@ public:
 int main()
 {
 	Tutorial::CountableClass();
+	Tutorial::MorphTest();
 
 	//Tutorial::Case<1>();
 	//Tutorial::Case<2>();
