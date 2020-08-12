@@ -30,8 +30,15 @@ private:
 	}
 
 
-	struct SHARE : Flag<SHARE>{  template<class T> using type = Pinweight<T>;  };
-	struct CREFER{  template<class T> using type = constAvatar<T>;  };
+	struct SHARE : Flag<SHARE>, Type_Decorator
+	{  
+		template<class T> using type = Pinweight<T>;  
+	};
+
+	struct CREFER : Flag<CREFER>, Type_Decorator
+	{
+		template<class T> using type = constAvatar<T>;  
+	};
 
 
 public:
@@ -49,13 +56,13 @@ public:
 		auto negate = [](int x)-> int{  return -x;  };
 		auto answer = std::vector<int>{ -1, -2, -3, -4, -5 };
 
+
 		assert
 		(	is_Equal(  ht::Morph( Countable<int>(5, 1), negate ), answer  )
-		&&	is_Equal(  ht::Morph( SHARE(), Countable<int>(5, 1), negate ), answer  )
 		&&	is_Equal(  ht::Morph<SHARE>( Countable<int>(5, 1), negate ), answer  )
 		&&	is_Equal
 			(	ht::Morph( Countable<int>(100000, 1), negate )
-			,	ht::Morph< ht::Par<> >( Countable<int>(100000, 1), negate )
+			,	ht::Morph< ht::Par<4>, SHARE >( Countable<int>(100000, 1), negate )
 			)
 		);
 	}

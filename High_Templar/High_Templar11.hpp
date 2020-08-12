@@ -21,16 +21,53 @@ namespace sgm
 	{
 
 
-		template<unsigned NOF_TASK = par::_Parallel_Helper::Nof_HW_Core::DYNAMIC>
-		struct Par : Flag< Par<NOF_TASK> >, par::Parallel<NOF_TASK>{};
+		enum : unsigned{AUTO_OR = par::_Parallel_Helper::Nof_HW_Core::DYNAMIC};
+
 
 		template<class maybe_Par>
 		struct is_Par : std::is_base_of<par::_Parallel_Helper, maybe_Par>{};
+
+
+		/**	
+		*	<N, whatever> : N tasks
+		*	AUTO_OR, AUTO_OR : Auto detection or sequancial if failed. Default setting
+		*	AUTO_OR, N : Auto detection or N tasks if failed.
+		*	AUTO_OR, 0 : Auto detection or throw exception
+		*/
+		template<unsigned NOF_TASK1 = AUTO_OR, unsigned NOF_TASK2 = NOF_TASK1> 
+		struct Par : Flag< Par<NOF_TASK1, NOF_TASK2> >, par::Parallel<NOF_TASK1>{};
+
+
+		template<unsigned N>
+		struct Par<AUTO_OR, N> : Flag< Par<AUTO_OR, N> >, par::Parallel<>
+		{
+			template<class F>
+			void operator()(size_t const nof_iteration, F&& func) const
+			{
+				if(par::Parallel<>::number_of_task() != 0)
+					par::Parallel<>::operator()( nof_iteration, std::forward<F>(func) );
+				else
+					par::Parallel<N>()( nof_iteration, std::forward<F>(func) );
+			}
+		};
+
+
+		template<>
+		struct Par<AUTO_OR, AUTO_OR> : Flag< Par<AUTO_OR, AUTO_OR> >, par::Parallel<>
+		{
+			Par() : par::Parallel<>(true){}
+		};
+
+
+		template<>
+		struct Par<AUTO_OR, 0> : Flag< Par<AUTO_OR, 0> >, par::Parallel<>
+		{
+			Par() : par::Parallel<>(false){}
+		};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		template<class T, class>
-		struct _Decorated{  using type = T;  };
+		template<class T, class> struct _Decorated{  using type = T;  };
 
 		template<class T, class...FLAGS>
 		struct _Decorated< T, Flag<FLAGS...> >
@@ -81,45 +118,6 @@ namespace sgm
 			template<class FS>
 			struct Morph_impl<FS, Mode::MULTI_THREAD>
 			{
-			private:
-				template<class MUL, bool = MUL::NUMBER_OF_TASK != 1> struct Tasker;
-
-				template<class MUL>
-				struct Tasker<MUL, true>
-				{
-					template<class elem_t, class CON, class FUNC>
-					static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
-					{
-						Serial<elem_t> res( con.size(), func(*con.begin()) );
-
-						MUL()
-						(	res.size()
-						,	[&con, &res, &func](size_t const idx_begin, size_t idx_end)
-							{
-								while(idx_end-->idx_begin)
-									res[idx_end] = func(con.begin()[idx_end]);
-							}
-						);
-
-						return res;						
-					}
-				};
-
-				template<class MUL>
-				struct Tasker<MUL, false>
-				{
-					template<class elem_t, class CON, class FUNC>
-					static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
-					{
-						return
-						Morph_impl<FS, Mode::SEQUANCIAL>::calc
-						(	std::forward<CON>(con), std::forward<FUNC>(func)
-						);						
-					}
-				};
-
-
-			public:
 				template
 				<	class CON, class FUNC
 				,	class y_t = decltype( Declval<FUNC>()(*Declval<CON>().begin()) )
@@ -132,15 +130,24 @@ namespace sgm
 					,	"the iterable should have random-access iterator for parallelization."
 					);
 
+
 					if(con.size() == 0)
 						return Serial<elem_t>{};
+					else
+					{
+						Serial<elem_t> res( con.size(), func(*con.begin()) );
 
-					//using Multi_Tasker = Satisfying_flag<is_Par, FS>;
+						Satisfying_flag<is_Par, FS>()
+						(	res.size()
+						,	[&con, &res, &func](size_t const idx_begin, size_t idx_end)
+							{
+								while(idx_end-->idx_begin)
+									res[idx_end] = func(con.begin()[idx_end]);
+							}
+						);
 
-					return 
-					Tasker< Satisfying_flag<is_Par, FS> >::calc<elem_t>
-					(	std::forward<CON>(con), std::forward<FUNC>(func)
-					);
+						return res;
+					}
 				}
 			};
 
@@ -160,17 +167,6 @@ namespace sgm
 			)
 		)
 
-
-		template
-		<	class...ARGS, class FLAGSET, class CON, class FUNC
-		,	class = std::enable_if_t< sizeof...(ARGS) <= 2 >
-		>
-		static auto Morph(FLAGSET, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
-		(
-			_implementation::Morph_impl<FLAGSET>::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func)
-			)
-		)
 	#if 0
 
 
@@ -180,12 +176,6 @@ namespace sgm
 		>
 		static auto Filter(CON&& con, FUNC&& func);
 
-
-		template
-		<	class...ARGS, class FLAGSET, class CON, class FUNC
-		,	class = Guaranteed_t< sizeof...(ARGS) <=2 >
-		>
-		static auto Filter(FLAGSET fset, CON&& con, FUNC&& func);
 	#endif
 
 

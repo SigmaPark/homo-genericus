@@ -134,48 +134,48 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	
-	template< template<class> class FM, class BRANCH >
-	struct Branch : No_Making
-	{
-	protected: 
-		template<class Q> using KeyFlag = FM<Q>;
-
-		template<class...FLAGS> struct Case
-		{
-			enum{ON = KeyFlag< Flag<FLAGS...> >::number};  
-		};
-
-
-	public:
-		template
-		<	class...TYPES, class FLAG_PARAM, class...ARGS
-		,	class = std::enable_if_t< is_FlagSet<FLAG_PARAM>::value > 
-		>
-		static auto calc(FLAG_PARAM, ARGS&&...args) SGM_DECLTYPE_AUTO
-		(
-			BRANCH::template Switch<FLAG_PARAM>::calc<TYPES...>( std::forward<ARGS>(args)... )
-		)
-
-
-		template<class...FLAGS, class...ARGS>
-		static auto calc(ARGS&&...args) SGM_DECLTYPE_AUTO
-		( 
-			BRANCH::template Switch< Flag<FLAGS...> >::calc( std::forward<ARGS>(args)... )
-		)
-	};
-
-
-#ifndef SGM_FLAG_SWITCH
-	#define SGM_FLAG_SWITCH template< class FLAG, int = KeyFlag<FLAG>::number > struct Switch
-#else
-	#error SGM_FLAG_SWITCH was already defined somewhere else.
-#endif
-
-#ifndef SGM_FLAG_CASE
-	#define SGM_FLAG_CASE(...) template<class F> struct Switch< F, Case<__VA_ARGS__>::ON >
-#else
-	#error SGM_FLAG_CASE was already defined somewhere else.
-#endif
+//	template< template<class> class FM, class BRANCH >
+//	struct Branch : No_Making
+//	{
+//	protected: 
+//		template<class Q> using KeyFlag = FM<Q>;
+//
+//		template<class...FLAGS> struct Case
+//		{
+//			enum{ON = KeyFlag< Flag<FLAGS...> >::number};  
+//		};
+//
+//
+//	public:
+//		template
+//		<	class...TYPES, class FLAG_PARAM, class...ARGS
+//		,	class = std::enable_if_t< is_FlagSet<FLAG_PARAM>::value > 
+//		>
+//		static auto calc(FLAG_PARAM, ARGS&&...args) SGM_DECLTYPE_AUTO
+//		(
+//			BRANCH::template Switch<FLAG_PARAM>::calc<TYPES...>( std::forward<ARGS>(args)... )
+//		)
+//
+//
+//		template<class...FLAGS, class...ARGS>
+//		static auto calc(ARGS&&...args) SGM_DECLTYPE_AUTO
+//		( 
+//			BRANCH::template Switch< Flag<FLAGS...> >::calc( std::forward<ARGS>(args)... )
+//		)
+//	};
+//
+//
+//#ifndef SGM_FLAG_SWITCH
+//	#define SGM_FLAG_SWITCH template< class FLAG, int = KeyFlag<FLAG>::number > struct Switch
+//#else
+//	#error SGM_FLAG_SWITCH was already defined somewhere else.
+//#endif
+//
+//#ifndef SGM_FLAG_CASE
+//	#define SGM_FLAG_CASE(...) template<class F> struct Switch< F, Case<__VA_ARGS__>::ON >
+//#else
+//	#error SGM_FLAG_CASE was already defined somewhere else.
+//#endif
 
 
 }

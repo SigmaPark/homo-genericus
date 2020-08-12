@@ -98,6 +98,9 @@ namespace sgm
 			enum : unsigned{NUMBER_OF_TASK = NOF_TASK};
 
 
+			auto number_of_task() const-> unsigned{  return NUMBER_OF_TASK;  }
+
+
 			template<class F>
 			void operator()(size_t const idx_begin, size_t const idx_end, F&& func) const
 			{
@@ -112,9 +115,9 @@ namespace sgm
 			}
 
 			template<class F>
-			void operator()(size_t const nof_of_iteration, F&& func) const
+			void operator()(size_t const nof_iteration, F&& func) const
 			{
-				(*this)( 0, nof_of_iteration, std::forward<F>(func) );
+				(*this)( 0, nof_iteration, std::forward<F>(func) );
 			}
 		};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -169,6 +172,9 @@ namespace sgm
 			auto operator=(Parallel const&)-> Parallel& = delete;
 
 
+			auto number_of_task() const-> unsigned{  return _nof_task;  }
+
+
 			template<class F>
 			void operator()(size_t const idx_begin, size_t const idx_end, F&& func) const
 			{
@@ -184,10 +190,34 @@ namespace sgm
 			}
 
 			template<class F>
-			void operator()(size_t const nof_of_iteration, F&& func) const
+			void operator()(size_t const nof_iteration, F&& func) const
 			{
-				(*this)( 0, nof_of_iteration, std::forward<F>(func) );
+				(*this)( 0, nof_iteration, std::forward<F>(func) );
 			}
+		};
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<>
+		struct Parallel<1> : _Parallel_Helper
+		{
+			enum : unsigned{NUMBER_OF_TASK = 1};
+
+
+			auto number_of_task() const-> unsigned{  return 1;  }
+
+
+			template<class F>
+			void operator()(size_t const idx_begin, size_t const idx_end, F&& func) const
+			{
+				func(idx_begin, idx_end);			
+			}
+
+			template<class F>
+			void operator()(size_t const nof_iteration, F&& func) const
+			{
+				(*this)( 0, nof_iteration, std::forward<F>(func) );
+			}			
 		};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
