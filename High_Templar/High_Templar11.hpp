@@ -150,6 +150,72 @@ namespace sgm
 					}
 				}
 			};
+			//--------//--------//--------//--------//-------#//--------//--------//--------//---
+
+
+			template
+			<	class FS
+			,	Mode
+				=	FS::template has<par::_Parallel_Helper>::value
+					?	Mode::MULTI_THREAD
+					:	Mode::SEQUANCIAL
+			>
+			struct Filter_impl;
+
+
+			template<class FS>
+			struct Filter_impl<FS, Mode::SEQUANCIAL>
+			{
+				template
+				<	class CON, class FUNC
+				,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
+				,	class elem_t = _Decorated_t<x_t, FS>
+				>
+				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+				{
+					Serial<elem_t> res(con.size());
+
+					for(auto const& x : con)
+						if( func(x) )
+							res >> x;
+
+					return res;
+				}
+			};
+
+
+			template<class FS>
+			struct Filter_impl<FS, Mode::MULTI_THREAD>
+			{
+				template
+				<	class CON, class FUNC
+				,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
+				,	class elem_t = _Decorated_t<x_t, FS>
+				>
+				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
+				{
+					auto const truth_table
+					=	Morph_impl<FS>::calc( con, std::forward<FUNC>(func) );
+
+					auto const nof_true
+					=	[&truth_table](size_t res)-> size_t
+						{
+							for(auto b : truth_table)
+								if(b) 
+									++res;
+									
+							return res;
+						}(0);
+
+					Serial<elem_t> res(nof_true);
+
+					for(size_t idx = 0;  idx < con.size();  ++idx)
+						if(truth_table[idx])
+							res >> con.begin()[idx];
+
+					return res;
+				}
+			};
 
 
 		};// end of struct _implementation
@@ -167,18 +233,17 @@ namespace sgm
 			)
 		)
 
-	#if 0
-
 
 		template
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto Filter(CON&& con, FUNC&& func);
-
-	#endif
-
-
+		static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		(
+			_implementation::Filter_impl< Flag<FLAGS...> >::calc
+			(	std::forward<CON>(con), std::forward<FUNC>(func)
+			)
+		)
 
 
 	}

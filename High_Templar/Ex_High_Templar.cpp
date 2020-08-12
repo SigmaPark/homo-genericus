@@ -68,33 +68,24 @@ public:
 	}
 
 
-	template<unsigned> static void Case();
-
-	template<> static void Case<1>()
-	{
-	}
-
-
-	template<> static void Case<2>()
-	{
-	}
-
-
-	template<> static void Case<3>()
+	static void FilterTest()
 	{
 		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 		auto answer = std::vector<int>{2, 4, 6, 8, 10};
-		
-		//assert
-		//(	is_Equal(  Filter( indices(10, 1), is_even ), answer  )
-		//&&	is_Equal(  Filter( SHARE(), indices(10, 1), is_even ), answer  )
-		//&&	is_Equal(  Filter<SHARE>( indices(10, 1), is_even ), answer  )
-		//&&	is_Equal
-		//	(	Filter( indices(100000, 1), is_even )
-		//	,	Filter<Parallel_Proc>( indices(100000, 1), is_even )
-		//	)
-		//);
+			
+
+		assert
+		(	is_Equal(  ht::Filter( Countable<int>(10, 1), is_even ), answer  )
+		&&	is_Equal(  ht::Filter<SHARE>( Countable<int>(10, 1), is_even ), answer  )
+		&&	is_Equal
+			(	ht::Filter( Countable<int>(100000, 1), is_even )
+			,	ht::Filter< ht::Par<> >( Countable<int>(100000, 1), is_even )
+			)
+		);
 	}
+
+
+	template<unsigned> static void Case();
 
 
 	template<> static void Case<4>()
@@ -128,6 +119,7 @@ int main()
 {
 	Tutorial::CountableClass();
 	Tutorial::MorphTest();
+	Tutorial::FilterTest();
 
 	//Tutorial::Case<1>();
 	//Tutorial::Case<2>();
