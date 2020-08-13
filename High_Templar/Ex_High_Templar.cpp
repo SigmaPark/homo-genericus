@@ -84,11 +84,8 @@ public:
 		);
 	}
 
-
-	template<unsigned> static void Case();
-
-
-	template<> static void Case<4>()
+	
+	static void FoldTest()
 	{
 		auto minus = [](int res, int const& x)-> int{  return res - x;  };
 
@@ -103,10 +100,6 @@ public:
 	}
 
 
-	template<> static void Case<5>()
-	{
-		//assert(  is_Equal( Countable<size_t>(5), indexable<size_t>{0, 1, 2, 3, 4} )  );
-	}
 
 
 };
@@ -121,11 +114,6 @@ int main()
 	Tutorial::MorphTest();
 	Tutorial::FilterTest();
 
-	//Tutorial::Case<1>();
-	//Tutorial::Case<2>();
-	//Tutorial::Case<3>();
-	//Tutorial::Case<4>();
-	//Tutorial::Case<5>();
 
 	return 0;
 }

@@ -109,7 +109,7 @@ namespace sgm
 					{
 						auto const range = _Ranger(idx_begin, idx_end, NOF_TASK)(d);
 
-						func(range.begin, range.end);
+						func(range.begin, range.end, d);
 					}
 				);				
 			}
@@ -183,7 +183,7 @@ namespace sgm
 					{
 						auto const range = _Ranger(idx_begin, idx_end, _nof_task)(d);
 
-						func(range.begin, range.end);
+						func(range.begin, range.end, d);
 					}
 				,	_nof_task
 				);				
@@ -210,7 +210,7 @@ namespace sgm
 			template<class F>
 			void operator()(size_t const idx_begin, size_t const idx_end, F&& func) const
 			{
-				func(idx_begin, idx_end);			
+				func(idx_begin, idx_end, 0);	
 			}
 
 			template<class F>
