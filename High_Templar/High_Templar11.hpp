@@ -273,7 +273,7 @@ namespace sgm
 			struct Fold_impl<true, FWD, FS, Mode::SEQUANCIAL> : _Fold_Helper
 			{
 				template<class CON, class FUNC, class res_t>
-				static auto fold(CON&& con, FUNC&& func, res_t&& res)-> res_t
+				static auto calc(CON&& con, FUNC&& func, res_t&& res)-> res_t
 				{
 					return
 					Accumulate
@@ -288,15 +288,17 @@ namespace sgm
 			struct Fold_impl<false, FWD, FS, Mode::SEQUANCIAL> : _Fold_Helper
 			{
 				template<class CON, class FUNC>
-				static auto fold(CON&& con, FUNC&& func, std::nullptr_t)
+				static auto calc(CON&& con, FUNC&& func, std::nullptr_t)
 				->	std::decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
 				{
-					auto const bi = itrMethod<FWD>::begin(con);
+					auto bi = itrMethod<FWD>::begin(con);
 					auto const ei = itrMethod<FWD>::end(con);
 
 					assert(bi != ei && L"the container has nothing to fold.\n");
 
-					return Accumulate( std::next(bi), ei, forward<FUNC>(func), *bi );
+					auto init_val = *bi;
+
+					return Accumulate( ++bi, ei, forward<FUNC>(func), init_val );
 				}
 			};
 
@@ -309,13 +311,13 @@ namespace sgm
 				,	class res_t 
 					=	std::decay_t< decltype( *itrMethod<FWD>::begin(Declval<CON>()) ) >
 				>
-				static auto fold(CON&& con, FUNC&& func, std::nullptr_t)-> res_t
+				static auto calc(CON&& con, FUNC&& func, std::nullptr_t)-> res_t
 				{
 					auto const tasker = Satisfying_flag<is_Par, FS>();
 
 					if(con.size() <= tasker.number_of_task())
 						return
-						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::fold
+						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
 						(	forward<CON>(con), forward<FUNC>(func), nullptr
 						);
 					else
@@ -341,7 +343,7 @@ namespace sgm
 						);
 
 						return
-						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::fold
+						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
 						(	sum, forward<FUNC>(func), nullptr
 						);
 					}
@@ -378,7 +380,7 @@ namespace sgm
 
 			public:
 				template<class CON, class FUNC, class res_t>
-				static auto fold(CON&& con, FUNC&& func, res_t&& res)-> res_t
+				static auto calc(CON&& con, FUNC&& func, res_t&& res)-> res_t
 				{
 					static_assert
 					(	std::is_convertible< res_t, std::decay_t<decltype(*con.begin())> >
@@ -389,7 +391,7 @@ namespace sgm
 					return 
 					_Last_fold<FWD>::calc
 					(	func, forward<res_t>(res)
-					,	Fold_impl<false, FWD, FS, Mode::MULTI_THREAD>::fold
+					,	Fold_impl<false, FWD, FS, Mode::MULTI_THREAD>::calc
 						(	forward<CON>(con), func, nullptr
 						)
 					);
@@ -422,6 +424,52 @@ namespace sgm
 		(
 			_implementation::Filter_impl< Flag<FLAGS...> >::calc
 			(	forward<CON>(con), forward<FUNC>(func)
+			)
+		)
+
+
+		template
+		<	class...FLAGS, class CON, class FUNC, class init_t
+		,	class = std::enable_if_t< is_iterable<CON>::value >
+		>
+		static auto Fold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
+		(
+			_implementation::Fold_impl< true, true, Flag<FLAGS...> >::calc
+			(	forward<CON>(con), forward<FUNC>(func), forward<init_t>(init)
+			)
+		)
+
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = std::enable_if_t< is_iterable<CON>::value >
+		>
+		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		(
+			_implementation::Fold_impl< false, true, Flag<FLAGS...> >::calc
+			(	forward<CON>(con), forward<FUNC>(func), nullptr
+			)
+		)
+
+
+		template
+		<	class...FLAGS, class CON, class FUNC, class init_t
+		,	class = std::enable_if_t< is_iterable<CON>::value >
+		>
+		static auto rFold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
+		(
+			_implementation::Fold_impl< true, false, Flag<FLAGS...> >::calc
+			(	forward<CON>(con), forward<FUNC>(func), forward<init_t>(init)
+			)
+		)
+
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = std::enable_if_t< is_iterable<CON>::value >
+		>
+		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		(
+			_implementation::Fold_impl< false, false, Flag<FLAGS...> >::calc
+			(	forward<CON>(con), forward<FUNC>(func), nullptr
 			)
 		)
 

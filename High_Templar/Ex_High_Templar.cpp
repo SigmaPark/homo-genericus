@@ -89,14 +89,13 @@ public:
 	{
 		auto minus = [](int res, int const& x)-> int{  return res - x;  };
 
-		//assert
-		//(	Fold( indices(3, 1), minus, 10 ) == 4
-		//&&	Fold( indices(3, 1), minus ) == -4
-		//&&	Fold<SHARE>( indices(3, 1), minus ) == -4
-		//&&	rFold( indices(3, 1), minus, 10 ) == 4
-		//&&	rFold( indices(3, 1), minus ) == 0
-		//&&	rFold( SHARE(), indices(3, 1), minus, 10 ) == 4
-		//);
+		assert
+		(	ht::Fold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	ht::Fold( Countable<int>(3, 1), minus ) == -4
+		&&	ht::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
+		&&	ht::rFold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	ht::rFold( Countable<int>(3, 1), minus ) == 0
+		);
 	}
 
 
@@ -105,14 +104,12 @@ public:
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
-
-
-
 int main()
 {
 	Tutorial::CountableClass();
 	Tutorial::MorphTest();
 	Tutorial::FilterTest();
+
 
 
 	return 0;
