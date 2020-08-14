@@ -185,6 +185,103 @@ namespace sgm
 	{
 		enum : bool{value = is_iterator<T>::value && Has_Operator_index<T>::value};
 	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template
+	<	class ITR
+	,	bool = Has_Operator_Post_Decrease<ITR>::value
+	,	bool = is_random_access_iterator<ITR>::value		
+	>
+	struct _Travel;
+
+
+	template<class ITR>
+	struct _Travel<ITR, false, false>
+	{
+		static auto next(ITR itr, size_t steps = 1)-> ITR
+		{
+			while(steps-->0)
+				itr++;
+
+			return itr;
+		}
+	};
+
+
+	template<class ITR>
+	struct _Travel<ITR, true, false> : _Travel<ITR, false, false>
+	{
+		static auto prev(ITR itr, size_t steps = 1)-> ITR
+		{
+			while(steps-->0)
+				itr--;
+
+			return itr;
+		}
+	};
+
+
+	template<class ITR>
+	struct _Travel<ITR, true, true>
+	{
+		static auto next(ITR itr, long long steps = 1)-> ITR{  return itr + steps;  }
+		static auto prev(ITR itr, long long steps = 1)-> ITR{  return itr - steps;  }
+	};
+
+
+	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
+	static auto Next(ITR const itr, long long steps = 1)-> ITR
+	{
+		return _Travel<ITR>::next(itr, steps);  
+	}
+
+	template
+	<	class ITR
+	,	class = Guaranteed_t< is_iterator<ITR>::value && Has_Operator_Post_Decrease<ITR>::value >
+	>
+	static auto Prev(ITR const itr, long long steps = 1)-> ITR
+	{
+		return _Travel<ITR>::prev(itr, steps);  
+	}
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<class ITR1, class ITR2> 
+	struct Dual_iterator
+	{
+		ITR1 _1;  
+		ITR2 _2;
+
+
+		Dual_iterator(ITR1 itr1, ITR2 itr2) : _1(itr1), _2(itr2){}
+
+		
+		auto operator++(int)-> Dual_iterator
+		{
+			auto const itr = *this;
+
+			_1++,  _2++;
+
+			return itr;
+		}
+
+		auto operator++()-> Dual_iterator&
+		{
+			++_1,  ++_2;
+
+			return *this;
+		}
+	};
+	
+
+	template<class ITR1, class ITR2>
+	static auto Zip_iterator(ITR1&& itr1, ITR2&& itr2) SGM_DECLTYPE_AUTO
+	(
+		Dual_iterator< std::decay_t<ITR1>, std::decay_t<ITR2> >
+		(	std::forward<ITR1>(itr1), std::forward<ITR2>(itr2) 
+		)
+	)
 
 
 } // end of namespace sgm

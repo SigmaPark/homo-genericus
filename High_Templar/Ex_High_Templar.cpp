@@ -2,8 +2,6 @@
 #include <array>
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Avatar\Avatar.hpp"
-#include "Countable.hpp"
-
 
 #include "High_Templar.hpp"
 
@@ -42,7 +40,7 @@ private:
 
 
 public:
-	static void CountableClass()
+	static void CountableTest()
 	{
 		assert
 		(	is_Equal( Countable<int>(5, 1), std::vector<int>{1, 2, 3, 4, 5} )
@@ -79,15 +77,21 @@ public:
 		&&	is_Equal(  ht::Filter<SHARE>( Countable<int>(10, 1), is_even ), answer  )
 		&&	is_Equal
 			(	ht::Filter( Countable<int>(100000, 1), is_even )
-			,	ht::Filter< ht::Par<> >( Countable<int>(100000, 1), is_even )
+			,	ht::Filter< ht::Par<>, SHARE >( Countable<int>(100000, 1), is_even )
 			)
 		);
+
+		Serial<int> const sr1 = Countable<int>(10, 1);
+		
+		assert(  is_Equal( ht::Filter<CREFER>(sr1, is_even), answer )  );
 	}
 
 	
 	static void FoldTest()
 	{
 		auto minus = [](int res, int const& x)-> int{  return res - x;  };
+		auto plus = [](int const res, int const x)-> int{  return res + x;  };
+
 
 		assert
 		(	ht::Fold( Countable<int>(3, 1), minus, 10 ) == 4
@@ -95,7 +99,39 @@ public:
 		&&	ht::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
 		&&	ht::rFold( Countable<int>(3, 1), minus, 10 ) == 4
 		&&	ht::rFold( Countable<int>(3, 1), minus ) == 0
+		&&	(	ht::Fold<ht::Par<>>( Countable<int>(1000, 1), plus )
+			==	ht::Fold( Countable<int>(1000, 1), plus )
+			)
 		);
+	}
+
+
+	static void Ex_LeibnizTest()
+	{
+		using namespace sgm::ht;
+
+		size_t const N = 1000000;
+
+		auto is_odd = [](size_t const n)-> bool{  return n % 2 == 1;  };
+		auto plus = [](double const res, double const x)-> double{  return res + x;  };
+
+		auto altered_harmonic 
+		=	[](size_t const n)-> double
+			{
+				auto const den = static_cast<double>(n);
+
+				return n % 4 == 1 ? 1.0 / den : -1.0 / den;
+			};
+
+		double const 
+			quater_pi = acos(.0) * .5,
+			Leibniz 
+			=	Fold<Par<>>
+				(	Morph<Par<>>(  Filter( Countable<>(N, 1), is_odd ), altered_harmonic  )
+				,	plus
+				);
+			
+		assert( abs(quater_pi - Leibniz) < 0.0001);
 	}
 
 
@@ -104,13 +140,15 @@ public:
 };
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
+
 int main()
 {
-	Tutorial::CountableClass();
+	Tutorial::CountableTest();
 	Tutorial::MorphTest();
 	Tutorial::FilterTest();
+	Tutorial::FoldTest();
 
-
+	Tutorial::Ex_LeibnizTest();
 
 	return 0;
 }

@@ -252,27 +252,18 @@ namespace sgm
 
 
 	protected:
-		template<class ITR1, class ITR2> struct _dual_iterator{  ITR1 _1;  ITR2 _2;  };
-		
-		template<class ITR1, class ITR2>
-		static auto _zip_iterator(ITR1 itr1, ITR2 itr2) SGM_DECLTYPE_AUTO
-		(
-			_dual_iterator<ITR1, ITR2>{itr1, itr2}
-		)
-
-
 		template
 		<	bool TEMP_HOST = false, class ITR, class CON
 		,	class RES_ITR = decltype(Declval<CON>().begin())
 		,	class = std::enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
 		>
-		static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> _dual_iterator<ITR, RES_ITR>
+		static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> Dual_iterator<ITR, RES_ITR>
 		{
 			RES_ITR itr = con.begin();
 
 			for ( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
 
-			return _zip_iterator(bi, itr);
+			return Zip_iterator(bi, itr);
 		}
 
 
@@ -525,7 +516,8 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value && !std::is_same< std::decay_t<CON>, Serial >::value  
+				<	is_iterable<CON>::value 
+				&&	!std::is_same< std::decay_t<CON>, Serial >::value  
 				>  
 		>
 		auto operator=(CON&& con)-> Serial&
@@ -629,7 +621,8 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value && !std::is_same< std::decay_t<CON>, Serial >::value
+				<	is_iterable<CON>::value 
+				&&	!std::is_same< std::decay_t<CON>, Serial >::value
 				>
 		> 
 		operator CON() const{  return std::decay_t<CON>(Helper::begin(), end());  }

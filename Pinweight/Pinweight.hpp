@@ -200,6 +200,23 @@ namespace sgm
 	}
 
 
+	template<class T>
+	struct __Root
+	{
+		using type 
+		=	std::conditional_t
+			<	is_Pinweight<T>::value
+			,	typename __Root<typename T::value_t>::type
+			,	std::decay_t<T>
+			>;
+	};
+
+	template<class T> 
+	using Root_t = typename __Root<T>::type;
+
+
+
 } // end of namespace sgm
 
 #endif // end of #ifndef _SGM_PINWEIGHT_
+

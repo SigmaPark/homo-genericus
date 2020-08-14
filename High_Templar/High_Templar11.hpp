@@ -20,7 +20,7 @@ namespace sgm
 	namespace ht
 	{
 
-		using std::forward;
+		
 		enum : unsigned{AUTO_OR = par::_Parallel_Helper::Nof_HW_Core::DYNAMIC};
 
 
@@ -32,7 +32,7 @@ namespace sgm
 		*	<N, whatever> : N tasks
 		*	AUTO_OR, AUTO_OR : Auto detection or sequancial if failed. Default setting
 		*	AUTO_OR, N : Auto detection or N tasks if failed.
-		*	AUTO_OR, 0 : Auto detection or throw exception
+		*	AUTO_OR, 0 : Auto detection or throw exception if failed.
 		*/
 		template<unsigned NOF_TASK1 = AUTO_OR, unsigned NOF_TASK2 = NOF_TASK1> 
 		struct Par : Flag< Par<NOF_TASK1, NOF_TASK2> >, par::Parallel<NOF_TASK1>{};
@@ -44,18 +44,11 @@ namespace sgm
 			template<class F>
 			void operator()(size_t const nof_iteration, F&& func) const
 			{
-				if(par::Parallel<>::number_of_task() != 0)
-					par::Parallel<>::operator()( nof_iteration, forward<F>(func) );
+				if(par::Parallel<>::number_of_task() != 1)
+					par::Parallel<>::operator()( nof_iteration, std::forward<F>(func) );
 				else
-					par::Parallel<N>()( nof_iteration, forward<F>(func) );
+					par::Parallel<N>()( nof_iteration, std::forward<F>(func) );
 			}
-		};
-
-
-		template<>
-		struct Par<AUTO_OR, AUTO_OR> : Flag< Par<AUTO_OR, AUTO_OR> >, par::Parallel<>
-		{
-			Par() : par::Parallel<>(true){}
 		};
 
 
@@ -125,12 +118,6 @@ namespace sgm
 				>
 				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
 				{
-					static_assert
-					(	sgm::is_random_access_iterator<decltype(con.begin())>::value
-					,	"the iterable should have random-access iterator for parallelization."
-					);
-
-
 					if(con.size() == 0)
 						return Serial<elem_t>{};
 					else
@@ -140,11 +127,14 @@ namespace sgm
 						Satisfying_flag<is_Par, FS>()
 						(	res.size()
 						,	[&con, &res, &func]
-							(	size_t const idx_begin, size_t idx_end, unsigned const
+							(	size_t idx_begin, size_t const idx_end, unsigned const
 							)
 							{
-								while(idx_end-->idx_begin)
-									res[idx_end] = func(con.begin()[idx_end]);
+								for
+								(	auto itr = Next(con.begin(), idx_begin)
+								;	idx_begin < idx_end
+								;	res[idx_begin++] = func(*itr++)
+								);
 							}
 						);
 
@@ -197,7 +187,8 @@ namespace sgm
 				static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
 				{
 					auto const truth_table
-					=	Morph_impl<FS>::calc( con, forward<FUNC>(func) );
+					=	Morph_impl<  Flag< Satisfying_flag<is_Par, FS> >  >
+						::	calc( con, std::forward<FUNC>(func) );
 
 					auto const nof_true
 					=	[&truth_table](size_t res)-> size_t
@@ -211,9 +202,13 @@ namespace sgm
 
 					Serial<elem_t> res(nof_true);
 
-					for(size_t idx = 0;  idx < con.size();  ++idx)
-						if(truth_table[idx])
-							res >> con.begin()[idx];
+					for
+					(	auto duo = Zip_iterator<size_t>(0, con.begin())
+					;	duo._1 < truth_table.size()
+					;	duo++
+					)
+						if(truth_table[duo._1])
+							res >> *duo._2;
 
 					return res;
 				}
@@ -225,7 +220,7 @@ namespace sgm
 			{
 			protected:
 				template<class ITR, class FUNC, class res_t>
-				static auto Accumulate(ITR itr, ITR const ei, FUNC&& func, res_t&& res)-> res_t
+				static auto Accumulate(ITR itr, ITR const ei, FUNC&& func, res_t res)-> res_t
 				{
 					while(itr != ei)
 						res = func(res, *itr++);
@@ -278,7 +273,7 @@ namespace sgm
 					return
 					Accumulate
 					(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
-					,	forward<FUNC>(func), forward<res_t>(res)
+					,	std::forward<FUNC>(func), std::forward<res_t>(res)
 					);
 				}
 			};
@@ -291,14 +286,11 @@ namespace sgm
 				static auto calc(CON&& con, FUNC&& func, std::nullptr_t)
 				->	std::decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
 				{
-					auto bi = itrMethod<FWD>::begin(con);
-					auto const ei = itrMethod<FWD>::end(con);
+					auto const bi = itrMethod<FWD>::begin(con), ei = itrMethod<FWD>::end(con);
 
 					assert(bi != ei && L"the container has nothing to fold.\n");
 
-					auto init_val = *bi;
-
-					return Accumulate( ++bi, ei, forward<FUNC>(func), init_val );
+					return Accumulate( Next(bi), ei, std::forward<FUNC>(func), *bi );
 				}
 			};
 
@@ -308,8 +300,8 @@ namespace sgm
 			{
 				template
 				<	class CON, class FUNC
-				,	class res_t 
-					=	std::decay_t< decltype( *itrMethod<FWD>::begin(Declval<CON>()) ) >
+				,	class res_t
+					=	std::decay_t<  decltype(*Declval< std::decay_t<CON> >().begin())  >
 				>
 				static auto calc(CON&& con, FUNC&& func, std::nullptr_t)-> res_t
 				{
@@ -318,7 +310,7 @@ namespace sgm
 					if(con.size() <= tasker.number_of_task())
 						return
 						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
-						(	forward<CON>(con), forward<FUNC>(func), nullptr
+						(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
 						);
 					else
 					{
@@ -334,9 +326,9 @@ namespace sgm
 							)
 							{	
 								auto const 
-									bi = std::next(con.begin(), idx_begin),
-									bi_1 = std::next(bi), 
-									ei = std::next(bi, idx_end - idx_begin);
+									bi = Next(con.begin(), idx_begin),
+									bi_1 = Next(bi), 
+									ei = Next(bi, idx_end - idx_begin);
 								 
 								sum[task_id] = Accumulate(bi_1, ei, func, *bi);
 							}
@@ -344,7 +336,7 @@ namespace sgm
 
 						return
 						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
-						(	sum, forward<FUNC>(func), nullptr
+						(	sum, std::forward<FUNC>(func), nullptr
 						);
 					}
 				}
@@ -363,7 +355,7 @@ namespace sgm
 					template<class FUNC, class T1, class T2>
 					static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
 					(
-						func( forward<T1>(t1), forward<T2>(t2) )
+						func( std::forward<T1>(t1), std::forward<T2>(t2) )
 					)
 				};
 
@@ -373,7 +365,7 @@ namespace sgm
 					template<class FUNC, class T1, class T2>
 					static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
 					(
-						func( forward<T2>(t2), forward<T1>(t1) )
+						func( std::forward<T2>(t2), std::forward<T1>(t1) )
 					)
 				};
 
@@ -390,9 +382,9 @@ namespace sgm
 
 					return 
 					_Last_fold<FWD>::calc
-					(	func, forward<res_t>(res)
+					(	func, std::forward<res_t>(res)
 					,	Fold_impl<false, FWD, FS, Mode::MULTI_THREAD>::calc
-						(	forward<CON>(con), func, nullptr
+						(	std::forward<CON>(con), func, nullptr
 						)
 					);
 				}
@@ -411,7 +403,7 @@ namespace sgm
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Morph_impl< Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func)
+			(	std::forward<CON>(con), std::forward<FUNC>(func)
 			)
 		)
 
@@ -423,7 +415,7 @@ namespace sgm
 		static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Filter_impl< Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func)
+			(	std::forward<CON>(con), std::forward<FUNC>(func)
 			)
 		)
 
@@ -435,7 +427,7 @@ namespace sgm
 		static auto Fold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Fold_impl< true, true, Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func), forward<init_t>(init)
+			(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<init_t>(init)
 			)
 		)
 
@@ -446,7 +438,7 @@ namespace sgm
 		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Fold_impl< false, true, Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func), nullptr
+			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
 			)
 		)
 
@@ -458,7 +450,7 @@ namespace sgm
 		static auto rFold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Fold_impl< true, false, Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func), forward<init_t>(init)
+			(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<init_t>(init)
 			)
 		)
 
@@ -469,307 +461,13 @@ namespace sgm
 		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_implementation::Fold_impl< false, false, Flag<FLAGS...> >::calc
-			(	forward<CON>(con), forward<FUNC>(func), nullptr
+			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
 			)
 		)
 
 
-	}
-}
-
-
-#if 0
-
-namespace sgm
-{
-
-
-	class HT_implementation : No_Making
-	{
-	
-		struct _Branch : No_Making
-		{
-			enum class _Sequancial;
-			enum class _Parallel;
-
-			template<class FLAG>
-			using impl_t
-			=	std::conditional_t
-				<	std::is_base_of< Parallel_Proc, std::decay_t<FLAG> >::value
-				,	_Parallel, _Sequancial
-				>;
-		};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		template< class FLAG, class = typename _Branch::impl_t<FLAG> > struct _Morph_Helper;
-
-
-		template<class FLAG>
-		struct _Morph_Helper<FLAG, _Branch::_Sequancial> : _Branch
-		{
-			template
-			<	class CON, class FUNC
-			,	class y_t = decltype( Declval<FUNC>()(*Declval<CON>().begin()) )
-			,	class elem_t = typename FLAG::template type<y_t>
-			>
-			static auto Morph(FLAG, CON&& con, FUNC&& func)-> indexable<elem_t>
-			{
-				indexable<elem_t> res(con.size());
-
-				for(auto const& x : con)
-					res >> func(x);
-
-				return res;
-			}
-		};
-
-
-		template<class FLAG>
-		struct _Morph_Helper<FLAG, _Branch::_Parallel> : _Branch
-		{
-			template
-			<	class CON, class FUNC
-			,	class y_t = decltype( Declval<FUNC>()(*Declval<CON>().begin()) )
-			,	class elem_t = typename FLAG::template type<y_t>
-			>
-			static auto Morph(FLAG flag, CON&& con, FUNC&& func)-> indexable<elem_t>
-			{
-				static_assert
-				(	sgm::is_random_access_iterator<decltype(con.begin())>::value
-				,	"the iterable should have random-access iterator type for parallelization."
-				);
-
-				if(con.size() == 0)
-					return indexable<elem_t>{};
-
-				indexable<elem_t> res( con.size(), func(*con.begin()) );
-
-				flag.process(con.size() - 1).calc
-				(	[&func, &res, &con](ixSize_t idx, ixSize_t idx_end)-> std::nullptr_t
-					{
-						for(; idx < idx_end; ++idx)
-							res[idx] = func(con.begin()[idx]);
-
-						return nullptr;
-					}
-				,	1
-				);
-
-				return res;
-			}
-		};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-
-
-		template< class FLAG, class = typename _Branch::impl_t<FLAG> > struct _Filter_Helper;
-
-
-		template<class FLAG>
-		struct _Filter_Helper<FLAG, _Branch::_Sequancial> : _Branch
-		{
-			template
-			<	class CON, class FUNC
-			,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
-			,	class elem_t = typename FLAG::template type<x_t>
-			>
-			static auto Filter(FLAG, CON&& con, FUNC&& func)-> indexable<elem_t>
-			{
-				indexable<elem_t> res(con.size());
-
-				for(auto const& x : con)
-					if( func(x) )
-						res >> x;
-
-				return res;
-			}
-		};
-
-
-		template<class FLAG>
-		struct _Filter_Helper<FLAG, _Branch::_Parallel> : _Branch
-		{	
-			template
-			<	class CON, class FUNC
-			,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
-			,	class elem_t = typename FLAG::template type<x_t>
-			>
-			static auto Filter(FLAG flag, CON&& con, FUNC&& func)-> indexable<elem_t>
-			{
-				indexable<bool> const truth_table
-				=	Morph( flag, con, std::forward<FUNC>(func) );
-
-				auto const nof_true
-				=	[](indexable<bool> const& tt)-> ixSize_t
-					{
-						int res = 0, i = 0;
-
-					//#pragma omp parallel for default(shared) private(i) reduction(+:res)
-					//	for(i = 0; i < tt.size(); i++)
-					//		if(tt[i])
-					//			res = res + 1;
-
-						return static_cast<ixSize_t>(res);
-					}(truth_table);
-
-				indexable<elem_t> res(nof_true);
-
-				for(ixSize_t idx = 0; idx < con.size(); ++idx)
-					if(truth_table[idx])
-						res >> con.begin()[idx];
-
-				return res;
-			}
-		};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		struct _Fold_Helper : No_Making
-		{
-
-			template<class FLAG> struct Accumulate;
-
-			template<>
-			struct Accumulate<_Branch::_Sequancial> : No_Making
-			{
-				template<class ITR, class FUNC, class res_t>
-				static auto calc(ITR itr, ITR const ei, FUNC&& func, res_t&& res)-> res_t
-				{
-					while(itr != ei)
-						res = func(res, *itr++);
-
-					return res;
-				}
-			};
-
-
-			template<>
-			struct Accumulate<_Branch::_Parallel> : No_Making
-			{
-				template<class ITR, class FUNC, class res_t>
-				static auto calc(ITR itr, ITR const ei, FUNC&& func, res_t&& res)-> res_t
-				{
-					//while(itr != ei)
-					//	res = func(res, *itr++);
-
-					//return res;
-				}
-			};
-
-
-			template<bool FORWARD> struct itrMethod;
-
-			template<>
-			struct itrMethod<true>
-			{
-				template<class CON>
-				static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.begin()  )
-
-				template<class CON>
-				static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.end()  )
-			};
-
-			template<>
-			struct itrMethod<false>
-			{
-				template<class CON>
-				static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.rbegin()  )
-
-				template<class CON>
-				static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.rend()  )
-			};
-
-		};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-		template<bool HAS_INIT, bool FORWARD, class FLAG> struct _Fold_impl;
-
-
-		template<bool FWD, class FLAG>
-		struct _Fold_impl<true, FWD, FLAG> : _Fold_Helper
-		{
-			template<class CON, class FUNC, class res_t>
-			static auto fold(CON&& con, FUNC&& func, res_t&& res)-> res_t
-			{
-				return
-				Accumulate< _Branch::impl_t<FLAG> >::calc
-				(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
-				,	std::forward<FUNC>(func)
-				,	std::forward<res_t>(res)
-				);
-			}
-		};
-
-
-		template<bool FWD, class FLAG>
-		struct _Fold_impl<false, FWD, FLAG> : _Fold_Helper
-		{
-			template<class CON, class FUNC>
-			static auto fold(CON&& con, FUNC&& func, std::nullptr_t)
-			->	std::decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
-			{
-				auto bi = itrMethod<FWD>::begin(con);
-				auto ei = itrMethod<FWD>::end(con);
-
-				assert(bi != ei && L"the container has nothing to fold.\n");
-
-				return
-				Accumulate< _Branch::impl_t<FLAG> >
-				::	calc( ++bi, ei, std::forward<FUNC>(func), *bi );
-			}
-		};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
-	};
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-//	
-//#ifndef _SGM_MORPH_AND_FILTER_INTERFACE
-//	#define _SGM_MORPH_AND_FILTER_INTERFACE(NAME)	\
-//		template		\
-//		<	class DECO = No_Deco, class CON, class FUNC		\
-//		,	class = Guaranteed_t< is_iterable<CON>::value >	\
-//		>	\
-//		static auto NAME(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO		\
-//		(	\
-//			HT_implementation	\
-//			::	template NAME<DECO>( std::forward<CON>(con), std::forward<FUNC>(func) )	\
-//		)	\
-//		\
-//		\
-//		template		\
-//		<	class...ARGS, class DECO, class CON, class FUNC	\
-//		,	class = Guaranteed_t< sizeof...(ARGS) <= 2 >	\
-//		>	\
-//		static auto NAME(DECO, CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO	\
-//		(	\
-//			NAME<DECO>	\
-//			(	std::conditional_t		\
-//				<	sizeof...(ARGS) >= 1, First_t<ARGS...>, decltype(con)	\
-//				>	\
-//				(con)	\
-//			,	std::conditional_t		\
-//				<	sizeof...(ARGS) >= 2, Nth_t<1, ARGS...>, decltype(func) \
-//				>	\
-//				(func)	\
-//			)	\
-//		)
-//
-//		_SGM_MORPH_AND_FILTER_INTERFACE(Morph)
-//		_SGM_MORPH_AND_FILTER_INTERFACE(Filter)
-//
-//	#undef _SGM_MORPH_AND_FILTER_INTERFACE
-//#else
-//	#error _SGM_MORPH_AND_FILTER_INTERFACE was already defined somewhere else.
-//#endif
-
-
+	}// end of namespace ht
 }// end of namespace sgm
-#endif
+
 
 #endif// end of #ifndef _SGM_HIGH_TEMPLAR11_

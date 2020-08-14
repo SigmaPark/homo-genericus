@@ -85,14 +85,16 @@ namespace sgm
 			return iter;
 		}
 
-		auto operator+(N const interval) const-> iter_t
+		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		auto operator+(_N const interval) const-> iter_t
 		{	
-			return iter_t( _shifted<true>(**this, interval) );
+			return iter_t(  _shifted<true>( **this, static_cast<N>(interval) )  );
 		}
 
-		auto operator-(N const interval) const-> iter_t
+		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		auto operator-(_N const interval) const-> iter_t
 		{
-			return iter_t( _shifted<false>(**this, interval) );
+			return iter_t(  _shifted<false>( **this, static_cast<N>(interval) )  );
 		}
 
 		auto operator-(iter_t const itr) const-> signed long long
@@ -108,9 +110,12 @@ namespace sgm
 			:	-static_cast<signed long long>(du);
 		}
 
+		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		auto operator+=(_N const interval)-> iter_t&{  return *this = *this + interval;  }
+		
+		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		auto operator-=(_N const interval)-> iter_t&{  return *this = *this - interval;  }
 
-		auto operator+=(N const interval)-> iter_t&{  return *this = *this + interval;  }
-		auto operator-=(N const interval)-> iter_t&{  return *this = *this - interval;  }
 		auto operator++()-> iter_t&{  return *this += 1;  }
 		auto operator--()-> iter_t&{  return *this -= 1;  }
 
