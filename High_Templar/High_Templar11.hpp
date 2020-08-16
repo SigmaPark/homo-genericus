@@ -3,10 +3,6 @@
 #ifndef _SGM_HIGH_TEMPLAR11_
 #define _SGM_HIGH_TEMPLAR11_
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-	#error C++11 or higher version language support is required.
-#endif
-
 #include "..\indexable\Serial.hpp"
 #include "..\Concurrency\Concurrency.hpp"
 #include "..\Type_Decorator\Type_Decorator.hpp"
