@@ -4,7 +4,6 @@
 
 
 using namespace sgm;
-using spec::Judge;
 using spec::is_True;
 
 
@@ -84,8 +83,6 @@ static void Test5()
 
 static void Test6()
 {
-	using namespace sgm;
-
 	Pinweight<int> pw;
 
 	Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
@@ -108,8 +105,6 @@ static void Test6()
 
 static void Test7()
 {
-	using namespace sgm;
-
 	Pinweight<double const> pw = 3;
 
 	{
@@ -132,8 +127,10 @@ static void Test7()
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
+
 #include "Test_Pinweight.hpp"
 #include <iostream>
+
 
 void Test_sgm_Pinweight::test()
 {
