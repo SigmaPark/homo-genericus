@@ -3,7 +3,7 @@
 #ifndef _SGM_HIGH_TEMPLAR11_
 #define _SGM_HIGH_TEMPLAR11_
 
-#include "..\indexable\Serial.hpp"
+#include "..\Serial\Serial.hpp"
 #include "..\Concurrency\Concurrency.hpp"
 #include "..\Type_Decorator\Type_Decorator.hpp"
 #include "..\Flags\Flags.hpp"
@@ -305,9 +305,8 @@ namespace sgm
 
 					if(con.size() <= tasker.number_of_task())
 						return
-						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
-						(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
-						);
+						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>
+						::	calc( std::forward<CON>(con), std::forward<FUNC>(func), nullptr );
 					else
 					{
 						Serial<res_t> sum
@@ -331,9 +330,8 @@ namespace sgm
 						);
 
 						return
-						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>::calc
-						(	sum, std::forward<FUNC>(func), nullptr
-						);
+						Fold_impl<false, FWD, FS, Mode::SEQUANCIAL>
+						::	calc( sum, std::forward<FUNC>(func), nullptr );
 					}
 				}
 			};
@@ -379,9 +377,8 @@ namespace sgm
 					return 
 					_Last_fold<FWD>::calc
 					(	func, std::forward<res_t>(res)
-					,	Fold_impl<false, FWD, FS, Mode::MULTI_THREAD>::calc
-						(	std::forward<CON>(con), func, nullptr
-						)
+					,	Fold_impl<false, FWD, FS, Mode::MULTI_THREAD>
+						::	calc( std::forward<CON>(con), func, nullptr )
 					);
 				}
 			};
@@ -398,9 +395,8 @@ namespace sgm
 		>
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			_implementation::Morph_impl< Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func)
-			)
+			_implementation::Morph_impl< Flag<FLAGS...> >
+			::	calc( std::forward<CON>(con), std::forward<FUNC>(func) )
 		)
 
 
@@ -410,9 +406,8 @@ namespace sgm
 		>
 		static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			_implementation::Filter_impl< Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func)
-			)
+			_implementation::Filter_impl< Flag<FLAGS...> >
+			::	calc( std::forward<CON>(con), std::forward<FUNC>(func) )
 		)
 
 
@@ -433,9 +428,8 @@ namespace sgm
 		>
 		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			_implementation::Fold_impl< false, true, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
-			)
+			_implementation::Fold_impl< false, true, Flag<FLAGS...> >
+			::	calc( std::forward<CON>(con), std::forward<FUNC>(func), nullptr )
 		)
 
 
@@ -456,9 +450,8 @@ namespace sgm
 		>
 		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
-			_implementation::Fold_impl< false, false, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
-			)
+			_implementation::Fold_impl< false, false, Flag<FLAGS...> >
+			::	calc( std::forward<CON>(con), std::forward<FUNC>(func), nullptr )
 		)
 
 

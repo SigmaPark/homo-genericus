@@ -204,13 +204,13 @@ namespace sgm
 			enum : unsigned{NUMBER_OF_TASK = 1};
 
 
-			auto number_of_task() const-> unsigned{  return 1;  }
+			auto number_of_task() const-> unsigned{  return NUMBER_OF_TASK;  }
 
 
 			template<class F>
 			void operator()(size_t const idx_begin, size_t const idx_end, F&& func) const
 			{
-				func(idx_begin, idx_end, 0);	
+				func(idx_begin, idx_end, NUMBER_OF_TASK - 1);
 			}
 
 			template<class F>

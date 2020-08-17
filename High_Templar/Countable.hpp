@@ -5,6 +5,7 @@
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
 #include <cassert>
+
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
@@ -97,7 +98,7 @@ namespace sgm
 			return iter_t(  _shifted<false>( **this, static_cast<N>(interval) )  );
 		}
 
-		auto operator-(iter_t const itr) const-> signed long long
+		auto operator-(iter_t const itr) const-> long long
 		{
 			bool const greater_mine = **this > *itr;
 			N const du = greater_mine ? **this - *itr : *itr - **this;
@@ -106,8 +107,8 @@ namespace sgm
 
 			return
 			INCREASING == greater_mine
-			?	static_cast<signed long long>(du)
-			:	-static_cast<signed long long>(du);
+			?	static_cast<long long>(du)
+			:	-static_cast<long long>(du);
 		}
 
 		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
@@ -166,7 +167,9 @@ namespace sgm
 }// end of namespace sgm
 
 
-#ifdef _ITERATOR_
+#include <iterator>
+
+
 namespace std
 {
 	
@@ -183,6 +186,6 @@ namespace std
 
 
 }
-#endif
+
 
 #endif // end of #ifndef _SGM_COUNTABLE_

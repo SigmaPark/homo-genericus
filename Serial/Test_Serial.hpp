@@ -1,6 +1,6 @@
 #pragma once
 
-struct Test_sgm_Serial
+struct Test_sgm_Serial 
 {
 	Test_sgm_Serial() = delete;
 
