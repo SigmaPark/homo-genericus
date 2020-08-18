@@ -104,6 +104,8 @@ namespace sgm
 	{
 		static_assert(!std::is_const<T>::value, "T should be mutable here");
 
+		friend class _sr_iterator_Helper<T>;
+
 		using value_t = std::conditional_t<IS_MUTABLE, T, T const>;
 		using iter_t = Serial_iterator;
 		
