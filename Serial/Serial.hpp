@@ -7,6 +7,8 @@
 #include <cassert>
 #include "..\interface_Traits\interface_Traits.hpp"
 
+#include "..\interface_Traits\Random_Access_iterator.hpp"
+
 #ifndef _SGM_NOEXCEPT
 	#define _SGM_NOEXCEPT throw()
 
@@ -406,6 +408,9 @@ namespace sgm
 	template<class T>
 	class Serial<T, srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 	{
+		static_assert(!std::is_const<T>::value, "T should be mutable for dynamic allocation");
+
+
 		using Helper = Serial<T, srSize::INTERFACE>;
 		using value_t = std::remove_reference_t<T>;
 		using Helper::_core;
@@ -455,7 +460,8 @@ namespace sgm
 		<	class CON
 		,	class 
 			=	std::enable_if_t
-				<	is_iterable<CON>::value && !std::is_same< Serial, std::decay_t<CON> >::value
+				<	is_iterable<CON>::value 
+				&&	!std::is_same< Serial, std::decay_t<CON> >::value
 				>
 		>
 		Serial(CON&& con)

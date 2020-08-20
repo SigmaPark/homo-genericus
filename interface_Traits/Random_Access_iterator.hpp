@@ -75,7 +75,8 @@ namespace sgm
 	class Random_Access_iterator
 	{
 	private:
-		using value_t = decltype( Declval<FUNC>()(size_t(0)) );
+		using _value_t = std::decay_t< decltype(  Declval<FUNC>()( size_t(0) )  ) >;
+		using value_t = std::conditional_t<IS_MUTABLE, _value_t, _value_t const>;
 		using iter_t = Random_Access_iterator;
 
 		friend class _Random_Access_iterator_Helper<FUNC>;
@@ -219,21 +220,29 @@ namespace sgm
 	template<class T, bool IS_MUTABLE>
 	class Serial_Memory_indexer
 	{
-		using value_t = std::conditional_t<IS_MUTABLE, T, T const>;
+	private:
+		T* _arr;
+
 
 	public:
-		Serial_Memory_indexer(value_t* arr) : _arr(arr){}
+		Serial_Memory_indexer(T* const& arr) : _arr(arr){}
 		Serial_Memory_indexer(Serial_Memory_indexer const&) = default;
 
 		auto operator=(Serial_Memory_indexer const&)-> Serial_Memory_indexer& = default;
 
-		auto operator()(size_t const idx) const-> value_t const&{  return *(_arr + idx);  }
-		auto operator()(size_t const idx)-> value_t&{  return *(_arr + idx);  }
 
+		auto operator()(size_t const idx) const-> T const&
+		{
+			return *(_arr + idx);
+		}
 
-	private:
-		value_t* _arr;
+		auto operator()(size_t const idx)-> std::conditional_t<IS_MUTABLE, T, T const>&
+		{
+			return *(_arr + idx);
+		}
 	};
+
+
 
 
 }
