@@ -4,7 +4,6 @@
 #define _SGM_SPECIFICATION_
 
 #include "..\interface_Traits\interface_Traits.hpp"
-
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -53,7 +52,7 @@ namespace sgm
 			{
 				return
 				(	n == 0
-				||	*bi == t && are_all_same_to( std::next(bi), n - 1, t )
+				||	*bi == t && are_all_same_to( Next(bi), n - 1, t )
 				);
 			}
 
@@ -74,7 +73,7 @@ namespace sgm
 			{
 				return
 				(	bi == ei
-				||	*bi == t && are_all_same_to( std::next(bi), ei, t )
+				||	*bi == t && are_all_same_to( Next(bi), ei, t )
 				);
 			}
 		};

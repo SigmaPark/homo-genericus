@@ -153,10 +153,10 @@ namespace sgm
 			auto const has_greater_idx = _idx > itr._idx;
 			auto const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
-			assert
-			(	du <= static_cast<size_t>(std::numeric_limits<long long>::max()) 
-			&&	L"the difference exceeds maximum capacity."
-			);
+			//assert
+			//(	du <= static_cast<size_t>(std::numeric_limits<long long>::max()) 
+			//&&	L"the difference exceeds maximum capacity."
+			//);
 
 			auto const LL_du = static_cast<long long>(du);
 

@@ -122,6 +122,18 @@ namespace sgm
 
 	public: enum : bool{value = has_begin::value && has_end::value && has_size::value};
 	};
+
+
+	template
+	<	class CON1, class CON2
+	,	class 
+		=	std::enable_if_t
+			<	is_iterable<CON1>::value && is_iterable<CON2>::value
+			&&	std::is_same<  std::decay_t< Elem_t<CON1> >, std::decay_t< Elem_t<CON2> >  >
+				::	value
+			>
+	>
+	static auto iterable_cast(CON2&& con)-> CON1{  return CON1(con.begin(), con.end());  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

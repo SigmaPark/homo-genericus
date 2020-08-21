@@ -196,7 +196,7 @@ struct Dynamic : No_Making
 		&&	Judge::are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
 		);
 
-		itb = static_cast<iterable_t>(sr2),
+		itb = iterable_cast<iterable_t>(sr2),
 		is_True
 		(	Judge::have_the_same(itb, sr2)
 		&&	Judge::are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
@@ -521,7 +521,7 @@ struct Static : No_Making
 		&&	Judge::are_all_same_to(itb, type::State::COPY_CONSTRUCTION)
 		);
 
-		itb = static_cast<iterable_t>(sr2),
+		itb = iterable_cast<iterable_t>(sr2),
 		is_True
 		(	Judge::have_the_same(itb, sr2)
 		&&	Judge::are_all_same_to(itb, type::State::COPY_CONSTRUCTION)

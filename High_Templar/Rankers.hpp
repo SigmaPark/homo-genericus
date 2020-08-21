@@ -12,9 +12,9 @@ namespace sgm
 {
 	namespace ht
 	{
-		/* TAB SAVE
-<<<<<<<<<	*/
 
+		/* TAB SAVE BEGIN
+|	|	*/
 template<  class CON, class FUNC, class = std::enable_if_t< is_iterable<CON>::value >  >
 static auto Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
 ->	Serial< std::decay_t<decltype( *con.begin() )> >
@@ -39,8 +39,9 @@ static auto Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
 
 	return Serial<elem_t>(kset);
 }
-/*>>>>>>>
-		TAB SAVE	*/
+/*	TAB SAVE END
+|	|	*/
+
 	}
 }
 

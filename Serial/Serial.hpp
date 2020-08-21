@@ -7,8 +7,6 @@
 #include <cassert>
 #include "..\interface_Traits\interface_Traits.hpp"
 
-#include "..\interface_Traits\Random_Access_iterator.hpp"
-
 #ifndef _SGM_NOEXCEPT
 	#define _SGM_NOEXCEPT throw()
 
@@ -22,16 +20,16 @@ namespace sgm
 	template<class T>
 	class _sr_iterator_Helper : No_Making
 	{
-		template<class, size_t, bool, bool> friend class Serial_iterator;
+		template<class, bool, bool> friend class Serial_iterator;
 
 
 		template
-		<	size_t S, bool M1, bool M2, bool F1, bool F2
-		,	class itr1_t = Serial_iterator<T, S, M1, F1>
-		,	class itr2_t = Serial_iterator<T, S, M2, F2>
+		<	bool M1, bool M2, bool F1, bool F2
+		,	class itr1_t = Serial_iterator<T, M1, F1>
+		,	class itr2_t = Serial_iterator<T, M2, F2>
 		>
 		static auto Substitution
-		(	Serial_iterator<T, S, M1, F1>& itr1, Serial_iterator<T, S, M2, F2> const itr2
+		(	Serial_iterator<T, M1, F1>& itr1, Serial_iterator<T, M2, F2> const itr2
 		)->	itr1_t&
 		{
 			static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
@@ -101,7 +99,7 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class T, size_t S, bool IS_MUTABLE, bool IS_FORWARD>
+	template<class T, bool IS_MUTABLE, bool IS_FORWARD>
 	class Serial_iterator
 	{
 		static_assert(!std::is_const<T>::value, "T should be mutable here");
@@ -125,7 +123,7 @@ namespace sgm
 		,	class 
 			=	std::enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 		>
-		auto operator=(Serial_iterator<T, S, _M, _F> const itr)-> iter_t&
+		auto operator=(Serial_iterator<T, _M, _F> const itr)-> iter_t&
 		{
 			return _sr_iterator_Helper<T>::Substitution(*this, itr);
 		}
@@ -183,10 +181,7 @@ namespace sgm
 			auto const has_greater_idx = _idx > itr._idx;
 			auto const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
-			assert
-			(	du <= static_cast<size_t>(std::numeric_limits<long long>::max()) 
-			&&	L"the difference exceeds maximum capacity."
-			);
+			assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.\n");
 
 			auto const LL_du = static_cast<long long>(du);
 
@@ -311,10 +306,10 @@ namespace sgm
 		_WHEN_STATIC auto size() const-> size_t { return SIZE; }
 
 
-		using iter_t = Serial_iterator<T, S, true, true>;
-		using citer_t = Serial_iterator<T, S, false, true>;
-		using riter_t = Serial_iterator<T, S, true, false>;
-		using criter_t = Serial_iterator<T, S, false, false>;
+		using iter_t = Serial_iterator<T, true, true>;
+		using citer_t = Serial_iterator<T, false, true>;
+		using riter_t = Serial_iterator<T, true, false>;
+		using criter_t = Serial_iterator<T, false, false>;
 
 		auto cbegin() const-> citer_t	{  return citer_t(_core, 0);  }
 		auto begin() const-> citer_t	{  return cbegin();  }
@@ -554,7 +549,7 @@ namespace sgm
 		template<class...ARGS>
 		auto emplace_back(ARGS&&...args)-> Serial&
 		{
-			assert(size() < capacity() && L"can't emplace_back : out of index");
+			assert(size() < capacity() && L"can't emplace_back : out of index.\n");
 
 			new(_core + _size++) value_t( std::forward<ARGS>(args)... );
 
@@ -575,7 +570,7 @@ namespace sgm
 			for 
 			(	assert
 				(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
-				&&	L"cannot merge_back : out of index"
+				&&	L"cannot merge_back : out of index.\n"
 				)	
 			;	bi != ei
 			;	*this >> Move_if<TEMP_HOST>::cast(*bi++) 
@@ -594,7 +589,14 @@ namespace sgm
 		}
 
 
-		auto pop_back(size_t const n = 1)-> Serial&{  return pop_back_from(end() - n);  }
+		auto pop_back(size_t const n = 1)-> Serial&
+		{
+			assert(n <= size() && L"cannot pop_back : out of index.\n");
+
+			return pop_back_from(end() - n);  
+		}
+
+
 		auto clear()-> Serial&{  return pop_back_from(Helper::begin());  }
 
 
@@ -634,8 +636,8 @@ namespace sgm
 				>
 		> 
 		operator CON() const{  return std::decay_t<CON>(Helper::begin(), end());  }
-
-	};
+	};// end of class Serial
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
 }// end of namespace sgm
@@ -652,8 +654,8 @@ namespace std
 {
 
 
-	template<class T, size_t S, bool M, bool F>
-	struct iterator_traits< sgm::Serial_iterator<T, S, M, F> >
+	template<class T, bool M, bool F>
+	struct iterator_traits< sgm::Serial_iterator<T, M, F> >
 	{
 		using iterator_category = std::random_access_iterator_tag;
 		using value_type = T;
