@@ -5,8 +5,8 @@
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
 #include <cassert>
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
 {
@@ -165,27 +165,21 @@ namespace sgm
 
 
 }// end of namespace sgm
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #include <iterator>
 
 
-namespace std
+template<class N, bool INCREASING>
+struct std::iterator_traits< sgm::Count_iterator<N, INCREASING> >
 {
-	
-
-	template<class N, bool INCREASING>
-	struct iterator_traits< sgm::Count_iterator<N, INCREASING> >
-	{
-		using iterator_category = std::random_access_iterator_tag;
-		using value_type = N;
-		using difference_type = signed long long;
-		using pointer = N const*;
-		using reference = N const&;
-	};
-
-
-}
+	using iterator_category = std::random_access_iterator_tag;
+	using value_type = N;
+	using difference_type = signed long long;
+	using pointer = N const*;
+	using reference = N const&;
+};
 
 
 #endif // end of #ifndef _SGM_COUNTABLE_

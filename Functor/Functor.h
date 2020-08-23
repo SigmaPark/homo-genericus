@@ -473,8 +473,9 @@ namespace sgm
 			[clone = *this, ftr](auto&&...args)
 			{
 				auto const [tu1, tu2]
-				=	_Partition< D, std::decay_t<FTR>::DIMENSION >
-					::	calc( std::forward<decltype(args)>(args)... );
+				=	_Partition< D, std::decay_t<FTR>::DIMENSION >::calc
+					(	std::forward<decltype(args)>(args)... 
+					);
 
 				return Params(  clone( Params(tu1) )  ) + Params(  ftr( Params(tu2) )  );
 			} / Dim< D + std::decay_t<FTR>::DIMENSION >;

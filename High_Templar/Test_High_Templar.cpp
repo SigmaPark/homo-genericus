@@ -4,8 +4,8 @@
 
 #include "High_Templar.hpp"
 #include "..\Specification\Specification.hpp"
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 using namespace sgm;
 using spec::Judge;
@@ -76,14 +76,13 @@ static void FoldTest()
 	auto minus = [](int res, int const& x)-> int{  return res - x;  };
 	auto plus = [](int const res, int const x)-> int{  return res + x;  };
 
-
 	is_True
 	(	ht::Fold( Countable<int>(3, 1), minus, 10 ) == 4
 	&&	ht::Fold( Countable<int>(3, 1), minus ) == -4
 	&&	ht::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
 	&&	ht::rFold( Countable<int>(3, 1), minus, 10 ) == 4
 	&&	ht::rFold( Countable<int>(3, 1), minus ) == 0
-	&&	(	ht::Fold<ht::Par<>>( Countable<int>(1000, 1), plus )
+	&&	(	ht::Fold<ht::Par<>>( Countable<int>(1000, 1), plus, int(0) )
 		==	ht::Fold( Countable<int>(1000, 1), plus )
 		)
 	);
@@ -117,8 +116,7 @@ static void Ex_LeibnizTest()
 		
 	is_True( abs(quater_pi - Leibniz) < 0.0001 );
 }
-
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #include "Test_High_Templar.hpp"

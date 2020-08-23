@@ -9,9 +9,8 @@
 
 #ifndef _SGM_NOEXCEPT
 	#define _SGM_NOEXCEPT throw()
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
 {
@@ -642,30 +641,27 @@ namespace sgm
 
 }// end of namespace sgm
 
+
 	#undef _SGM_NOEXCEPT
 #else
 	#error _SGM_NOEXCEPT was already defined somewhere else.
-#endif
+#endif // end of #ifndef _SGM_NOEXCEPT
+
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #include <iterator>
 
-namespace std
+
+template<class T, bool M, bool F>
+struct std::iterator_traits< sgm::Serial_iterator<T, M, F> >
 {
+	using iterator_category = std::random_access_iterator_tag;
+	using value_type = T;
+	using difference_type = long long;
+	using pointer = std::conditional_t<M, T*, T const*>;
+	using reference = std::conditional_t<M, T&, T const&>;
+};
 
 
-	template<class T, bool M, bool F>
-	struct iterator_traits< sgm::Serial_iterator<T, M, F> >
-	{
-		using iterator_category = std::random_access_iterator_tag;
-		using value_type = T;
-		using difference_type = long long;
-		using pointer = std::conditional_t<M, T*, T const*>;
-		using reference = std::conditional_t<M, T&, T const&>;
-	};
-
-
-}
-
-
-#endif
+#endif // end of #ifndef _SGM_SERIAL_
