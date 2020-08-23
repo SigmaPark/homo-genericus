@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Matrix_interface/Matrix_interface.hpp"
+#include "Matrix_interface.hpp"
 
-#include "Reform/ReformEigen.h"
+#include "..\..\3rd_Party_Libraries\Eigen_3_3_7\Eigen\Dense"
 #include <cmath>
 ////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 

@@ -404,7 +404,7 @@ namespace sgm::mxi
 
 
 		template<MxSize_t L = 2>
-		auto norm() const{  return impl_t::norm<L>();  }
+		auto norm() const{  return impl_t::template norm<L>();  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
