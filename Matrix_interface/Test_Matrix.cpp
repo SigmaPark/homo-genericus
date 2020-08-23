@@ -1,6 +1,4 @@
 #include "Matrix.hpp"
-#include "..\Specification\Specification.hpp"
-//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 using namespace sgm;
@@ -9,8 +7,7 @@ using mxi::Matrix, mxi::Vector;
 
 template
 <	class T, class U
-,	class 
-	=	std::enable_if_t< std::is_convertible_v<T, U> || std::is_convertible_v<U, T> >
+,	class = std::enable_if_t< std::is_convertible_v<T, U> || std::is_convertible_v<U, T> >
 >
 static bool is_Equal(T t, U u)
 {
@@ -63,11 +60,57 @@ struct Matrix_Case : No_Making
 
 struct Vector_Case : No_Making
 {
+	static void Constructions();
+	static void Substitutions();
+	static void Element();
+	static void Resize();
+	static void Head_and_Tail();
+	static void Normalization();
+	static void Algebra();
+	static void Special_Vectors();
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+#include "..\Specification\Specification.hpp"
+#include <vector>
 
+
+using spec::is_True;
+
+
+void Matrix_Case::Constructions()
+{
+	Matrix<float, 2, 2> 
+		X1,
+		X2
+		{	3, 4
+		,	1, 2
+		},
+		X3 = X2;
+
+	is_True( is_Equal(X2, X3) );
+
+
+	Matrix<float> 
+		X4
+		=	Matrix<float, 2, 2>
+			{	3, 4
+			,	1, 2
+			},
+		X5 = X2;
+
+	is_True
+	(	is_Equal(X4, X5) 
+	&&	is_Equal
+		(	X4
+		,	Matrix<float, 2, 2>
+			{	3, 4
+			,	1, 2
+			}
+		) 
+	);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -79,12 +122,15 @@ void Test_sgm_Matrix::test()
 {
 	try
 	{
-		Vector<double> v1{1, 2, 3};
+		Matrix_Case::Constructions();
 
-		auto const n1 = v1.norm();
 	}
 	catch(...)
 	{
+		std::wcout << L"Matrix Test Failed.\n";
+
 		throw;
 	}
+
+	std::wcout << L"Matrix Test Complete.\n";
 }
