@@ -40,6 +40,9 @@ namespace sgm::mxi
 		core_t _core;
 
 
+		SGM_HAS_MEMFUNC(data);
+
+
 	protected:
 		using elem_t = std::decay_t< decltype( _core(0) ) >;
 
@@ -58,6 +61,11 @@ namespace sgm::mxi
 					if(r == MxSize::DYNAMIC || c == MxSize::DYNAMIC)
 						(r == MxSize::DYNAMIC ? r : c)
 						=	(MxSize_t)con.size() / (r == MxSize::DYNAMIC ? c : r),
+						res.resize(r, c);
+					else if
+					(	res.rows() != static_cast<egnSize_t>(r) 
+					||	res.cols() != static_cast<egnSize_t>(c)
+					)
 						res.resize(r, c);
 
 					for(  auto[itr, i] = std::pair( con.begin(), MxSize_t(0) ); i < r; ++i  )
@@ -101,7 +109,24 @@ namespace sgm::mxi
 
 		auto rows() const{  return _core.rows();  }
 		auto cols() const{  return _core.cols();  }
+		
 		auto size() const{  return _core.size();  }
+		
+		auto data()
+		{
+			if constexpr(Has_MemFunc_data<core_t>::value)
+				return _core.data();
+			else
+				return static_cast< egnDynamicMatrix<elem_t> >(_core).data();
+		}
+
+		auto data() const
+		{
+			if constexpr(Has_MemFunc_data<core_t>::value)
+				return _core.data();
+			else
+				return static_cast< egnDynamicMatrix<elem_t> >(_core).data();
+		}
 
 		void resize(MxSize_t r, MxSize_t c){  _core.resize(r, c);  }
 

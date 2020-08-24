@@ -162,6 +162,12 @@ namespace sgm::mxi
 
 
 		template
+		<	class = std::enable_if_t< !MxSize::is_static_v<R> && !MxSize::is_static_v<C> > 
+		>
+		Matrix(MxSize_t r, MxSize_t c) : Matrix(){  this->resize(r, c);  }
+
+
+		template
 		<	class Q
 		,	class 
 			=	std::enable_if_t
@@ -213,7 +219,11 @@ namespace sgm::mxi
 
 		auto rows() const-> MxSize_t{  return impl_t::rows();  }
 		auto cols() const-> MxSize_t{  return impl_t::cols();  }
+
 		auto size() const-> MxSize_t{  return impl_t::size();  }
+		auto data(){  return impl_t::data();  }
+		auto data() const{  return impl_t::data();  }
+
 
 		decltype(auto) core() const	{  return impl_t::core();  }
 
