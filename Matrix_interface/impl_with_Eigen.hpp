@@ -201,7 +201,12 @@ namespace sgm::mxi
 		:	_core
 			(	[&q]()-> core_t
 				{
-					if constexpr(MxTraits::is_mxiMatrix_v<Q>)
+					if constexpr
+					(	MxSize::is_dynamic_v<S> 
+					&&	std::is_integral_v< std::decay_t<Q> >
+					)
+						return core_t(q, 1);
+					else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 					{
 						assert
 						(	(q.rows() == 1 || q.cols() == 1)

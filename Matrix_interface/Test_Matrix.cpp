@@ -64,6 +64,7 @@ struct Vector_Case : No_Making
 	static void Element();
 	static void Resize();
 	static void Head_and_Tail();
+	static void Conversion_to_Matrix();
 	static void Normalization();
 	static void Algebra();
 	static void Special_Vectors();
@@ -154,9 +155,16 @@ void Matrix_Case::Substitutions()
 	X3 = X2,
 	X4 = X3;
 
+	Matrix<float, 2, 2> X5;
+
+	X5
+	=	{	3, 4
+		,	1, 2
+		};
+
 	is_True
 	(	is_Equal
-		(	X1, X2, X3, X4
+		(	X1, X2, X3, X4, X5
 		,	Matrix<float, 2, 2>
 			{	3, 4
 			,	1, 2
@@ -526,6 +534,168 @@ void Matrix_Case::internal_Array()
 		)
 	);
 }
+
+
+void Vector_Case::Constructions()
+{
+	Vector<float, 3> 
+		V1,
+		V2{2, 4, 6},
+		V3 = std::vector<float>{2, 4, 6},
+		V4 = Matrix<float, 1, 3>{2, 4, 6},
+		V5 
+		=	Matrix<float, 3, 1>
+			{	2
+			,	4
+			,	6
+			},
+		V6 = V3;
+
+	Vector<float> V7(3);
+
+	is_True
+	(	V1.size() == 3
+	&&	is_Equal(V2, V3, V4, V5, V6)
+	&&	V7.size() == 3
+	);
+}
+
+
+void Vector_Case::Substitutions()
+{
+	Vector<float, 4> V1, V2, V3;
+
+	V1 = Vector<float>{2, 4, 6, 8};
+	V2 = {2, 4, 6, 8};
+
+	//V3 = Matrix<float, 4, 1>{2, 4, 6, 8};	// Compile Fails : implicit type conversion
+	V3 = static_cast< Vector<float> >(Matrix<float, 4, 1>{2, 4, 6, 8});
+
+
+	is_True( is_Equal(V1, V2, V3, Vector<float>{2, 4, 6, 8}) ); 
+}
+
+
+void Vector_Case::Element()
+{
+	Vector<int, 3> const CV1{3, 6, 9};
+
+	is_True( CV1(0) == 3 && CV1(1) == 6 && CV1(2) == 9 );
+
+	Vector<int> V2 = CV1;
+
+	V2(0) = -3,  V2(1) = 60;
+
+	is_True( is_Equal(V2, Vector<int>{-3, 60, 9}) );
+}
+
+
+void Vector_Case::Resize()
+{
+	Vector<float> V1;
+
+	is_True(V1.size() == 0);
+
+	V1.resize(3),  V1(0) = 1,  V1(1) = 3,  V1(2) = 5;
+
+	is_True( is_Equal(V1, Vector<float>{1, 3, 5}) );
+
+	V1.resize(4) = {-1, 3, -5, 7};
+
+	is_True( is_Equal(V1, Vector<float>{-1, 3, -5, 7}) );
+}
+
+
+void Vector_Case::Head_and_Tail()
+{
+	Vector<float> const CV1{1, 1, 2, 3, 5, 8, 13};
+
+	is_True
+	(	is_Equal(CV1.head(3), Vector<float>{1, 1, 2})
+	&&	is_Equal(CV1.tail(4), Vector<float>{3, 5, 8, 13})
+	);
+
+	Vector<float> V2 = CV1;
+
+	V2.head(4) = Vector<float>{-1, 1, 2, -3},
+	V2.tail(3) = Vector<float>{50, 80, 130};
+
+	is_True( is_Equal(V2, Vector<float>{-1, 1, 2, -3, 50, 80, 130}) );
+}
+
+
+void Vector_Case::Conversion_to_Matrix()
+{
+	Matrix<float, 3, 4> X1
+	{	2, 4, 6, 8
+	,	10, 12, 14, 16
+	,	18, 20, 22, 24
+	};
+
+	Vector<float> const 
+		CV1{-10, -12, -14, -16},
+		CV2{60, 140, 220};
+
+	X1.row(1) = CV1.rowVec(),
+	X1.col(2) = CV2.colVec();
+
+	is_True
+	(	is_Equal
+		(	X1
+		,	Matrix<float, 3, 4>
+			{	2, 4, 60, 8
+			,	-10, -12, 140, -16
+			,	18, 20, 220, 24
+			}
+		) 
+	);
+}
+
+
+void Vector_Case::Normalization()
+{
+	Vector<float, 3> const CV1{1, 2, 3}, CV2 = CV1.normalized();
+
+	is_True
+	(	is_Equal(  CV1.norm(), sqrt( CV1(0)*CV1(0) + CV1(1)*CV1(1) + CV1(2)*CV1(2) )  )
+	&&	is_Equal(CV1 / CV1.norm(), CV2)
+	);
+}
+
+
+void Vector_Case::Special_Vectors()
+{
+	is_True
+	(	is_Equal
+		(	Vector<float, 3>::zero()
+		,	Vector<float>::zero(3)
+		,	Vector<float>{0, 0, 0}
+		)
+	&&	is_Equal
+		(	Vector<float, 5>::ones()
+		,	Vector<float>::ones(5)
+		,	Vector<float>{1, 1, 1, 1, 1}
+		)
+	);
+}
+
+
+void Vector_Case::Algebra()
+{
+	is_True
+	(	is_Equal
+		(	Vector<float>{1, 2, 3} + Vector<float>{-2, 10, 5} - 3.f*Vector<float, 3>::ones()
+		,	Vector<float>{-4, 9, 5}
+		)
+	&&	is_Equal( Vector<float>{1, 0, 0}.dot(Vector<float>{0, 1, 0}), 0.f )
+	&&	is_Equal( Vector<float>{1, 0, 0}.dot(Vector<float>{1, 0, 0}), 1.f )
+	&&	is_Equal( Vector<float>{1, 0, 0}.cross(Vector<float>{0, 1, 0}), Vector<float>{0, 0, 1} )
+	&&	is_Equal
+		(	Vector<float>{1, 0, 0}.dyad(Vector<float>{0, 1, 0})
+		,	Vector<float>{1, 0, 0}.colVec() * Vector<float>{0, 1, 0}.rowVec()
+		)
+	);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -548,6 +718,16 @@ void Test_sgm_Matrix::test()
 		Matrix_Case::Special_Matrices();
 		Matrix_Case::Algebra();
 		Matrix_Case::internal_Array();
+
+		Vector_Case::Constructions();
+		Vector_Case::Substitutions();
+		Vector_Case::Element();
+		Vector_Case::Resize();
+		Vector_Case::Head_and_Tail();
+		Vector_Case::Conversion_to_Matrix();
+		Vector_Case::Normalization();
+		Vector_Case::Special_Vectors();
+		Vector_Case::Algebra();
 	}
 	catch(...)
 	{

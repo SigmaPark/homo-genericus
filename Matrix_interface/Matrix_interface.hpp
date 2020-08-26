@@ -206,6 +206,10 @@ namespace sgm::mxi
 
 			return *this;
 		}
+
+
+		template<class Q, MxSize_t _S>
+		auto operator=(Vector<Q, _S>) = delete;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
@@ -362,13 +366,17 @@ namespace sgm::mxi
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
-		template<  class Q, class = std::enable_if_t< is_mxiVector_v<Q> >  >
+		template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 		auto operator=(Q&& q)-> Vector&
 		{
 			impl_t::core() = q.core();
 
 			return *this;
 		}
+
+
+		template<class Q, MxSize_t _R, MxSize_t _C>
+		auto operator=(Matrix<Q, _R, _C>) = delete;
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 
