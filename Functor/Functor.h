@@ -9,7 +9,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include <type_traits>
+#include "..\Type_Analysis\Type_Analysis.hpp"
 #include <memory>
 #include <tuple>
 
@@ -494,8 +494,7 @@ namespace sgm
 				return _cut_rear( std::forward<ARGS>(args)... );
 			else if constexpr( sizeof...(ARGS) == D )
 				return (*_spf)( std::forward<ARGS>(args)... );
-			else
-				static_assert(false, "no suitable evaluation method was found.");
+			else SGM_COMPILE_FAILED(no suitable evaluation method was found.);
 		}
 
 

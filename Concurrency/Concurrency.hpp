@@ -14,7 +14,9 @@ namespace sgm
 
 		struct _Parallel_Helper;
 
-		template<unsigned NOF_TASK = _Parallel_Helper::Nof_HW_Core::DYNAMIC>
+		struct Nof_HW_Core{  enum : unsigned{DYNAMIC = Size_info<unsigned>::MAXIMUM};  };
+
+		template<unsigned NOF_TASK = Nof_HW_Core::DYNAMIC>
 		struct Parallel;
 
 	}
@@ -26,11 +28,6 @@ struct sgm::par::_Parallel_Helper
 {
 	template<class T> using type = T;
 
-	struct Nof_HW_Core
-	{  
-		enum : unsigned{DYNAMIC = unsigned(-1)};  
-	};
-
 
 protected:
 	struct _Ranger
@@ -39,7 +36,7 @@ protected:
 
 
 		_Ranger(size_t const idx_begin, size_t const idx_end, unsigned const nof_task)
-		:	_idx_begin(idx_begin), _idx_end(idx_end)
+		:	_idx_begin(idx_begin)
 		,	_nof_task( static_cast<size_t>(nof_task) )
 		,	_total_size
 			(	[idx_begin, idx_end]()-> decltype(_total_size)
@@ -69,7 +66,7 @@ protected:
 
 
 	private:
-		size_t const _idx_begin, _idx_end, _nof_task, _total_size, _loop_q, _loop_r;
+		size_t const _idx_begin, _nof_task, _total_size, _loop_q, _loop_r;
 	};
 
 
@@ -133,7 +130,7 @@ public:
 
 
 template<>
-struct sgm::par::Parallel<sgm::par::_Parallel_Helper::Nof_HW_Core::DYNAMIC> : _Parallel_Helper
+struct sgm::par::Parallel<sgm::par::Nof_HW_Core::DYNAMIC> : _Parallel_Helper
 {
 private:
 	template<class F>
@@ -152,7 +149,7 @@ private:
 
 
 public:
-	enum : unsigned{NUMBER_OF_TASK = _Parallel_Helper::Nof_HW_Core::DYNAMIC};
+	enum : unsigned{NUMBER_OF_TASK = Nof_HW_Core::DYNAMIC};
 
 
 	Parallel(unsigned const nof_task) : _nof_task(nof_task){}
@@ -168,12 +165,12 @@ public:
 				?	nof_core
 				:	
 				throw_when_core_detection_fails
-				?	_Parallel_Helper::Nof_HW_Core::DYNAMIC
+				?	Nof_HW_Core::DYNAMIC
 				:	1;
 			}(std::thread::hardware_concurrency())
 		)
 	{
-		if(_nof_task == _Parallel_Helper::Nof_HW_Core::DYNAMIC)
+		if(_nof_task == Nof_HW_Core::DYNAMIC)
 			throw false;
 	}
 

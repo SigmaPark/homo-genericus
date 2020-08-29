@@ -1,7 +1,6 @@
 #include "Serial.hpp"
 #include "..\Specification\Specification.hpp"
 #include <vector>
-#include "Test_Serial.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -587,6 +586,8 @@ struct Static : No_Making
 
 
 #include <iostream>
+#include "Test_Serial.hpp"
+
 
 void Test_sgm_Serial::test()
 {

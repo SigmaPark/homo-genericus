@@ -26,7 +26,7 @@ namespace sgm::mxi
 	
 	struct MxSize : No_Making 
 	{ 
-		static auto constexpr DYNAMIC = static_cast<size_t>(-1);
+		static size_t constexpr DYNAMIC = Size_info<size_t>::MAXIMUM;
 		static auto constexpr TEMPORARY = DYNAMIC - 1;
 		
 		template<size_t N> static bool constexpr is_dynamic_v = N == DYNAMIC;

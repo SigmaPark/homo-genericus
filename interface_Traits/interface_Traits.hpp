@@ -222,8 +222,8 @@ namespace sgm
 	};
 
 
-	template<class ITR>
-	struct _Travel<ITR, true, true>
+	template<class ITR, bool HAS_POST_DECREASE>
+	struct _Travel<ITR, HAS_POST_DECREASE, true>
 	{
 		static auto next(ITR itr, long long steps = 1)-> ITR{  return itr + steps;  }
 		static auto prev(ITR itr, long long steps = 1)-> ITR{  return itr - steps;  }

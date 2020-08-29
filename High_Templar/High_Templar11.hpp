@@ -15,7 +15,7 @@ namespace sgm
 	namespace ht
 	{
 
-		enum : unsigned{AUTO_OR = par::_Parallel_Helper::Nof_HW_Core::DYNAMIC};
+		enum : unsigned{AUTO_OR = par::Nof_HW_Core::DYNAMIC};
 
 		template<class maybe_Par> struct is_Par;
 

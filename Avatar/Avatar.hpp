@@ -28,23 +28,23 @@ template<class T>
 struct sgm::is_constAvatar : No_Making
 {
 private:
-	template<class T>
+	template<class Q>
 	struct AvtMutability : No_Making
 	{
 		using type 
-		=	std::conditional_t< is_immutable<T>::value && is_Avatar<T>::value, invar, void >;
+		=	std::conditional_t< is_immutable<Q>::value && is_Avatar<Q>::value, invar, void >;
 	};
 
-	template<class T, class M, bool...BS>
-	struct AvtMutability<  Avatar_t< T, M, Avatar_T_Helper<T, M, BS...> >  > : No_Making
+	template<class Q, class M, bool...BS>
+	struct AvtMutability<  Avatar_t< Q, M, Avatar_T_Helper<Q, M, BS...> >  > : No_Making
 	{
 		using type 
 		=	std::conditional_t
-			<	std::is_same<M, invar>::value || is_immutable<T>::value
+			<	std::is_same<M, invar>::value || is_immutable<Q>::value
 			,	invar
 			,	std::conditional_t
-				<	is_Avatar<T>::value
-				,	typename AvtMutability< std::remove_reference_t<T> >::type
+				<	is_Avatar<Q>::value
+				,	typename AvtMutability< std::remove_reference_t<Q> >::type
 				,	Var
 				>
 			>;
@@ -56,7 +56,7 @@ public:
 	{	value 
 		=	std::is_same
 			<	typename AvtMutability< std::remove_reference_t<T> >::type, invar					 
-			>::value
+			>::	value
 	};
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -66,12 +66,7 @@ template<class T, class M>
 class sgm::Avatar_t< T, M, sgm::Avatar_T_Helper<T, M, false, false, false> >
 {
 public:
-	enum : bool
-	{	IS_CONST 
-		=	is_constAvatar
-			<	Avatar_t< T, M, Avatar_T_Helper<T, M, false, false, false> >  
-			>::value
-	};
+	enum : bool{IS_CONST = is_constAvatar<Avatar_t>::value};
 
 	using value_t = std::conditional_t< IS_CONST, std::add_const_t<T>, T >;
 
@@ -88,8 +83,8 @@ public:
 
 	Avatar_t(T&&) = delete;
 
-	template<  class M, class = std::enable_if_t< IS_CONST || !Avatar_t<T, M>::IS_CONST >  >
-	Avatar_t(Avatar_t<T, M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){} 
+	template<  class _M, class = std::enable_if_t< IS_CONST || !Avatar_t<T, _M>::IS_CONST >  >
+	Avatar_t(Avatar_t<T, _M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){} 
 
 	~Avatar_t(){  _pval = nullptr, _state = State::GONE;  }
 
@@ -97,8 +92,10 @@ public:
 	auto value() const-> T const&	{  return *_pval;  }
 	operator T const&() const		{  return value();  }
 
-	template< class = std::enable_if_t<!IS_CONST> >
-	auto value()-> T&{  return *_pval;  }
+	//template< class = std::enable_if_t<!IS_CONST> >
+	//auto value()-> T&{  return *_pval;  }
+	auto value()-> std::conditional_t<IS_CONST, T const&, T&>{  return *_pval;  }
+
 
 
 	auto operator=(Avatar_t const& avt)-> Avatar_t&
@@ -130,11 +127,11 @@ public:
 	}
 
 
-	template<class M>
-	auto operator()(Avatar_t<T, M> avt)-> Avatar_t
+	template<class _M>
+	auto operator()(Avatar_t<T, _M> avt)-> Avatar_t
 	{
 		static_assert
-		(	IS_CONST || !Avatar_t<T, M>::IS_CONST, "cannot bind to const Avatar_t"
+		(	IS_CONST || !Avatar_t<T, _M>::IS_CONST, "cannot bind to const Avatar_t"
 		);
 
 		_pval = &avt.value(), _state = get_state(avt);
@@ -164,16 +161,16 @@ public:
 	bool operator!=(Q&& q) const{  return !( *this == std::forward<Q>(q) );  }
 
 
-	template<class M>
-	bool operator==(Avatar_t<T, M> avt) const
+	template<class _M>
+	bool operator==(Avatar_t<T, _M> avt) const
 	{  
 		assert(!has_gone() && !avt.has_gone() && L"Avatar_t was released already");
 
 		return *this == avt.value(); 
 	}
 
-	template<class M>
-	bool operator!=(Avatar_t<T, M> avt) const{  return !(*this == avt);  }
+	template<class _M>
+	bool operator!=(Avatar_t<T, _M> avt) const{  return !(*this == avt);  }
 
 
 private:
@@ -181,8 +178,8 @@ private:
 	enum class State{YET, OWNING, GONE} _state;
 
 
-	template<class M>
-	static auto get_state(Avatar_t<T, M> avt)-> State
+	template<class _M>
+	static auto get_state(Avatar_t<T, _M> avt)-> State
 	{
 		return 
 		avt.is_owning() ? State::OWNING : (avt.is_yet() ? State::YET : State::GONE);

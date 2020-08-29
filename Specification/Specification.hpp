@@ -52,7 +52,7 @@ namespace sgm
 			{
 				return
 				(	n == 0
-				||	*bi == t && are_all_same_to( Next(bi), n - 1, t )
+				||	(  *bi == t && are_all_same_to( Next(bi), n - 1, t )  )
 				);
 			}
 

@@ -24,7 +24,12 @@ namespace sgm
 	template<class T, bool IS_MUTABLE, bool IS_FORWARD>
 	class Serial_iterator;
 
-	struct srSize;
+
+	struct srSize : No_Making
+	{	
+		enum : size_t{ INTERFACE = Size_info<size_t>::MAXIMUM, DYNAMIC = 0};  
+	};
+
 
 	template<class T, size_t S = srSize::DYNAMIC>
 	class Serial;
@@ -193,7 +198,7 @@ public:
 		auto const has_greater_idx = _idx > itr._idx;
 		auto const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
-		assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.\n");
+		assert( du <= 0x7fffffffffffffffi64 && L"the difference exceeds maximum capacity.\n" );
 
 		auto const LL_du = static_cast<long long>(du);
 
@@ -241,18 +246,14 @@ private:
 	(	size_t const idx, bool const plus_dir = true, size_t const interval = 1
 	)
 	{
-		return _sr_iterator_Helper<T>::shifted<IS_FORWARD>(idx, plus_dir, interval);
+		return _sr_iterator_Helper<T>::template shifted<IS_FORWARD>(idx, plus_dir, interval);
 	}
 
 	static bool Less(iter_t const itr1, iter_t const itr2)
 	{
-		return _sr_iterator_Helper<T>::Less<IS_FORWARD>(itr1._idx, itr2._idx);
+		return _sr_iterator_Helper<T>::template Less<IS_FORWARD>(itr1._idx, itr2._idx);
 	}
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-struct sgm::srSize : No_Making{  enum : size_t{INTERFACE = -1, DYNAMIC = 0};  };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -312,11 +313,7 @@ public:
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-#ifndef _WHEN_STATIC 
-	#define _WHEN_STATIC template< class = std::enable_if_t<S != srSize::INTERFACE> >
-
-
-	_WHEN_STATIC auto size() const-> size_t { return SIZE; }
+	auto size() const-> size_t { return SIZE; }
 
 
 	using iter_t = Serial_iterator<T, true, true>;
@@ -332,20 +329,20 @@ public:
 	auto rend() const-> criter_t	{  return crend();  }
 	auto rend()-> riter_t			{  return riter_t(_core, 0);  }
 
-	_WHEN_STATIC auto cend() const-> citer_t		{  return citer_t(_core, SIZE);  }
-	_WHEN_STATIC auto end() const-> citer_t			{  return cend();  }
-	_WHEN_STATIC auto end()-> iter_t				{  return iter_t(_core, SIZE);  }
+	auto cend() const-> citer_t		{  return citer_t(_core, SIZE);  }
+	auto end() const-> citer_t			{  return cend();  }
+	auto end()-> iter_t				{  return iter_t(_core, SIZE);  }
 
-	_WHEN_STATIC auto crbegin() const-> criter_t		{  return criter_t(_core, SIZE);  }
-	_WHEN_STATIC auto rbegin() const-> criter_t		{  return crbegin();  }
-	_WHEN_STATIC auto rbegin()-> riter_t			{  return riter_t(_core, SIZE);  }
+	auto crbegin() const-> criter_t		{  return criter_t(_core, SIZE);  }
+	auto rbegin() const-> criter_t		{  return crbegin();  }
+	auto rbegin()-> riter_t			{  return riter_t(_core, SIZE);  }
 
 
 	auto front() const-> T const&	{  return *cbegin();  }
 	auto front()-> T&				{  return *begin();  }
 
-	_WHEN_STATIC auto back() const-> T const&	{  return *crbegin();  }
-	_WHEN_STATIC auto back()-> T&				{  return *rbegin();  }
+	auto back() const-> T const&	{  return *crbegin();  }
+	auto back()-> T&				{  return *rbegin();  }
 
 
 	template
@@ -391,7 +388,7 @@ public:
 	}
 
 
-	_WHEN_STATIC auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
+	auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
 	{
 		for 
 		(	auto itr = begin(), sitr = sr.begin()
@@ -401,12 +398,6 @@ public:
 
 		return *this;
 	}
-
-
-	#undef _WHEN_STATIC
-#else
-	#error _WHEN_STATIC was already defined somewhere else.
-#endif
 
 
 };// end of class Serial
@@ -446,7 +437,7 @@ class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 		if(capacity() < length)
 			this->~Serial(),  _alloc(length);
 
-		auto const itrs = Helper::_copy_AMAP<TEMP_HOST>(bi, ei, *this);
+		auto const itrs = Helper::template _copy_AMAP<TEMP_HOST>(bi, ei, *this);
 
 		return itrs._1 != ei ? merge_back<TEMP_HOST>(itrs._1, ei) : pop_back_from(itrs._2);
 	}

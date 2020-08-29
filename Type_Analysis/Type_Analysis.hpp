@@ -20,7 +20,6 @@ namespace sgm
 #endif
 
 
-
 	struct No_Making{  No_Making() = delete;  };
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -32,6 +31,63 @@ namespace sgm
 
 	template<class CON>
 	using Elem_t = decltype(*Declval<CON>().begin());
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<  class T, class = std::enable_if_t< std::is_integral<T>::value >  >
+	struct Size_info : No_Making
+	{
+	private:
+	#pragma warning(push)
+	#pragma warning(disable : 4348)
+		template< class Q, unsigned = sizeof(Q), bool = std::is_unsigned<Q>::value > 
+		struct _info;
+	#pragma warning(pop)
+
+		template<class Q> struct _info<Q, 8, true>
+		{
+			enum : T{MAXIMUM = 0xffffffffffffffffui64, MINIMUM = 0};
+		};
+
+		template<class Q> struct _info<Q, 4, true>
+		{
+			enum : T{MAXIMUM = 0xffffffffUL, MINIMUM = 0};
+		};
+
+		template<class Q> struct _info<Q, 2, true>
+		{
+			enum : T{MAXIMUM = 0xffffui16, MINIMUM = 0}; 
+		};
+
+		template<class Q> struct _info<Q, 1, true>
+		{
+			enum : T{MAXIMUM = 0xffui8, MINIMUM = 0}; 
+		};
+
+		template<class Q> struct _info<Q, 8, false>
+		{  
+			enum : T{MAXIMUM = 0x7fffffffffffffffi64, MINIMUM = -0x8000000000000000i64}; 
+		};
+
+		template<class Q> struct _info<Q, 4, false>
+		{
+			enum : T{MAXIMUM = 0x7fffffffi32, MINIMUM = -0x80000000i32};
+		};
+
+		template<class Q> struct _info<Q, 2, false>
+		{
+			enum : T{MAXIMUM = 0x7fffi16, MINIMUM = -0x8000i16}; 
+		};
+
+		template<class Q> struct _info<Q, 1, false>
+		{
+			enum : T{MAXIMUM = 0x7fi8, MINIMUM = -0x80i8}; 
+		};
+
+
+	public:
+		enum : T{MAXIMUM = _info<T>::MAXIMUM, MINIMUM = _info<T>::MINIMUM};
+	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
