@@ -13,8 +13,8 @@ static void Factorial_Test()
 	auto const answer 
 	=	[N](int res)
 		{	
-			for(auto d = N;  d > 1;)
-				res*=d,  --d;
+			for(auto d = N;  d > 1;  --d)
+				res*=d;
 
 			return res;
 		}(1);
