@@ -3,7 +3,7 @@
 
 
 using namespace sgm;
-using spec::is_True;
+using spec::are_Equivalent;
 
 
 static void Factorial_Test()
@@ -20,32 +20,29 @@ static void Factorial_Test()
 		}(1);
 
 
-	is_True
-	(	(	[](int n, int res)
-			{
-				for( auto recur = Recursion(n, res);	  n > 1; )
-					recur(n - 1, n*res);
-						
-				return res;
-			}(N, 1)
-		==	answer
-		)
-	&&	(	[](  decltype( Recursion(N, 1) ) recur  )
-			{
-				while(recur.first() > 1)
-					recur(recur.first() - 1, recur.first()*recur.last());
+	are_Equivalent
+	(	[](int n, int res)
+		{
+			for( auto recur = Recursion(n, res);	  n > 1; )
+				recur(n - 1, n*res);
+					
+			return res;
+		}(N, 1)
+	,	[](  decltype( Recursion(N, 1) ) recur  )
+		{
+			while(recur.first() > 1)
+				recur(recur.first() - 1, recur.first()*recur.last());
 
-				return recur.last();
-			}( Recursion(N, 1) )
-		==	answer
-		)
+			return recur.last();
+		}( Recursion(N, 1) )
+	,	answer
 	);
 }
 
 
 static void Fibonacci_Test()
 {
-	is_True
+	are_Equivalent
 	(	[](int n, int prev, int next)
 		{
 			for( auto recur = Recursion(n, prev, next);  n > 1; )
@@ -53,7 +50,7 @@ static void Fibonacci_Test()
 
 			return next;
 		}(10, 0, 1)
-	==	55	// fibonacci sequance : 1, 1, 2, 3, 5, 8, 13, 21, 34, 55
+	,	55
 	);
 }
 
@@ -62,7 +59,7 @@ static void N_sum_Test()
 {
 	auto arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 	
-	is_True
+	are_Equivalent
 	(	[](decltype( make_Chain(arr) ) chain, int res)
 		{
 			for( auto recur = Recursion(chain, res);  chain; )
@@ -70,7 +67,7 @@ static void N_sum_Test()
 
 			return res;
 		}( make_Chain(arr), 0 )
-	==	1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
+	,	1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
 	);
 }
 

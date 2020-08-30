@@ -106,12 +106,13 @@ static void Test5()
 	Avatar<  Avatar< Avatar<int> const >  > avt1 = x;
 
 	static_assert
-	(	(	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
-		&&	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
-		&&	is_constAvatar<  constAvatar< Avatar<int> >  >::value
-		&&	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
-		&&	is_constAvatar< Avatar< Avatar<int> > const  >::value
-		)
+	(	spec::All_True
+		<	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
+		,	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
+		,	is_constAvatar<  constAvatar< Avatar<int> >  >::value
+		,	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
+		,	is_constAvatar< Avatar< Avatar<int> > const  >::value
+		>::	value
 	,	""
 	);
 

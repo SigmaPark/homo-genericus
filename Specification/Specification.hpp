@@ -16,11 +16,74 @@ namespace sgm
 		struct Exception{};
 
 
-		static void is_True(bool const b)
+		template<class...>		//	to avoid warning C4505
+		static void is_True(){}
+
+		template<class...BOOLS>
+		static void is_True(bool const b, BOOLS...bs)	//	have to change name. : not "is"
 		{
 			if(!b)
 				throw Exception();
+			else
+				is_True(bs...);
 		}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
+
+
+		template<class T1, class T2, class...TYPES>
+		static void are_Equivalent(T1&& t1, T2&& t2, TYPES&&...types)
+		{
+			if(t1 != t2)
+				throw Exception();
+			else
+				are_Equivalent( std::forward<T2>(t2), std::forward<TYPES>(types)... );
+		}
+
+
+		template<class T>
+		static void are_Equivalent(T&&){}
+
+
+		template
+		<	class COMP, class T1, class T2, class...TYPES
+		,	class 
+			=	std::enable_if_t
+				<	std::is_same
+					<	decltype( Declval<COMP>()(Declval<T1>(), Declval<T2>()) ), bool
+					>::	value
+				>
+		>
+		static void are_Equivalent(COMP&& comp, T1&& t1, T2&& t2, TYPES&&...types)
+		{
+			if( !comp(t1, t2) )
+				throw Exception();
+			else
+				are_Equivalent
+				(	std::forward<COMP>(comp)
+				,	std::forward<T2>(t2)
+				,	std::forward<TYPES>(types)...
+				);
+		}
+
+
+		template
+		<	class COMP, class T
+		,	class 
+			=	std::enable_if_t
+				<	std::is_same
+					<	decltype( Declval<COMP>()(Declval<T>(), Declval<T>()) ), bool
+					>::	value
+				>
+		>
+		static void are_Equivalent(COMP&&, T&&){}
+		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
+
+		template<int B = 1, int...BS>
+		struct All_True : std::conditional_t< B == 1, All_True<BS...>, std::false_type >{};
+
+		template<> 
+		struct All_True<> : std::true_type{};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
 
 
