@@ -1,6 +1,6 @@
 #include "Recursion.hpp"
 #include "..\Specification\Specification.hpp"
-
+#include "..\Avatar\Avatar.hpp"
 
 using namespace sgm;
 using spec::are_Equivalent;
@@ -23,17 +23,20 @@ static void Factorial_Test()
 	are_Equivalent
 	(	[](int n, int res)
 		{
-			for( auto recur = Recursion(n, res);	  n > 1; )
-				recur(n - 1, n*res);
+			for
+			(	auto recur = Recursion( std::ref(n), std::ref(res) )
+			;	n > 1
+			;	recur(n - 1, n * res)
+			);
 					
 			return res;
 		}(N, 1)
 	,	[](  decltype( Recursion(N, 1) ) recur  )
 		{
-			while(recur.first() > 1)
-				recur(recur.first() - 1, recur.first()*recur.last());
+			while(recur._<1>() > 1)
+				recur( recur._<1>() - 1, recur._<1>()*recur._<-1>() );
 
-			return recur.last();
+			return recur._<-1>();
 		}( Recursion(N, 1) )
 	,	answer
 	);
@@ -45,8 +48,11 @@ static void Fibonacci_Test()
 	are_Equivalent
 	(	[](int n, int prev, int next)
 		{
-			for( auto recur = Recursion(n, prev, next);  n > 1; )
-				recur(n - 1, next, prev + next);
+			for
+			(	auto recur = Recursion( std::ref(n), std::ref(prev), std::ref(next) )
+			;	n > 1
+			;	recur(n - 1, next, prev + next)
+			);
 
 			return next;
 		}(10, 0, 1)
@@ -60,13 +66,16 @@ static void N_sum_Test()
 	auto arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 	
 	are_Equivalent
-	(	[](decltype( make_Chain(arr) ) chain, int res)
+	(	[](decltype( Chaining(arr) ) chain, int res)
 		{
-			for( auto recur = Recursion(chain, res);  chain; )
-				recur(chain.body(), res + chain.head());
+			for
+			(	auto recur = Recursion( chain, Refer(res) )
+			;	chain
+			;	recur(recur._<1>().body(), res + recur._<1>().head())
+			);
 
 			return res;
-		}( make_Chain(arr), 0 )
+		}( Chaining(arr), 0 )
 	,	1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
 	);
 }

@@ -13,14 +13,14 @@ static void Test1()
 	double const cx = 6;
 
 	{
-		auto avt = sgm::make_Avatar(x);
+		auto avt = sgm::Refer(x);
 
 		x = 30.0;
 
 		is_True(avt == x && x == 30.0);
 	}
 	{
-		auto cavt = sgm::make_Avatar(cx);
+		auto cavt = sgm::Refer(cx);
 
 		//cavt = 23;	// error
 
@@ -40,15 +40,10 @@ static void Test1()
 
 static void Test2()
 {
-	static_assert
-	(	std::is_convertible
-		<	Avatar<double>, Avatar<double const>
-		>::value
-	&&	!std::is_convertible
-		<	Avatar<double const>, Avatar<double>
-		>::value
-	,	""
-	);
+	spec::All_True
+	<	std::is_convertible< Avatar<double>, Avatar<double const> >::value
+	,	!std::is_convertible< Avatar<double const>, Avatar<double> >::value
+	>();
 
 
 	Avatar<double const> cavt = Avatar<double>();
@@ -105,22 +100,19 @@ static void Test5()
 
 	Avatar<  Avatar< Avatar<int> const >  > avt1 = x;
 
-	static_assert
-	(	spec::All_True
-		<	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
-		,	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
-		,	is_constAvatar<  constAvatar< Avatar<int> >  >::value
-		,	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
-		,	is_constAvatar< Avatar< Avatar<int> > const  >::value
-		>::	value
-	,	""
-	);
+	spec::All_True
+	<	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
+	,	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
+	,	is_constAvatar<  constAvatar< Avatar<int> >  >::value
+	,	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
+	,	is_constAvatar< Avatar< Avatar<int> > const  >::value
+	>();
 
 //	int const cx = 40;
 
 //	constAvatar< Avatar<int> > avt_ = cx;	// Compile Fails.
 
-	auto avt2 = make_Avatar(avt1);
+	auto avt2 = Refer(avt1);
 
 	is_True(avt1 == 3 && avt2 == 3);
 }

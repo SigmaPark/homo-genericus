@@ -12,14 +12,9 @@ namespace sgm
 {
 	SGM_DECL_PROXY_TEMPLATE_CLASS(Avatar);
 
+
 	template<class T>
 	struct is_constAvatar;
-
-	template<  class T, class = std::enable_if_t< !is_Avatar<T>::value >  >
-	static auto make_Avatar(T& t)-> Avatar< std::remove_reference_t<T> >;
-
-	template<  class T, class = std::enable_if_t< is_Avatar<T>::value >  >
-	static auto make_Avatar(T t)-> Avatar<typename T::value_t>;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -92,10 +87,7 @@ public:
 	auto value() const-> T const&	{  return *_pval;  }
 	operator T const&() const		{  return value();  }
 
-	//template< class = std::enable_if_t<!IS_CONST> >
-	//auto value()-> T&{  return *_pval;  }
 	auto value()-> std::conditional_t<IS_CONST, T const&, T&>{  return *_pval;  }
-
 
 
 	auto operator=(Avatar_t const& avt)-> Avatar_t&
@@ -188,16 +180,25 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T, class>
-auto sgm::make_Avatar(T& t)-> Avatar< std::remove_reference_t<T> >
+namespace sgm
 {
-	return Avatar< std::remove_reference_t<T> >(t);
-}
 
-template<class T, class>
-auto sgm::make_Avatar(T t)-> Avatar<typename T::value_t>
-{  
-	return Avatar<typename T::value_t>(t.value());
+	template<  class T, class = std::enable_if_t< !is_Avatar<T>::value >  >
+	static auto Refer(T& t)-> Avatar< std::remove_reference_t<T> >
+	{
+		return Avatar< std::remove_reference_t<T> >(t);
+	}
+
+
+	template<  class T, class = std::enable_if_t< is_Avatar<T>::value >  >
+	static auto Refer(T t)-> Avatar<typename T::value_t>
+	{  
+		return Avatar<typename T::value_t>(t.value());
+	}
+
+
+	template<class T>
+	static auto CRefer(T&& t) SGM_DECLTYPE_AUTO(  Refer( static_cast<T const&>(t) )  )
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

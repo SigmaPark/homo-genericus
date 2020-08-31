@@ -41,11 +41,15 @@ public:
 		return *this;
 	}
 
-	template< size_t IDX = std::tuple_size<TU>::value - 1 >
-	auto get() const-> decltype( std::get<IDX>(_tu) ) const&{  return std::get<IDX>(_tu);  }
 
-	auto first() const SGM_DECLTYPE_AUTO(  get<0>()  )
-	auto last() const SGM_DECLTYPE_AUTO(  get()  )
+	template
+	<	signed IDX
+	,	int N 
+		=	IDX == 0
+			?	0
+			:	(IDX < 0) ? std::tuple_size<TU>::value + IDX : IDX - 1
+	>
+	auto _() const-> decltype( std::get<N>(_tu) ) const&{  return std::get<N>(_tu);  }
 };
 
 
@@ -63,36 +67,19 @@ public:
 
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	auto operator=(CON&& con)-> Chain&
-	{
-		return *this = Chain(con.begin(), con.end());
-	}
+	auto operator=(CON&& con)-> Chain&{  return *this = Chain(con.begin(), con.end());  }
 
 	auto operator()(ITR h, ITR t)-> Chain&{  return *this = Chain(h, t);  }
 
-
 	auto head() const-> deref_t const&{  return *_head;  }
-	auto tail() const-> deref_t const&{  return *_tail;  }
 	auto body() const-> Chain{  return Chain( Next(_head), _tail );  }
 
 	bool is_empty() const{  return _head == _tail;  }
 	operator bool() const{  return !is_empty();  }
 
+
 private:
 	ITR _head, _tail;
-};
-
-
-struct sgm::_Recursion_Helper : No_Making
-{
-	template<class T>
-	static auto carry(T& t)-> std::conditional_t< is_immutable<T>::value, std::decay_t<T>, T& >
-	{
-		return t;
-	}
-
-	template<class T>
-	static auto carry(T&& t) SGM_DECLTYPE_AUTO(  std::move(t)  )
 };
 
 
@@ -102,20 +89,18 @@ namespace sgm
 	template<class...ARGS>
 	auto Recursion(ARGS&&...args) SGM_DECLTYPE_AUTO
 	(
-		Recursor<  std::tuple< decltype( _Recursion_Helper::carry<ARGS>(args) )... >  >
-		(	std::forward_as_tuple
-			(	_Recursion_Helper::carry<ARGS>(args)...
-			)
+		Recursor<  std::tuple< std::decay_t<ARGS>... >  >
+		(	std::forward_as_tuple( std::forward<ARGS>(args)... )
 		)
 	)
 
 
 	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-	auto make_Chain(ITR head, ITR tail) SGM_DECLTYPE_AUTO(  Chain<ITR>(head, tail)  )
+	auto Chaining(ITR head, ITR tail) SGM_DECLTYPE_AUTO(  Chain<ITR>(head, tail)  )
 
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	auto make_Chain(CON&& con) SGM_DECLTYPE_AUTO
+	auto Chaining(CON&& con) SGM_DECLTYPE_AUTO
 	(	
 		Chain< std::decay_t<decltype(con.begin())> >( std::forward<CON>(con) )
 	)

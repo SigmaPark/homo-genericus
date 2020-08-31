@@ -10,6 +10,7 @@
 
 namespace sgm
 {
+
 	SGM_DECL_PROXY_TEMPLATE_CLASS(Pinweight);
 
 	template<class T>
@@ -21,8 +22,6 @@ namespace sgm
 	template<class T>
 	using Root_t = typename __Root<T>::type;
 
-	template<class T>
-	static auto make_Pinweight(T&& t)-> Pinweight< std::remove_reference_t<T> >;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -219,10 +218,15 @@ struct sgm::__Root
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>
-auto sgm::make_Pinweight(T&& t)-> Pinweight< std::remove_reference_t<T> >
+namespace sgm
 {
-	return Pinweight< std::remove_reference_t<T> >( std::forward<T>(t) );
+
+	template<class T>
+	static auto Pinweighting(T&& t)-> Pinweight< std::remove_reference_t<T> >
+	{
+		return Pinweight< std::remove_reference_t<T> >( std::forward<T>(t) );
+	}
+
 }
 
 

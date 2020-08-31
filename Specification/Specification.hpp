@@ -80,10 +80,10 @@ namespace sgm
 
 
 		template<int B = 1, int...BS>
-		struct All_True : std::conditional_t< B == 1, All_True<BS...>, std::false_type >{};
+		struct All_True : std::conditional_t< B == 1, All_True<BS...>, Guaranteed_t<B> >{};
 
 		template<> 
-		struct All_True<> : std::true_type{};
+		struct All_True<>{};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
 
 
