@@ -4,6 +4,7 @@
 #define _SGM_NUM_MATHEMATICS_
 
 #include <cfloat>
+#include <cmath>
 
 namespace sgm
 {

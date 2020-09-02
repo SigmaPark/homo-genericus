@@ -22,23 +22,57 @@ static void Test01()
 	);
 }
 
-#include <iostream>
+
+template< class X, class Y = X, class pair_t = num::XY_Pair<X, Y> >
+struct _Compare
+{
+	pair_t _thresholds;
+
+	
+	_Compare(X x_thres, Y y_thres) : _thresholds( {abs(x_thres), abs(y_thres)} ){}
+	_Compare(X thres) : _Compare(thres, thres){}
+
+	bool operator()(pair_t A, pair_t B) const
+	{
+		return abs(A.x - B.x) < _thresholds.x && abs(A.y - B.y) < _thresholds.y;
+	}
+};
 
 
 static void Test02()
 {
-	//std::wcout << L"answer = "
-	//<<	num::GoldenSection<num::Extreme::MINIMUM>::search
-	//	(	[](float x)-> float{  return (x*x - 1) - 1;  }
-	//	,	{0.f, 3.f}, 0.0001f
-	//	).first
-	//<<	std::endl;
-	//
+	auto parabola_f = [](double x)-> double{  return pow(x - 1, 2) - 1;  };
+	double const threshold = 1e-5;
+
+	num::XY_Pair<double, double> const
+		answer{1, parabola_f(1)},
+		gs_searched 
+		=	num::GoldenSection<num::Extreme::MINIMUM>::search
+			(	parabola_f, num::Real_Range<double>{0.0, 5.0}, threshold
+			);
+
+	spec::are_Equivalent( _Compare<double>(threshold), gs_searched, answer );
+}
+
+
+static void Test03()
+{
+	auto sine_f = [](double x)-> double{  return sin(x);  };
+	double const threshold = 1e-5, &pi = num::Constants::Pi<double>();
+
+	num::XY_Pair<double, double> const
+		answer{pi/2, sin(pi/2)},
+		gs_searched
+		=	num::GoldenSection<num::Extreme::MAXIMUM>::search
+			(	sine_f, num::Real_Range<double>{0.0, pi}, threshold
+			);
+	
+	spec::are_Equivalent( _Compare<double>(threshold), gs_searched, answer );
 }
 
 
 #include "Test_Mathematics.hpp"
-
+#include <iostream>
 
 
 void Test_sgm_Mathematics::test()
@@ -47,6 +81,7 @@ void Test_sgm_Mathematics::test()
 	{
 		::Test01();
 		::Test02();
+		::Test03();
 	}
 	catch (std::exception e)
 	{
