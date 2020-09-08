@@ -63,7 +63,7 @@ public:
 	Chain(ITR h, ITR t) : _head(h), _tail(t){}
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	Chain(CON&& con) : Chain(con.begin(), con.end()){}
+	Chain(CON& con) : Chain(con.begin(), con.end()){}
 
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
@@ -100,9 +100,9 @@ namespace sgm
 
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	auto Chaining(CON&& con) SGM_DECLTYPE_AUTO
+	auto Chaining(CON& con) SGM_DECLTYPE_AUTO
 	(	
-		Chain< std::decay_t<decltype(con.begin())> >( std::forward<CON>(con) )
+		Chain< std::decay_t<decltype(con.begin())> >(con)
 	)
 
 }

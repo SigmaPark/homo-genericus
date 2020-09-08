@@ -53,12 +53,12 @@ namespace sgm
 					>::	value
 				>
 		>
-		static void are_Equivalent(COMP&& comp, T1&& t1, T2&& t2, TYPES&&...types)
+		static void are_Equivalent_by(COMP&& comp, T1&& t1, T2&& t2, TYPES&&...types)
 		{
 			if( !comp(t1, t2) )
 				throw Exception();
 			else
-				are_Equivalent
+				are_Equivalent_by
 				(	std::forward<COMP>(comp)
 				,	std::forward<T2>(t2)
 				,	std::forward<TYPES>(types)...
@@ -75,7 +75,7 @@ namespace sgm
 					>::	value
 				>
 		>
-		static void are_Equivalent(COMP&&, T&&){}
+		static void are_Equivalent_by(COMP&&, T&&){}
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
 
 

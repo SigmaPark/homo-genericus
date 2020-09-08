@@ -19,27 +19,29 @@ static void Factorial_Test()
 			return res;
 		}(1);
 
+	auto const 
+		Ex1 
+		=	[](int n, int res)
+			{
+				for
+				(	auto recur = Recursion( Refer(n), Refer(res) )
+				;	n > 1
+				;	recur(n - 1, n * res)
+				);
+						
+				return res;
+			}(N, 1),
+		Ex2
+		=	[](  decltype( Recursion(N, 1) ) recur  )
+			{
+				while(recur._<1>() > 1)
+					recur( recur._<1>() - 1, recur._<1>()*recur._<-1>() );
 
-	are_Equivalent
-	(	[](int n, int res)
-		{
-			for
-			(	auto recur = Recursion( std::ref(n), std::ref(res) )
-			;	n > 1
-			;	recur(n - 1, n * res)
-			);
-					
-			return res;
-		}(N, 1)
-	,	[](  decltype( Recursion(N, 1) ) recur  )
-		{
-			while(recur._<1>() > 1)
-				recur( recur._<1>() - 1, recur._<1>()*recur._<-1>() );
+				return recur._<-1>();
+			}( Recursion(N, 1) );
 
-			return recur._<-1>();
-		}( Recursion(N, 1) )
-	,	answer
-	);
+
+	are_Equivalent(Ex1, Ex2, answer);
 }
 
 
@@ -49,7 +51,7 @@ static void Fibonacci_Test()
 	(	[](int n, int prev, int next)
 		{
 			for
-			(	auto recur = Recursion( std::ref(n), std::ref(prev), std::ref(next) )
+			(	auto recur = Recursion( Refer(n), Refer(prev), Refer(next) )
 			;	n > 1
 			;	recur(n - 1, next, prev + next)
 			);
@@ -57,26 +59,6 @@ static void Fibonacci_Test()
 			return next;
 		}(10, 0, 1)
 	,	55
-	);
-}
-
-
-static void N_sum_Test()
-{
-	auto arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-	
-	are_Equivalent
-	(	[](decltype( Chaining(arr) ) chain, int res)
-		{
-			for
-			(	auto recur = Recursion( chain, Refer(res) )
-			;	chain
-			;	recur(recur._<1>().body(), res + recur._<1>().head())
-			);
-
-			return res;
-		}( Chaining(arr), 0 )
-	,	1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
 	);
 }
 
@@ -91,7 +73,6 @@ void Test_sgm_Recursion::test()
 	{
 		::Factorial_Test();
 		::Fibonacci_Test();
-		::N_sum_Test();
 	}
 	catch(...)
 	{
