@@ -383,13 +383,6 @@ namespace sgm
 #else
 	#error SGM_DECL_PROXY_TEMPLATE_CLASS was already defined somewhere else.
 #endif
-
-
-#ifndef SGM_MACROPACK
-	#define SGM_MACROPACK(...) __VA_ARGS__
-#else
-	#error SGM_MACROPACK was already defined somewhere else.
-#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

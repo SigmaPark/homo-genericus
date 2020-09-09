@@ -8,6 +8,7 @@
 #endif
 
 #include "..\interface_Traits\interface_Traits.hpp"
+#include "..\idiom\idiom.hpp"
 #include <cassert>
 #include <iterator>
 
