@@ -219,7 +219,7 @@ struct sgm::ht::_Filter_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 		Serial<elem_t> res(nof_true);
 
 		for
-		(	auto duo = Zip_iterator<size_t>(0, con.begin())
+		(	auto duo = Dual_iteration<size_t>(0, con.begin())
 		;	duo._1 < truth_table.size()
 		;	duo++
 		)

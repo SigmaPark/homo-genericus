@@ -164,9 +164,8 @@ namespace sgm
 	template<class T> struct is_Comparable : Has_Operator_Same<T>{};
 	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
 
-
 	template<class T> 
-	struct is_iterator : No_Making
+	struct is_iterator
 	{
 		enum : bool
 		{	value 
@@ -177,14 +176,15 @@ namespace sgm
 				||	std::is_pointer<T>::value
 				)
 		};
+
+		is_iterator() = delete;
 	};
 
 
 	template<class T>
-	struct is_random_access_iterator : No_Making
-	{
-		enum : bool{value = is_iterator<T>::value && Has_Operator_index<T>::value};
-	};
+	struct is_random_access_iterator 
+	:	std::conditional_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >
+	{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -245,43 +245,6 @@ namespace sgm
 		return _Travel<ITR>::prev(itr, steps);  
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template<class ITR1, class ITR2> 
-	struct Dual_iterator
-	{
-		ITR1 _1;  
-		ITR2 _2;
-
-
-		Dual_iterator(ITR1 itr1, ITR2 itr2) : _1(itr1), _2(itr2){}
-
-		
-		auto operator++(int)-> Dual_iterator
-		{
-			auto const itr = *this;
-
-			_1++,  _2++;
-
-			return itr;
-		}
-
-		auto operator++()-> Dual_iterator&
-		{
-			++_1,  ++_2;
-
-			return *this;
-		}
-	};
-	
-
-	template<class ITR1, class ITR2>
-	static auto Zip_iterator(ITR1&& itr1, ITR2&& itr2) SGM_DECLTYPE_AUTO
-	(
-		Dual_iterator< std::decay_t<ITR1>, std::decay_t<ITR2> >
-		(	std::forward<ITR1>(itr1), std::forward<ITR2>(itr2) 
-		)
-	)
 
 
 } // end of namespace sgm

@@ -6,6 +6,7 @@
 #include <new>
 #include <cassert>
 #include "..\interface_Traits\interface_Traits.hpp"
+#include "..\idiom\idiom.hpp"
 
 #ifndef _SGM_NOEXCEPT
 	#define _SGM_NOEXCEPT throw()
@@ -276,7 +277,7 @@ protected:
 
 		for ( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
 
-		return Zip_iterator(bi, itr);
+		return Dual_iteration(bi, itr);
 	}
 
 
