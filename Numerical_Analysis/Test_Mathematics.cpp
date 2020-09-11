@@ -1,4 +1,4 @@
-#include "Mathematics.hpp"
+//#include "Mathematics.hpp"
 #include "Extremum.hpp"
 #include "..\Specification\Specification.hpp"
 
@@ -82,6 +82,8 @@ void Test_sgm_Mathematics::test()
 		::Test01();
 		::Test02();
 		::Test03();
+		
+		std::wcout << L"Mathematics Test Complete.\n";
 	}
 	catch (std::exception e)
 	{
@@ -89,6 +91,4 @@ void Test_sgm_Mathematics::test()
 
 		throw e;
 	}
-
-	std::wcout << L"Mathematics Test Complete.\n";
 }

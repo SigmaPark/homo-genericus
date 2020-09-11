@@ -143,6 +143,8 @@ void Test_sgm_Pinweight::test()
 		::Test5();
 		::Test6();
 		::Test7();
+		
+		std::wcout << L"Pinweight Test Complete.\n";
 	}
 	catch(spec::Exception e)
 	{
@@ -150,6 +152,4 @@ void Test_sgm_Pinweight::test()
 
 		throw e;
 	}
-
-	std::wcout << L"Pinweight Test Complete.\n";
 }

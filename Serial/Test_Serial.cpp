@@ -567,14 +567,14 @@ struct Static : No_Making
 		is_True(sr1.front() == *sr1.begin() && sr1.back() == *sr1.rbegin());
 
 
-		Serial<type, 3> const sr2{3, 6, 9};
+		using csr_t = Serial<type, 3> const;
 
 		static_assert
-		(	(	is_immutable<decltype(sr2[1])>::value
-			&&	is_immutable<decltype(sr2.front())>::value
-			&&	is_immutable<decltype(sr2.back())>::value
-			&&	is_immutable<decltype(*sr2.begin())>::value
-			&&	is_immutable<decltype(*sr2.rbegin())>::value	
+		(	(	is_immutable<decltype(Declval<csr_t>()[1])>::value
+			&&	is_immutable<decltype(Declval<csr_t>().front())>::value
+			&&	is_immutable<decltype(Declval<csr_t>().back())>::value
+			&&	is_immutable<decltype(*Declval<csr_t>().begin())>::value
+			&&	is_immutable<decltype(*Declval<csr_t>().rbegin())>::value	
 			)
 		,	"access interface may cause unexpected modification."
 		);
@@ -613,6 +613,8 @@ void Test_sgm_Serial::test()
 		Static::Type_Conversion_into_iterable();
 		Static::Swap();
 		Static::Element();
+		
+		std::wcout << L"Serial Test Complete.\n";
 	}
 	catch(sgm::spec::Exception e)
 	{
@@ -620,6 +622,4 @@ void Test_sgm_Serial::test()
 
 		throw e;
 	}
-
-	std::wcout << L"Serial Test Complete.\n";
 }

@@ -132,6 +132,8 @@ void Test_sgm_Avatar::test()
 		::Test3();
 		::Test4();
 		::Test5();
+		
+		std::wcout << L"Avatar Test Complete.\n";
 	}
 	catch(spec::Exception e)
 	{
@@ -139,6 +141,4 @@ void Test_sgm_Avatar::test()
 
 		throw e;
 	}
-
-	std::wcout << L"Avatar Test Complete.\n";
 }

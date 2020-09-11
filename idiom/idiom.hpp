@@ -14,6 +14,9 @@
 namespace sgm
 {
 
+	struct Violation;
+
+
 	struct Freezer_Violation;
 	template<class T> class Freezer;
 
@@ -22,27 +25,39 @@ namespace sgm
 
 
 	struct Over_instantiation_Violation;
-	template<class instance_t, size_t NOF_INSTANCE> struct Limited;
+	template<size_t NOF_INSTANCE, class = void> struct Limited;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+struct sgm::Violation
+{
+	virtual auto what() const-> wchar_t const* = 0;
+	virtual ~Violation() = default;
+};
+
+
 #ifndef _SGM_VIOLATION
-	#define _SGM_VIOLATION(NAME)	\
-		struct sgm::NAME	\
+	#define _SGM_VIOLATION(NAME, ...)	\
+		struct sgm::NAME : Violation	\
 		{	\
 		public:	\
-			auto what() const-> wchar_t const*{  return L###NAME;  }	\
+			auto what() const-> wchar_t const* override{  return L###NAME;  }	\
 			\
-		protected:	\
+		private:	\
+			__VA_ARGS__; \
 			\
 			NAME() = default;	\
 		}
 
 
-		_SGM_VIOLATION(Freezer_Violation);
-		_SGM_VIOLATION(Over_instantiation_Violation);
+		_SGM_VIOLATION(Freezer_Violation, template<class> friend class Freezer);
+
+		_SGM_VIOLATION
+		(	Over_instantiation_Violation, template<size_t, class> friend struct Limited
+		);
+
 
 	#undef _SGM_VIOLATION
 #else
@@ -52,7 +67,7 @@ namespace sgm
 
 
 template<class T>
-class sgm::Freezer : public Freezer_Violation
+class sgm::Freezer
 {
 public:
 	Freezer(T const& t) : _t(t), _frozen(false){}
@@ -79,8 +94,8 @@ private:
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class instance_t, size_t NOF_INSTANCE>
-struct sgm::Limited : Over_instantiation_Violation
+template<size_t NOF_INSTANCE, class>
+struct sgm::Limited
 {
 private:
 	enum Count : long long{UP = 1, READ = 0, DOWN = -1};
@@ -109,8 +124,8 @@ protected:
 };
 
 
-template<class instance_t>
-struct sgm::Limited<instance_t, 0>{  Limited() = delete;  };
+template<>
+struct sgm::Limited<0, void>{  Limited() = delete;  };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

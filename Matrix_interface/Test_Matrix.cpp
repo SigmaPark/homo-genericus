@@ -728,6 +728,8 @@ void Test_sgm_Matrix::test()
 		Vector_Case::Normalization();
 		Vector_Case::Special_Vectors();
 		Vector_Case::Algebra();
+		
+		std::wcout << L"Matrix Test Complete.\n";
 	}
 	catch(...)
 	{
@@ -735,6 +737,4 @@ void Test_sgm_Matrix::test()
 
 		throw;
 	}
-
-	std::wcout << L"Matrix Test Complete.\n";
 }

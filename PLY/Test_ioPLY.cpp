@@ -32,6 +32,7 @@ void Test_sgm_ioPLY::test()
 	{
 		::Test01();
 
+		std::wcout << L"ioPLY Test Complete.\n";
 	}
 	catch(...)
 	{
@@ -39,6 +40,4 @@ void Test_sgm_ioPLY::test()
 
 		throw;
 	}
-
-	std::wcout << L"ioPLY Test Complete.\n";
 }

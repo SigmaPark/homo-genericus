@@ -73,6 +73,8 @@ void Test_sgm_Recursion::test()
 	{
 		::Factorial_Test();
 		::Fibonacci_Test();
+		
+		std::wcout << L"Recursion Test Complelete.\n";
 	}
 	catch(...)
 	{
@@ -80,6 +82,4 @@ void Test_sgm_Recursion::test()
 
 		throw;
 	}
-
-	std::wcout << L"Recursion Test Complelete.\n";
 }

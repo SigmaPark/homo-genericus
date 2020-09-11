@@ -133,6 +133,8 @@ void Test_sgm_High_Templar::test()
 		FoldTest();
 
 		Ex_LeibnizTest();
+
+		std::wcout << L"High Templar Test Complete.\n";
 	}
 	catch(spec::Exception e)
 	{
@@ -140,6 +142,4 @@ void Test_sgm_High_Templar::test()
 
 		throw e;
 	}
-
-	std::wcout << L"High Templar Test Complete.\n";
 }

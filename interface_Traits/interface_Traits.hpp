@@ -10,6 +10,9 @@ namespace sgm
 {
 
 
+	template<class...> using Void_t = void;
+
+
 #ifndef SGM_INTERFACE_CHECK
 	#define SGM_INTERFACE_CHECK(TEMPLATE_ARGS, NAME, ...)	\
 		template<class _CLASS, TEMPLATE_ARGS>	\
@@ -185,6 +188,54 @@ namespace sgm
 	struct is_random_access_iterator 
 	:	std::conditional_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >
 	{};
+
+
+	template<class CON, class T = void> 
+	struct is_iterable
+	{
+	private:
+	#ifndef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+		#define _HAS_ITERABLE_METHOD_WHOSE_NAME_IS(METHOD, TYPE, DEREF)	\
+			template<class Q>	\
+			static auto _has_##METHOD(Q*)	\
+			->	typename std::is_convertible	\
+				<	std::add_pointer_t	\
+					<	std::decay_t< decltype( DEREF Declval<Q>().METHOD() ) >  \
+					>	\
+				,	TYPE* \
+				>::	type;	\
+			\
+			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
+			\
+			using has_##METHOD = decltype( _has_##METHOD< std::decay_t<CON> >(nullptr) )
+
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);
+		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(size, size_t, );
+
+		#undef _HAS_ITERABLE_METHOD_WHOSE_NAME_IS
+	#else
+		#error _HAS_ITERABLE_METHOD_WHOSE_NAME_IS was already defined somewhere else.
+	#endif
+
+	public: 
+		enum : bool{value = has_begin::value && has_end::value && has_size::value};
+
+		is_iterable() = delete;
+	};
+
+
+	template
+	<	class CON1, class CON2
+	,	class 
+		=	std::enable_if_t
+			<	is_iterable<CON1>::value && is_iterable<CON2>::value
+			&&	std::is_same
+				<	std::decay_t< Elem_t<CON1> >, std::decay_t< Elem_t<CON2> >  
+				>::	value
+			>
+	>
+	static auto iterable_cast(CON2&& con)-> CON1{  return CON1(con.begin(), con.end());  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

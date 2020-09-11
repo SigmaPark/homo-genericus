@@ -109,9 +109,13 @@ struct sgm::_iterator_Distance<ITR, false> : No_Making
 {
 	static_assert(is_iterator<ITR>::value, "ITR doesn't have iterator interface");
 
-	static auto calc(ITR bi, ITR const ei, size_t dist = 0)-> size_t
+	static auto calc(ITR bi, ITR const ei)-> size_t
 	{
-		return bi == ei ? dist : calc(++bi, ei, ++dist);
+		size_t dist = 0;
+
+		for (;  bi != ei;  ++bi,  ++dist);
+
+		return dist;
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
