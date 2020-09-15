@@ -3,7 +3,7 @@
 #ifndef _SGM_COUNTABLE_
 #define _SGM_COUNTABLE_
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include <type_traits>
 #include <cassert>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -152,15 +152,15 @@ namespace sgm
 		using iterator_t = Count_iterator<N, true>;
 		using riterator_t = Count_iterator<N, false>;
 
-		auto cbegin() const SGM_DECLTYPE_AUTO(  iterator_t(_offset)  )
-		auto cend() const SGM_DECLTYPE_AUTO(  iterator_t(_offset + _length)  )
-		auto begin() const SGM_DECLTYPE_AUTO(  cbegin()  )
-		auto end() const SGM_DECLTYPE_AUTO(  cend()  )
+		auto cbegin() const-> iterator_t{  return iterator_t(_offset);  }
+		auto cend() const-> iterator_t{  return iterator_t(_offset + _length);  }
+		auto begin() const-> iterator_t{  return cbegin();  }
+		auto end() const-> iterator_t{  return cend();  }
 
-		auto crbegin() const SGM_DECLTYPE_AUTO(  riterator_t(_offset + _length - 1)  )
-		auto crend() const SGM_DECLTYPE_AUTO(  riterator_t(_offset - 1)  )
-		auto rbegin() const SGM_DECLTYPE_AUTO(  crbegin()  )
-		auto rend() const SGM_DECLTYPE_AUTO(  crend()  )
+		auto crbegin() const-> riterator_t{  return riterator_t(_offset + _length - 1);  }
+		auto crend() const-> riterator_t{ return riterator_t(_offset - 1);  }
+		auto rbegin() const-> riterator_t{  return crbegin();  }
+		auto rend() const-> riterator_t{  return crend();  }
 	};
 
 

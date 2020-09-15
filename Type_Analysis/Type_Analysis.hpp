@@ -13,13 +13,6 @@ namespace sgm
 {
 	
 
-#ifndef SGM_DECLTYPE_AUTO
-	#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
-#else
-	#error SGM_DECLTYPE_AUTO was already defined somewhere else.
-#endif
-
-
 	struct No_Making{  No_Making() = delete;  };
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -230,14 +223,14 @@ namespace sgm
 	struct Move_if<false> : No_Making
 	{
 		template<class T>
-		static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::forward<T>(t) )
+		static auto cast(T&& t)-> decltype( std::forward<T>(t) ){  return std::forward<T>(t);  }
 	};
 
 	template<>
 	struct Move_if<true> : No_Making
 	{
 		template<class T>
-		static auto cast(T&& t) SGM_DECLTYPE_AUTO( std::move(t) )
+		static auto cast(T&& t)-> decltype( std::move(t) ){  return std::move(t);  }
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
 

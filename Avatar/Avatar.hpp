@@ -198,7 +198,10 @@ namespace sgm
 
 
 	template<class T>
-	static auto CRefer(T&& t) SGM_DECLTYPE_AUTO(  Refer( static_cast<T const&>(t) )  )
+	static auto CRefer(T&& t)-> decltype(  Refer( static_cast<T const&>(t) )  )
+	{
+		return Refer( static_cast<T const&>(t) );
+	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

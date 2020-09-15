@@ -11,6 +11,13 @@
 #endif
 
 
+#ifndef SGM_DECLTYPE_AUTO
+	#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
+#else
+	#error SGM_DECLTYPE_AUTO was already defined somewhere else.
+#endif
+
+
 namespace sgm
 {
 

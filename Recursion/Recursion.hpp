@@ -87,23 +87,27 @@ namespace sgm
 {
 
 	template<class...ARGS>
-	auto Recursion(ARGS&&...args) SGM_DECLTYPE_AUTO
-	(
+	auto Recursion(ARGS&&...args)-> Recursor<  std::tuple< std::decay_t<ARGS>... >  >
+	{
+		return
 		Recursor<  std::tuple< std::decay_t<ARGS>... >  >
 		(	std::forward_as_tuple( std::forward<ARGS>(args)... )
-		)
-	)
+		);
+	}
+	
 
 
 	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
-	auto Chaining(ITR head, ITR tail) SGM_DECLTYPE_AUTO(  Chain<ITR>(head, tail)  )
+	auto Chaining(ITR head, ITR tail)-> Chain<ITR>{  return Chain<ITR>(head, tail);  }
+	
 
 
 	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	auto Chaining(CON& con) SGM_DECLTYPE_AUTO
-	(	
-		Chain< std::decay_t<decltype(con.begin())> >(con)
-	)
+	auto Chaining(CON& con)-> Chain< std::decay_t<decltype(con.begin())> >
+	{
+		return Chain< std::decay_t<decltype(con.begin())> >(con);
+	}
+	
 
 }
 

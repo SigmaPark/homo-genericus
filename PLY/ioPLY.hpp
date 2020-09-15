@@ -8,21 +8,17 @@ namespace sgm
 {
 	namespace ply
 	{
-		class ASCII_Recorder;
 		class ASCII_Loader;
+		class ASCII_Recorder;
 	}
 }
 
 
+#include "..\Serial\Serial.hpp"
 
 
 class sgm::ply::ASCII_Loader
 {
-private:
-	class impl;
-	impl* _pimpl;
-
-
 public:
 	ASCII_Loader(char const* const str = nullptr);
 	~ASCII_Loader();
@@ -30,24 +26,30 @@ public:
 	auto nofVertices() const-> size_t;
 	auto nofFaces() const-> size_t;
 
-	auto positions() const-> double const*;
-	auto normals() const-> double const*;
-	auto RGB() const-> unsigned char const*;
-	auto RGBA() const-> unsigned char const*;
-	auto faces() const-> size_t const*;
+	auto positions() const-> Serial< Serial<double> > const&;
+	auto normals() const-> Serial< Serial<double> > const&;
+	auto colors() const-> Serial< Serial<unsigned char> > const&;
+	auto faces() const-> Serial< Serial<size_t> > const&;
+
+	bool has_normal() const;
+	bool has_color() const;
+	bool has_alpha() const;
+	bool has_face() const;
 
 	auto file_path(char const* const str)-> ASCII_Loader&;
+
+	bool loaded() const;
 	bool load();
+
+
+private:
+	class impl;
+	impl* _pimpl;
 };
 
 
 class sgm::ply::ASCII_Recorder
 {
-private:
-	class impl;
-	impl* _pimpl;
-
-
 public:
 	ASCII_Recorder
 	(	char const* const str = nullptr
@@ -67,6 +69,10 @@ public:
 
 	auto file_path(char const* const str)-> ASCII_Recorder&;
 	bool record() const;
+
+
+private:
+
 };
 
 
