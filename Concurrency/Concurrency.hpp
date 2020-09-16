@@ -14,7 +14,7 @@ namespace sgm
 
 		struct _Parallel_Helper;
 
-		struct Nof_HW_Core{  enum : unsigned{DYNAMIC = Size_info<unsigned>::MAXIMUM};  };
+		struct Nof_HW_Core{  enum : unsigned{DYNAMIC = 0xffffffffUL};  };
 
 		template<unsigned NOF_TASK = Nof_HW_Core::DYNAMIC>
 		struct Parallel;

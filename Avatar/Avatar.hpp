@@ -4,57 +4,15 @@
 #define _SGM_AVATAR_
 
 #include <cassert>
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\Abbreviable\Abbreviable.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm
 {
-	SGM_DECL_PROXY_TEMPLATE_CLASS(Avatar);
-
-
-	template<class T>
-	struct is_constAvatar;
+	SGM_ABBREVIABLE_PROXY(Avatar);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class T>
-struct sgm::is_constAvatar : No_Making
-{
-private:
-	template<class Q>
-	struct AvtMutability : No_Making
-	{
-		using type 
-		=	std::conditional_t< is_immutable<Q>::value && is_Avatar<Q>::value, invar, void >;
-	};
-
-	template<class Q, class M, bool...BS>
-	struct AvtMutability<  Avatar_t< Q, M, Avatar_T_Helper<Q, M, BS...> >  > : No_Making
-	{
-		using type 
-		=	std::conditional_t
-			<	std::is_same<M, invar>::value || is_immutable<Q>::value
-			,	invar
-			,	std::conditional_t
-				<	is_Avatar<Q>::value
-				,	typename AvtMutability< std::remove_reference_t<Q> >::type
-				,	Var
-				>
-			>;
-	};
-
-
-public:
-	enum : bool
-	{	value 
-		=	std::is_same
-			<	typename AvtMutability< std::remove_reference_t<T> >::type, invar					 
-			>::	value
-	};
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T, class M>
@@ -204,13 +162,6 @@ namespace sgm
 	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class A, class B, class C>
-struct sgm::is_immutable< sgm::Avatar_t<A, B, C> > : No_Making
-{
-	enum : bool{value = is_constAvatar< Avatar_t<A, B, C> >::value};
-};
 
 
 #endif // end of #ifndef _SGM_AVATAR_

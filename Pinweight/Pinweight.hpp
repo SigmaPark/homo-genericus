@@ -3,7 +3,7 @@
 #ifndef _SGM_PINWEIGHT_
 #define _SGM_PINWEIGHT_
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\Abbreviable\Abbreviable.hpp"
 #include <atomic>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -11,16 +11,10 @@
 namespace sgm
 {
 
-	SGM_DECL_PROXY_TEMPLATE_CLASS(Pinweight);
+	SGM_ABBREVIABLE_PROXY(Pinweight);
 
 	template<class T>
 	class _Pinweight_interface;
-
-	template<class T>
-	struct __Root;
-
-	template<class T>
-	using Root_t = typename __Root<T>::type;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -205,19 +199,6 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>
-struct sgm::__Root
-{
-	using type 
-	=	std::conditional_t
-		<	is_Pinweight<T>::value
-		,	typename __Root<typename T::value_t>::type
-		,	std::decay_t<T>
-		>;
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 namespace sgm
 {
 
@@ -228,6 +209,7 @@ namespace sgm
 	}
 
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 #endif // end of #ifndef _SGM_PINWEIGHT_
