@@ -37,9 +37,11 @@ public:
 	Avatar_t(T&&) = delete;
 
 	template<  class _M, class = std::enable_if_t< IS_CONST || !Avatar_t<T, _M>::IS_CONST >  >
-	Avatar_t(Avatar_t<T, _M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){} 
+	Avatar_t(Avatar_t<T, _M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){}
 
-	~Avatar_t(){  _pval = nullptr, _state = State::GONE;  }
+
+	void distruct() throw(){  _pval = nullptr, _state = State::GONE;  }
+	~Avatar_t(){  distruct();  }
 
 
 	auto value() const-> T const&	{  return *_pval;  }
@@ -80,9 +82,7 @@ public:
 	template<class _M>
 	auto operator()(Avatar_t<T, _M> avt)-> Avatar_t
 	{
-		static_assert
-		(	IS_CONST || !Avatar_t<T, _M>::IS_CONST, "cannot bind to const Avatar_t"
-		);
+		static_assert(IS_CONST || !Avatar_t<T, _M>::IS_CONST, "cannot bind to const Avatar_t");
 
 		_pval = &avt.value(), _state = get_state(avt);
 
@@ -131,8 +131,7 @@ private:
 	template<class _M>
 	static auto get_state(Avatar_t<T, _M> avt)-> State
 	{
-		return 
-		avt.is_owning() ? State::OWNING : (avt.is_yet() ? State::YET : State::GONE);
+		return avt.is_owning() ? State::OWNING : (avt.is_yet() ? State::YET : State::GONE);
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -160,6 +159,7 @@ namespace sgm
 	{
 		return Refer( static_cast<T const&>(t) );
 	}
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

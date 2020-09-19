@@ -71,8 +71,8 @@ void Test_sgm_Recursion::test()
 {
 	try
 	{
-		::Factorial_Test();
-		::Fibonacci_Test();
+		//::Factorial_Test();
+		//::Fibonacci_Test();
 		
 		std::wcout << L"Recursion Test Complelete.\n";
 	}

@@ -68,7 +68,7 @@ static void Test3()
 
 	is_True(avt1 == 4);
 
-	avt1.~Avatar_t();
+	avt1.distruct();
 
 	is_True(avt1.has_gone());
 }
