@@ -5,7 +5,7 @@
 using namespace sgm;
 using spec::are_Equivalent;
 
-
+#if 0
 static void Factorial_Test()
 {
 	int const N = 5;
@@ -61,6 +61,25 @@ static void Fibonacci_Test()
 	,	55
 	);
 }
+#endif
+
+#include <vector>
+
+static void Chain_Test()
+{
+	std::vector<int> const list = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+	int const sum 
+	=	[]( decltype(list) L, int res )
+		{
+			for ( auto chain = Chaining(L);  chain;  res += *chain++ );
+
+			return res;
+		}(list, 0);
+
+
+	are_Equivalent(sum, 55);
+}
 
 
 #include <iostream>
@@ -73,6 +92,7 @@ void Test_sgm_Recursion::test()
 	{
 		//::Factorial_Test();
 		//::Fibonacci_Test();
+		Chain_Test();
 		
 		std::wcout << L"Recursion Test Complelete.\n";
 	}
