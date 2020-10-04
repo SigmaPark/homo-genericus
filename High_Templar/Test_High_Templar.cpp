@@ -13,13 +13,13 @@ using spec::is_True;
 
 
 struct SHARE : Flag<SHARE>, Type_Decorator
-{  
-	template<class T> using type = Pinweight<T>;  
+{
+	template<class T> using type = Pinweight<T>;
 };
 
 struct CREFER : Flag<CREFER>, Type_Decorator
 {
-	template<class T> using type = constAvatar<T>;  
+	template<class T> using type = constAvatar<T>;
 };
 
 
@@ -29,7 +29,7 @@ static void CountableTest()
 	is_True
 	(	Judge::have_the_same( Countable<int>(5, 1), std::vector<int>{1, 2, 3, 4, 5} )
 	&&	Judge::have_the_same( Countable<unsigned>(4), std::vector<unsigned>{0, 1, 2, 3} )
-	);		
+	);
 }
 
 
@@ -54,7 +54,7 @@ static void FilterTest()
 {
 	auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 	auto answer = std::vector<int>{2, 4, 6, 8, 10};
-		
+	
 
 	is_True
 	(	Judge::have_the_same(  ht::Filter( Countable<int>(10, 1), is_even ), answer  )
