@@ -15,6 +15,7 @@ decltype(auto) tfunc(X&& x, Y&& y, Z&& z)
 void Test_sgm_Functor::test()
 {
 	using namespace sgm;
+	using blk::__;
 
 	Functor ftr = SGM_FUNCTOR(tfunc, 3);
 	Functor ftr2 = ftr(__, -1);

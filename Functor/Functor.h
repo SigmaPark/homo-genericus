@@ -9,11 +9,12 @@
 	#error C++17 or higher version language support is required.
 #endif
 
+
 #include "..\Type_Analysis\Type_Analysis.hpp"
 #include <memory>
 #include <tuple>
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 #ifndef SGM_FUNCTOR
 	/**	Macro function which converts template function into sgm::Functor
@@ -31,9 +32,8 @@
 #else
 	#error macro SGM_FUNCTOR is already defined elsewhere.
 #endif
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 namespace sgm
 {
@@ -97,7 +97,10 @@ namespace sgm
 
 
 	//	pre-defined constexpr for placeholder
-	inline static Blanker constexpr __;
+	namespace blk
+	{
+		inline static Blanker constexpr __;
+	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -115,11 +118,9 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 	 
-	class _Tuple_Detect_Helper
+	class _Tuple_Detect_Helper : public No_Making
 	{
 	public:
-		_Tuple_Detect_Helper() = delete;
-
 		template<typename...TYPES>
 		static bool constexpr calc(std::tuple<TYPES...> const*){  return true;  }
 
@@ -266,11 +267,9 @@ namespace sgm
 
 
 	template<unsigned N>
-	class _Multipling_Helper
+	class _Multipling_Helper : public No_Making
 	{
 	public:
-		_Multipling_Helper() = delete;
-
 		template<typename F, typename MTP, typename...ARGS>
 		static decltype(auto) constexpr calc(F&& f,[[maybe_unused]] MTP&& mtp, ARGS&&...args)
 		{
@@ -314,11 +313,9 @@ namespace sgm
 
 
 	template<unsigned NOF_PART, unsigned S, unsigned...SIZES>
-	class _Partition_Helper
+	class _Partition_Helper : public No_Making
 	{
 	public:
-		_Partition_Helper() = delete;
-
 		template<typename TTU, typename TU, typename A, typename...ARGS>
 		static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu, A&& a, ARGS&&...args)
 		{
@@ -341,11 +338,9 @@ namespace sgm
 
 
 	template<>
-	class _Partition_Helper<1, 0>
+	class _Partition_Helper<1, 0> : public No_Making
 	{
 	public:
-		_Partition_Helper() = delete;
-
 		template<typename TTU, typename TU>
 		static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu)
 		{
@@ -355,11 +350,9 @@ namespace sgm
 
 
 	template<unsigned...SIZES>
-	class _Partition
+	class _Partition : public No_Making
 	{
 	public:
-		_Partition() = delete;
-
 		template<typename...ARGS>
 		static decltype(auto) constexpr calc(ARGS&&...args)
 		{
@@ -373,11 +366,9 @@ namespace sgm
 
 
 	template<signed N>
-	class _reverse_Params_Helper
+	class _reverse_Params_Helper : public No_Making
 	{
 	public:
-		_reverse_Params_Helper() = delete;
-
 		template<typename TU, typename...ARGS>
 		static decltype(auto) calc([[maybe_unused]] TU&& tu, ARGS&&...args)
 		{
@@ -494,7 +485,7 @@ namespace sgm
 				return _cut_rear( std::forward<ARGS>(args)... );
 			else if constexpr( sizeof...(ARGS) == D )
 				return (*_spf)( std::forward<ARGS>(args)... );
-			else SGM_COMPILE_FAILED(no suitable evaluation method was found.);
+			//else SGM_COMPILE_FAILED(no suitable evaluation method was found.);
 		}
 
 
@@ -596,7 +587,7 @@ namespace sgm
 	{
 		static_assert(D == 2, "not a binary operation.");
 
-		return _infixer_Helper::make_infixer(  ftr( std::forward<T>(t), __ )  );
+		return _infixer_Helper::make_infixer(  ftr( std::forward<T>(t), blk::__ )  );
 	}
 
 
@@ -638,7 +629,7 @@ namespace sgm
 
 
 }	// End of namespace sgm
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
 
 #endif // End of #ifndef _SGM_FUNCTOR_
