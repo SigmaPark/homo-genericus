@@ -10,7 +10,7 @@
 #include "..\interface_Traits\interface_Traits.hpp"
 #include "..\idiom\idiom.hpp"
 #include <cassert>
-#include <iterator>
+
 
 #ifndef _READ_WRITE_MEMFUNC
 	#define _READ_WRITE_MEMFUNC(signature, ...)		\
@@ -73,6 +73,28 @@ namespace sgm::mxi
 	,	class = std::enable_if_t< MxTraits::is_mxiMatrix_v<T> || MxTraits::is_mxiVector_v<T> >
 	>
 	static decltype(auto) fetch(T&& t);
+
+
+	template
+	<	class VECS
+	,	class
+		=	std::enable_if_t
+			<	is_iterable<VECS>::value
+			&&	MxTraits::is_mxiVector_v< decltype(*Declval<VECS>().begin()) >
+			>	
+	>
+	static auto column_space(VECS&& vecs);
+
+
+	template
+	<	class VECS
+	,	class
+		=	std::enable_if_t
+			<	is_iterable<VECS>::value
+			&&	MxTraits::is_mxiVector_v< decltype(*Declval<VECS>().begin()) >
+			>	
+	>
+	static auto row_space(VECS&& vecs);
 
 
 	template
@@ -363,6 +385,42 @@ public:
 
 template<class S, class T, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C, class>
 auto sgm::mxi::operator*(S s, Matrix<T, R, C> const& m){  return m * s;  }
+
+
+template<class VECS, class>
+auto sgm::mxi::column_space(VECS&& vecs)
+{
+	using Vec_t = std::decay_t<decltype(*vecs.begin())>;
+	using elem_t = typename Vec_t::elem_t;
+
+	Matrix<elem_t> res(vecs.begin()->size(), vecs.size());
+
+	for
+	(	auto[itr, c] = Dual_iteration( vecs.begin(), MxSize_t(0) )
+	;	c < res.cols()
+	;	res.col(c) = itr->colVec(),  c++,  itr++
+	);
+		
+	return res;
+}
+
+
+template<class VECS, class>
+auto sgm::mxi::row_space(VECS&& vecs)
+{
+	using Vec_t = std::decay_t<decltype(*vecs.begin())>;
+	using elem_t = typename Vec_t::elem_t;
+
+	Matrix<elem_t> res(vecs.size(), vecs.begin()->size());
+
+	for
+	(	auto[itr, r] = Dual_iteration( vecs.begin(), MxSize_t(0) )
+	;	r < res.rows()
+	;	res.row(r) = itr->rowVec(),  r++,  itr++
+	);
+	
+	return res;
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

@@ -338,3 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Under 3rd Party Libraries
+3rd_Party_Libraries/

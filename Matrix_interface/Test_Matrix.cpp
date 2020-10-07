@@ -53,6 +53,7 @@ struct Matrix_Case : No_Making
 	static void Resize();
 	static void Special_Matrices();
 	static void Algebra();
+	static void Space();
 	static void internal_Array();
 };
 
@@ -482,6 +483,40 @@ void Matrix_Case::Algebra()
 }
 
 
+void Matrix_Case::Space()
+{
+	std::vector< Vector<float> > const vec1
+	{	Vector<float>{1, 2}, Vector<float>{3, 4}, Vector<float>{5, 6}
+	};
+
+	is_True
+	(	is_Equal
+		(	sgm::mxi::column_space(vec1)
+		,	Matrix<float, 2, 3>
+			{	1, 3, 5
+			,	2, 4, 6
+			}
+		)
+	);
+
+
+	std::vector< Vector<float, 2> > const vec2
+	{	Vector<float>{1, 2}, Vector<float>{3, 4}, Vector<float>{5, 6}
+	};
+
+	is_True
+	(	is_Equal
+		(	sgm::mxi::row_space(vec1)
+		,	Matrix<float, 3, 2>
+			{	1, 2
+			,	3, 4
+			,	5, 6
+			}
+		)
+	);
+}
+
+
 void Matrix_Case::internal_Array()
 {
 	auto copied
@@ -717,6 +752,7 @@ void Test_sgm_Matrix::test()
 		Matrix_Case::Resize(); 
 		Matrix_Case::Special_Matrices();
 		Matrix_Case::Algebra();
+		Matrix_Case::Space();
 		Matrix_Case::internal_Array();
 
 		Vector_Case::Constructions();
