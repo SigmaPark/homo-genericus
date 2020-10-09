@@ -42,6 +42,7 @@ void Test_sgm_Functor::test()
 			== 8
 		);
 
+
 		Functor const ftr3 = [](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>;
 
 		is_True
@@ -49,6 +50,21 @@ void Test_sgm_Functor::test()
 		&&	(ftr3 | Pass<-3>)(-1, 3, 2) == 8
 		&&	( ftr3 | Pass<2> + [](auto&& x){  return x/2;  } / Dim<1> )(2, 3, -2) == 8
 		);
+
+
+		int x = 3, *px = &x;
+		auto const& cx = x;
+		double y = 0.618;
+
+		auto permuted = Permute<1, 2, 3, 0>(3, px, cx, y);
+		
+		is_True
+		(	std::get<0>(permuted()) == px
+		&&	std::get<1>(permuted()) == cx
+		&&	std::get<2>(permuted()) == y
+		&&	std::get<3>(permuted()) == 3
+		);
+
 
 		std::wcout << L"Functor Test Complete.\n";
 	}

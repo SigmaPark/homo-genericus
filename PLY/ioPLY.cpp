@@ -31,7 +31,7 @@ public:
 
 	void file_path(char const* const str)
 	{
-		if (str != _file_path)
+		if(str != _file_path)
 			*this = impl(str);
 	}
 
@@ -87,27 +87,27 @@ void ASCII_Loader::impl::read_header(std::ifstream& ifs)
 
 		char const* w1 = _1st_word(str);
 
-		if (w1 == "end_header")
+		if(w1 == "end_header")
 			break;
-		else if (w1 == "element")
-			if ( has_word(str, "vertex") )
+		else if(w1 == "element")
+			if( has_word(str, "vertex") )
 				_positions = decltype(_positions)( last_number(str) );
-			else if ( has_word(str, "face") )
+			else if( has_word(str, "face") )
 				_faces = decltype(_faces)( last_number(str) );
 			else assert(false && "no suitable method was found.\n");
-		else if (w1 == "property")
+		else if(w1 == "property")
 		{
-			if ( has_word(str, "nx") || has_word(str, "ny") || has_word(str, "nz") )
+			if( has_word(str, "nx") || has_word(str, "ny") || has_word(str, "nz") )
 				_normals.is_null() 
 				?	_normals = decltype(_normals)(nofVertices())
 				:	_normals;
-			else if ( has_word(str, "red") || has_word(str, "green") || has_word(str, "blue") )
+			else if( has_word(str, "red") || has_word(str, "green") || has_word(str, "blue") )
 				_colors.is_null()
 				?	_colors = decltype(_colors)(nofVertices())
 				:	_colors;
-			else if ( has_word(str, "alpha") )
+			else if( has_word(str, "alpha") )
 				_colors >> Serial<unsigned char>(4);
-			else if ( has_word(str, "vertex_index") )
+			else if( has_word(str, "vertex_index") )
 				_faces = decltype(_faces)(nofFaces());
 			else assert(false && "no suitable method was found.\n");
 		}
@@ -158,7 +158,7 @@ bool ASCII_Loader::load()
 	//std::ifstream ifs;
 	//ifs.open(_file_path);
 
-	//if (!ifs.is_open())
+	//if(!ifs.is_open())
 	//	return _loaded = false;
 	return true;
 

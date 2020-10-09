@@ -142,8 +142,8 @@ namespace sgm
 	};
 
 
-	template<typename FPK>
-	static bool constexpr is_Multiple_v = std::is_base_of_v< Multiple_t, std::decay_t<FPK> >;
+	template<typename MTP>
+	static bool constexpr is_Multiple_v = std::is_base_of_v< Multiple_t, std::decay_t<MTP> >;
 
 
 	/**	Data structure to express multiple output from sgm::Functor
@@ -401,6 +401,50 @@ namespace sgm
 				(	std::make_tuple( std::forward<decltype(args)>(args)... )
 				);
 		} / Dim<(N >= 0 ? N : -N)>;
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
+	template<unsigned...INDICES>
+	struct _Permuter;
+
+
+	template<unsigned IDX, unsigned...INDICES>
+	struct _Permuter<IDX, INDICES...>
+	{
+		template<class...TYPES, class...ARGS>
+		static decltype(auto) calc(std::tuple<TYPES...>&& src_tu, ARGS&&...args)
+		{
+			return 
+			_Permuter<INDICES...>::calc
+			(	std::move(src_tu)
+			,	std::forward<ARGS>(args)...
+			,	static_cast< Nth_t<IDX, TYPES...> >( std::get<IDX>(src_tu) )
+			);
+		}
+	};
+
+
+	template<>
+	struct _Permuter<>
+	{
+		template<class...TYPES, class...ARGS>
+		static decltype(auto) calc(std::tuple<TYPES...>&&, ARGS&&...args)
+		{
+			return Params( std::forward<ARGS>(args)... );
+		}
+	};
+
+
+	template<unsigned...INDICES, class...ARGS>
+	static auto Permute(ARGS&&...args)
+	{
+		static_assert
+		(	sizeof...(INDICES) == sizeof...(ARGS), "the number of arguments is mismatched."
+		);
+
+		return
+		_Permuter<INDICES...>::calc(  std::forward_as_tuple( std::forward<ARGS>(args)... )  );
+	}
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

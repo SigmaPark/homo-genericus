@@ -72,7 +72,7 @@ static void Chain_Test()
 	int const sum 
 	=	[]( decltype(list) L, int res )
 		{
-			for ( auto chain = Chaining(L);  chain;  res += *chain++ );
+			for( auto chain = Chaining(L);  chain;  res += *chain++ );
 
 			return res;
 		}(list, 0);

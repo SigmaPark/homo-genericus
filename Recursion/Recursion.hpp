@@ -4,16 +4,14 @@
 #define _SGM_RECURSION11_
 
 #include "..\interface_Traits\interface_Traits.hpp"
-#include <tuple>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm
 {
-	struct _Recursion_Helper;
 
-	template<class TU>
-	class Recursor;
+	//template<class TU>
+	//class Recursor;
 
 
 	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
@@ -21,39 +19,9 @@ namespace sgm
 
 	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
 	class Chain;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class TU>
-class sgm::Recursor
-{
-private:
-	TU _tu;
-
-
-public:
-	Recursor(TU&& tu) : _tu( std::forward<TU>(tu) ){}
-
-
-	template<class...ARGS>
-	auto operator()(ARGS&&...args)-> Recursor&
-	{
-		_tu = std::forward_as_tuple(args...);
-
-		return *this;
-	}
-
-
-	template
-	<	signed IDX
-	,	int N 
-		=	IDX == 0
-			?	0
-			:	(IDX < 0) ? std::tuple_size<TU>::value + IDX : IDX - 1
-	>
-	auto _() const-> decltype( std::get<N>(_tu) ) const&{  return std::get<N>(_tu);  }
-};
 
 
 template<class ITR, class>
@@ -77,6 +45,7 @@ public:
 	{
 		return *this = constChain(con.begin(), con.end());  
 	}
+
 
 	auto operator()(ITR h, ITR t)-> constChain&{  return *this = constChain(h, t);  }
 
@@ -115,8 +84,8 @@ class sgm::Chain : public constChain<ITR>
 public:
 	Chain(ITR h, ITR t) : cc_t(h, t){}
 
-	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
-	Chain(CON& con) : cc_t(con.begin(), con.end()){}
+	template<class CON>
+	Chain(CON& con) : cc_t(con){}
 
 	auto operator*()-> typename cc_t::deref_t&{  return *_head;  }
 };
@@ -124,16 +93,6 @@ public:
 
 namespace sgm
 {
-
-	template<class...ARGS>
-	static auto Recursion(ARGS&&...args)-> Recursor<  std::tuple< std::decay_t<ARGS>... >  >
-	{
-		return
-		Recursor<  std::tuple< std::decay_t<ARGS>... >  >
-		(	std::forward_as_tuple( std::forward<ARGS>(args)... )
-		);
-	}
-	
 
 	template<class ITR>
 	static auto Chaining(ITR head, ITR tail)	
@@ -162,7 +121,6 @@ namespace sgm
 		return con;
 	}
 
-	
 }
 
 

@@ -112,7 +112,7 @@ private:
 	{
 		static size_t nof_instance = 0;
 
-		if (cnt == UP && nof_instance >= NOF_INSTANCE)
+		if(cnt == UP && nof_instance >= NOF_INSTANCE)
 			throw Over_instantiation_Violation();
 		else
 			return nof_instance += cnt;

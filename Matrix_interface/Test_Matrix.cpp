@@ -18,8 +18,8 @@ static bool is_Equal(T t, U u, TYPES...types)
 	{
 		bool res = t.rows() == u.rows() && t.cols() == u.cols();
 
-		for (auto i = t.rows();  i-->0;)
-			for (auto j = t.cols();  res && j-->0;)
+		for(auto i = t.rows();  i-->0;)
+			for(auto j = t.cols();  res && j-->0;)
 				res = is_Equal( t(i, j), u(i, j) );
 
 		return res;
@@ -28,7 +28,7 @@ static bool is_Equal(T t, U u, TYPES...types)
 	{
 		bool res = t.size() == u.size();
 
-		for (auto idx = t.size();  res && idx-->0;)
+		for(auto idx = t.size();  res && idx-->0;)
 			res = is_Equal( t(idx), u(idx) );
 
 		return res;

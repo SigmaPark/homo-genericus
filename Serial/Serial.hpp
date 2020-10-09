@@ -89,7 +89,6 @@ class sgm::_sr_iterator_Helper : No_Making
 
 	template<>
 	static bool Less<false>(size_t const idx1, size_t const idx2){  return idx1 > idx2;;  }
-
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -113,7 +112,7 @@ struct sgm::_iterator_Distance<ITR, false> : No_Making
 	{
 		size_t dist = 0;
 
-		for (;  bi != ei;  ++bi,  ++dist);
+		for(;  bi != ei;  ++bi,  ++dist);
 
 		return dist;
 	}
@@ -200,7 +199,7 @@ public:
 
 	auto operator-(iter_t const itr) const-> long long
 	{
-		auto const has_greater_idx = _idx > itr._idx;
+		bool const has_greater_idx = _idx > itr._idx;
 		auto const du = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
 		assert( du <= 0x7fffffffffffffffi64 && L"the difference exceeds maximum capacity.\n" );
@@ -279,7 +278,7 @@ protected:
 	{
 		RES_ITR itr = con.begin();
 
-		for ( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
+		for( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
 
 		return Dual_iteration(bi, itr);
 	}
@@ -300,7 +299,7 @@ public:
 
 	auto operator=(Serial&& sr) _SGM_NOEXCEPT-> Serial&
 	{
-		for 
+		for
 		(	auto itr = begin(), sitr = sr.begin()
 		;	itr != end()
 		;	*itr++ = std::move(*sitr++)
@@ -395,7 +394,7 @@ public:
 
 	auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
 	{
-		for 
+		for
 		(	auto itr = begin(), sitr = sr.begin()
 		;	itr != end()
 		;	std::swap(*itr++, *sitr++) 
@@ -499,7 +498,7 @@ public:
 	template<class...ARGS>
 	Serial(size_t const size, ARGS const&... args)
 	{
-		for ( _alloc(size);  _size < size;  new(_core + _size++) value_t(args...) );
+		for( _alloc(size);  _size < size;  new(_core + _size++) value_t(args...) );
 	}
 
 
@@ -576,7 +575,7 @@ public:
 	>
 	auto merge_back(ITR bi, ITR const ei)-> Serial&
 	{
-		for 
+		for
 		(	assert
 			(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
 			&&	L"cannot merge_back : out of index.\n"

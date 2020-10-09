@@ -32,13 +32,13 @@ static auto sgm::ht::Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
 	std::list<elem_t> kset;
 	auto itr = con.begin();
 
-	for (size_t d = k;  d-->0;  ++itr)
+	for(size_t d = k;  d-->0;  ++itr)
 		kset.emplace_back(*itr);
 
 	kset.sort(comp);
 
-	if (k == nof_ranker)
-		for (auto LBitr = kset.begin();  itr != con.end();  ++itr)
+	if(k == nof_ranker)
+		for(auto LBitr = kset.begin();  itr != con.end();  ++itr)
 			if( comp(*itr, kset.back()) )
 				LBitr = std::lower_bound(kset.begin(), kset.end(), *itr, comp),
 				kset.emplace(LBitr, *itr),

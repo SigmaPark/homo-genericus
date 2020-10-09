@@ -10,7 +10,6 @@
 namespace sgm
 {
 
-
 	template<class...> using Void_t = void;
 
 
@@ -297,7 +296,6 @@ namespace sgm
 		return _Travel<ITR>::prev(itr, steps);  
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
-
 
 } // end of namespace sgm
 
