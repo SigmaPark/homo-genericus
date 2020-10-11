@@ -529,7 +529,6 @@ namespace sgm
 				return _cut_rear( std::forward<ARGS>(args)... );
 			else if constexpr( sizeof...(ARGS) == D )
 				return (*_spf)( std::forward<ARGS>(args)... );
-			//else SGM_COMPILE_FAILED(no suitable evaluation method was found.);
 		}
 
 
@@ -613,6 +612,7 @@ namespace sgm
 		std::shared_ptr<F const> const _spf;
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
+
 
 	class _infixer_Helper;
 
