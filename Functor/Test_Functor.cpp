@@ -17,7 +17,7 @@ struct Test_Case
 };
 
 
-using namespace sgm::ftr;
+using namespace sgm::fp;
 using sgm::spec::is_True;
 
 
@@ -95,25 +95,25 @@ void Test_Case::Pass_and_Permute()
 	Functor const ftr3 = [](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>;
 
 
-	//is_True
-	//(	(ftr3 | Pass<3>)(2, 3, -1) == 8
-	//&&	(ftr3 | Pass<-3>)(-1, 3, 2) == 8
-	//&&	( ftr3 | Pass<2> + [](auto&& x){  return x/2;  } / Dim<1> )(2, 3, -2) == 8
-	//);
+	is_True
+	(	(ftr3 | Pass<3>)(2, 3, -1) == 8
+	&&	(ftr3 | Pass<-3>)(-1, 3, 2) == 8
+	&&	( ftr3 | Pass<2> + [](auto&& x){  return x/2;  } / Dim<1> )(2, 3, -2) == 8
+	);
 
 
-	//int x = 3, *px = &x;
-	//auto const& cx = x;
-	//double y = 0.618;
+	int x = 3, *px = &x;
+	auto const& cx = x;
+	double y = 0.618;
 
-	//auto permuted = Permute<1, 2, 3, 0>(3, px, cx, y);
-	//
-	//is_True
-	//(	std::get<0>(permuted) == px
-	//&&	std::get<1>(permuted) == cx
-	//&&	std::get<2>(permuted) == y
-	//&&	std::get<3>(permuted) == 3
-	//);	
+	auto permuted = Permute<1, 2, 3, 0>(3, px, cx, y);
+	
+	is_True
+	(	std::get<0>(permuted) == px
+	&&	std::get<1>(permuted) == cx
+	&&	std::get<2>(permuted) == y
+	&&	std::get<3>(permuted) == 3
+	);	
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
