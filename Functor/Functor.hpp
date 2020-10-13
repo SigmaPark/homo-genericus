@@ -150,6 +150,10 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<class>
 struct sgm::fp::_Tuple_Carry_Helper : std::false_type, No_Making{};
 
@@ -188,7 +192,8 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 
 	Multiple(tuple_t const& tu) : tuple_t(tu){}
 	Multiple(tuple_t&& tu) : tuple_t( std::move(tu) ){}
-	Multiple(TYPES&&...types) : tuple_t( Forward<TYPES>(types)... ){}
+	Multiple(TYPES...types) : tuple_t( Forward<TYPES>(types)... ){}
+	
 
 
 	decltype(auto) operator*() const{  return static_cast<tuple_t const&>(*this);  }
@@ -197,6 +202,9 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 
 	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
 	auto operator+(MTP&& mtp) const{  return to_Multiple( std::tuple_cat(**this, *mtp) );  }
+
+	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
+	auto operator+(MTP&& mtp){  return to_Multiple( std::tuple_cat(**this, *mtp) );  }
 };
 
 
@@ -221,8 +229,8 @@ decltype(auto) sgm::fp::to_Multiple(T&& t)
 		return Forward<T>(t);
 	else if constexpr(is_tuple_v<T>)
 		return Multiple( Forward<T>(t) );
-	else 
-		return Multiple<T>( Forward<T>(t) );
+	else
+		return Multiple<T>( static_cast<T&&>(t) );
 }
 
 
