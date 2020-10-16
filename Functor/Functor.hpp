@@ -47,6 +47,20 @@ namespace sgm::fp
 	//--------//--------//--------//--------//-------#//-------//--------//--------//--------//---
 
 
+	template<class T>
+	struct Aleph;
+
+	template<class T>
+	Aleph(T&&)-> Aleph< std::remove_reference_t<T> >;
+
+
+	template<class T>
+	static decltype(auto) Transfer(std::remove_reference_t<T>&);
+
+	template<class T>
+	static auto Transfer(std::remove_reference_t<T>&&);
+
+
 	template<class>
 	struct _Tuple_Carry_Helper;
 
@@ -150,7 +164,29 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class T>
+struct sgm::fp::Aleph
+{
+	T&& ref;
 
+	Aleph(T& t) : ref( std::move(t) ){}
+	Aleph(T&& t) noexcept : Aleph(t){}
+	Aleph(T const&) = delete;
+
+	Aleph(Aleph& al) : Aleph(al.ref){}
+	Aleph(Aleph&& al) : Aleph(al){}
+	Aleph(Aleph const&) = delete;
+
+	operator T(){  return std::move(ref);  }
+};
+
+
+template<class T>
+decltype(auto) sgm::fp::Transfer(std::remove_reference_t<T>& t){  return static_cast<T&&>(t);  }
+
+
+template<class T>
+auto sgm::fp::Transfer(std::remove_reference_t<T>&& t){  return Aleph(t);  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -191,7 +227,7 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 	static auto constexpr DIMENSION = sizeof...(TYPES);
 
 	Multiple(tuple_t const& tu) : tuple_t(tu){}
-	Multiple(tuple_t&& tu) : tuple_t( std::move(tu) ){}
+	Multiple(tuple_t&& tu) noexcept : tuple_t( std::move(tu) ){}
 	Multiple(TYPES...types) : tuple_t( Forward<TYPES>(types)... ){}
 	
 
@@ -202,9 +238,6 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 
 	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
 	auto operator+(MTP&& mtp) const{  return to_Multiple( std::tuple_cat(**this, *mtp) );  }
-
-	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
-	auto operator+(MTP&& mtp){  return to_Multiple( std::tuple_cat(**this, *mtp) );  }
 };
 
 
@@ -508,7 +541,7 @@ private:
 	friend decltype(auto) constexpr sgm::fp::operator/(_F&&, Dimension<_D>);
 
 
-	Functor(F&& f) : _pwf( std::move(f) ){}
+	Functor(F&& f) noexcept : _pwf( std::move(f) ){}
 	Functor(F const& f) : _pwf(f){}
 
 

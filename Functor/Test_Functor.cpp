@@ -22,26 +22,16 @@ using sgm::spec::is_True;
 
 
 
-//void Temporary_test()
-//{
-//	int const x = 3;
-//	Multiple m1 = std::tuple<int const&>(x);
-//	Multiple m2 = std::tuple<int const*>(&x);
-//	auto m3 = Params(x, &x);
-//
-//	is_Multiple_v<decltype(m1)>;
-//	is_tuple_v<decltype( std::forward_as_tuple(x) )>;
-//
-//	static_assert
-//	(	std::is_same_v< decltype(m3), Multiple<int const&, int const*> > 
-//	);
-//
-//	auto mtp = m1 + m2;
-//
-//	decltype(mtp)::DIMENSION;
-//
-//
-//}
+void Temporary_test()
+{
+	using sgm::spec::Specimen;
+
+	auto s1 = Specimen(4), &s2 = s1 ;
+	auto&& al1 = Transfer<Specimen>(s1);
+	Specimen s = al1;
+
+	//is_True(s == Specimen::State::DESTRUCTED);
+}
 
 
 void Test_Case::Made_from_Generic_Lambda()
@@ -126,7 +116,7 @@ void Test_sgm_Functor::test()
 {
 	try
 	{
-		//Temporary_test();
+		Temporary_test();
 
 		Test_Case::Made_from_Generic_Lambda();
 		Test_Case::Made_from_Template_Object();
