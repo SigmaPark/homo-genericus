@@ -30,6 +30,9 @@ void Temporary_test()
 	auto&& al1 = Transfer<Specimen>(s1);
 	Specimen s = al1;
 
+	int const y = 3;
+	auto tu = Transfer_as_Tuple<int const>(y);
+
 	//is_True(s == Specimen::State::DESTRUCTED);
 }
 

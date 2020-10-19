@@ -54,6 +54,20 @@ namespace sgm::fp
 	Aleph(T&&)-> Aleph< std::remove_reference_t<T> >;
 
 
+	template<class>
+	struct _is_Aleph;
+
+	template<class T>
+	static bool constexpr is_Aleph_v = _is_Aleph< std::decay_t<T> >::value;
+
+
+	template<class T>
+	static decltype(auto) Deliver(std::remove_reference_t<T>& t);
+
+	template<class T>
+	static decltype(auto) Deliver(std::remove_reference_t<T>&& t);
+
+
 	template<class T>
 	static decltype(auto) Transfer(std::remove_reference_t<T>&);
 
@@ -61,17 +75,11 @@ namespace sgm::fp
 	static auto Transfer(std::remove_reference_t<T>&&);
 
 
-	template<class>
-	struct _Tuple_Carry_Helper;
-
-	template<class TU>
-	static bool constexpr should_carry_tuple_v = _Tuple_Carry_Helper< std::decay_t<TU> >::value;
-
 	template<class T>
-	static decltype(auto) Forward(std::remove_reference_t<T>&&);
+	static auto Transfer_as_Tuple(std::remove_reference_t<T>&);
 
-	template<class T>
-	static decltype(auto) Forward(std::remove_reference_t<T>&);
+	template< class T, class refless_t = std::remove_reference_t<T> >
+	static auto Transfer_as_Tuple(refless_t&&);
 
 
 	template<class> 
@@ -187,35 +195,44 @@ decltype(auto) sgm::fp::Transfer(std::remove_reference_t<T>& t){  return static_
 
 template<class T>
 auto sgm::fp::Transfer(std::remove_reference_t<T>&& t){  return Aleph(t);  }
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class>
-struct sgm::fp::_Tuple_Carry_Helper : std::false_type, No_Making{};
-
-
-template<class...ARGS>
-struct sgm::fp::_Tuple_Carry_Helper< std::tuple<ARGS...> > 
-:	Check_All<std::is_rvalue_reference>::template for_any<ARGS...>, No_Making
-{};
 
 
 template<class T>
-decltype(auto) sgm::fp::Forward(std::remove_reference_t<T>& t)
+auto sgm::fp::Transfer_as_Tuple(std::remove_reference_t<T>& t)
 {
-	if constexpr(is_tuple_v<T>)
-		return Move_if< should_carry_tuple_v<T> >::template cast( static_cast<T&&>(t) );
+	return std::forward_as_tuple(t);
+}
+
+template< class T, class refless_t = std::remove_reference_t<T> >
+auto sgm::fp::Transfer_as_Tuple(refless_t&& t)
+{
+	return std::tuple( Aleph(t) );
+}
+
+
+template<class>
+struct sgm::fp::_is_Aleph : std::false_type, No_Making{};
+
+template<class T>
+struct sgm::fp::_is_Aleph< sgm::fp::Aleph<T> > : std::true_type, No_Making{};
+
+
+template<class T>
+decltype(auto) sgm::fp::Deliver(std::remove_reference_t<T>& t)
+{
+	if constexpr(is_Aleph_v<T>)
+		return std::move(t.ref);
 	else
 		return static_cast<T&&>(t);
 }
 
-
 template<class T>
-static decltype(auto) sgm::fp::Forward(std::remove_reference_t<T>&& t)
+decltype(auto) sgm::fp::Deliver(std::remove_reference_t<T>&& t)
 {
-	static_assert(!std::is_lvalue_reference_v<T>, "bad Forwarding");
-
-	return static_cast<T&&>(t);
+	if constexpr(is_Aleph_v<T>)
+		return std::move(t.ref);
+	else
+		return static_cast<T&&>(t);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -228,7 +245,7 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 
 	Multiple(tuple_t const& tu) : tuple_t(tu){}
 	Multiple(tuple_t&& tu) noexcept : tuple_t( std::move(tu) ){}
-	Multiple(TYPES...types) : tuple_t( Forward<TYPES>(types)... ){}
+	Multiple(TYPES...types) : tuple_t( Transfer<TYPES>(types)... ){}
 	
 
 
@@ -259,11 +276,11 @@ template<class T>
 decltype(auto) sgm::fp::to_Multiple(T&& t)
 {
 	if constexpr(is_Multiple_v<T>)
-		return Forward<T>(t);
+		return std::forward<T>(t);
 	else if constexpr(is_tuple_v<T>)
-		return Multiple( Forward<T>(t) );
+		return Multiple( std::forward<T>(t) );
 	else
-		return Multiple<T>( static_cast<T&&>(t) );
+		return Multiple( Transfer<T>(t) );
 }
 
 
@@ -271,9 +288,9 @@ template<class T, class...TYPES>
 decltype(auto) sgm::fp::Params(T&& t, TYPES&&...types)
 {
 	if constexpr( sizeof...(TYPES) > 0 )
-		return Params( Forward<T>(t) ) + Params( Forward<TYPES>(types)... );
+		return Params( std::forward<T>(t) ) + Params( std::forward<TYPES>(types)... );
 	else 
-		return to_Multiple( Forward<T>(t) );
+		return to_Multiple( Transfer<T>(t) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -282,12 +299,12 @@ template<unsigned D, class...ARGS>
 class sgm::fp::Dimension
 {
 public:
-	Dimension(ARGS...args) : _mtp(  std::tuple<ARGS...>( Forward<ARGS>(args)... )  ){}
+	Dimension(ARGS...args) : _mtp(  std::tuple<ARGS...>( static_cast<ARGS>(args)... )  ){}
 
 	template<class..._ARGS>
 	auto operator()(_ARGS&&..._args) const
 	{
-		return Dimension<D, decltype(_args)...>( Forward<_ARGS>(_args)... );
+		return Dimension<D, decltype(_args)...>( static_cast<decltype(_args)>(_args)... );
 	}
 
 
@@ -304,14 +321,14 @@ private:
 template<unsigned _D, class _F> 
 decltype(auto) constexpr sgm::fp::operator/(_F&& f, Dimension<_D>)
 {
-	return Functor<_D, _F>( Forward<_F>(f) );
+	return Functor<_D, _F>( std::forward<_F>(f) );
 }
 
 
 template<unsigned _D, class _F, class..._ARGS>
 decltype(auto) constexpr sgm::fp::operator/(_F&& f, Dimension<_D, _ARGS...>&& d)
 {
-	return ( Forward<_F>(f) / Dim<_D> )(d._mtp);
+	return ( std::forward<_F>(f) / Dim<_D> )(d._mtp);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -329,11 +346,11 @@ public:
 		static_assert(Blank::is_well_used_v<ARGS...>, "Blank is misused.");
 
 		if constexpr(Blank::has_front_blank_v<ARGS...>)
-			return _cut_front( Forward<ARGS>(args)... );
+			return _cut_front( std::forward<ARGS>(args)... );
 		else if constexpr(Blank::has_rear_blank_v<ARGS...>)
-			return _cut_rear( Forward<ARGS>(args)... );
+			return _cut_rear( std::forward<ARGS>(args)... );
 		else if constexpr( sizeof...(ARGS) == D )
-			return _pwf.value()( Forward<ARGS>(args)... );
+			return _pwf.value()( std::forward<ARGS>(args)... );
 	}
 
 
@@ -347,7 +364,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( args..., Forward<decltype(params)>(params)... );
+			return cpy_pwf.value()( args..., std::forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -361,7 +378,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( Forward<decltype(params)>(params)..., args... );
+			return cpy_pwf.value()( std::forward<decltype(params)>(params)..., args... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -369,7 +386,7 @@ private:
 	template<class T, class...TYPES>
 	decltype(auto) _cut_front(T&&, TYPES&&...types) const
 	{
-		return _push_rear( Forward<TYPES>(types)... );
+		return _push_rear( std::forward<TYPES>(types)... );
 	}
 
 
@@ -379,13 +396,13 @@ private:
 	)	const
 	{
 		if constexpr(N == 0)
-			return _push_front( Forward<ARGS>(args)... );
+			return _push_front( std::forward<ARGS>(args)... );
 		else
 			return
 			_cut_rear_helper<N - 1>
 			(	std::move(tu)
 			,	static_cast< Nth_t<N - 1, TYPES...> >( std::get<N - 1>(tu) )
-			,	Forward<ARGS>(args)...
+			,	std::forward<ARGS>(args)...
 			);
 	}
 
@@ -394,7 +411,7 @@ private:
 	{
 		return
 		_cut_rear_helper<sizeof...(TYPES) - 1>
-		(	std::forward_as_tuple( Forward<TYPES>(types)... )
+		(	std::forward_as_tuple( std::forward<TYPES>(types)... )
 		);
 	}
 
@@ -412,7 +429,7 @@ struct sgm::fp::_Partition : No_Making
 	{
 		return
 		_Partition_Helper<sizeof...(SIZES), SIZES...>::calc
-		(	std::tuple(), std::tuple(), Forward<ARGS>(args)...
+		(	std::tuple(), std::tuple(), std::forward<ARGS>(args)...
 		);
 	}
 };
@@ -428,14 +445,14 @@ struct sgm::fp::_Partition_Helper : No_Making
 			return 
 			_Partition_Helper<NOF_PART - 1, SIZES...>::calc
 			(	std::tuple_cat(  std::move(ttu), std::make_tuple( std::move(tu) )  )
-			,	std::tuple(), Forward<A>(a), Forward<ARGS>(args)...
+			,	std::tuple(), std::forward<A>(a), std::forward<ARGS>(args)...
 			);
 		else
 			return
 			_Partition_Helper<NOF_PART, S - 1, SIZES...>::calc
 			(	std::move(ttu)
-			,	std::tuple_cat(  std::move(tu), std::tuple<decltype(a)>( Forward<A>(a) )  )
-			,	Forward<ARGS>(args)...
+			,	std::tuple_cat(  std::move(tu), Transfer_as_Tuple<A>(a)  )
+			,	std::forward<ARGS>(args)...
 			);
 	}
 };
@@ -457,7 +474,9 @@ template<class F, class MTP>
 decltype(auto) sgm::fp::Apply(F&& f, MTP&& mtp)
 {
 	return
-	_Apply_Helper< std::decay_t<MTP>::DIMENSION >::calc( Forward<F>(f), Forward<MTP>(mtp) );
+	_Apply_Helper< std::decay_t<MTP>::DIMENSION >::calc
+	(	std::forward<F>(f), std::forward<MTP>(mtp) 
+	);
 }
 
 
@@ -465,18 +484,18 @@ template<unsigned D>
 struct sgm::fp::_Apply_Helper : No_Making
 {
 	template<class F, class MTP, class...ARGS>
-	static decltype(auto) constexpr calc(F&& f, [[maybe_unused]] MTP&& mtp, ARGS&&...args)
+	static decltype(auto) constexpr calc(F&& f, [[maybe_unused]]MTP&& mtp, ARGS&&...args)
 	{
 		if constexpr(D == 0)
-			return f( Forward<ARGS>(args)... );
+			return f( Deliver<ARGS>(args)... );
 		else
 			return
 			_Apply_Helper<D - 1>::calc
-			(	Forward<F>(f), Forward<MTP>(mtp)
+			(	std::forward<F>(f), std::forward<MTP>(mtp)
 			,	std::tuple_element_t< D - 1, std::decay_t<decltype(*mtp)> > 
 				(	std::get<D - 1>(mtp)
 				)
-			,	Forward<ARGS>(args)...
+			,	std::forward<ARGS>(args)...
 			);
 	}
 };
@@ -497,9 +516,9 @@ public:
 		using eval_t = _Evaluator< D, constPinweight<F> >;
 
 		if constexpr( Check_All<_is_Multiple>::template for_any< std::decay_t<ARGS>... >::value )
-			return Apply(  eval_t(_pwf), Params( Forward<ARGS>(args)... )  );
+			return Apply(  eval_t(_pwf), Params( std::forward<ARGS>(args)... )  );
 		else
-			return eval_t(_pwf)( Forward<ARGS>(args)... );
+			return eval_t(_pwf)( std::forward<ARGS>(args)... );
 	}
 
 
@@ -512,7 +531,7 @@ public:
 		return
 		[clone = *this, ftr](auto&&...args)
 		{	
-			return clone(  ftr( Forward<decltype(args)>(args)... )  );
+			return clone(  ftr( std::forward<decltype(args)>(args)... )  );
 		} / Dim< std::decay_t<FTR>::DIMENSION >;
 	}
 
@@ -528,7 +547,7 @@ public:
 		{
 			auto [tu1, tu2]
 			=	_Partition< D, std::decay_t<FTR>::DIMENSION >::calc
-				(	Forward<decltype(args)>(args)... 
+				(	std::forward<decltype(args)>(args)... 
 				);
 
 			return Params(  clone( Params(tu1) )  ) + Params(  ftr( Params(tu2) )  );
@@ -564,7 +583,7 @@ struct sgm::fp::_rPass_Helper : No_Making
 	static decltype(auto) calc([[maybe_unused]] TU&& tu, ARGS&&...args)
 	{
 		if constexpr(D == 0)
-			return Params( Forward<ARGS>(args)... );
+			return Params( std::forward<ARGS>(args)... );
 		else
 		{
 			size_t constexpr IDX = std::tuple_size_v< std::decay_t<TU> > - D;
@@ -572,7 +591,8 @@ struct sgm::fp::_rPass_Helper : No_Making
 
 			return
 			_rPass_Helper<D - 1>::calc
-			(	std::move(tu), static_cast<elem_t>( std::get<IDX>(tu) ), Forward<ARGS>(args)...
+			(	std::move(tu), static_cast<elem_t>( std::get<IDX>(tu) )
+			,	std::forward<ARGS>(args)...
 			);
 		}
 	}
@@ -589,7 +609,7 @@ struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 		return 
 		_Permute_Helper<INDICES...>::calc
 		(	std::move(src_tu)
-		,	Forward<ARGS>(args)...
+		,	std::forward<ARGS>(args)...
 		,	static_cast< Nth_t<IDX, TYPES...> >( std::get<IDX>(src_tu) )
 		);
 	}
@@ -602,7 +622,7 @@ struct sgm::fp::_Permute_Helper<>
 	template<class...TYPES, class...ARGS>
 	static decltype(auto) calc(std::tuple<TYPES...>&&, ARGS&&...args)
 	{
-		return Params( Forward<ARGS>(args)... );
+		return Params( std::forward<ARGS>(args)... );
 	}
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -619,11 +639,11 @@ namespace sgm::fp
 	=	[](auto&&...args)
 		{
 			if constexpr(D >= 0)
-				return Params( Forward<decltype(args)>(args)... );
+				return Params( std::forward<decltype(args)>(args)... );
 			else
 				return
 				_rPass_Helper<-D>::calc
-				(	std::tuple<decltype(args)...>( Forward<decltype(args)>(args)... )
+				(	std::tuple<decltype(args)...>( std::forward<decltype(args)>(args)... )
 				);
 		} / Dim<(D >= 0 ? D : -D)>;
 
@@ -632,9 +652,9 @@ namespace sgm::fp
 	static auto const Permute
 	=	[](auto&&...args)
 		{
-			return 
+			return
 			_Permute_Helper<INDICES...>::calc
-			(	std::forward_as_tuple( Forward<decltype(args)>(args)... )
+			(	std::forward_as_tuple( Transfer<decltype(args)>(args)... )
 			);
 		} / Dim<sizeof...(INDICES)>;
 
@@ -650,7 +670,7 @@ namespace sgm::fp
 	#define SGM_FUNCTOR(TemFunc, Dimension, ...)	\
 	(	[](auto&&...args)		\
 		{	\
-			return TemFunc __VA_ARGS__ ( sgm::fp::Forward<decltype(args)>(args)... );	\
+			return TemFunc __VA_ARGS__ ( std::forward<decltype(args)>(args)... );	\
 		}	\
 	/	sgm::fp::Dim<(Dimension)>	\
 	)
