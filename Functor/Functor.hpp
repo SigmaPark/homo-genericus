@@ -48,38 +48,12 @@ namespace sgm::fp
 
 
 	template<class T>
-	struct Aleph;
-
-	template<class T>
-	Aleph(T&&)-> Aleph< std::remove_reference_t<T> >;
+	using remove_rvalue_reference_t
+	=	std::conditional_t< std::is_rvalue_reference_v<T>, std::remove_reference_t<T>, T >;
 
 
-	template<class>
-	struct _is_Aleph;
-
-	template<class T>
-	static bool constexpr is_Aleph_v = _is_Aleph< std::decay_t<T> >::value;
-
-
-	template<class T>
-	static decltype(auto) Deliver(std::remove_reference_t<T>& t);
-
-	template<class T>
-	static decltype(auto) Deliver(std::remove_reference_t<T>&& t);
-
-
-	template<class T>
-	static decltype(auto) Transfer(std::remove_reference_t<T>&);
-
-	template<class T>
-	static auto Transfer(std::remove_reference_t<T>&&);
-
-
-	template<class T>
-	static auto Transfer_as_Tuple(std::remove_reference_t<T>&);
-
-	template< class T, class refless_t = std::remove_reference_t<T> >
-	static auto Transfer_as_Tuple(refless_t&&);
+	template<class TU1, class TU2, class...ARGS>
+	static auto Merged_Tuple(TU1&& tu1, TU2&& tu2, ARGS&&...args);
 
 
 	template<class> 
@@ -172,67 +146,48 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>
-struct sgm::fp::Aleph
+
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class TU1, class TU2, class...ARGS>
+auto sgm::fp::Merged_Tuple(TU1&& tu1, TU2&& tu2, ARGS&&...args)
 {
-	T&& ref;
+	using pure_tu1_t = std::decay_t<TU1>;
+	using pure_tu2_t = std::decay_t<TU2>;
 
-	Aleph(T& t) : ref( std::move(t) ){}
-	Aleph(T&& t) noexcept : Aleph(t){}
-	Aleph(T const&) = delete;
+	if constexpr
+	(	auto constexpr
+			tu1_size = std::tuple_size_v<pure_tu1_t>,
+			tu2_size = std::tuple_size_v<pure_tu2_t>,
+			nof_args = sizeof...(args)
+	;	nof_args == tu1_size + tu2_size
+	)
+		return std::tuple<decltype(args)...>( std::forward<ARGS>(args)... );
+	else if constexpr(bool constexpr EXTRACTING_TU1 = nof_args >= tu2_size; EXTRACTING_TU1)
+	{
+		auto constexpr IDX = tu1_size + tu2_size - 1 - nof_args;
+		using elem_t = std::tuple_element_t<IDX, pure_tu1_t>;
 
-	Aleph(Aleph& al) : Aleph(al.ref){}
-	Aleph(Aleph&& al) : Aleph(al){}
-	Aleph(Aleph const&) = delete;
+		return
+		Merged_Tuple
+		(	std::forward<TU1>(tu1), std::forward<TU2>(tu2)
+		,	static_cast<elem_t&&>( std::get<IDX>(tu1) )
+		,	std::forward<ARGS>(args)...
+		);
+	}
+	else 
+	{
+		auto constexpr IDX = tu2_size - 1 - nof_args;
+		using elem_t = std::tuple_element_t<IDX, pure_tu2_t>;
 
-	operator T(){  return std::move(ref);  }
-};
-
-
-template<class T>
-decltype(auto) sgm::fp::Transfer(std::remove_reference_t<T>& t){  return static_cast<T&&>(t);  }
-
-
-template<class T>
-auto sgm::fp::Transfer(std::remove_reference_t<T>&& t){  return Aleph(t);  }
-
-
-template<class T>
-auto sgm::fp::Transfer_as_Tuple(std::remove_reference_t<T>& t)
-{
-	return std::forward_as_tuple(t);
-}
-
-template< class T, class refless_t = std::remove_reference_t<T> >
-auto sgm::fp::Transfer_as_Tuple(refless_t&& t)
-{
-	return std::tuple( Aleph(t) );
-}
-
-
-template<class>
-struct sgm::fp::_is_Aleph : std::false_type, No_Making{};
-
-template<class T>
-struct sgm::fp::_is_Aleph< sgm::fp::Aleph<T> > : std::true_type, No_Making{};
-
-
-template<class T>
-decltype(auto) sgm::fp::Deliver(std::remove_reference_t<T>& t)
-{
-	if constexpr(is_Aleph_v<T>)
-		return std::move(t.ref);
-	else
-		return static_cast<T&&>(t);
-}
-
-template<class T>
-decltype(auto) sgm::fp::Deliver(std::remove_reference_t<T>&& t)
-{
-	if constexpr(is_Aleph_v<T>)
-		return std::move(t.ref);
-	else
-		return static_cast<T&&>(t);
+		return
+		Merged_Tuple
+		(	std::forward<TU1>(tu1), std::forward<TU2>(tu2)
+		,	static_cast<elem_t&&>( std::get<IDX>(tu2) )
+		,	std::forward<ARGS>(args)...
+		);
+	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -243,9 +198,9 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 	using tuple_t = std::tuple<TYPES...>;
 	static auto constexpr DIMENSION = sizeof...(TYPES);
 
-	Multiple(tuple_t const& tu) : tuple_t(tu){}
+	Multiple(tuple_t& tu) : tuple_t( std::move(tu) ){}
 	Multiple(tuple_t&& tu) noexcept : tuple_t( std::move(tu) ){}
-	Multiple(TYPES...types) : tuple_t( Transfer<TYPES>(types)... ){}
+	Multiple(TYPES...types) : tuple_t( std::forward<TYPES>(types)... ){}
 	
 
 
@@ -254,7 +209,9 @@ struct sgm::fp::Multiple : public std::tuple<TYPES...>
 
 
 	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
-	auto operator+(MTP&& mtp) const{  return to_Multiple( std::tuple_cat(**this, *mtp) );  }
+	auto operator+(MTP&& mtp){  return to_Multiple( Merged_Tuple(**this, *mtp) );  }
+
+
 };
 
 
@@ -280,7 +237,7 @@ decltype(auto) sgm::fp::to_Multiple(T&& t)
 	else if constexpr(is_tuple_v<T>)
 		return Multiple( std::forward<T>(t) );
 	else
-		return Multiple( Transfer<T>(t) );
+		return Multiple( std::forward<T>(t) );
 }
 
 
@@ -290,7 +247,7 @@ decltype(auto) sgm::fp::Params(T&& t, TYPES&&...types)
 	if constexpr( sizeof...(TYPES) > 0 )
 		return Params( std::forward<T>(t) ) + Params( std::forward<TYPES>(types)... );
 	else 
-		return to_Multiple( Transfer<T>(t) );
+		return to_Multiple( std::forward<T>(t) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -444,14 +401,14 @@ struct sgm::fp::_Partition_Helper : No_Making
 		if constexpr(S == 0)
 			return 
 			_Partition_Helper<NOF_PART - 1, SIZES...>::calc
-			(	std::tuple_cat(  std::move(ttu), std::make_tuple( std::move(tu) )  )
+			(	Merged_Tuple(  std::move(ttu), std::make_tuple( std::move(tu) )  )
 			,	std::tuple(), std::forward<A>(a), std::forward<ARGS>(args)...
 			);
 		else
 			return
 			_Partition_Helper<NOF_PART, S - 1, SIZES...>::calc
 			(	std::move(ttu)
-			,	std::tuple_cat(  std::move(tu), Transfer_as_Tuple<A>(a)  )
+			,	Merged_Tuple(  std::move(tu), std::forward_as_tuple( std::forward<A>(a) )  )
 			,	std::forward<ARGS>(args)...
 			);
 	}
@@ -464,7 +421,7 @@ struct sgm::fp::_Partition_Helper<1, 0> : No_Making
 	template<class TTU, class TU>
 	static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu)
 	{
-		return std::tuple_cat(  std::move(ttu), std::make_tuple( std::move(tu) )  );
+		return Merged_Tuple(  std::move(ttu), std::make_tuple( std::move(tu) )  );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -487,7 +444,7 @@ struct sgm::fp::_Apply_Helper : No_Making
 	static decltype(auto) constexpr calc(F&& f, [[maybe_unused]]MTP&& mtp, ARGS&&...args)
 	{
 		if constexpr(D == 0)
-			return f( Deliver<ARGS>(args)... );
+			return f( std::forward<ARGS>(args)... );
 		else
 			return
 			_Apply_Helper<D - 1>::calc
@@ -583,7 +540,12 @@ struct sgm::fp::_rPass_Helper : No_Making
 	static decltype(auto) calc([[maybe_unused]] TU&& tu, ARGS&&...args)
 	{
 		if constexpr(D == 0)
-			return Params( std::forward<ARGS>(args)... );
+			return
+			Params
+			(	std::tuple< remove_rvalue_reference_t<decltype(args)>... > 
+				(	static_cast< remove_rvalue_reference_t<decltype(args)> >(args)...
+				)
+			);
 		else
 		{
 			size_t constexpr IDX = std::tuple_size_v< std::decay_t<TU> > - D;
@@ -631,15 +593,20 @@ struct sgm::fp::_Permute_Helper<>
 namespace sgm::fp
 {
 
-	inline static Blank constexpr __;
+	static Blank constexpr __;
 
 
 	template<signed D>
-	static auto const Pass
+	inline static auto const Pass
 	=	[](auto&&...args)
 		{
 			if constexpr(D >= 0)
-				return Params( std::forward<decltype(args)>(args)... );
+				return 
+				Params
+				(	std::tuple< remove_rvalue_reference_t<decltype(args)>... > 
+					(	static_cast< remove_rvalue_reference_t<decltype(args)> >(args)...
+					)
+				);
 			else
 				return
 				_rPass_Helper<-D>::calc
@@ -649,12 +616,12 @@ namespace sgm::fp
 
 
 	template<unsigned...INDICES>
-	static auto const Permute
+	inline static auto const Permute
 	=	[](auto&&...args)
 		{
 			return
 			_Permute_Helper<INDICES...>::calc
-			(	std::forward_as_tuple( Transfer<decltype(args)>(args)... )
+			(	std::forward_as_tuple( std::forward<decltype(args)>(args)... )
 			);
 		} / Dim<sizeof...(INDICES)>;
 
