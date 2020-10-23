@@ -151,7 +151,7 @@ public:
 
 
 template<class TU1, class TU2, class...ARGS>
-auto sgm::fp::Merged_Tuple(TU1&& tu1, TU2&& tu2, ARGS&&...args)
+auto sgm::fp::Merged_Tuple([[maybe_unused]]TU1&& tu1, [[maybe_unused]]TU2&& tu2, ARGS&&...args)
 {
 	using pure_tu1_t = std::decay_t<TU1>;
 	using pure_tu2_t = std::decay_t<TU2>;

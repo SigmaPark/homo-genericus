@@ -52,6 +52,13 @@ namespace sgm::fp0
 	static decltype(auto) Forward_as_Flat_MTP(T&& t, ARGS&&...args);
 
 
+	template<unsigned Di>
+	struct _2FMTP_Helper;
+
+	template<unsigned D1, unsigned D2, class...ARGS>
+	static auto Forward_as_2FMTP(ARGS&&...args);
+
+
 	template<class T>
 	using remove_aleph_t
 	=	std::conditional_t< std::is_rvalue_reference_v<T>, std::remove_reference_t<T>, T >;
@@ -133,7 +140,7 @@ public:
 
 	auto hardened() const
 	{
-		static_assert(Type_Check_by< std::is_rvalue_reference >::for_none_v<TYPES...>);
+		static_assert(Type_Check_by<std::is_rvalue_reference>::for_none_v<TYPES...>);
 
 		return *this;
 	}
@@ -336,6 +343,36 @@ decltype(auto) sgm::fp0::Forward_as_Flat_MTP(T&& t, [[maybe_unused]]ARGS&&...arg
 		return t.forward();
 	else
 		return Forward_as_Multiple( std::forward<T>(t) );
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<unsigned D1>
+struct sgm::fp0::_2FMTP_Helper : No_Making
+{
+	template<unsigned N = 0, class MTP1, class MTP2, class...ARGS>
+	static decltype(auto) calc(MTP1&& mtp1, MTP2&& mtp2, Multiple<ARGS...>& amtp)
+	{
+		if constexpr(N == amtp.DIMENSION)
+			return Forward_as_Multiple( std::move(mtp1), std::move(mtp2) ).hardened();
+		else if constexpr(N < D1)
+			return
+			calc<N + 1>( mtp1 + Forward_as_Multiple(amtp.forward<N>()), std::move(mtp2), amtp );
+		else
+			return
+			calc<N + 1>( std::move(mtp1), mtp2 + Forward_as_Multiple(amtp.forward<N>()), amtp );
+	}
+};
+
+
+template<unsigned D1, unsigned D2, class...ARGS>
+static auto sgm::fp0::Forward_as_2FMTP(ARGS&&...args)
+{
+	auto amtp = Forward_as_Flat_MTP( std::forward<ARGS>(args)... );
+
+	static_assert(D1 + D2 == amtp.DIMENSION);
+
+	return _2FMTP_Helper<D1>::calc(Multiple(), Multiple(), amtp);
 }
 
 

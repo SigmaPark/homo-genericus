@@ -4,6 +4,7 @@
 
 using namespace sgm;
 using fp0::Multiple, spec::Specimen, spec::is_True;
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 static void Test01()
@@ -143,6 +144,36 @@ static void Test06()
 }
 
 
+static void Test07()
+{
+	Specimen s1 = 9, s2 = 8, s3 = 90;
+
+	auto[mtp1, mtp2]
+	=	*fp0::Forward_as_2FMTP<2, 2>
+		(	Specimen(2), s1, static_cast<Specimen const&>(s2), std::move(s3)
+		);
+
+	static_assert
+	(	std::is_same_v
+		<	decltype(mtp1)
+		,	Multiple<Specimen&&, Specimen&>
+		>
+	&&	std::is_same_v
+		<	decltype(mtp2)
+		,	Multiple<Specimen const&, Specimen&&>
+		>
+	);
+
+	is_True
+	(	mtp1.get<0>() == Specimen::State::DESTRUCTED
+	&&	mtp1.get<1>() == 9
+	&&	mtp2.get<0>() == 8
+	&&	mtp2.get<1>() == 90
+	);
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 #include "Test_Multiple.hpp"
 #include <iostream>
 
@@ -157,6 +188,7 @@ void Test_sgm_Multiple::test()
 		::Test04();
 		::Test05();
 		::Test06();
+		::Test07();
 
 		std::wcout << L"Multiple Test Complete.\n";
 	}
