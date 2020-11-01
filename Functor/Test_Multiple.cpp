@@ -3,7 +3,7 @@
 
 
 using namespace sgm;
-using fp0::Multiple, spec::Specimen, spec::is_True;
+using fp::Multiple, spec::Specimen, spec::is_True;
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -12,8 +12,8 @@ static void Test01()
 	Specimen s1 = 3;
 	Specimen const cs1 = 80;
 
-	auto const mtp1 = fp0::Make_Multiple( s1, cs1, Specimen(-2) );
-	auto const mtp2 = fp0::Forward_as_Multiple( s1, cs1, Specimen(-2) );
+	auto const mtp1 = fp::Make_Multiple( s1, cs1, Specimen(-2) );
+	auto const mtp2 = fp::Forward_as_Multiple( s1, cs1, Specimen(-2) );
 
 	is_True
 	(	mtp1.get<0>() == 3 && mtp1.get<1>() == 80 && mtp1.get<2>() == -2
@@ -54,7 +54,7 @@ static void Test03()
 	(	Specimen(7), s1, s2, std::move(s3)
 	);
 
-	auto mtp1 = fp0::to_Multiple(tu1);
+	auto mtp1 = fp::to_Multiple(tu1);
 
 	static_assert
 	(	std::is_same_v
@@ -149,7 +149,7 @@ static void Test07()
 	Specimen s1 = 9, s2 = 8, s3 = 90;
 
 	auto[mtp1, mtp2]
-	=	*fp0::Forward_as_2FMTP<2, 2>
+	=	*fp::Forward_as_2FMTP<2, 2>
 		(	Specimen(2), s1, static_cast<Specimen const&>(s2), std::move(s3)
 		);
 
@@ -176,6 +176,25 @@ static void Test07()
 #endif
 	is_True(test_result);
 }
+
+
+static void Test08()
+{
+	Specimen s1 = 9, s2 = 7;
+	Specimen const cs1 = -3;
+
+	auto func 
+	=	[](auto&& x1, auto&& x2, auto&& x3)
+		{
+			return x1.val + x2.val + x3.val;
+		};
+
+	Multiple<Specimen&, Specimen const&, Specimen&&> mtp1( s1, cs1, std::move(s2) );
+
+	auto res = fp::Apply(func, mtp1);
+
+	is_True(res == 13);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -194,6 +213,7 @@ void Test_sgm_Multiple::test()
 		::Test05();
 		::Test06();
 		::Test07();
+		::Test08();
 
 		std::wcout << L"Multiple Test Complete.\n";
 	}

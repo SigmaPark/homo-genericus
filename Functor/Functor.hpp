@@ -10,14 +10,14 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include <tuple>
+#include "Multiple.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm::fp
 {
-
+	
 	template<unsigned D, class F>
 	class Functor;
 	
@@ -25,18 +25,11 @@ namespace sgm::fp
 	struct Blank;
 
 
-	template<class...TYPES> 
-	struct Multiple;
-
-	template<class T, class...TYPES>
-	static decltype(auto) Params(T&& t, TYPES&&...params);
-
-
 	template<unsigned D, class...ARGS>
 	class Dimension;
 
 	template<unsigned D>
-	static auto const Dim = Dimension<D>();
+	static inline auto const Dim = Dimension<D>();
 
 
 	template<unsigned _D, class _F>
@@ -44,33 +37,6 @@ namespace sgm::fp
 
 	template<unsigned _D, class _F, class..._ARGS>
 	static decltype(auto) constexpr operator/(_F&&, Dimension<_D, _ARGS...>&&);
-	//--------//--------//--------//--------//-------#//-------//--------//--------//--------//---
-
-
-	template<class T>
-	using remove_rvalue_reference_t
-	=	std::conditional_t< std::is_rvalue_reference_v<T>, std::remove_reference_t<T>, T >;
-
-
-	template<class TU1, class TU2, class...ARGS>
-	static auto Merged_Tuple(TU1&& tu1, TU2&& tu2, ARGS&&...args);
-
-
-	template<class> 
-	struct _is_Multiple;
-
-	template<class>
-	struct _is_tuple;
-
-	template<class MTP>
-	static bool constexpr is_Multiple_v = _is_Multiple< std::decay_t<MTP> >::value;
-
-	template<class TU>
-	static bool constexpr is_tuple_v = _is_tuple< std::decay_t<TU> >::value;
-
-
-	template<class T>
-	static decltype(auto) to_Multiple(T&&);
 
 
 	template<class>
@@ -84,26 +50,40 @@ namespace sgm::fp
 	class _Evaluator;
 
 
-	template<unsigned D>
-	struct _Apply_Helper;
-
-	template<class F, class MTP>
-	static decltype(auto) Apply(F&& f, MTP&& mtp);
-
-
-	template<unsigned NOF_PART, unsigned S, unsigned...SIZES>
-	struct _Partition_Helper;
-
-	template<unsigned...SIZES>
-	struct _Partition;
-
-
-	template<signed D>
 	struct _rPass_Helper;
 
 
 	template<unsigned...INDICES>
 	struct _Permute_Helper;
+
+	
+	inline static auto Params
+	=	[](auto&&...args)
+		{  
+			return Forward_as_Flat_MTP( std::forward<decltype(args)>(args)... );
+		};
+
+
+	template<signed D>
+	inline static auto const Pass
+	=	[](auto&&...args)
+		{
+			if constexpr(D >= 0)
+				return Params( std::forward<decltype(args)>(args)... );
+			else
+				return _rPass_Helper::calc(  Params( std::forward<decltype(args)>(args)... )  );
+		} / Dim<(D >= 0 ? D : -D)>;
+
+
+	template<unsigned...INDICES>
+	inline static auto const Permute
+	=	[](auto&&...args)
+		{
+			return
+			_Permute_Helper<INDICES...>::calc
+			(	Params( std::forward<decltype(args)>(args)... )  
+			);
+		} / Dim<sizeof...(INDICES)>;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -143,112 +123,9 @@ public:
 			)
 		);
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class TU1, class TU2, class...ARGS>
-auto sgm::fp::Merged_Tuple([[maybe_unused]]TU1&& tu1, [[maybe_unused]]TU2&& tu2, ARGS&&...args)
-{
-	using pure_tu1_t = std::decay_t<TU1>;
-	using pure_tu2_t = std::decay_t<TU2>;
-
-	if constexpr
-	(	auto constexpr
-			tu1_size = std::tuple_size_v<pure_tu1_t>,
-			tu2_size = std::tuple_size_v<pure_tu2_t>,
-			nof_args = sizeof...(args)
-	;	nof_args == tu1_size + tu2_size
-	)
-		return std::tuple<decltype(args)...>( std::forward<ARGS>(args)... );
-	else if constexpr(bool constexpr EXTRACTING_TU1 = nof_args >= tu2_size; EXTRACTING_TU1)
-	{
-		auto constexpr IDX = tu1_size + tu2_size - 1 - nof_args;
-		using elem_t = std::tuple_element_t<IDX, pure_tu1_t>;
-
-		return
-		Merged_Tuple
-		(	std::forward<TU1>(tu1), std::forward<TU2>(tu2)
-		,	static_cast<elem_t&&>( std::get<IDX>(tu1) )
-		,	std::forward<ARGS>(args)...
-		);
-	}
-	else 
-	{
-		auto constexpr IDX = tu2_size - 1 - nof_args;
-		using elem_t = std::tuple_element_t<IDX, pure_tu2_t>;
-
-		return
-		Merged_Tuple
-		(	std::forward<TU1>(tu1), std::forward<TU2>(tu2)
-		,	static_cast<elem_t&&>( std::get<IDX>(tu2) )
-		,	std::forward<ARGS>(args)...
-		);
-	}
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class...TYPES>
-struct sgm::fp::Multiple : public std::tuple<TYPES...>
-{
-	using tuple_t = std::tuple<TYPES...>;
-	static auto constexpr DIMENSION = sizeof...(TYPES);
-
-	Multiple(tuple_t& tu) : tuple_t( std::move(tu) ){}
-	Multiple(tuple_t&& tu) noexcept : tuple_t( std::move(tu) ){}
-	Multiple(TYPES...types) : tuple_t( std::forward<TYPES>(types)... ){}
-	
-
-
-	decltype(auto) operator*() const{  return static_cast<tuple_t const&>(*this);  }
-	decltype(auto) operator*(){  return static_cast<tuple_t&>(*this);  }
-
-
-	template<  class MTP, class = std::enable_if_t< is_Multiple_v<MTP> >  >
-	auto operator+(MTP&& mtp){  return to_Multiple( Merged_Tuple(**this, *mtp) );  }
-
-
-};
-
-
-template<class>
-struct sgm::fp::_is_Multiple : std::false_type, No_Making{};
-
-template<class...TYPES>
-struct sgm::fp::_is_Multiple< sgm::fp::Multiple<TYPES...> > : std::true_type, No_Making{};
-
-
-template<class>
-struct sgm::fp::_is_tuple : std::false_type, No_Making{};
-
-template<class...TYPES>
-struct sgm::fp::_is_tuple< std::tuple<TYPES...> > : std::true_type, No_Making{};
-
-
-template<class T>
-decltype(auto) sgm::fp::to_Multiple(T&& t)
-{
-	if constexpr(is_Multiple_v<T>)
-		return std::forward<T>(t);
-	else if constexpr(is_tuple_v<T>)
-		return Multiple( std::forward<T>(t) );
-	else
-		return Multiple( std::forward<T>(t) );
-}
-
-
-template<class T, class...TYPES>
-decltype(auto) sgm::fp::Params(T&& t, TYPES&&...types)
-{
-	if constexpr( sizeof...(TYPES) > 0 )
-		return Params( std::forward<T>(t) ) + Params( std::forward<TYPES>(types)... );
-	else 
-		return to_Multiple( std::forward<T>(t) );
-}
+static sgm::fp::Blank constexpr __;
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -256,7 +133,7 @@ template<unsigned D, class...ARGS>
 class sgm::fp::Dimension
 {
 public:
-	Dimension(ARGS...args) : _mtp(  std::tuple<ARGS...>( static_cast<ARGS>(args)... )  ){}
+	Dimension(ARGS...args) : _mtp( static_cast<ARGS>(args)... ){}
 
 	template<class..._ARGS>
 	auto operator()(_ARGS&&..._args) const
@@ -287,6 +164,14 @@ decltype(auto) constexpr sgm::fp::operator/(_F&& f, Dimension<_D, _ARGS...>&& d)
 {
 	return ( std::forward<_F>(f) / Dim<_D> )(d._mtp);
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class>
+struct sgm::fp::_is_Functor : std::false_type, No_Making{};
+
+template<unsigned D, class F>
+struct sgm::fp::_is_Functor< sgm::fp::Functor<D, F> > : std::true_type, No_Making{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -378,87 +263,6 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned...SIZES>
-struct sgm::fp::_Partition : No_Making
-{
-	template<class...ARGS>
-	static decltype(auto) constexpr calc(ARGS&&...args)
-	{
-		return
-		_Partition_Helper<sizeof...(SIZES), SIZES...>::calc
-		(	std::tuple(), std::tuple(), std::forward<ARGS>(args)...
-		);
-	}
-};
-
-
-template<unsigned NOF_PART, unsigned S, unsigned...SIZES>
-struct sgm::fp::_Partition_Helper : No_Making
-{
-	template<class TTU, class TU, class A, class...ARGS>
-	static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu, A&& a, ARGS&&...args)
-	{
-		if constexpr(S == 0)
-			return 
-			_Partition_Helper<NOF_PART - 1, SIZES...>::calc
-			(	Merged_Tuple(  std::move(ttu), std::make_tuple( std::move(tu) )  )
-			,	std::tuple(), std::forward<A>(a), std::forward<ARGS>(args)...
-			);
-		else
-			return
-			_Partition_Helper<NOF_PART, S - 1, SIZES...>::calc
-			(	std::move(ttu)
-			,	Merged_Tuple(  std::move(tu), std::forward_as_tuple( std::forward<A>(a) )  )
-			,	std::forward<ARGS>(args)...
-			);
-	}
-};
-
-
-template<>
-struct sgm::fp::_Partition_Helper<1, 0> : No_Making
-{
-	template<class TTU, class TU>
-	static decltype(auto) constexpr calc(TTU&& ttu, TU&& tu)
-	{
-		return Merged_Tuple(  std::move(ttu), std::make_tuple( std::move(tu) )  );
-	}
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class F, class MTP>
-decltype(auto) sgm::fp::Apply(F&& f, MTP&& mtp)
-{
-	return
-	_Apply_Helper< std::decay_t<MTP>::DIMENSION >::calc
-	(	std::forward<F>(f), std::forward<MTP>(mtp) 
-	);
-}
-
-
-template<unsigned D>
-struct sgm::fp::_Apply_Helper : No_Making
-{
-	template<class F, class MTP, class...ARGS>
-	static decltype(auto) constexpr calc(F&& f, [[maybe_unused]]MTP&& mtp, ARGS&&...args)
-	{
-		if constexpr(D == 0)
-			return f( std::forward<ARGS>(args)... );
-		else
-			return
-			_Apply_Helper<D - 1>::calc
-			(	std::forward<F>(f), std::forward<MTP>(mtp)
-			,	std::tuple_element_t< D - 1, std::decay_t<decltype(*mtp)> > 
-				(	std::get<D - 1>(mtp)
-				)
-			,	std::forward<ARGS>(args)...
-			);
-	}
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 template<unsigned D, class F>
 class sgm::fp::Functor
 {
@@ -499,16 +303,25 @@ public:
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator+");
 
+		enum {D2 = ftr.DIMENSION};
+
 		return
 		[clone = *this, ftr](auto&&...args)
 		{
-			auto [tu1, tu2]
-			=	_Partition< D, std::decay_t<FTR>::DIMENSION >::calc
-				(	std::forward<decltype(args)>(args)... 
-				);
+			auto[mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( std::forward<decltype(args)>(args)... );
 
-			return Params(  clone( Params(tu1) )  ) + Params(  ftr( Params(tu2) )  );
-		} / Dim< D + std::decay_t<FTR>::DIMENSION >;
+			using res1_t = decltype( clone(mtp1) );
+			using res2_t = decltype( ftr(mtp2) );
+
+			return
+			(	std::conditional_t< is_Multiple_v<res1_t>, res1_t, Multiple<res1_t> >
+				(	clone(mtp1) 
+				)
+			+	std::conditional_t< is_Multiple_v<res2_t>, res2_t, Multiple<res2_t> >	
+				(	ftr(mtp2)
+				)
+			);
+		} / Dim<D + D2>;
 	}
 
 
@@ -523,40 +336,18 @@ private:
 
 	constPinweight<F> _pwf;
 };
-
-
-template<class>
-struct sgm::fp::_is_Functor : std::false_type, No_Making{};
-
-template<unsigned D, class F>
-struct sgm::fp::_is_Functor< sgm::fp::Functor<D, F> > : std::true_type, No_Making{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<signed D>
 struct sgm::fp::_rPass_Helper : No_Making
 {
-	template<class TU, class...ARGS>
-	static decltype(auto) calc([[maybe_unused]] TU&& tu, ARGS&&...args)
+	template<class MTP, class...ARGS>
+	static decltype(auto) calc([[maybe_unused]]MTP&& mtp, ARGS&&...args)
 	{
-		if constexpr(D == 0)
-			return
-			Params
-			(	std::tuple< remove_rvalue_reference_t<decltype(args)>... > 
-				(	static_cast< remove_rvalue_reference_t<decltype(args)> >(args)...
-				)
-			);
+		if constexpr( auto constexpr IDX = sizeof...(ARGS);  mtp.DIMENSION == IDX )
+			return Forward_as_Multiple( std::forward<ARGS>(args)... );
 		else
-		{
-			size_t constexpr IDX = std::tuple_size_v< std::decay_t<TU> > - D;
-			using elem_t = std::tuple_element_t< IDX, std::decay_t<TU> >;
-
-			return
-			_rPass_Helper<D - 1>::calc
-			(	std::move(tu), static_cast<elem_t>( std::get<IDX>(tu) )
-			,	std::forward<ARGS>(args)...
-			);
-		}
+			return calc( std::forward<MTP>(mtp), mtp.get<IDX>(), std::forward<ARGS>(args)...  );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -566,13 +357,11 @@ template<unsigned IDX, unsigned...INDICES>
 struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 {
 	template<class...TYPES, class...ARGS>
-	static decltype(auto) calc(std::tuple<TYPES...>&& src_tu, ARGS&&...args)
+	static decltype(auto) calc(Multiple<TYPES...>&& mtp, ARGS&&...args)
 	{
 		return 
 		_Permute_Helper<INDICES...>::calc
-		(	std::move(src_tu)
-		,	std::forward<ARGS>(args)...
-		,	static_cast< Nth_t<IDX, TYPES...> >( std::get<IDX>(src_tu) )
+		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.get<IDX>()
 		);
 	}
 };
@@ -582,50 +371,12 @@ template<>
 struct sgm::fp::_Permute_Helper<>
 {
 	template<class...TYPES, class...ARGS>
-	static decltype(auto) calc(std::tuple<TYPES...>&&, ARGS&&...args)
+	static decltype(auto) calc(Multiple<TYPES...>&&, ARGS&&...args)
 	{
 		return Params( std::forward<ARGS>(args)... );
 	}
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
-
-
-namespace sgm::fp
-{
-
-	static Blank constexpr __;
-
-
-	template<signed D>
-	inline static auto const Pass
-	=	[](auto&&...args)
-		{
-			if constexpr(D >= 0)
-				return 
-				Params
-				(	std::tuple< remove_rvalue_reference_t<decltype(args)>... > 
-					(	static_cast< remove_rvalue_reference_t<decltype(args)> >(args)...
-					)
-				);
-			else
-				return
-				_rPass_Helper<-D>::calc
-				(	std::tuple<decltype(args)...>( std::forward<decltype(args)>(args)... )
-				);
-		} / Dim<(D >= 0 ? D : -D)>;
-
-
-	template<unsigned...INDICES>
-	inline static auto const Permute
-	=	[](auto&&...args)
-		{
-			return
-			_Permute_Helper<INDICES...>::calc
-			(	std::forward_as_tuple( std::forward<decltype(args)>(args)... )
-			);
-		} / Dim<sizeof...(INDICES)>;
-
-}
 
 
 #ifndef SGM_FUNCTOR
@@ -644,6 +395,7 @@ namespace sgm::fp
 #else
 	#error macro SGM_FUNCTOR is already defined elsewhere.
 #endif
+
 
 
 #endif // end of #ifndef _SGM_FUNCTOR_

@@ -12,7 +12,7 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-namespace sgm::fp0
+namespace sgm::fp
 {
 	
 	template<class...TYPES>
@@ -59,6 +59,19 @@ namespace sgm::fp0
 	static auto Forward_as_2FMTP(ARGS&&...args);
 
 
+	template<class F, class...TYPES>
+	static decltype(auto) Apply(F&& f, Multiple<TYPES...>& mtp);
+
+	template<class F, class...TYPES>
+	static decltype(auto) Apply(F&& f, Multiple<TYPES...>&& mtp);
+
+	template<class F, class...TYPES>
+	static decltype(auto) Apply(F&& f, Multiple<TYPES...> const& mtp);
+
+	template<class...TYPES>
+	struct _Apply_Helper;
+
+
 	template<class T>
 	using remove_aleph_t
 	=	std::conditional_t< std::is_rvalue_reference_v<T>, std::remove_reference_t<T>, T >;
@@ -72,7 +85,7 @@ namespace sgm::fp0
 
 
 template< template<class...> class TC >
-struct sgm::fp0::Type_Check_by : No_Making
+struct sgm::fp::Type_Check_by : No_Making
 {
 	template<class...TYPES>
 	static bool constexpr for_any_v = Check_All<TC>::template for_any<TYPES...>::value;
@@ -90,7 +103,7 @@ struct sgm::fp0::Type_Check_by : No_Making
 
 
 template<class...TYPES>
-class sgm::fp0::Multiple
+class sgm::fp::Multiple
 {
 	template<class...> struct _Merge_Helper;
 
@@ -251,7 +264,7 @@ private:
 
 
 template<class...ARGS>
-auto sgm::fp0::Make_Multiple(ARGS&&...args)
+auto sgm::fp::Make_Multiple(ARGS&&...args)
 {
 	return
 	Multiple< std::remove_reference_t<ARGS>... >
@@ -260,7 +273,7 @@ auto sgm::fp0::Make_Multiple(ARGS&&...args)
 }
 
 template<class...ARGS>
-auto sgm::fp0::Forward_as_Multiple(ARGS&&...args)
+auto sgm::fp::Forward_as_Multiple(ARGS&&...args)
 {
 	return Multiple<decltype(args)...>( static_cast<decltype(args)>(args)... );
 }
@@ -268,7 +281,7 @@ auto sgm::fp0::Forward_as_Multiple(ARGS&&...args)
 
 
 template<class...TYPES>
-struct sgm::fp0::_MTP_Cast_Helper : No_Making
+struct sgm::fp::_MTP_Cast_Helper : No_Making
 {
 	template<class TU, class...ARGS>
 	static auto cast([[maybe_unused]]TU&& tu, ARGS&&...args)
@@ -291,19 +304,19 @@ struct sgm::fp0::_MTP_Cast_Helper : No_Making
 
 
 template<class...TYPES>
-auto sgm::fp0::to_Multiple(std::tuple<TYPES...>& tu)
+auto sgm::fp::to_Multiple(std::tuple<TYPES...>& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast(tu);
 }
 
 template<class...TYPES>
-auto sgm::fp0::to_Multiple(std::tuple<TYPES...> const& tu)
+auto sgm::fp::to_Multiple(std::tuple<TYPES...> const& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast(tu);
 }
 
 template<class...TYPES>
-auto sgm::fp0::to_Multiple(std::tuple<TYPES...>&& tu)
+auto sgm::fp::to_Multiple(std::tuple<TYPES...>&& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast( std::move(tu) );
 }
@@ -311,14 +324,14 @@ auto sgm::fp0::to_Multiple(std::tuple<TYPES...>&& tu)
 
 
 template<class>
-struct sgm::fp0::_is_Multiple : std::false_type, No_Making{};
+struct sgm::fp::_is_Multiple : std::false_type, No_Making{};
 
 template<class...TYPES>
-struct sgm::fp0::_is_Multiple< sgm::fp0::Multiple<TYPES...> > : std::true_type, No_Making{};
+struct sgm::fp::_is_Multiple< sgm::fp::Multiple<TYPES...> > : std::true_type, No_Making{};
 
 
 template<class T, class...ARGS>
-decltype(auto) sgm::fp0::Make_Flat_MTP(T&&t, [[maybe_unused]]ARGS&&...args)
+decltype(auto) sgm::fp::Make_Flat_MTP(T&&t, [[maybe_unused]]ARGS&&...args)
 {
 	using std::forward;
 
@@ -332,7 +345,7 @@ decltype(auto) sgm::fp0::Make_Flat_MTP(T&&t, [[maybe_unused]]ARGS&&...args)
 
 
 template<class T, class...ARGS>
-decltype(auto) sgm::fp0::Forward_as_Flat_MTP(T&& t, [[maybe_unused]]ARGS&&...args)
+decltype(auto) sgm::fp::Forward_as_Flat_MTP(T&& t, [[maybe_unused]]ARGS&&...args)
 {
 	if constexpr( sizeof...(ARGS) > 0 )
 		return
@@ -348,7 +361,7 @@ decltype(auto) sgm::fp0::Forward_as_Flat_MTP(T&& t, [[maybe_unused]]ARGS&&...arg
 
 
 template<unsigned D1>
-struct sgm::fp0::_2FMTP_Helper : No_Making
+struct sgm::fp::_2FMTP_Helper : No_Making
 {
 	template<unsigned N = 0, class MTP1, class MTP2, class...ARGS>
 	static decltype(auto) calc(MTP1&& mtp1, MTP2&& mtp2, Multiple<ARGS...>& amtp)
@@ -366,7 +379,7 @@ struct sgm::fp0::_2FMTP_Helper : No_Making
 
 
 template<unsigned D1, unsigned D2, class...ARGS>
-static auto sgm::fp0::Forward_as_2FMTP(ARGS&&...args)
+static auto sgm::fp::Forward_as_2FMTP(ARGS&&...args)
 {
 	auto amtp = Forward_as_Flat_MTP( std::forward<ARGS>(args)... );
 
@@ -374,6 +387,45 @@ static auto sgm::fp0::Forward_as_2FMTP(ARGS&&...args)
 
 	return _2FMTP_Helper<D1>::calc(Multiple(), Multiple(), amtp);
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class F, class...TYPES>
+decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...>& mtp)
+{
+	return _Apply_Helper<TYPES...>::calc( std::forward<F>(f), mtp );
+}
+
+template<class F, class...TYPES>
+decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...>&& mtp)
+{
+	return _Apply_Helper<TYPES...>::calc( std::forward<F>(f), std::move(mtp) );
+}
+
+template<class F, class...TYPES>
+decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...> const& mtp)
+{
+	return _Apply_Helper<TYPES...>::calc( std::forward<F>(f), mtp );
+}
+
+
+template<class...TYPES>
+struct sgm::fp::_Apply_Helper
+{
+	template<class F, class MTP, class...ARGS>
+	static decltype(auto) calc(F&& f, [[maybe_unused]]MTP&& mtp, ARGS&&...args)
+	{
+		if constexpr( auto constexpr IDX = sizeof...(ARGS);  sizeof...(TYPES) == IDX )
+			return f( std::forward<ARGS>(args)... );
+		else
+			return
+			calc
+			(	std::forward<F>(f), std::forward<MTP>(mtp)
+			,	std::forward<ARGS>(args)..., mtp.get<IDX>()
+			);
+	}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 #endif // end of #ifndef _SGM_MULTIPLE_
