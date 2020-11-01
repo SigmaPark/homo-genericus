@@ -23,8 +23,6 @@ using namespace sgm::fp;
 using sgm::spec::is_True;
 
 
-
-
 void Test_Case::Made_from_Generic_Lambda()
 {
 	is_True
@@ -113,8 +111,8 @@ void Test_Case::Pass_and_Permute()
 	(	permuted.get<0>() == px
 	&&	permuted.get<1>() == cx
 	&&	permuted.get<2>() == y
-	&&	permuted.get<3>() == 3
-	);	
+	//&&	permuted.get<3>() == 3		// already destructed because it's an rvalue reference.
+	);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

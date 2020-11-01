@@ -57,11 +57,8 @@ namespace sgm::fp
 	struct _Permute_Helper;
 
 	
-	inline static auto Params
-	=	[](auto&&...args)
-		{  
-			return Forward_as_Flat_MTP( std::forward<decltype(args)>(args)... );
-		};
+	template<class...ARGS>
+	static auto Params(ARGS&&...);
 
 
 	template<signed D>
@@ -339,6 +336,14 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class...ARGS>
+auto sgm::fp::Params(ARGS&&...args)
+{  
+	return Forward_as_Flat_MTP( std::forward<ARGS>(args)... );  
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 struct sgm::fp::_rPass_Helper : No_Making
 {
 	template<class MTP, class...ARGS>
@@ -347,7 +352,8 @@ struct sgm::fp::_rPass_Helper : No_Making
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  mtp.DIMENSION == IDX )
 			return Forward_as_Multiple( std::forward<ARGS>(args)... );
 		else
-			return calc( std::forward<MTP>(mtp), mtp.get<IDX>(), std::forward<ARGS>(args)...  );
+			return 
+			calc( std::forward<MTP>(mtp), mtp.forward<IDX>(), std::forward<ARGS>(args)...  );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -361,7 +367,7 @@ struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 	{
 		return 
 		_Permute_Helper<INDICES...>::calc
-		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.get<IDX>()
+		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.forward<IDX>()
 		);
 	}
 };
