@@ -291,6 +291,10 @@ public:
 	core_t _core;
 
 
+	auto operator*()-> core_t&{  return _core;  }
+	auto operator*() const-> core_t const&{  return _core;  }
+
+
 	Serial() = default;
 	Serial(Serial const&) = default;
 

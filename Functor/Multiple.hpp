@@ -26,14 +26,14 @@ namespace sgm::fp
 	static auto Forward_as_Multiple(ARGS&&...args);
 
 
-	template<class...TYPES>
-	static auto to_Multiple(std::tuple<TYPES...>& tu);
+	template< template<class...> class TC, class...TYPES >
+	static auto to_Multiple(TC<TYPES...>& tu);
 
-	template<class...TYPES>
-	static auto to_Multiple(std::tuple<TYPES...> const& tu);
+	template< template<class...> class TC, class...TYPES >
+	static auto to_Multiple(TC<TYPES...> const& tu);
 
-	template<class...TYPES>
-	static auto to_Multiple(std::tuple<TYPES...>&& tu);
+	template< template<class...> class TC, class...TYPES >
+	static auto to_Multiple(TC<TYPES...>&& tu);
 
 	template<class...TYPES>
 	struct _MTP_Cast_Helper;
@@ -303,20 +303,20 @@ struct sgm::fp::_MTP_Cast_Helper : No_Making
 };
 
 
-template<class...TYPES>
-auto sgm::fp::to_Multiple(std::tuple<TYPES...>& tu)
+template< template<class...> class TC, class...TYPES >
+auto sgm::fp::to_Multiple(TC<TYPES...>& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast(tu);
 }
 
-template<class...TYPES>
-auto sgm::fp::to_Multiple(std::tuple<TYPES...> const& tu)
+template< template<class...> class TC, class...TYPES >
+auto sgm::fp::to_Multiple(TC<TYPES...> const& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast(tu);
 }
 
-template<class...TYPES>
-auto sgm::fp::to_Multiple(std::tuple<TYPES...>&& tu)
+template< template<class...> class TC, class...TYPES >
+auto sgm::fp::to_Multiple(TC<TYPES...>&& tu)
 {
 	return _MTP_Cast_Helper<TYPES...>::cast( std::move(tu) );
 }

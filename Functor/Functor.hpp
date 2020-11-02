@@ -231,7 +231,7 @@ private:
 
 	template<unsigned N, class...TYPES, class...ARGS>
 	decltype(auto) _cut_rear_helper
-	(	[[maybe_unused]] std::tuple<TYPES...>&& tu, ARGS&&...args
+	(	[[maybe_unused]] Multiple<TYPES...>&& mtp, ARGS&&...args
 	)	const
 	{
 		if constexpr(N == 0)
@@ -239,9 +239,7 @@ private:
 		else
 			return
 			_cut_rear_helper<N - 1>
-			(	std::move(tu)
-			,	static_cast< Nth_t<N - 1, TYPES...> >( std::get<N - 1>(tu) )
-			,	std::forward<ARGS>(args)...
+			(	std::move(mtp), mtp.forward<N - 1>(), std::forward<ARGS>(args)...
 			);
 	}
 
@@ -250,7 +248,7 @@ private:
 	{
 		return
 		_cut_rear_helper<sizeof...(TYPES) - 1>
-		(	std::forward_as_tuple( std::forward<TYPES>(types)... )
+		(	Forward_as_Multiple( std::forward<TYPES>(types)... )
 		);
 	}
 
