@@ -49,25 +49,19 @@ static void Test02()
 static void Test03()
 {
 	Specimen s1 = 9, s2 = 8, s3 = 90;
-	
-	std::tuple<Specimen, Specimen&, Specimen const&, Specimen&&> tu1
+
+	Multiple<Specimen, Specimen&, Specimen const&, Specimen&&> mtp1
 	(	Specimen(7), s1, s2, std::move(s3)
 	);
-
-	auto mtp1 = fp::to_Multiple(tu1);
+	
+	auto&&[a1, a2, a3, a4] = *mtp1;
 
 	static_assert
-	(	std::is_same_v
-		<	decltype(mtp1)
-		,	Multiple<Specimen, Specimen&, Specimen const&, Specimen&&>
-		>
+	(	std::is_same_v< decltype(a1), Specimen >
+	&&	std::is_same_v< decltype(a2), Specimen& >
+	&&	std::is_same_v< decltype(a3), Specimen const& >
+	&&	std::is_same_v< decltype(a4), Specimen&& >
 	);
-
-	is_True(mtp1.forward<3>() == 90);
-
-	auto s4 = mtp1.forward<3>();
-
-	is_True(mtp1.get<3>() == Specimen::State::DESTRUCTED);
 }
 
 

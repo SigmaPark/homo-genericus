@@ -8,7 +8,7 @@
 #endif
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
-#include <tuple>
+#include "..\Family\Family.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -24,19 +24,6 @@ namespace sgm::fp
 
 	template<class...ARGS>
 	static auto Forward_as_Multiple(ARGS&&...args);
-
-
-	template< template<class...> class TC, class...TYPES >
-	static auto to_Multiple(TC<TYPES...>& tu);
-
-	template< template<class...> class TC, class...TYPES >
-	static auto to_Multiple(TC<TYPES...> const& tu);
-
-	template< template<class...> class TC, class...TYPES >
-	static auto to_Multiple(TC<TYPES...>&& tu);
-
-	template<class...TYPES>
-	struct _MTP_Cast_Helper;
 
 
 	template<class>
@@ -108,20 +95,20 @@ class sgm::fp::Multiple
 	template<class...> struct _Merge_Helper;
 
 public:
-	using tuple_t = std::tuple<TYPES...>;
+	using fam_t = Family<TYPES...>;
 	static auto constexpr DIMENSION = sizeof...(TYPES);
 
 
-	Multiple(TYPES...types) : _tu(  tuple_t( std::forward<TYPES>(types)... )  ){}
+	Multiple(TYPES...types) : _fam(  fam_t( std::forward<TYPES>(types)... )  ){}
 
 
-	auto operator*() const&-> tuple_t const&{  return _tu;  }
-	auto operator*() &-> tuple_t&{  return _tu;  }
-	auto operator*() &&-> tuple_t&&{  return std::move(_tu);  }
+	auto operator*() const&-> fam_t const&{  return _fam;  }
+	auto operator*() &-> fam_t&{  return _fam;  }
+	auto operator*() &&-> fam_t&&{  return std::move(_fam);  }
 
 
-	template<unsigned IDX> decltype(auto) get(){  return std::get<IDX>(_tu);  }
-	template<unsigned IDX> decltype(auto) get() const{  return std::get<IDX>(_tu);  }
+	template<unsigned IDX> decltype(auto) get(){  return std::get<IDX>(_fam);  }
+	template<unsigned IDX> decltype(auto) get() const{  return std::get<IDX>(_fam);  }
 
 
 	template< unsigned IDX = Size_info<unsigned>::MAXIMUM >
@@ -179,7 +166,7 @@ public:
 
 
 private:
-	std::tuple<TYPES...> _tu;
+	fam_t _fam;
 
 
 	template<class...ARGS>
@@ -276,49 +263,6 @@ template<class...ARGS>
 auto sgm::fp::Forward_as_Multiple(ARGS&&...args)
 {
 	return Multiple<decltype(args)...>( static_cast<decltype(args)>(args)... );
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class...TYPES>
-struct sgm::fp::_MTP_Cast_Helper : No_Making
-{
-	template<class TU, class...ARGS>
-	static auto cast([[maybe_unused]]TU&& tu, ARGS&&...args)
-	{
-		using std::forward;
-		
-		if constexpr
-		(	auto constexpr tu_size = sizeof...(TYPES), nof_args = sizeof...(ARGS)
-		;	tu_size == nof_args
-		)
-			return Multiple<TYPES...>( forward<ARGS>(args)... );
-		else
-			return
-			cast
-			(	forward<TU>(tu), forward<ARGS>(args)...
-			,	static_cast< Nth_t<nof_args, TYPES...> >( std::get<nof_args>(tu) )
-			);
-	}
-};
-
-
-template< template<class...> class TC, class...TYPES >
-auto sgm::fp::to_Multiple(TC<TYPES...>& tu)
-{
-	return _MTP_Cast_Helper<TYPES...>::cast(tu);
-}
-
-template< template<class...> class TC, class...TYPES >
-auto sgm::fp::to_Multiple(TC<TYPES...> const& tu)
-{
-	return _MTP_Cast_Helper<TYPES...>::cast(tu);
-}
-
-template< template<class...> class TC, class...TYPES >
-auto sgm::fp::to_Multiple(TC<TYPES...>&& tu)
-{
-	return _MTP_Cast_Helper<TYPES...>::cast( std::move(tu) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
