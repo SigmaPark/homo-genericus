@@ -3,7 +3,7 @@
 #include "..\Avatar\Avatar.hpp"
 
 using namespace sgm;
-using spec::are_Equivalent;
+//using spec::are_Equivalent;
 
 #if 0
 static void Factorial_Test()
@@ -78,7 +78,8 @@ static void Chain_Test()
 		}(list, 0);
 
 
-	are_Equivalent(sum, 55);
+	//are_Equivalent(sum, 55);
+	spec::is_True(sum == 55);
 }
 
 

@@ -7,7 +7,8 @@
 #ifndef _SGM_FAMILY_
 #define _SGM_FAMILY_
 
-#include <type_traits>
+#include "..\Type_Analysis\Type_Analysis.hpp"
+#include "..\idiom\idiom.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -22,11 +23,23 @@ namespace sgm
 	struct Family_member;
 
 
+	template<class T>
+	struct is_Family;
+
+
 	template<class...TYPES>
 	static auto Make_Family(TYPES...types)-> Family<TYPES...>;
 
 	template<class...TYPES>
 	static auto Forward_as_Family(TYPES&&...types)-> Family<TYPES&&...>;
+
+
+	template<class FAM1, class FAM2>
+	struct _Merge_Fam_Helper;
+
+	template<class FAM1, class FAM2>
+	static auto Merge_Families(FAM1&& fam1, FAM2&& fam2)
+	->	typename _Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::res_t;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -138,13 +151,17 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<> struct sgm::Family_member<0, sgm::Family<>>
+{
+	using type = std::nullptr_t;
+	using family_type = Family<>;	
+};
+
 template<class T, class...TYPES>
 struct sgm::Family_member< 0, sgm::Family<T, TYPES...> >
 {
 	using type = T;
 	using family_type = Family<T, TYPES...>;
-
-	Family_member() = delete;
 };
 
 template<size_t N, class T, class...TYPES>
@@ -153,19 +170,28 @@ struct sgm::Family_member< N, sgm::Family<T, TYPES...> >
 {};
 
 
+template<> struct sgm::Family_member<0, sgm::Family<> const>
+{
+	using type = std::nullptr_t;
+	using family_type = Family<> const;
+};
+
 template<class T, class...TYPES>
 struct sgm::Family_member< 0, sgm::Family<T, TYPES...> const >
 {
 	using type = T const;
 	using family_type = Family<T, TYPES...> const;
-
-	Family_member() = delete;
 };
 
 template<size_t N, class T, class...TYPES>
 struct sgm::Family_member< N, sgm::Family<T, TYPES...> const > 
 :	Family_member< N - 1, Family<TYPES...> const >
 {};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T>
+struct sgm::is_Family : std::is_base_of< Family<>, std::decay_t<T> >, No_Making{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -180,6 +206,81 @@ template<class...TYPES>
 auto sgm::Forward_as_Family(TYPES&&...types)-> Family<TYPES&&...>
 {
 	return Family<TYPES&&...>( std::forward<TYPES>(types)... );
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class...TYPES1, class...TYPES2>
+struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > : No_Making
+{
+#pragma warning(push)
+#pragma warning(disable : 4348)
+	template
+	<	unsigned IDX = 0 
+	,	unsigned
+		=	IDX == sizeof...(TYPES1) + sizeof...(TYPES2)
+			?	0
+			:	
+			( IDX < sizeof...(TYPES1) )
+			?	1
+			:	2
+	>
+	struct Nth;
+#pragma warning(pop)
+
+	using res_t = Family<TYPES1..., TYPES2...>;
+
+	
+	template<unsigned IDX>
+	struct Nth<IDX, 0> : No_Making
+	{
+		template<class FAM1, class FAM2, class...ARGS>
+		static auto calc(FAM1&&, FAM2&&, ARGS&&...args)-> res_t
+		{
+			return Family<TYPES1..., TYPES2...>( std::forward<ARGS>(args)... );
+		}
+	};
+
+	template<unsigned IDX>
+	struct Nth<IDX, 1> : No_Making
+	{
+		template<class FAM1, class FAM2, class...ARGS>
+		static auto calc(FAM1&& fam1, FAM2&& fam2, ARGS&&...args)-> res_t
+		{
+			return
+			Nth<IDX + 1>::calc
+			(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2), std::forward<ARGS>(args)...
+			,	std::forward< Nth_t<IDX, TYPES1...> >( std::get<IDX>(fam1) )
+			);
+		}
+	};
+
+	template<unsigned IDX>
+	struct Nth<IDX, 2> : No_Making
+	{
+		template<class FAM1, class FAM2, class...ARGS>
+		static auto calc(FAM1&& fam1, FAM2&& fam2, ARGS&&...args)-> res_t
+		{
+			return
+			Nth<IDX + 1>::calc
+			(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2), std::forward<ARGS>(args)...
+			,	std::forward< Nth_t<IDX - sizeof...(TYPES1), TYPES2...> >
+				(	std::get<IDX - sizeof...(TYPES1)>(fam2) 
+				)
+			);
+		}
+	};
+};
+
+
+template<class FAM1, class FAM2>
+auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2)
+->	typename _Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::res_t
+{
+	return
+	_Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::template Nth<>::calc
+	(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2)
+	);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

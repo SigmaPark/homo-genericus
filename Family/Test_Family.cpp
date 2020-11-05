@@ -138,6 +138,32 @@ static void Test06()
 }
 
 
+static void Test07()
+{
+	Specimen s1 = -2, s2 = 30;
+
+	Family<Specimen&, Specimen> fam1(s2, 65);
+	Family<Specimen, Specimen&&> fam2( -4, std::move(s1) );
+
+
+	auto fam3 = sgm::Merge_Families(fam1, fam2);
+
+	static_assert
+	(	std::is_same
+		<	decltype(fam3), Family<Specimen&, Specimen, Specimen, Specimen&&> 
+		>::value
+	,	""
+	);
+
+	is_True
+	(	std::get<0>(fam3) == s2
+	&&	std::get<1>(fam3) == 65
+	&&	std::get<2>(fam3) == -4
+	&&	std::get<3>(fam3) == -2
+	);
+}
+
+
 #include "Test_Family.hpp"
 #include <iostream>
 
@@ -152,6 +178,7 @@ void Test_sgm_Family::test()
 		::Test04();
 		::Test05();
 		::Test06();
+		::Test07();
 
 		std::wcout << L"Family Test Complete.\n";
 	}

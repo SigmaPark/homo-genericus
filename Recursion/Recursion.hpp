@@ -87,7 +87,7 @@ public:
 	template<class CON>
 	Chain(CON& con) : cc_t(con){}
 
-	auto operator*()-> typename cc_t::deref_t&{  return *_head;  }
+	auto operator*()-> typename cc_t::deref_t&{  return *cc_t::_head;  }
 };
 
 
