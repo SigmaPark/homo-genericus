@@ -51,7 +51,7 @@ static void Test02()
 			(	parabola_f, num::Real_Range<double>{0.0, 5.0}, threshold
 			);
 
-	//spec::are_Equivalent_by( _Compare<double>(threshold), gs_searched, answer );
+	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
 }
 
 
@@ -66,8 +66,8 @@ static void Test03()
 		=	num::GoldenSection<num::Extreme::MAXIMUM>::search
 			(	sine_f, num::Real_Range<double>{0.0, pi}, threshold
 			);
-	
-	//spec::are_Equivalent_by( _Compare<double>(threshold), gs_searched, answer );
+
+	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
 }
 
 

@@ -8,7 +8,6 @@
 #define _SGM_FAMILY_
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
-#include "..\idiom\idiom.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
