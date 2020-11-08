@@ -3,11 +3,8 @@
 #ifndef _SGM_HIGH_TEMPLAR11_
 #define _SGM_HIGH_TEMPLAR11_
 
-#include "..\Serial\Serial.hpp"
+
 #include "..\Concurrency\Concurrency.hpp"
-#include "..\Type_Decorator\Type_Decorator.hpp"
-#include "..\Flags\Flags.hpp"
-//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm
@@ -64,9 +61,22 @@ namespace sgm
 
 		struct _Fold_Helper;
 
+
+		template
+		<	class FLAG_SET
+		,	_impl_Mode
+			=	FLAG_SET::template has<par::_Parallel_Helper>::value
+				?	_impl_Mode::MULTI_THREAD
+				:	_impl_Mode::SEQUANCIAL
+		>
+		struct _Zip_impl;
+
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#include "..\Flags\Flags.hpp"
 
 
 template<class maybe_Par>
@@ -105,6 +115,9 @@ struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> : Flag< Par<AUTO_OR, 0> >, par::Paralle
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+#include "..\Type_Decorator\Type_Decorator.hpp"
+
+
 template<class T, class> struct sgm::ht::_Decorated{  using type = T;  };
 
 template<class T, class...FLAGS>
@@ -113,6 +126,9 @@ struct sgm::ht::_Decorated< T, sgm::Flag<FLAGS...> >
 	using type = typename Decorated<T>::template by<FLAGS...>::type;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+#include "..\Serial\Serial.hpp"
 
 
 template<class FS>
@@ -387,6 +403,78 @@ public:
 		);
 	}
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+#include "..\Family\Family.hpp"
+
+
+template<class FS>
+struct sgm::ht::_Zip_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
+{
+	template
+	<	class CON1, class CON2
+	,	class x1_t = std::remove_reference_t< decltype(*Declval<CON1>().begin()) >
+	,	class x2_t = std::remove_reference_t< decltype(*Declval<CON2>().begin()) >
+	,	class e1_t = _Decorated_t<x1_t, FS>, class e2_t = _Decorated_t<x2_t, FS>
+	,	class elem_t = Family<e1_t, e2_t>
+	>
+	static auto calc(CON1&& con1, CON2&& con2)-> Serial<elem_t>
+	{
+		assert(con1.size() == con2.size() && L"size mismatched.\n");
+
+		Serial<elem_t> res(con1.size());
+
+		for
+		(	auto duo = Dual_iteration(con1.begin(), con2.begin())
+		;	duo._1 != con1.end()
+		;	res >> Make_Family(*duo._1, *duo._2),  duo++
+		);
+
+		return res;
+	}
+};
+
+
+template<class FS>
+struct sgm::ht::_Zip_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
+{
+	template
+	<	class CON1, class CON2
+	,	class x1_t = std::remove_reference_t< decltype(*Declval<CON1>().begin()) >
+	,	class x2_t = std::remove_reference_t< decltype(*Declval<CON2>().begin()) >
+	,	class e1_t = _Decorated_t<x1_t, FS>, class e2_t = _Decorated_t<x2_t, FS>
+	,	class elem_t = Family<e1_t, e2_t>
+	>
+	static auto calc(CON1&& con1, CON2&& con2)-> Serial<elem_t>
+	{
+		assert(con1.size() == con2.size() && L"size mismatched.\n");
+		
+		if(con1.size() == 0)
+			return Serial<elem_t>{};
+		else
+		{
+			Serial<elem_t> res( con1.size(), Make_Family(*con1.begin(), *con2.begin()) );
+
+			Satisfying_flag<is_Par, FS>()
+			(	res.size()
+			,	[&con1, &con2, &res](size_t idx_begin, size_t const idx_end, unsigned const)
+				{
+					for
+					(	auto duo 
+						=	Dual_iteration
+							(	Next(con1.begin(), idx_begin), Next(con2.begin(), idx_begin)
+							)
+					;	idx_begin < idx_end
+					;	res[idx_begin++] = Make_Family(*duo._1++, *duo._2++)
+					);
+				}
+			);
+
+			return res;
+		}
+	}
+};
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -461,6 +549,17 @@ namespace sgm
 		(
 			_Fold_impl< false, false, Flag<FLAGS...> >::calc
 			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
+			)
+		)
+
+
+		template
+		<	class...FLAGS, class CON1, class CON2
+		>
+		static auto Zip(CON1&& con1, CON2&& con2) SGM_DECLTYPE_AUTO
+		(
+			_Zip_impl< Flag<FLAGS...> >::calc
+			(	std::forward<CON1>(con1), std::forward<CON2>(con2)
 			)
 		)
 

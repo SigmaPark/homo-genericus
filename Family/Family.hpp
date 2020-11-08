@@ -42,18 +42,22 @@ namespace sgm
 
 
 	template<class T>
-	using remove_aleph_t
-	=	std::conditional_t< std::is_rvalue_reference<T>::value, std::remove_reference_t<T>, T >;
+	struct remove_aleph;
+
+	template<class T>
+	using remove_aleph_t = typename remove_aleph<T>::type;
 	
 
-	template<class...TYPES>
+	template<bool, template<class...> class TL,  class...TYPES>
 	struct _Harden_Helper;
 
-	template<class...TYPES>
-	static auto Harden(Family<TYPES...>& fam)-> typename _Harden_Helper<TYPES...>::res_t;
+	template< template<class...> class TL, class...TYPES >
+	static auto Harden(TL<TYPES...>& tuple_like)
+	->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t;
 
-	template<class...TYPES>
-	static auto Harden(Family<TYPES...>&& fam)-> typename _Harden_Helper<TYPES...>::res_t;
+	template< template<class...> class TL, class...TYPES >
+	static auto Harden(TL<TYPES...>&& tuple_like)
+	->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -109,7 +113,12 @@ namespace std
 
 
 template<>
-class sgm::Family<>{};
+class sgm::Family<>
+{
+public:
+	bool operator==(Family) const{  return true;  }
+	bool operator!=(Family) const{  return false;  }
+};
 
 
 #pragma warning(push)
@@ -159,6 +168,17 @@ public:
 
 		return *this;
 	}
+
+
+	bool operator==(Family const& fam) const
+	{
+		return 
+		(	_val == fam._val 
+		&&	static_cast<_upper_t>(*this) == static_cast<_upper_t const&>(fam)
+		);
+	}
+
+	bool operator!=(Family const& fam) const{  return !(*this == fam);  }
 
 };
 #pragma warning(pop)
@@ -322,58 +342,57 @@ struct std::tuple_element< N, sgm::Family<TYPES...> const >
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class...TYPES>
-struct sgm::_Harden_Helper : No_Making
+template<class T>
+struct sgm::remove_aleph
 {
-	using res_t = Family< remove_aleph_t<TYPES>... >;
+	using type
+	=	std::conditional_t< std::is_rvalue_reference<T>::value, std::remove_reference_t<T>, T >;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-	template<bool>
-	struct _impl;
+template< template<class...> class TL, class...TYPES >
+auto sgm::Harden(TL<TYPES...>& tL)
+->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t
+{
+	return _Harden_Helper<sizeof...(TYPES) == 0, TL, TYPES...>::calc(tL);
+}
 
-	template<>
-	struct _impl<true> : No_Making
-	{
-		template<class FAM, class...ARGS>
-		static auto calc(FAM&&, ARGS&&...args)-> res_t
-		{
-			return { std::forward<ARGS>(args)... };
-		}
-	};
+template< template<class...> class TL, class...TYPES >
+auto sgm::Harden(TL<TYPES...>&& tL)
+->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t
+{
+	return _Harden_Helper<sizeof...(TYPES) == 0, TL, TYPES...>::calc( std::move(tL) );
+}
 
-	template<>
-	struct _impl<false> : No_Making
-	{
-		template<class FAM, class...ARGS>
-		static auto calc(FAM&& fam, ARGS&&...args)-> res_t
-		{
-			enum {IDX = sizeof...(ARGS)};
-			using elem_t = Nth_t<IDX, TYPES...>;
 
-			return
-			_impl<IDX + 1 == sizeof...(TYPES)>::calc
-			(	std::forward<FAM>(fam), std::forward<ARGS>(args)...
-			,	static_cast< remove_aleph_t<elem_t>&& >( std::get<IDX>(fam) )
-			);
-		}
-	};
+template< template<class...> class TL, class...TYPES >
+struct sgm::_Harden_Helper<true, TL, TYPES...> : No_Making
+{
+	using res_t = TL< remove_aleph_t<TYPES>... >;
+	
+	template<class Q, class...ARGS>
+	static auto calc(Q&&, ARGS&&...args)-> res_t{  return {std::forward<ARGS>(args)...};  }
 };
 
-
-template<class...TYPES>
-auto sgm::Harden(sgm::Family<TYPES...>& fam)-> typename _Harden_Helper<TYPES...>::res_t
+template< template<class...> class TL, class...TYPES >
+struct sgm::_Harden_Helper<false, TL, TYPES...> : No_Making
 {
-	return _Harden_Helper<TYPES...>::template _impl<sizeof...(TYPES) == 0>::calc(fam);
-}
+	template<class Q, class...ARGS>
+	static auto calc(Q&& q, ARGS&&...args)
+	->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t
+	{
+		enum {IDX = sizeof...(ARGS)};
+		using elem_t = Nth_t<IDX, TYPES...>;
 
-template<class...TYPES>
-auto sgm::Harden(sgm::Family<TYPES...>&& fam)-> typename _Harden_Helper<TYPES...>::res_t
-{
-	return 
-	_Harden_Helper<TYPES...>::template _impl<sizeof...(TYPES) == 0>::calc( std::move(fam) );
-}
-
-
+		return
+		sgm::_Harden_Helper<IDX + 1 == sizeof...(TYPES), TL, TYPES...>::calc
+		(	std::forward<Q>(q), std::forward<ARGS>(args)...
+		,	static_cast< remove_aleph_t<elem_t>&& >( std::get<IDX>(q) )
+		);
+	}
+};
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 
