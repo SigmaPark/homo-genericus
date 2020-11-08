@@ -59,11 +59,6 @@ namespace sgm::fp
 	struct _Apply_Helper;
 
 
-	template<class T>
-	using remove_aleph_t
-	=	std::conditional_t< std::is_rvalue_reference_v<T>, std::remove_reference_t<T>, T >;
-
-
 	template< template<class...> class TC >
 	struct Type_Check_by;
 
@@ -178,21 +173,11 @@ private:
 		)
 			return Multiple< remove_aleph_t<TYPES>... >( std::forward<ARGS>(args)... );
 		else
-		{
-			using elem_t = Nth_t<nof_args, TYPES...>;
-
-			using maybe_aleph_t
-			=	std::conditional_t
-				<	std::is_rvalue_reference_v<elem_t>
-				,	elem_t
-				,	decltype(get<nof_args>())
-				>;
-
 			return
 			_hardened
-			(	std::forward<ARGS>(args)..., static_cast<maybe_aleph_t>(get<nof_args>()) 
+			(	std::forward<ARGS>(args)...
+			,	static_cast<  remove_aleph_t< Nth_t<nof_args, TYPES...> >&&  >(get<nof_args>())
 			);
-		}
 	}
 
 

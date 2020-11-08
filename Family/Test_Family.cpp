@@ -164,6 +164,29 @@ static void Test07()
 }
 
 
+static void Test08()
+{
+	Specimen s1 = -2, s2 = 30;
+	Family<Specimen&, Specimen&&> fam1( s1, std::move(s2) );
+
+	//	Fail to compile of vs2013 but ok with one of vs2019...
+	//auto fam2 = sgm::Harden(fam1);
+
+	//static_assert
+	//(	std::is_same
+	//	<	decltype(fam2), Family<Specimen&, Specimen> 
+	//	>::value
+	//,	""
+	//);
+
+	//is_True
+	//(	std::get<0>(fam2) == s1
+	//&&	std::get<1>(fam2) == 30
+	//&&	s2 == Specimen::State::DESTRUCTED
+	//);
+}
+
+
 #include "Test_Family.hpp"
 #include <iostream>
 
@@ -179,6 +202,7 @@ void Test_sgm_Family::test()
 		::Test05();
 		::Test06();
 		::Test07();
+		::Test08();
 
 		std::wcout << L"Family Test Complete.\n";
 	}

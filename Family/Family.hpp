@@ -40,6 +40,21 @@ namespace sgm
 	static auto Merge_Families(FAM1&& fam1, FAM2&& fam2)
 	->	typename _Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::res_t;
 
+
+	template<class T>
+	using remove_aleph_t
+	=	std::conditional_t< std::is_rvalue_reference<T>::value, std::remove_reference_t<T>, T >;
+	
+
+	template<class...TYPES>
+	struct _Harden_Helper;
+
+	template<class...TYPES>
+	static auto Harden(Family<TYPES...>& fam)-> typename _Harden_Helper<TYPES...>::res_t;
+
+	template<class...TYPES>
+	static auto Harden(Family<TYPES...>&& fam)-> typename _Harden_Helper<TYPES...>::res_t;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -304,6 +319,61 @@ struct std::tuple_element< N, sgm::Family<TYPES...> const >
 {
 	static_assert( N < sizeof...(TYPES), "out of index" );
 };
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<class...TYPES>
+struct sgm::_Harden_Helper : No_Making
+{
+	using res_t = Family< remove_aleph_t<TYPES>... >;
+
+
+	template<bool>
+	struct _impl;
+
+	template<>
+	struct _impl<true> : No_Making
+	{
+		template<class FAM, class...ARGS>
+		static auto calc(FAM&&, ARGS&&...args)-> res_t
+		{
+			return { std::forward<ARGS>(args)... };
+		}
+	};
+
+	template<>
+	struct _impl<false> : No_Making
+	{
+		template<class FAM, class...ARGS>
+		static auto calc(FAM&& fam, ARGS&&...args)-> res_t
+		{
+			enum {IDX = sizeof...(ARGS)};
+			using elem_t = Nth_t<IDX, TYPES...>;
+
+			return
+			_impl<IDX + 1 == sizeof...(TYPES)>::calc
+			(	std::forward<FAM>(fam), std::forward<ARGS>(args)...
+			,	static_cast< remove_aleph_t<elem_t>&& >( std::get<IDX>(fam) )
+			);
+		}
+	};
+};
+
+
+template<class...TYPES>
+auto sgm::Harden(sgm::Family<TYPES...>& fam)-> typename _Harden_Helper<TYPES...>::res_t
+{
+	return _Harden_Helper<TYPES...>::template _impl<sizeof...(TYPES) == 0>::calc(fam);
+}
+
+template<class...TYPES>
+auto sgm::Harden(sgm::Family<TYPES...>&& fam)-> typename _Harden_Helper<TYPES...>::res_t
+{
+	return 
+	_Harden_Helper<TYPES...>::template _impl<sizeof...(TYPES) == 0>::calc( std::move(fam) );
+}
+
+
 
 
 
