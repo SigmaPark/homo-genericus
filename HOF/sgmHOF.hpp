@@ -5,17 +5,20 @@
 #ifndef _SGM_HOF_
 #define _SGM_HOF_
 
-#include "../Functor/Functor.h"
-#include "../High_Templar/High_Templar.h"
 
-////////--////////--////////--////////--////////-#////////--////////--////////--////////--////////-#
+#include "..\Functor\Functor.hpp"
+#include "..\High_Templar\High_Templar.hpp"
+#include "..\High_Templar\Rankers.hpp"
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-namespace sgm
+
+namespace sgm::hof
 {
+
 #ifndef SGM_HOF_FACTORY
 	#define SGM_HOF_FACTORY(temfunc)	\
-		template<unsigned D, typename...TYPES>	\
-		static auto const temfunc##_c	\
+		template<unsigned D, class...TYPES>	\
+		static auto const temfunc##_d	\
 		=	[](auto&&...args)	\
 			{	\
 				if constexpr( sizeof...(TYPES) == 0 )	\
@@ -27,22 +30,17 @@ namespace sgm
 	#error SGM_HOF_FACTORY was already defined elsewhere.
 #endif
 
+	using namespace fp;
+	using namespace ht;
+
 	SGM_HOF_FACTORY(Morph);
-	SGM_HOF_FACTORY(Repack);
 	SGM_HOF_FACTORY(Filter);
 	SGM_HOF_FACTORY(Fold);
-	SGM_HOF_FACTORY(Sort);
+	SGM_HOF_FACTORY(rFold);
 	SGM_HOF_FACTORY(Rankers);
-	SGM_HOF_FACTORY(Take);
+	SGM_HOF_FACTORY(Plait);
 
 	#undef SGM_HOF_FACTORY
-
-	template<unsigned D, size_t N>
-	static auto const RankerN_c
-	=	[](auto&&...args)
-		{	
-			return Rankers<N>( std::forward<decltype(args)>(args)... );
-		} / Dim<D>;
 
 }
 
