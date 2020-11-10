@@ -14,7 +14,11 @@ namespace sgm
 
 		struct _Parallel_Helper;
 
-		struct Nof_HW_Core{  enum : unsigned{DYNAMIC = 0xffffffffUL};  };
+		struct Nof_HW_Core
+		{  
+			enum : unsigned{DYNAMIC = 0xffffffffUL};
+			enum class When_Fails : unsigned{SEQUANCIAL = 1, THROW = DYNAMIC};
+		};
 
 		template<unsigned NOF_TASK = Nof_HW_Core::DYNAMIC>
 		struct Parallel;
@@ -30,6 +34,7 @@ struct sgm::par::_Parallel_Helper
 
 protected:
 	struct _Ranger;
+	struct _boundary{  size_t begin, end;  };
 
 	_Parallel_Helper() = default;
 };
@@ -43,7 +48,7 @@ struct sgm::par::_Parallel_Helper::_Ranger
 	,	_total_size
 		(	[idx_begin, idx_end]()-> decltype(_total_size)
 			{
-				assert(idx_begin <= idx_end && L"invalid index range.\n");
+				//assert(idx_begin <= idx_end && L"invalid index range.\n");
 
 				return idx_end - idx_begin;
 			}()
@@ -56,7 +61,7 @@ struct sgm::par::_Parallel_Helper::_Ranger
 	auto operator=(_Ranger const&)-> _Ranger& = delete;
 
 	
-	auto operator()(unsigned const task_id) const-> std::initializer_list<size_t>
+	auto operator()(unsigned const task_id) const-> _boundary
 	{
 		auto const 
 			d = static_cast<size_t>(task_id),
@@ -113,7 +118,7 @@ public:
 			{
 				auto const range = _Ranger(idx_begin, idx_end, NOF_TASK)(d);
 
-				func(range.begin()[0], range.begin()[1], d);
+				func(range.begin, range.end, d);
 			}
 		);				
 	}
@@ -150,11 +155,37 @@ public:
 	enum : unsigned{NUMBER_OF_TASK = Nof_HW_Core::DYNAMIC};
 
 
-	struct Unknown_nof_HW_Core;
+	struct Unknown_nof_HW_Core : public std::exception
+	{
+		auto what() const-> char const* override
+		{
+			return "Failed to find out how many hardware cores are equipped.\n";
+		}
+	
+	
+	private:
+		friend struct Parallel;
+	
+		Unknown_nof_HW_Core() = default;
+	};
 
 
 	Parallel(unsigned const nof_task) : _nof_task(nof_task){}
-	Parallel(bool const throw_when_core_detection_fails = false);
+
+	Parallel(Nof_HW_Core::When_Fails const wf = Nof_HW_Core::When_Fails::SEQUANCIAL)
+	:	_nof_task
+		(	[wf](unsigned const nof_core)->	decltype(_nof_task)
+			{
+				return 
+				nof_core != 0
+				?	nof_core
+				:	static_cast<unsigned>(wf);
+			}(std::thread::hardware_concurrency())
+		)
+	{
+		if(_nof_task == Nof_HW_Core::DYNAMIC)
+			throw Unknown_nof_HW_Core();
+	}
 
 
 	auto operator=(Parallel const&)-> Parallel& = delete;
@@ -171,7 +202,7 @@ public:
 			{
 				auto const range = _Ranger(idx_begin, idx_end, _nof_task)(d);
 
-				func(range.begin()[0], range.begin()[1], d);
+				func(range.begin, range.end, d);
 			}
 		,	_nof_task
 		);				
@@ -183,41 +214,6 @@ public:
 		(*this)( 0, nof_iteration, std::forward<F>(func) );
 	}
 };
-
-
-struct sgm::par::Parallel<sgm::par::Nof_HW_Core::DYNAMIC>::Unknown_nof_HW_Core 
-:	public std::exception
-{
-	auto what() const-> char const* override
-	{
-		return "Failed to find out how many hardware cores are equipped.\n";
-	}
-
-
-private:
-	friend struct Parallel;
-
-	Unknown_nof_HW_Core() = default;
-};
-
-
-sgm::par::Parallel<sgm::par::Nof_HW_Core::DYNAMIC>::Parallel(bool const throw_when_fails)
-:	_nof_task
-	(	[throw_when_fails](unsigned const nof_core)->	decltype(_nof_task)
-		{
-			return 
-			nof_core != 0
-			?	nof_core
-			:	
-			throw_when_fails
-			?	Nof_HW_Core::DYNAMIC
-			:	1;
-		}(std::thread::hardware_concurrency())
-	)
-{
-	if(_nof_task == Nof_HW_Core::DYNAMIC)
-		throw Unknown_nof_HW_Core();
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

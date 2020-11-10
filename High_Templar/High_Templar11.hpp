@@ -69,7 +69,11 @@ namespace sgm
 				?	_impl_Mode::MULTI_THREAD
 				:	_impl_Mode::SEQUANCIAL
 		>
-		struct _Zip_impl;
+		struct _Plait_impl;
+
+
+		template<unsigned D, class FLAG_SET, class...CONS>
+		struct _Plait_Helper;
 
 	}
 }
@@ -110,7 +114,7 @@ struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : Flag< Par<AUTO_OR, N> >, par::Paralle
 template<>
 struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> : Flag< Par<AUTO_OR, 0> >, par::Parallel<>
 {
-	Par() : par::Parallel<>(false){}
+	Par() : par::Parallel<>(par::Nof_HW_Core::When_Fails::THROW){}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -409,27 +413,59 @@ public:
 #include "..\Family\Family.hpp"
 
 
+template<class FS, class...CONS>
+struct sgm::ht::_Plait_Helper<0, FS, CONS...>
+{
+private:
+	template<unsigned D, class C, class...ARGS>
+	struct _td
+	:	_td<  D - 1, ARGS..., _Decorated_t<  std::remove_reference_t< Elem_t<C> >, FS  >  >
+	{};
+
+	template<class...ARGS>
+	struct _td<0, ARGS...>{  using type = Family<ARGS...>;  };
+
+
+public:
+	using res_t = typename _td<sizeof...(CONS), CONS...>::type;
+
+	template<class...ARGS>
+	static auto calc(size_t const, ARGS&&...args)-> res_t
+	{
+		return {std::forward<ARGS>(args)...};
+	}
+};
+
+
+template<unsigned D, class FS, class...CONS>
+struct sgm::ht::_Plait_Helper
+{
+	template<class CON, class...ARGS>
+	static auto calc(size_t const idx, CON&& con, ARGS&&...args)
+	->	typename _Plait_Helper<0, FS, CONS...>::res_t
+	{
+		return
+		_Plait_Helper<D - 1, FS, CONS...>::calc
+		(	idx, std::forward<ARGS>(args)..., *Next(con.begin(), idx)
+		);
+	}
+};
+
+
 template<class FS>
-struct sgm::ht::_Zip_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
+struct sgm::ht::_Plait_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
 {
 	template
-	<	class CON1, class CON2
-	,	class x1_t = std::remove_reference_t< decltype(*Declval<CON1>().begin()) >
-	,	class x2_t = std::remove_reference_t< decltype(*Declval<CON2>().begin()) >
-	,	class e1_t = _Decorated_t<x1_t, FS>, class e2_t = _Decorated_t<x2_t, FS>
-	,	class elem_t = Family<e1_t, e2_t>
+	<	class CON, class...CONS
+	,	class elem_t = typename _Plait_Helper<0, FS, CON, CONS...>::res_t
 	>
-	static auto calc(CON1&& con1, CON2&& con2)-> Serial<elem_t>
+	static auto calc(CON&& con, CONS&&...cons)-> Serial<elem_t>
 	{
-		assert(con1.size() == con2.size() && L"size mismatched.\n");
+		using Helper_t = _Plait_Helper<sizeof...(CONS) + 1, FS, CON, CONS...>;
+		Serial<elem_t> res(con.size());
 
-		Serial<elem_t> res(con1.size());
-
-		for
-		(	auto duo = Dual_iteration(con1.begin(), con2.begin())
-		;	duo._1 != con1.end()
-		;	res >> Make_Family(*duo._1, *duo._2),  duo++
-		);
+		for(unsigned idx = 0;  idx < res.capacity();  ++idx)
+			res >> Helper_t::calc(idx, con, cons...);
 
 		return res;
 	}
@@ -437,37 +473,29 @@ struct sgm::ht::_Zip_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
 
 
 template<class FS>
-struct sgm::ht::_Zip_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
+struct sgm::ht::_Plait_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 {
 	template
-	<	class CON1, class CON2
-	,	class x1_t = std::remove_reference_t< decltype(*Declval<CON1>().begin()) >
-	,	class x2_t = std::remove_reference_t< decltype(*Declval<CON2>().begin()) >
-	,	class e1_t = _Decorated_t<x1_t, FS>, class e2_t = _Decorated_t<x2_t, FS>
-	,	class elem_t = Family<e1_t, e2_t>
+	<	class CON, class...CONS
+	,	class elem_t = typename _Plait_Helper<0, FS, CON, CONS...>::res_t
 	>
-	static auto calc(CON1&& con1, CON2&& con2)-> Serial<elem_t>
+	static auto calc(CON&& con, CONS&&...cons)-> Serial<elem_t>
 	{
-		assert(con1.size() == con2.size() && L"size mismatched.\n");
-		
-		if(con1.size() == 0)
-			return Serial<elem_t>{};
+		size_t const size = con.size();
+
+		if(size == 0)
+			return {};
 		else
 		{
-			Serial<elem_t> res( con1.size(), Make_Family(*con1.begin(), *con2.begin()) );
+			using Helper_t = _Plait_Helper<sizeof...(CONS) + 1, FS, CON, CONS...>;
+			Serial<elem_t> res( size, Helper_t::calc(0, con, cons...) );
 
 			Satisfying_flag<is_Par, FS>()
-			(	res.size()
-			,	[&con1, &con2, &res](size_t idx_begin, size_t const idx_end, unsigned const)
+			(	size
+			,	[&con, &cons..., &res](size_t idx_begin, size_t const idx_end, unsigned const)
 				{
-					for
-					(	auto duo 
-						=	Dual_iteration
-							(	Next(con1.begin(), idx_begin), Next(con2.begin(), idx_begin)
-							)
-					;	idx_begin < idx_end
-					;	res[idx_begin++] = Make_Family(*duo._1++, *duo._2++)
-					);
+					for(;  idx_begin < idx_end;  ++idx_begin)
+						res[idx_begin] = Helper_t::calc(idx_begin, con, cons...);
 				}
 			);
 
@@ -553,14 +581,10 @@ namespace sgm
 		)
 
 
-		template
-		<	class...FLAGS, class CON1, class CON2
-		>
-		static auto Zip(CON1&& con1, CON2&& con2) SGM_DECLTYPE_AUTO
+		template<class...FLAGS, class...CONS>
+		static auto Plait(CONS&&...cons) SGM_DECLTYPE_AUTO
 		(
-			_Zip_impl< Flag<FLAGS...> >::calc
-			(	std::forward<CON1>(con1), std::forward<CON2>(con2)
-			)
+			_Plait_impl< Flag<FLAGS...> >::calc( std::forward<CONS>(cons)... )
 		)
 
 	}

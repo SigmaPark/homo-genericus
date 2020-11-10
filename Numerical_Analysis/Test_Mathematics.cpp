@@ -16,10 +16,10 @@ static void Test01()
 	>();
 
 
-	spec::is_True
-	(	FLT_EPSILON == num::Constants::Epsilon<float, 0>() 
-	,	DBL_EPSILON == num::Constants::Epsilon<double, 0>()
-	);
+	//spec::is_True
+	//(	FLT_EPSILON == num::Constants::Epsilon<float, 0>() 
+	//,	DBL_EPSILON == num::Constants::Epsilon<double, 0>()
+	//);
 }
 
 

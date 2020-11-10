@@ -5,6 +5,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <climits>
 
 namespace sgm
 {
@@ -28,14 +29,14 @@ struct sgm::num::Constants
 	struct Decimal<0>{  enum{value = 1};  };
 
 
-	template<class T, unsigned TOLERANCE_LEVEL = 2>
-	static auto Epsilon()-> T const&
-	{
-		static T const ep 
-		=	static_cast<T>(Decimal<TOLERANCE_LEVEL>::value) * std::numeric_limits<T>::epsilon();
+	//template<class T, unsigned TOLERANCE_LEVEL = 2>
+	//static auto Epsilon()-> T const&
+	//{
+	//	static T const ep 
+	//	=	static_cast<T>(Decimal<TOLERANCE_LEVEL>::value) * std::numeric_limits<T>::epsilon();
 
-		return ep;
-	}
+	//	return ep;
+	//}
 
 
 	template<class T = float>
@@ -45,7 +46,6 @@ struct sgm::num::Constants
 
 		return pi;
 	}
-
 };
 
 #endif

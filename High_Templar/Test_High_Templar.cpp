@@ -44,8 +44,8 @@ static void MorphTest()
 	=	(	Judge::have_the_same(  ht::Morph( Countable<int>(5, 1), negate ), answer  )
 		&&	Judge::have_the_same(  ht::Morph<SHARE>( Countable<int>(5, 1), negate ), answer  )
 		&&	Judge::have_the_same
-			(	ht::Morph( Countable<int>(100000, 1), negate )
-			,	ht::Morph< ht::Par<4>, SHARE >( Countable<int>(100000, 1), negate )
+			(	ht::Morph( Countable<int>(20, 1), negate )
+			,	ht::Morph< ht::Par<4>, SHARE >( Countable<int>(20, 1), negate )
 			)
 		);
 #endif
@@ -68,8 +68,8 @@ static void FilterTest()
 			(	ht::Filter<SHARE>( Countable<int>(10, 1), is_even ), answer  
 			)
 		&&	Judge::have_the_same
-			(	ht::Filter( Countable<int>(100000, 1), is_even )
-			,	ht::Filter<ht::Par<>, SHARE>( Countable<int>(100000, 1), is_even )
+			(	ht::Filter( Countable<int>(20, 1), is_even )
+			,	ht::Filter<ht::Par<>, SHARE>( Countable<int>(20, 1), is_even )
 			)
 		&&	Judge::have_the_same( ht::Filter<CREFER>(sr1, is_even), answer )
 		);
@@ -91,8 +91,8 @@ static void FoldTest()
 		&&	ht::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
 		&&	ht::rFold( Countable<int>(3, 1), minus, 10 ) == 4
 		&&	ht::rFold( Countable<int>(3, 1), minus ) == 0
-		&&	(	ht::Fold<ht::Par<>>( Countable<int>(1000, 1), plus, int(0) )
-			==	ht::Fold( Countable<int>(1000, 1), plus )
+		&&	(	ht::Fold<ht::Par<>>( Countable<int>(20, 1), plus, int(0) )
+			==	ht::Fold( Countable<int>(20, 1), plus )
 			)
 		);
 #endif
@@ -133,32 +133,39 @@ static void Ex_LeibnizTest()
 }
 
 
-static void Zip_Test()
+static void Plait_Test()
 {
 	Serial<int> sr1{1, 4, 7, 10};
-	Serial<double> sr2{-1, -2, -3, -4};
+	Serial<double> sr2{-1, -2, -3, -4};	
+	Serial<char> sr3{'a', 'b', 'c', 'd'};
+
+	using fam1_t = Family<int, double, char>;
+	using fam2_t = Family< Pinweight<int>, Pinweight<double>, Pinweight<char> >;
+
+	auto ans1
+	=	Serial<fam1_t>
+		{	fam1_t(1, -1.0, 'a'), fam1_t(4, -2.0, 'b')
+		,	fam1_t(7, -3.0, 'c'), fam1_t(10, -4.0, 'd')
+		};
+
+	auto ans2
+	=	Serial<fam2_t>
+		{	fam2_t(1, -1.0, 'a'), fam2_t(4, -2.0, 'b')
+		,	fam2_t(7, -3.0, 'c'), fam2_t(10, -4.0, 'd')
+		};
 
 	bool res = false;
 #ifndef __INTELLISENSE__
 	res
-	=	(	Judge::have_the_same
-			(	ht::Zip(sr1, sr2)
-			,	Serial< Family<int, double> >
-				{	Family<int, double>{1, -1.0}, Family<int, double>{4, -2.0}
-				,	Family<int, double>{7, -3.0}, Family<int, double>{10, -4.0}
-				}
-			)
-		&&	Judge::have_the_same
-			(	ht::Zip< ht::Par<2> >(sr1, sr2)
-			,	Serial< Family<int, double> >
-				{	Family<int, double>{1, -1.0}, Family<int, double>{4, -2.0}
-				,	Family<int, double>{7, -3.0}, Family<int, double>{10, -4.0}
-				}
-			)
+	=	(	Judge::have_the_same( ht::Plait(sr1, sr2, sr3), ans1 )
+		&&	Judge::have_the_same( ht::Plait< ht::Par<2> >(sr1, sr2, sr3), ans1 )
+		&&	Judge::have_the_same( ht::Plait< ht::Par<2>, SHARE >(sr1, sr2, sr3), ans2 )
 		);
 #endif
 	is_True(res);
 }
+
+
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -177,7 +184,7 @@ void Test_sgm_High_Templar::test()
 
 		Ex_LeibnizTest();
 
-		Zip_Test();
+		Plait_Test();
 
 		std::wcout << L"High Templar Test Complete.\n";
 	}
