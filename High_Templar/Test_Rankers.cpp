@@ -17,7 +17,7 @@ void Test_sgm_Rankers::test()
 		
 		spec::is_True
 		(	spec::Judge::have_the_same
-			(	ht::Rankers(sr, 5, std::less<int>())
+			(	ht::Rankers(sr, 5)
 			,	Serial<int, 5>{0, 1, 2, 2, 3}
 			)
 		&&	spec::Judge::have_the_same

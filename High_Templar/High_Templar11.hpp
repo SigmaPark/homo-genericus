@@ -417,17 +417,24 @@ template<class FS, class...CONS>
 struct sgm::ht::_Plait_Helper<0, FS, CONS...>
 {
 private:
-	template<unsigned D, class C, class...ARGS>
-	struct _td
-	:	_td<  D - 1, ARGS..., _Decorated_t<  std::remove_reference_t< Elem_t<C> >, FS  >  >
+	template<class, class...>
+	struct _td;
+
+	template<class T, class...TYPES, class...ARGS>
+	struct _td< Family<T, TYPES...>, ARGS... >
+	:	_td
+		<	Family<TYPES...>
+		,	ARGS..., _Decorated_t<  std::remove_reference_t< Elem_t<T> >, FS  >
+		>
 	{};
 
 	template<class...ARGS>
-	struct _td<0, ARGS...>{  using type = Family<ARGS...>;  };
+	struct _td<Family<>, ARGS...>{  using type = Family<ARGS...>;  };
 
 
 public:
-	using res_t = typename _td<sizeof...(CONS), CONS...>::type;
+	using res_t = typename _td< Family<CONS...> >::type;
+
 
 	template<class...ARGS>
 	static auto calc(size_t const, ARGS&&...args)-> res_t

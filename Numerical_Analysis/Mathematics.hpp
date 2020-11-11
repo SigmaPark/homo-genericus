@@ -19,7 +19,7 @@ namespace sgm
 
 struct sgm::num::Constants
 {
-	sgm::num::Constants() = delete;
+	Constants() = delete;
 
 
 	template<unsigned POWER>

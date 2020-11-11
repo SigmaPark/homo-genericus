@@ -17,8 +17,8 @@ void Test<1>()
 
 	sgm::spec::is_True
 	(	(	Equal(Basel, __)
-		|	Fold_d<2>( __, [](auto x1, auto x2){  return x1 + x2;  } )
-		|	Morph_d<2>( __, [](auto x){  return 1.0/double(x*x);  } )
+		|	Fold_f<>( __, [](auto x1, auto x2){  return x1 + x2;  } )
+		|	Morph_f<>( __, [](auto x){  return 1.0/double(x*x);  } )
 		)( sgm::Countable<int>(10000, 1) )
 	);
 }

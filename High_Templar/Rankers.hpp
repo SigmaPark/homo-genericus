@@ -13,18 +13,37 @@ namespace sgm
 	namespace ht
 	{
 
-		template<  class CON, class FUNC, class = std::enable_if_t< is_iterable<CON>::value >  >
-		static auto Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
-		->	Serial< std::decay_t<decltype( *con.begin() )> >;
+		template<class CON>
+		struct _increasing_order;
+
+
+		template
+		<	class CON, class FUNC = _increasing_order<CON>
+		,	class = std::enable_if_t< is_iterable<CON>::value >  
+		>
+		static auto Rankers
+		(	CON&& con, size_t const nof_ranker, FUNC&& comp = _increasing_order<CON>()
+		)->	Serial< std::decay_t<decltype(*con.begin())> >;
 
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+template<class CON>
+struct sgm::ht::_increasing_order
+{
+private:
+	using type = std::decay_t<  decltype( *Declval<CON>().begin() )  >;
+
+public:
+	bool operator()(type const& t1, type const& t2) const{  return t1 < t2;  }
+};
+
+
 template<class CON, class FUNC, class>
 static auto sgm::ht::Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
-->	Serial< std::decay_t<decltype( *con.begin() )> >
+->	Serial< std::decay_t<decltype(*con.begin())> >
 {
 	using elem_t = std::decay_t<decltype( *con.begin() )>;
 

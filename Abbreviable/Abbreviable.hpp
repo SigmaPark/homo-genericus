@@ -168,11 +168,15 @@ struct sgm::is_Mutability : std::is_base_of<Mutability, T>{  is_Mutability() = d
 	template<class T, class...ARGS>	\
 	struct is_immutable< PROXYNAME##_t<T, ARGS...>, false > \
 	:	is_const##PROXYNAME< PROXYNAME##_t<T, ARGS...> >	\
-	{};	\
-	\
-	\
-	template<class T, class...ARGS>	\
-	struct std::decay< PROXYNAME##_t<T, ARGS...> > : std::decay<T>{}
+	{}
+	
+
+	//
+	//namespace std
+	//{
+	//	template<class T, class...ARGS>
+	//	struct decay< PROXYNAME##_t<T, ARGS...> > : decay<T>{}
+	//}
 
 
 #else

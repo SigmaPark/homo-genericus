@@ -17,8 +17,8 @@ namespace sgm::hof
 
 #ifndef SGM_HOF_FACTORY
 	#define SGM_HOF_FACTORY(temfunc)	\
-		template<unsigned D, class...TYPES>	\
-		static auto const temfunc##_d	\
+		template<class...TYPES, unsigned D = 2>	\
+		static auto const temfunc##_f	\
 		=	[](auto&&...args)	\
 			{	\
 				if constexpr( sizeof...(TYPES) == 0 )	\

@@ -140,16 +140,16 @@ public:
 	Family() = default;
 
 	Family(T t, TYPES...types)
-	:	_val( static_cast<T>(t) ), _upper_t( static_cast<TYPES>(types)... )
+	:	_upper_t( static_cast<TYPES>(types)... ), _val( static_cast<T>(t) )
 	{}
 
 
 	Family(Family const& fam)
-	:	_val( static_cast<T>(fam._val) ), _upper_t( static_cast<_upper_t const&>(fam) )
+	:	_upper_t( static_cast<_upper_t const&>(fam) ), _val( static_cast<T>(fam._val) )
 	{}
 
 	Family(Family&& fam) throw()
-	:	_val( std::forward<T>(fam._val) ), _upper_t( static_cast<_upper_t&&>(fam) )
+	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( std::forward<T>(fam._val) )
 	{}
 
 
@@ -179,7 +179,6 @@ public:
 	}
 
 	bool operator!=(Family const& fam) const{  return !(*this == fam);  }
-
 };
 #pragma warning(pop)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
