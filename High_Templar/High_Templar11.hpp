@@ -464,6 +464,7 @@ struct sgm::ht::_Plait_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
 {
 	template
 	<	class CON, class...CONS
+	,	class = Guaranteed_t< is_iterable<CON>::value >
 	,	class elem_t = typename _Plait_Helper<0, FS, CON, CONS...>::res_t
 	>
 	static auto calc(CON&& con, CONS&&...cons)-> Serial<elem_t>
@@ -484,6 +485,7 @@ struct sgm::ht::_Plait_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 {
 	template
 	<	class CON, class...CONS
+	,	class = Guaranteed_t< is_iterable<CON>::value >
 	,	class elem_t = typename _Plait_Helper<0, FS, CON, CONS...>::res_t
 	>
 	static auto calc(CON&& con, CONS&&...cons)-> Serial<elem_t>
@@ -520,7 +522,7 @@ namespace sgm
 
 		template
 		<	class...FLAGS, class CON, class FUNC
-		,	class = std::enable_if_t< is_iterable<CON>::value >
+		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
@@ -544,7 +546,7 @@ namespace sgm
 		
 		template
 		<	class...FLAGS, class CON, class FUNC, class init_t
-		,	class = std::enable_if_t< is_iterable<CON>::value >
+		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto Fold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
@@ -555,7 +557,7 @@ namespace sgm
 		
 		template
 		<	class...FLAGS, class CON, class FUNC
-		,	class = std::enable_if_t< is_iterable<CON>::value >
+		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
@@ -567,7 +569,7 @@ namespace sgm
 		
 		template
 		<	class...FLAGS, class CON, class FUNC, class init_t
-		,	class = std::enable_if_t< is_iterable<CON>::value >
+		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto rFold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
@@ -578,7 +580,7 @@ namespace sgm
 		
 		template
 		<	class...FLAGS, class CON, class FUNC
-		,	class = std::enable_if_t< is_iterable<CON>::value >
+		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
 		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(

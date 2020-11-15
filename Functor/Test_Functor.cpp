@@ -72,6 +72,16 @@ void Test_Case::Composition()
 }
 
 
+static void stbinding_by_family()
+{
+	auto fam = sgm::Family<int, double>(3, .14);
+
+	auto[x1, x2] = fam;
+
+	is_True( x1 == 3 && abs(x2 - .14) < 1e-7 );
+}
+
+
 void Test_Case::Codomain_Merge()
 {
 	Functor const ftr = [](auto&& x, auto&& y){  return x*y;  } / Dim<2>;
@@ -125,6 +135,8 @@ void Test_sgm_Functor::test()
 {
 	try
 	{
+		::stbinding_by_family();
+
 		Test_Case::Made_from_Generic_Lambda();
 		Test_Case::Made_from_Template_Object();
 		Test_Case::Made_from_Other_Functor();

@@ -53,11 +53,11 @@ namespace sgm
 
 	template< template<class...> class TL, class...TYPES >
 	static auto Harden(TL<TYPES...>& tuple_like)
-	->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t;
+	->	typename _Harden_Helper<true, TL, TYPES...>::res_t;
 
 	template< template<class...> class TL, class...TYPES >
 	static auto Harden(TL<TYPES...>&& tuple_like)
-	->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t;
+	->	typename _Harden_Helper<true, TL, TYPES...>::res_t;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -107,6 +107,28 @@ namespace std
 	template<size_t, class>
 	struct tuple_element;
 #endif
+
+
+	template<class...TYPES>
+	struct tuple_size< sgm::Family<TYPES...> >{  enum{value = sizeof...(TYPES)};  };
+	
+	template<class...TYPES>
+	struct tuple_size< sgm::Family<TYPES...> const > : tuple_size< sgm::Family<TYPES...> >{};
+	
+	
+	template<size_t N, class...TYPES>
+	struct tuple_element< N, sgm::Family<TYPES...> >
+	:	sgm::Family_member< N, sgm::Family<TYPES...> >
+	{
+		static_assert( N < sizeof...(TYPES), "out of index" );
+	};
+	
+	template<size_t N, class...TYPES>
+	struct tuple_element< N, sgm::Family<TYPES...> const >
+	:	sgm::Family_member< N, sgm::Family<TYPES...> const >
+	{
+		static_assert( N < sizeof...(TYPES), "out of index" );
+	};
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -315,29 +337,6 @@ auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2)
 	(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2)
 	);
 }
-//========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class...TYPES>
-struct std::tuple_size< sgm::Family<TYPES...> >{  enum{value = sizeof...(TYPES)};  };
-
-template<class...TYPES>
-struct std::tuple_size< sgm::Family<TYPES...> const> : tuple_size< sgm::Family<TYPES...> >{};
-
-
-template<size_t N, class...TYPES>
-struct std::tuple_element< N, sgm::Family<TYPES...> >
-:	sgm::Family_member< N, sgm::Family<TYPES...> >
-{
-	static_assert( N < sizeof...(TYPES), "out of index" );
-};
-
-template<size_t N, class...TYPES>
-struct std::tuple_element< N, sgm::Family<TYPES...> const >
-:	sgm::Family_member< N, sgm::Family<TYPES...> const >
-{
-	static_assert( N < sizeof...(TYPES), "out of index" );
-};
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

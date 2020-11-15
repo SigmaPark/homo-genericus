@@ -7,7 +7,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
+
 #include "..\Family\Family.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -216,7 +216,9 @@ private:
 				return
 				calc
 				(	forward<MTP1>(mtp1), forward<MTP2>(mtp2), forward<ARGS>(args)...
-				,	static_cast< decltype(mtp1.forward<nof_args>())&& >(mtp1.get<nof_args>())
+				,	static_cast< decltype(mtp1.template forward<nof_args>())&& >
+					(	mtp1.template get<nof_args>()
+					)
 				);
 			else
 			{
@@ -225,7 +227,9 @@ private:
 				return
 				calc
 				(	forward<MTP1>(mtp1), forward<MTP2>(mtp2), forward<ARGS>(args)...	
-				,	static_cast< decltype(mtp2.forward<idx>())&& >(mtp2.get<idx>())
+				,	static_cast< decltype(mtp2.template forward<idx>())&& >
+					(	mtp2.template get<idx>()
+					)
 				);
 			}
 		}
@@ -299,10 +303,14 @@ struct sgm::fp::_2FMTP_Helper : No_Making
 			return Forward_as_Multiple( std::move(mtp1), std::move(mtp2) ).hardened();
 		else if constexpr(N < D1)
 			return
-			calc<N + 1>( mtp1 + Forward_as_Multiple(amtp.forward<N>()), std::move(mtp2), amtp );
+			calc<N + 1>
+			(	mtp1 + Forward_as_Multiple(amtp.template forward<N>()), std::move(mtp2), amtp 
+			);
 		else
 			return
-			calc<N + 1>( std::move(mtp1), mtp2 + Forward_as_Multiple(amtp.forward<N>()), amtp );
+			calc<N + 1>
+			(	std::move(mtp1), mtp2 + Forward_as_Multiple(amtp.template forward<N>()), amtp 
+			);
 	}
 };
 
@@ -350,7 +358,7 @@ struct sgm::fp::_Apply_Helper
 			return
 			calc
 			(	std::forward<F>(f), std::forward<MTP>(mtp)
-			,	std::forward<ARGS>(args)..., mtp.get<IDX>()
+			,	std::forward<ARGS>(args)..., mtp.template get<IDX>()
 			);
 	}
 };

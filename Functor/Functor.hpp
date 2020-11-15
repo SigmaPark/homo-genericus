@@ -60,28 +60,6 @@ namespace sgm::fp
 	template<class...ARGS>
 	static auto Params(ARGS&&...);
 
-
-	template<signed D>
-	inline static auto const Pass
-	=	[](auto&&...args)
-		{
-			if constexpr(D >= 0)
-				return Params( std::forward<decltype(args)>(args)... );
-			else
-				return _rPass_Helper::calc(  Params( std::forward<decltype(args)>(args)... )  );
-		} / Dim<(D >= 0 ? D : -D)>;
-
-
-	template<unsigned...INDICES>
-	inline static auto const Permute
-	=	[](auto&&...args)
-		{
-			return
-			_Permute_Helper<INDICES...>::calc
-			(	Params( std::forward<decltype(args)>(args)... )  
-			);
-		} / Dim<sizeof...(INDICES)>;
-
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -239,7 +217,7 @@ private:
 		else
 			return
 			_cut_rear_helper<N - 1>
-			(	std::move(mtp), mtp.forward<N - 1>(), std::forward<ARGS>(args)...
+			(	std::move(mtp), mtp.template forward<N - 1>(), std::forward<ARGS>(args)...
 			);
 	}
 
@@ -351,7 +329,9 @@ struct sgm::fp::_rPass_Helper : No_Making
 			return Forward_as_Multiple( std::forward<ARGS>(args)... );
 		else
 			return 
-			calc( std::forward<MTP>(mtp), mtp.forward<IDX>(), std::forward<ARGS>(args)...  );
+			calc
+			(	std::forward<MTP>(mtp), mtp.template forward<IDX>(), std::forward<ARGS>(args)...  
+			);
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -365,7 +345,7 @@ struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 	{
 		return 
 		_Permute_Helper<INDICES...>::calc
-		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.forward<IDX>()
+		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.template forward<IDX>()
 		);
 	}
 };
@@ -381,6 +361,33 @@ struct sgm::fp::_Permute_Helper<>
 	}
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+namespace sgm::fp
+{
+
+	template<signed D>
+	inline static auto const Pass
+	=	[](auto&&...args)
+		{
+			if constexpr(D >= 0)
+				return Params( std::forward<decltype(args)>(args)... );
+			else
+				return _rPass_Helper::calc(  Params( std::forward<decltype(args)>(args)... )  );
+		} / Dim<(D >= 0 ? D : -D)>;
+
+
+	template<unsigned...INDICES>
+	inline static auto const Permute
+	=	[](auto&&...args)
+		{
+			return
+			_Permute_Helper<INDICES...>::calc
+			(	Params( std::forward<decltype(args)>(args)... )  
+			);
+		} / Dim<sizeof...(INDICES)>;
+
+}
 
 
 #ifndef SGM_FUNCTOR
