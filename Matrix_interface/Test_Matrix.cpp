@@ -74,7 +74,7 @@ struct Vector_Case : No_Making
 
 struct UnitVector_Case : No_Making
 {
-	
+	static void Constructions();
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -740,7 +740,29 @@ void Vector_Case::Algebra()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+using sgm::mxi::UnitVector;
 
+
+void UnitVector_Case::Constructions()
+{
+	UnitVector<float, 3> u1{1, 1, 1};
+
+	float const len = 1 / sqrt(3.f);
+
+	is_True(  is_Equal( u1(0), len ) && is_Equal( u1(1), len ) && is_Equal( u1(2), len )  );
+
+	UnitVector<float> u2 = 2*u1;
+
+	is_True
+	(	is_Equal( u1(0), u2(0) ) && is_Equal( u1(1), u2(1) ) && is_Equal( u1(2), u2(2) )  
+	);
+
+	Vector<float> v1 = -u1;
+
+	is_True
+	(	is_Equal( u1(0), -v1(0) ) && is_Equal( u1(1), -v1(1) ) && is_Equal( u1(2), -v1(2) )  
+	);	
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -774,6 +796,8 @@ void Test_sgm_Matrix::test()
 		Vector_Case::Normalization();
 		Vector_Case::Special_Vectors();
 		Vector_Case::Algebra();
+
+		UnitVector_Case::Constructions();
 		
 		std::wcout << L"Matrix Test Complete.\n";
 	}

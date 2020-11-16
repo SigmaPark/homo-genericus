@@ -109,6 +109,10 @@ namespace sgm::mxi
 	>
 	static auto operator*(S s, Vector<T, SIZE> const& v);
 
+
+	template<class T, MxSize_t S = MxSize::DYNAMIC>
+	class UnitVector;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -562,6 +566,57 @@ public:
 
 template<class S, class T, sgm::mxi::MxSize_t SIZE, class>
 auto sgm::mxi::operator*(S s, Vector<T, SIZE> const& v){  return v * s;  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T, sgm::mxi::MxSize_t S>
+class sgm::mxi::UnitVector : public Vector<T, S>
+{
+	using Vec_t = Vector<T, S>;
+
+public:
+	template<class Q>
+	UnitVector(Q&& q) : Vec_t( std::forward<Q>(q) ){  _normalize_myself();  }
+
+
+	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
+	UnitVector(std::initializer_list<Q>&& iL) : Vec_t( std::move(iL) )
+	{
+		_normalize_myself();
+	}
+
+
+	template<class Q>
+	auto operator=(Q&& q)-> UnitVector&
+	{
+		Vec_t::operator=( std::forward<Q>(q) );
+
+		return _normalize_myself();
+	}
+
+
+	template<class Q> auto operator+(Q) const = delete;
+	template<class Q> auto operator+=(Q) = delete;
+	template<class Q> auto operator-(Q) const = delete;
+	template<class Q> auto operator-=(Q) = delete;
+
+	auto operator-() const{  return Vec_t::operator-();  }
+
+
+private:
+	auto _normalize_myself()-> UnitVector&
+	{
+		assert
+		(	abs( Vec_t::operator()(0) ) > .000001
+		&&	abs( Vec_t::operator()(1) ) > .000001
+		&&	abs( Vec_t::operator()(2) ) > .000001
+		);
+
+		static_cast<Vec_t&>(*this) = Vec_t::normalized();
+
+		return *this;
+	}
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
