@@ -110,8 +110,12 @@ namespace sgm::mxi
 	static auto operator*(S s, Vector<T, SIZE> const& v);
 
 
-	template<class T, MxSize_t S = MxSize::DYNAMIC>
+	template<class T = float, MxSize_t S = MxSize::DYNAMIC>
 	class UnitVector;
+
+
+	template<class elem_t = float,MxSize_t N = MxSize::DYNAMIC>
+	class OrthonormalMatrix;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -616,6 +620,19 @@ private:
 
 		return *this;
 	}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T, sgm::mxi::MxSize_t N>
+class sgm::mxi::OrthonormalMatrix : public Matrix<T, N, N>
+{
+	using Mat_t = Matrix<T, N, N>;
+
+public:
+
+private:
+	
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

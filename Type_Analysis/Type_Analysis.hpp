@@ -69,12 +69,12 @@ namespace sgm
 
 		template<class Q> struct _info<Q, 2, false>
 		{
-			enum : T{MAXIMUM = 0x7fffi16, MINIMUM = -0x8000i16}; 
+			enum : T{MAXIMUM = 0x7fffi16, MINIMUM = -32768};
 		};
 
 		template<class Q> struct _info<Q, 1, false>
 		{
-			enum : T{MAXIMUM = 0x7fi8, MINIMUM = -0x80i8}; 
+			enum : T{MAXIMUM = 0x7fi8, MINIMUM = -128}; 
 		};
 
 
