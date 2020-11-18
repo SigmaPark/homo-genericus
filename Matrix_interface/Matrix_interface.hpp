@@ -612,8 +612,8 @@ private:
 	{
 		assert
 		(	abs( Vec_t::operator()(0) ) > .000001
-		&&	abs( Vec_t::operator()(1) ) > .000001
-		&&	abs( Vec_t::operator()(2) ) > .000001
+		||	abs( Vec_t::operator()(1) ) > .000001
+		||	abs( Vec_t::operator()(2) ) > .000001
 		);
 
 		static_cast<Vec_t&>(*this) = Vec_t::normalized();
@@ -630,9 +630,51 @@ class sgm::mxi::OrthonormalMatrix : public Matrix<T, N, N>
 	using Mat_t = Matrix<T, N, N>;
 
 public:
+	template<class Q>
+	OrthonormalMatrix(Q&& q) : Mat_t( std::forward<Q>(q) ){  _orthonormalize_myself();  }
+
+
+	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
+	OrthonormalMatrix(std::initializer_list<Q>&& iL) : Mat_t( std::move(iL) )
+	{
+		_orthonormalize_myself();
+	}
+
+
+	template<class Q>
+	auto operator=(Q&& q)-> OrthonormalMatrix&
+	{
+		Mat_t::operator=( std::forward<Q>(q) );
+
+		return _orthonormalize_myself();
+	}
+
+	template<class Q> auto operator+(Q) const = delete;
+	template<class Q> auto operator+=(Q) = delete;
+	template<class Q> auto operator-(Q) const = delete;
+	template<class Q> auto operator-=(Q) = delete;
+
+	auto operator-() const{  return Mat_t::operator-();  }
+
 
 private:
-	
+	auto _orthonormalize_myself()-> OrthonormalMatrix&
+	{
+		auto const size = Mat_t::cols();
+		auto v = [this](MxSize_t j)-> Vector<T, N>{  return Mat_t::col(j);  };
+
+		for(MxSize_t j = 0;  j < size;  ++j)
+		{
+			auto s = Vector<T>::zero(size);
+
+			for(MxSize_t k = 0;  k < j;  ++k)
+				s += v(k) * v(k).dot( v(j) );
+
+			Mat_t::col(j) = UnitVector<T, N>( v(j) - s ).colVec();
+		}
+
+		return *this;
+	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

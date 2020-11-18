@@ -76,6 +76,12 @@ struct UnitVector_Case : No_Making
 {
 	static void Constructions();
 };
+
+
+struct OrthonormalMatrix_Case : No_Making
+{
+	static void Constructions();
+};
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -766,6 +772,22 @@ void UnitVector_Case::Constructions()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+using sgm::mxi::OrthonormalMatrix;
+
+
+void OrthonormalMatrix_Case::Constructions()
+{
+	OrthonormalMatrix<float, 3> onx1 = 3* Matrix<float, 3, 3>::identity();
+
+	is_True
+	(	is_Equal( onx1(0, 0), 1 )
+	&&	is_Equal( onx1(1, 1), 1 )
+	&&	is_Equal( onx1(2, 2), 1 )
+	);
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 #include "Test_Matrix.hpp"
 #include <iostream>
 
@@ -798,6 +820,8 @@ void Test_sgm_Matrix::test()
 		Vector_Case::Algebra();
 
 		UnitVector_Case::Constructions();
+
+		OrthonormalMatrix_Case::Constructions();
 		
 		std::wcout << L"Matrix Test Complete.\n";
 	}
