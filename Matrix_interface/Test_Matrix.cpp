@@ -763,7 +763,7 @@ void UnitVector_Case::Constructions()
 	(	is_Equal( u1(0), u2(0) ) && is_Equal( u1(1), u2(1) ) && is_Equal( u1(2), u2(2) )  
 	);
 
-	Vector<float> v1 = -u1;
+	Vector<float, 3> v1 = -u1.vec();	// explicit conversion to vector
 
 	is_True
 	(	is_Equal( u1(0), -v1(0) ) && is_Equal( u1(1), -v1(1) ) && is_Equal( u1(2), -v1(2) )  

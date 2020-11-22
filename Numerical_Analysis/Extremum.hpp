@@ -12,8 +12,6 @@ namespace sgm
 	{
 		enum class Extreme{MINIMUM, MAXIMUM};
 
-		template<class T>
-		struct Real_Range;
 
 		template<class X, class Y>
 		struct XY_Pair;
@@ -24,15 +22,11 @@ namespace sgm
 }
 
 
-template<class T>
-struct sgm::num::Real_Range{  T t1, t2;  };
-
-
 template<class X, class Y>
 struct sgm::num::XY_Pair{  X x;  Y y;  };
 
 
-#include <type_traits>
+#include "..\interface_Traits\interface_Traits.hpp"
 
 
 template<sgm::num::Extreme XT>
@@ -65,21 +59,21 @@ private:
 public:
 	template
 	<	class X, class FUNC
-	,	class Y 
-		=	std::decay_t
-			<	decltype
-				(	( *(std::decay_t<FUNC>*)(nullptr) )( *(std::decay_t<X>*)(nullptr) )  
-				)
-			> 
+	,	class Y = std::decay_t< decltype( Declval<FUNC>()(Declval<X>()) ) >
+	,	class X_DOMAIN
+	,	class 
+		=	std::enable_if_t
+			<	std::is_scalar<X>::value && is_iterable<X_DOMAIN, X>::value
+			>
 	>
-	static auto search(FUNC&& func, Real_Range<X> const x_range, X epsilon)-> XY_Pair<X, Y>
+	static auto search(FUNC&& func, X_DOMAIN&& x_domain, X epsilon)-> XY_Pair<X, Y>
 	{
 		static X const iphi = X(.5) * (  sqrt( X(5) ) - X(1)  );
 
 		if(epsilon < 0)
 			epsilon *= X(-1);
 
-		X	a = x_range.t1, b = x_range.t2;
+		X a = *x_domain.begin(), b = *Next(x_domain.begin());
 
 		if(a > b)
 			std::swap(a, b);

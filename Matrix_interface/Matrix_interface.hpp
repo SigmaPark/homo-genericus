@@ -511,10 +511,15 @@ public:
 
 	template<MxSize_t L = 2>
 	auto norm() const{  return impl_t::template norm<L>();  }
+
+	auto normalized() const
+	{
+		assert(norm() > 0.000001 && L"cannot normalize zero vector.\n");
+
+		return _Temporary::Vt(impl_t::normalized());
+	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
-
-	auto normalized() const{  return _Temporary::Vt(impl_t::normalized());  }
 
 	auto operator-() const{  return _Temporary::Vt(-impl_t::core());  }
 
@@ -577,9 +582,14 @@ template<class T, sgm::mxi::MxSize_t S>
 class sgm::mxi::UnitVector : public Vector<T, S>
 {
 	using Vec_t = Vector<T, S>;
+	using cVec_t = Vec_t const;
+	enum class _Just_Get_it{};
 
 public:
-	template<class Q>
+	template
+	<	class Q
+	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, UnitVector >  >
+	>
 	UnitVector(Q&& q) : Vec_t( std::forward<Q>(q) ){  _normalize_myself();  }
 
 
@@ -590,7 +600,10 @@ public:
 	}
 
 
-	template<class Q>
+	template
+	<	class Q
+	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, UnitVector >  >
+	>
 	auto operator=(Q&& q)-> UnitVector&
 	{
 		Vec_t::operator=( std::forward<Q>(q) );
@@ -599,27 +612,46 @@ public:
 	}
 
 
+	decltype(auto) operator()(index_t idx) const{  return cVec_t::operator()(idx);  }
+	decltype(auto) operator()(index_t idx){  return static_cast<UnitVector const>(*this)(idx);  }
+
+	decltype(auto) head(MxSize_t n) const{  return cVec_t::head(n);  }
+	decltype(auto) head(MxSize_t n){  return static_cast<UnitVector const>(*this).head(n);  }
+
+	decltype(auto) tail(MxSize_t n) const{  return cVec_t::tail(n);  }
+	decltype(auto) tail(MxSize_t n){  return static_cast<UnitVector const>(*this).tail(n);  }
+
+	decltype(auto) rowVec() const{  return cVec_t::rowVec();  }
+	decltype(auto) rowVec(){  return static_cast<UnitVector const>(*this).rowVec();  }
+
+	decltype(auto) colVec() const{  return cVec_t::colVec();  }
+	decltype(auto) colVec(){  return static_cast<UnitVector const>(*this).colVec();  }
+
+
 	template<class Q> auto operator+(Q) const = delete;
 	template<class Q> auto operator+=(Q) = delete;
 	template<class Q> auto operator-(Q) const = delete;
 	template<class Q> auto operator-=(Q) = delete;
 
-	auto operator-() const{  return Vec_t::operator-();  }
+	auto norm() const = delete;
+	auto normalized() const = delete;
+
+	auto operator-() const{  return UnitVector(cVec_t::operator-(), _Just_Get_it());  }
+
+	auto vec() const-> cVec_t&{  return *this;  }
+	decltype(auto) vec(){  return static_cast<UnitVector const&>(*this).vec();  }
 
 
 private:
 	auto _normalize_myself()-> UnitVector&
 	{
-		assert
-		(	abs( Vec_t::operator()(0) ) > .000001
-		||	abs( Vec_t::operator()(1) ) > .000001
-		||	abs( Vec_t::operator()(2) ) > .000001
-		);
-
-		static_cast<Vec_t&>(*this) = Vec_t::normalized();
+		static_cast<Vec_t&>(*this) = cVec_t::normalized();
 
 		return *this;
 	}
+
+
+	UnitVector(Vec_t const& v, _Just_Get_it) : Vec_t(v){}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -628,9 +660,13 @@ template<class T, sgm::mxi::MxSize_t N>
 class sgm::mxi::OrthonormalMatrix : public Matrix<T, N, N>
 {
 	using Mat_t = Matrix<T, N, N>;
+	enum class _Just_Get_it{};
 
 public:
-	template<class Q>
+	template
+	<	class Q
+	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, OrthonormalMatrix >  >
+	>
 	OrthonormalMatrix(Q&& q) : Mat_t( std::forward<Q>(q) ){  _orthonormalize_myself();  }
 
 
@@ -641,7 +677,10 @@ public:
 	}
 
 
-	template<class Q>
+	template
+	<	class Q
+	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, OrthonormalMatrix >  >
+	>
 	auto operator=(Q&& q)-> OrthonormalMatrix&
 	{
 		Mat_t::operator=( std::forward<Q>(q) );
@@ -654,7 +693,8 @@ public:
 	template<class Q> auto operator-(Q) const = delete;
 	template<class Q> auto operator-=(Q) = delete;
 
-	auto operator-() const{  return Mat_t::operator-();  }
+	auto operator-() const{  return OrthonormalMatrix(Mat_t::operator-(), _Just_Get_it());  }
+	auto inversed() const{  return OrthonormalMatrix(Mat_t::transposed(), _Just_Get_it());  }
 
 
 private:
@@ -675,6 +715,9 @@ private:
 
 		return *this;
 	}
+
+
+	OrthonormalMatrix(Mat_t const& m, _Just_Get_it) : Mat_t(m){}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

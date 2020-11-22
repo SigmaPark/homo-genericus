@@ -43,12 +43,13 @@ static void Test02()
 {
 	auto parabola_f = [](double x)-> double{  return pow(x - 1, 2) - 1;  };
 	double const threshold = 1e-5;
+	auto domain = {.0, 5.0};
 
 	num::XY_Pair<double, double> const
 		answer{1, parabola_f(1)},
 		gs_searched 
 		=	num::GoldenSection<num::Extreme::MINIMUM>::search
-			(	parabola_f, num::Real_Range<double>{0.0, 5.0}, threshold
+			(	parabola_f, domain, threshold
 			);
 
 	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
@@ -64,7 +65,7 @@ static void Test03()
 		answer{pi/2, sin(pi/2)},
 		gs_searched
 		=	num::GoldenSection<num::Extreme::MAXIMUM>::search
-			(	sine_f, num::Real_Range<double>{0.0, pi}, threshold
+			(	sine_f, std::initializer_list<double>{0.0, pi}, threshold
 			);
 
 	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
