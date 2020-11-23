@@ -27,7 +27,7 @@ namespace sgm::mxi
 	
 	struct MxSize : No_Making 
 	{ 
-		static size_t constexpr DYNAMIC = Size_info<size_t>::MAXIMUM;
+		static size_t constexpr DYNAMIC = ULLONG_MAX;
 		static auto constexpr TEMPORARY = DYNAMIC - 1;
 		
 		template<size_t N> static bool constexpr is_dynamic_v = N == DYNAMIC;
@@ -116,6 +116,31 @@ namespace sgm::mxi
 
 	template<class elem_t = float,MxSize_t N = MxSize::DYNAMIC>
 	class OrthonormalMatrix;
+
+
+	template
+	<	class S, class T, MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
+	>
+	static auto operator*(S s, OrthonormalMatrix<T, N> const& m);
+
+
+	template
+	<	class S, class T, MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
+	>
+	static auto operator*(S s, UnitVector<T, SIZE> const& v);
+
+
+	template<class> 
+	struct is_UnitVector;
+
+	template<class>
+	struct is_OrthonormalMatrix;
+
+	template<class T>
+	static auto constexpr is_UnitVector_v = is_UnitVector< std::decay_t<T> >::value;
+
+	template<class T>
+	static auto constexpr is_OrthonormalMatrix_v = is_OrthonormalMatrix< std::decay_t<T> >::value;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -325,7 +350,8 @@ public:
 	(	auto transposed(), {  return _Temporary::Mx(impl_t::transposed());  }
 	)
 
-
+	
+	auto det() const{  return impl_t::det();  }
 	auto inversed() const{  return _Temporary::Mx(impl_t::inversed());  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -579,22 +605,32 @@ auto sgm::mxi::operator*(S s, Vector<T, SIZE> const& v){  return v * s;  }
 
 
 template<class T, sgm::mxi::MxSize_t S>
-class sgm::mxi::UnitVector : public Vector<T, S>
+class sgm::mxi::UnitVector
 {
 	using Vec_t = Vector<T, S>;
-	using cVec_t = Vec_t const;
-	enum class _Just_Get_it{};
+
 
 public:
-	template
-	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, UnitVector >  >
-	>
-	UnitVector(Q&& q) : Vec_t( std::forward<Q>(q) ){  _normalize_myself();  }
+	UnitVector() : _vec(Vec_t::zero())
+	{
+		static_assert(MxSize::is_static_v<S>);
+
+		_vec(0) = 1;
+	}
+
+
+	template<class Q>
+	UnitVector(Q&& q)
+	{
+		if constexpr(is_UnitVector_v<Q>)
+			_vec = q.vec();
+		else
+			_vec = std::forward<Q>(q),  _normalize_myself();
+	}
 
 
 	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-	UnitVector(std::initializer_list<Q>&& iL) : Vec_t( std::move(iL) )
+	UnitVector(std::initializer_list<Q>&& iL) : _vec( std::move(iL) )
 	{
 		_normalize_myself();
 	}
@@ -606,53 +642,66 @@ public:
 	>
 	auto operator=(Q&& q)-> UnitVector&
 	{
-		Vec_t::operator=( std::forward<Q>(q) );
+		_vec = std::forward<Q>(q);
 
 		return _normalize_myself();
 	}
 
 
-	decltype(auto) operator()(index_t idx) const{  return cVec_t::operator()(idx);  }
-	decltype(auto) operator()(index_t idx){  return static_cast<UnitVector const>(*this)(idx);  }
+	auto vec() const-> Vec_t const&{  return _vec;  }
 
-	decltype(auto) head(MxSize_t n) const{  return cVec_t::head(n);  }
-	decltype(auto) head(MxSize_t n){  return static_cast<UnitVector const>(*this).head(n);  }
+	auto size() const{  return vec().size();  }
+	decltype(auto) data() const{  return vec().data();  }
 
-	decltype(auto) tail(MxSize_t n) const{  return cVec_t::tail(n);  }
-	decltype(auto) tail(MxSize_t n){  return static_cast<UnitVector const>(*this).tail(n);  }
+	decltype(auto) operator()(index_t idx) const{  return vec()(idx);  }
+	decltype(auto) head(MxSize_t n) const{  return vec().head(n);  }
+	decltype(auto) tail(MxSize_t n) const{  return vec().tail(n);  }
 
-	decltype(auto) rowVec() const{  return cVec_t::rowVec();  }
-	decltype(auto) rowVec(){  return static_cast<UnitVector const>(*this).rowVec();  }
+	decltype(auto) rowVec() const{  return vec().rowVec();  }
+	decltype(auto) colVec() const{  return vec().colVec();  }
 
-	decltype(auto) colVec() const{  return cVec_t::colVec();  }
-	decltype(auto) colVec(){  return static_cast<UnitVector const>(*this).colVec();  }
-
-
-	template<class Q> auto operator+(Q) const = delete;
-	template<class Q> auto operator+=(Q) = delete;
-	template<class Q> auto operator-(Q) const = delete;
-	template<class Q> auto operator-=(Q) = delete;
-
-	auto norm() const = delete;
-	auto normalized() const = delete;
-
-	auto operator-() const{  return UnitVector(cVec_t::operator-(), _Just_Get_it());  }
-
-	auto vec() const-> cVec_t&{  return *this;  }
-	decltype(auto) vec(){  return static_cast<UnitVector const&>(*this).vec();  }
-
-
-private:
-	auto _normalize_myself()-> UnitVector&
+	auto operator-() const
 	{
-		static_cast<Vec_t&>(*this) = cVec_t::normalized();
+		auto cpy = *this;
+		
+		cpy._vec *= -1;
 
-		return *this;
+		return cpy;
 	}
 
 
-	UnitVector(Vec_t const& v, _Just_Get_it) : Vec_t(v){}
+	template<class Q> 
+	decltype(auto) operator*(Q&& q) const{  return vec() * std::forward<Q>(q);  }
+
+	template<class Q>
+	decltype(auto) operator/(Q&& q) const{  return vec() / std::forward<Q>(q);  }
+
+
+	template<class Q>
+	decltype(auto) dot(Q&& q) const{  return vec().dot( std::forward<Q>(q) );  }
+
+	template<class Q>
+	decltype(auto) cross(Q&& q) const{  return vec().cross( std::forward<Q>(q) );  }
+
+	template<class Q>
+	decltype(auto) dyad(Q&& q) const{  return vec().dyad( std::forward<Q>(q) );  }
+
+
+private:
+	Vec_t _vec;
+
+
+	auto _normalize_myself()-> UnitVector&
+	{
+		_vec = _vec.normalized();
+
+		return *this;
+	}
 };
+
+
+template<class S, class T, sgm::mxi::MxSize_t SIZE, class>
+auto sgm::mxi::operator*(S s, UnitVector<T, SIZE> const& v){  return v * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -660,18 +709,23 @@ template<class T, sgm::mxi::MxSize_t N>
 class sgm::mxi::OrthonormalMatrix : public Matrix<T, N, N>
 {
 	using Mat_t = Matrix<T, N, N>;
-	enum class _Just_Get_it{};
+
 
 public:
-	template
-	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, OrthonormalMatrix >  >
-	>
-	OrthonormalMatrix(Q&& q) : Mat_t( std::forward<Q>(q) ){  _orthonormalize_myself();  }
+	OrthonormalMatrix() : _mat(Mat_t::identity()){  static_assert(MxSize::is_static_v<N>);  }
+
+	template<class Q>
+	OrthonormalMatrix(Q&& q)
+	{
+		if constexpr(is_OrthonormalMatrix_v<Q>)
+			_mat = q.mat();
+		else
+			_mat = std::forward<Q>(q),  _orthonormalize_myself();
+	}
 
 
 	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-	OrthonormalMatrix(std::initializer_list<Q>&& iL) : Mat_t( std::move(iL) )
+	OrthonormalMatrix(std::initializer_list<Q>&& iL) : _mat( std::move(iL) )
 	{
 		_orthonormalize_myself();
 	}
@@ -683,25 +737,61 @@ public:
 	>
 	auto operator=(Q&& q)-> OrthonormalMatrix&
 	{
-		Mat_t::operator=( std::forward<Q>(q) );
+		_mat = std::forward<Q>(q);
 
 		return _orthonormalize_myself();
 	}
 
-	template<class Q> auto operator+(Q) const = delete;
-	template<class Q> auto operator+=(Q) = delete;
-	template<class Q> auto operator-(Q) const = delete;
-	template<class Q> auto operator-=(Q) = delete;
 
-	auto operator-() const{  return OrthonormalMatrix(Mat_t::operator-(), _Just_Get_it());  }
-	auto inversed() const{  return OrthonormalMatrix(Mat_t::transposed(), _Just_Get_it());  }
+	auto mat() const-> Mat_t const&{  return _mat;  }
+
+	decltype(auto) data() const{  return mat().data();  }
+	decltype(auto) operator()(index_t r, index_t c) const{  return mat()(r, c);  }
+
+	auto rows() const{  return mat().rows();  }
+	auto cols() const{  return mat().cols();  }
+	auto size() const{  return mat().size();  }
+
+	decltype(auto) row(index_t r) const{  return mat().row(r);  }
+	decltype(auto) col(index_t c) const{  return mat().col(c);  }
+
+	auto operator-() const
+	{
+		auto cpy = *this;
+
+		cpy._mat *= -1;
+
+		return cpy;
+	}
+
+
+	auto transposed() const
+	{
+		auto cpy = *this;
+
+		cpy._mat = cpy._mat.transposed();
+
+		return cpy;
+	}
+
+
+	auto inversed() const{  return transposed();  }
+
+	template<class Q> 
+	decltype(auto) operator*(Q&& q) const{  return mat() * std::forward<Q>(q);  }
+
+	template<class Q>
+	decltype(auto) operator/(Q&& q) const{  return mat() / std::forward<Q>(q);  }
 
 
 private:
+	Matrix<T, N, N> _mat;
+	
+
 	auto _orthonormalize_myself()-> OrthonormalMatrix&
 	{
-		auto const size = Mat_t::cols();
-		auto v = [this](MxSize_t j)-> Vector<T, N>{  return Mat_t::col(j);  };
+		auto const size = mat().cols();
+		auto v = [this](MxSize_t j)-> Vector<T, N>{  return mat().col(j);  };
 
 		for(MxSize_t j = 0;  j < size;  ++j)
 		{
@@ -710,15 +800,33 @@ private:
 			for(MxSize_t k = 0;  k < j;  ++k)
 				s += v(k) * v(k).dot( v(j) );
 
-			Mat_t::col(j) = UnitVector<T, N>( v(j) - s ).colVec();
+			_mat.col(j) = UnitVector<T, N>( v(j) - s ).colVec();
 		}
 
 		return *this;
 	}
-
-
-	OrthonormalMatrix(Mat_t const& m, _Just_Get_it) : Mat_t(m){}
 };
+
+
+template<class S, class T, sgm::mxi::MxSize_t N, class>
+auto sgm::mxi::operator*(S s, OrthonormalMatrix<T, N> const& m){  return m * s;  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class>
+struct sgm::mxi::is_UnitVector : No_Making, std::false_type{};
+
+template<class T, size_t N>
+struct sgm::mxi::is_UnitVector< sgm::mxi::UnitVector<T, N> > : No_Making, std::true_type{};
+
+
+template<class>
+struct sgm::mxi::is_OrthonormalMatrix : No_Making, std::false_type{};
+
+template<class T, size_t N>
+struct sgm::mxi::is_OrthonormalMatrix< sgm::mxi::OrthonormalMatrix<T, N> >
+:	No_Making, std::true_type
+{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

@@ -137,6 +137,7 @@ protected:
 	auto transposed() const{  return _core.adjoint();  }
 	decltype(auto) transposed(){  return _core.transpose();  }
 
+	auto det() const{  return _core.determinant();  }
 	auto inversed() const{  return _core.inverse();  }
 
 

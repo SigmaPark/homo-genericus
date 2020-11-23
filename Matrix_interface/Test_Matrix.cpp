@@ -751,6 +751,10 @@ using sgm::mxi::UnitVector;
 
 void UnitVector_Case::Constructions()
 {
+	UnitVector<float, 3> u0;
+
+	is_True(  is_Equal( u0(0), 1 ) && is_Equal( u0(1), 0 ) && is_Equal( u0(2), 0 )  );
+
 	UnitVector<float, 3> u1{1, 1, 1};
 
 	float const len = 1 / sqrt(3.f);
@@ -777,7 +781,8 @@ using sgm::mxi::OrthonormalMatrix;
 
 void OrthonormalMatrix_Case::Constructions()
 {
-	OrthonormalMatrix<float, 3> onx1 = 3* Matrix<float, 3, 3>::identity();
+	OrthonormalMatrix<float, 3> onx0;
+	OrthonormalMatrix<float, 3> onx1 = 3*onx0;
 
 	is_True
 	(	is_Equal( onx1(0, 0), 1 )

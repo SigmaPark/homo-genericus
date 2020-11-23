@@ -28,7 +28,7 @@ namespace sgm
 
 	struct srSize : No_Making
 	{	
-		enum : size_t{ INTERFACE = Size_info<size_t>::MAXIMUM, DYNAMIC = 0};  
+		enum : size_t{ INTERFACE = ULLONG_MAX, DYNAMIC = 0};  
 	};
 
 

@@ -106,19 +106,19 @@ public:
 	template<unsigned IDX> decltype(auto) get() const{  return std::get<IDX>(_fam);  }
 
 
-	template< unsigned IDX = Size_info<unsigned>::MAXIMUM >
+	template<unsigned IDX = ULONG_MAX>
 	decltype(auto) forward()
 	{	
-		if constexpr(IDX == Size_info<unsigned>::MAXIMUM)
+		if constexpr(IDX == ULONG_MAX)
 			return _forward();
 		else
 			return static_cast< Nth_t<IDX, TYPES...> >(get<IDX>());
 	}
 
-	template< unsigned IDX = Size_info<unsigned>::MAXIMUM >
+	template<unsigned IDX = ULONG_MAX>
 	decltype(auto) forward() const
 	{
-		if constexpr(IDX == Size_info<unsigned>::MAXIMUM)
+		if constexpr(IDX == ULONG_MAX)
 			return _forward();
 		else
 		{

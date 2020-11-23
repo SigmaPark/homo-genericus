@@ -26,28 +26,6 @@ static void Test_Declval()
 }
 
 
-#include <climits>
-
-
-static void Test_Size_info()
-{
-	static_assert
-	(	(	CHAR_MAX == Size_info<char>::MAXIMUM && CHAR_MIN == Size_info<char>::MINIMUM
-		&&	SHRT_MAX == Size_info<short>::MAXIMUM && SHRT_MIN == Size_info<short>::MINIMUM
-		&&	INT_MAX == Size_info<int>::MAXIMUM && INT_MIN == Size_info<int>::MINIMUM
-		&&	LLONG_MAX == Size_info<long long>::MAXIMUM 
-		&&	LLONG_MIN == Size_info<long long>::MINIMUM
-		&&	UCHAR_MAX == Size_info<unsigned char>::MAXIMUM
-		&&	USHRT_MAX == Size_info<unsigned short>::MAXIMUM
-		&&	UINT_MAX == Size_info<unsigned>::MAXIMUM
-		&&	ULLONG_MAX == Size_info<unsigned long long>::MAXIMUM
-		)
-	,	""
-	);
-}
-
-
-
 #include "Test_Type_Analysis.hpp"
 #include <iostream>
 
@@ -58,7 +36,6 @@ void Test_sgm_Type_Analysis::test()
 	{
 		::Test_No_Making();
 		::Test_Declval();
-		::Test_Size_info();
 
 		std::wcout << L"Type_Analysis Test Complete.\n";
 	}
