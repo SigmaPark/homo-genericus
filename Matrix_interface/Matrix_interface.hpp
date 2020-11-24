@@ -79,20 +79,18 @@ namespace sgm::mxi
 	<	class VECS
 	,	class
 		=	std::enable_if_t
-			<	is_iterable<VECS>::value
-			&&	MxTraits::is_mxiVector_v< decltype(*Declval<VECS>().begin()) >
-			>	
+			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Elem_t<VECS> >
+			>
 	>
 	static auto column_space(VECS&& vecs);
 
-
+	 
 	template
 	<	class VECS
 	,	class
 		=	std::enable_if_t
-			<	is_iterable<VECS>::value
-			&&	MxTraits::is_mxiVector_v< decltype(*Declval<VECS>().begin()) >
-			>	
+			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Elem_t<VECS> >
+			>
 	>
 	static auto row_space(VECS&& vecs);
 
@@ -424,8 +422,7 @@ auto sgm::mxi::operator*(S s, Matrix<T, R, C> const& m){  return m * s;  }
 template<class VECS, class>
 auto sgm::mxi::column_space(VECS&& vecs)
 {
-	using Vec_t = std::decay_t<decltype(*vecs.begin())>;
-	using elem_t = typename Vec_t::elem_t;
+	using elem_t = typename std::decay_t< Elem_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.begin()->size(), vecs.size());
 
@@ -442,8 +439,7 @@ auto sgm::mxi::column_space(VECS&& vecs)
 template<class VECS, class>
 auto sgm::mxi::row_space(VECS&& vecs)
 {
-	using Vec_t = std::decay_t<decltype(*vecs.begin())>;
-	using elem_t = typename Vec_t::elem_t;
+	using elem_t = typename std::decay_t< Elem_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.size(), vecs.begin()->size());
 
@@ -706,7 +702,7 @@ auto sgm::mxi::operator*(S s, UnitVector<T, SIZE> const& v){  return v * s;  }
 
 
 template<class T, sgm::mxi::MxSize_t N>
-class sgm::mxi::OrthonormalMatrix : public Matrix<T, N, N>
+class sgm::mxi::OrthonormalMatrix
 {
 	using Mat_t = Matrix<T, N, N>;
 
