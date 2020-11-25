@@ -75,6 +75,7 @@ struct Vector_Case : No_Making
 struct UnitVector_Case : No_Making
 {
 	static void Constructions();
+	static void Substitutions();
 };
 
 
@@ -753,25 +754,39 @@ void UnitVector_Case::Constructions()
 {
 	UnitVector<float, 3> u0;
 
-	is_True(  is_Equal( u0(0), 1 ) && is_Equal( u0(1), 0 ) && is_Equal( u0(2), 0 )  );
+	is_True( is_Equal(u0.vec(), Vector<float>{1, 0, 0}) );
 
 	UnitVector<float, 3> u1{1, 1, 1};
 
-	float const len = 1 / sqrt(3.f);
+	is_True( is_Equal(u1.vec(), Vector<float>{1, 1, 1}.normalized()) );
 
-	is_True(  is_Equal( u1(0), len ) && is_Equal( u1(1), len ) && is_Equal( u1(2), len )  );
+	UnitVector<float> u2 = 2*u1;	// Vector-> UnitVector : implicit conversion
 
-	UnitVector<float> u2 = 2*u1;
+	is_True(  is_Equal( u2.vec(), (2*u1).normalized() )  );
 
-	is_True
-	(	is_Equal( u1(0), u2(0) ) && is_Equal( u1(1), u2(1) ) && is_Equal( u1(2), u2(2) )  
-	);
+	Vector<float, 3> v1 = -u1.vec();	// UnitVector-> Vector : explicit conversion only
 
-	Vector<float, 3> v1 = -u1.vec();	// explicit conversion to vector
+	is_True(	is_Equal(v1, -u1.vec()) );	
+}
 
-	is_True
-	(	is_Equal( u1(0), -v1(0) ) && is_Equal( u1(1), -v1(1) ) && is_Equal( u1(2), -v1(2) )  
-	);	
+
+void UnitVector_Case::Substitutions()
+{
+	UnitVector<float, 3> u1, u2{-1, 1, 0};
+	 
+	u1 = u2;
+
+	float const len1 = sqrt(2.f)/2.f;
+
+	is_True( is_Equal(u1.vec(), Vector<float>{-len1, len1, 0.f}) );
+
+	u1 = UnitVector<float>{1, 1, 1};
+
+	is_True( is_Equal(u1.vec(), Vector<float>{1, 1, 1}.normalized()) );
+
+	u1 = 3*Vector<float>{0, 1, 1} + Vector<float>::ones(3);
+
+	is_True( is_Equal(u1.vec(), Vector<float>{1, 4, 4}.normalized()) );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -825,6 +840,7 @@ void Test_sgm_Matrix::test()
 		Vector_Case::Algebra();
 
 		UnitVector_Case::Constructions();
+		UnitVector_Case::Substitutions();
 
 		OrthonormalMatrix_Case::Constructions();
 		

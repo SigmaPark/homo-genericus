@@ -411,7 +411,6 @@ public:
 		return _Temporary::Mx( impl_t::zero(r, c) );
 	}
 
-
 };// end of Matrix class
 
 
@@ -615,13 +614,14 @@ public:
 	}
 
 
+	UnitVector(size_t dim) : _vec( Vec_t::zero(dim) ){  _vec(0) = 1;  }
+
+
 	template<class Q>
-	UnitVector(Q&& q)
+	UnitVector(Q&& q) : _vec(  _ctor( std::forward<Q>(q) )  )
 	{
-		if constexpr(is_UnitVector_v<Q>)
-			_vec = q.vec();
-		else
-			_vec = std::forward<Q>(q),  _normalize_myself();
+		if constexpr(!is_UnitVector_v<Q>)
+			_normalize_myself();
 	}
 
 
@@ -638,7 +638,7 @@ public:
 	>
 	auto operator=(Q&& q)-> UnitVector&
 	{
-		_vec = std::forward<Q>(q);
+		_vec = _ctor( std::forward<Q>(q) );
 
 		return _normalize_myself();
 	}
@@ -693,7 +693,18 @@ private:
 
 		return *this;
 	}
-};
+
+
+	template<class Q>
+	static decltype(auto) _ctor(Q&& q)
+	{
+		if constexpr(is_UnitVector_v<Q>)
+			return q.vec();
+		else
+			return std::forward<Q>(q);
+	}
+
+};// end of class UnitVector
 
 
 template<class S, class T, sgm::mxi::MxSize_t SIZE, class>
@@ -709,14 +720,13 @@ class sgm::mxi::OrthonormalMatrix
 
 public:
 	OrthonormalMatrix() : _mat(Mat_t::identity()){  static_assert(MxSize::is_static_v<N>);  }
+	OrthonormalMatrix(size_t dim) : _mat( Mat_t::identity(dim) ){}
 
 	template<class Q>
-	OrthonormalMatrix(Q&& q)
+	OrthonormalMatrix(Q&& q) : _mat(  _ctor( std::forward<Q>(q) )  )
 	{
-		if constexpr(is_OrthonormalMatrix_v<Q>)
-			_mat = q.mat();
-		else
-			_mat = std::forward<Q>(q),  _orthonormalize_myself();
+		if constexpr(!is_OrthonormalMatrix_v<Q>)
+			_orthonormalize_myself();
 	}
 
 
@@ -733,7 +743,7 @@ public:
 	>
 	auto operator=(Q&& q)-> OrthonormalMatrix&
 	{
-		_mat = std::forward<Q>(q);
+		_mat = _ctor( std::forward<Q>(q) );
 
 		return _orthonormalize_myself();
 	}
@@ -801,7 +811,18 @@ private:
 
 		return *this;
 	}
-};
+
+
+	template<class Q>
+	static decltype(auto) _ctor(Q&& q)
+	{
+		if constexpr(is_UnitVector_v<Q>)
+			return q.mat();
+		else
+			return std::forward<Q>(q);
+	}
+
+};// end of class OrthonormalMatrix
 
 
 template<class S, class T, sgm::mxi::MxSize_t N, class>
