@@ -94,7 +94,7 @@ void Test_sgm_Recursion::test()
 		//::Fibonacci_Test();
 		Chain_Test();
 		
-		std::wcout << L"Recursion Test Complelete.\n";
+		std::wcout << L"Recursion Test Complete.\n";
 	}
 	catch(...)
 	{
