@@ -130,6 +130,7 @@ static void Test7()
 
 #include "Test_Pinweight.hpp"
 #include <iostream>
+#include <functional>
 
 
 void Test_sgm_Pinweight::test()
