@@ -40,14 +40,14 @@ struct sgm::num::XY_Pair{  X x;  Y y;  };
 
 
 template<class FUNC, class X>
-struct sgm::num::_Result_of
+struct sgm::num::_Result_of : No_Making
 {
 	using type = std::decay_t< decltype( Declval<FUNC>()(Declval<X>()) ) >;
 };
 
 
 template<sgm::num::Extreme XT>
-class sgm::num::GoldenSection
+class sgm::num::GoldenSection : No_Making
 {
 private:
 	template<Extreme> struct Helper;
@@ -66,8 +66,6 @@ private:
 		static bool Left(Y const& fc, Y const& fd){  return fc > fd;  }
 	};
 
-	template<bool B, class...ARGS>
-	static bool then(ARGS&&...){  return B;  }
 
 	template<class T>
 	static T middle(T const& a, T const& b){  return T(.5)*(a + b);  }
@@ -110,7 +108,7 @@ public:
 
 
 template<sgm::num::Extreme XT, class LINE_SEARCHER>
-class sgm::num::Powell
+class sgm::num::Powell : No_Making
 {
 private:
 	template<class Y, class FUNC, class G>
@@ -121,15 +119,17 @@ private:
 		Serial<G> const gamma_domain{-radius, radius};
 
 		auto xf
-		=	[x, &u](G gamma) mutable-> Serial<G>
+		=	[&x, &u](G gamma)-> Serial<G>
 			{
+				Serial<G> s = x;
+
 				for
-				(	auto duo = Dual_iteration(x.begin(), u.begin()) 
-				;	duo._1 != x.end()
+				(	auto duo = Dual_iteration(s.begin(), u.begin()) 
+				;	duo._1 != s.end()
 				;	*duo._1 = *duo._1 + gamma * *duo._2,  duo++
 				);
 
-				return x;
+				return s;
 			};
 
 		auto const gamma 
@@ -154,58 +154,162 @@ private:
 
 
 	template<class X>
-	static auto Norm(Serial<X>&& vec)-> X
+	static auto sqrNorm(Serial<X>&& vec)-> X
 	{
 		X res = 0;
 
 		for(auto x : vec)
 			res += x*x;
 
-		return sqrt(res);
+		return res;
 	}
 
 
-public:
-	template
-	<	class FUNC, class XV, class X, class Y = typename _Result_of<FUNC, XV>::type
-	>
-	static auto search
-	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
-	)->	XY_Pair< Serial<X>, Y >
+	template<class CON>
+	static auto Minus(CON x1, CON const& x2)-> CON
 	{
-		auto x = iterable_cast< Serial<X> >( std::forward<XV>(init_x) );
-		auto const n = x.size();
-		auto U = Basis<X>(n);
+		for( auto duo = Dual_iteration(x1.begin(), x2.begin());  duo._1 != x1.end();  duo++ )
+			*duo._1 -= *duo._2;
 
-		auto line_sweep 
+		return x1;
+	}
+
+
+	template<size_t N, class X>
+	struct _Apply_Helper
+	{
+		template<class FUNC, class...ARGS>
+		static auto calc(FUNC&& func, Serial<X> const& vec, ARGS const&...args) SGM_DECLTYPE_AUTO
+		(
+			_Apply_Helper<N-1, X>::calc(func, vec, vec[N-1], args...)
+		)
+	};
+
+	template<class X>
+	struct _Apply_Helper<0, X>
+	{
+		template<class FUNC, class...ARGS>
+		static auto calc(FUNC&& func, Serial<X> const&, ARGS const&...args) SGM_DECLTYPE_AUTO
+		(
+			func(args...)
+		)
+	};
+
+
+	template<size_t N, class FUNC, class X>
+	class _Apply
+	{
+	private:
+		FUNC const& _func;
+
+	public:
+		_Apply(FUNC const& func) : _func(func){}
+
+		auto operator=(_Apply const&)-> _Apply& = delete;
+
+		auto operator()(Serial<X> const& vec) const SGM_DECLTYPE_AUTO
+		(
+			_Apply_Helper<N, X>::calc(_func, vec)
+		)
+	};
+
+
+	template<class FUNC, class X, class XITR, class Y>
+	static bool _search
+	(	FUNC&& func, Serial<X> x, X const radius, X const epsilon, unsigned max_iteration
+	,	XITR xitr, Y& yout
+	)
+	{
+		auto U = Basis<X>(x.size());
+
+		auto line_sweep
 		=	[radius, epsilon, &func](Serial<X> const& v, Serial<X> const& u)-> Serial<X>
 			{
 				return line_search<Y>(func, v, u, radius, epsilon);
 			};
 
-		for(X delta = radius;  delta > epsilon && max_iteration > 0;  --max_iteration)
+		X const sqrEpsilon = pow(epsilon, 2);
+
+		for
+		(	X sqrDelta = pow(radius, 2)
+		;	sqrDelta > sqrEpsilon && max_iteration > 0
+		;	--max_iteration
+		)
 		{
 			auto x2 = x;
 
 			for(auto const& u : U)
 				x2 = line_sweep(x2, u);
 
-			for(size_t idx = 0;  idx < n - 1;  ++idx)
+			for(size_t idx = 0;  idx < U.size() - 1;  ++idx)
 				U[idx] = U[idx+1];
 
-			U[n - 1] = x2 - x;
+			U.back() = Minus(x2, x);
 
-			x2 = line_sweep(x, U[n - 1]);
+			x2 = line_sweep(x, U.back());
 
-			delta = Norm(x2 - x);
+			sqrDelta = sqrNorm( Minus(x2, x) );
 
 			x = x2;
 		}
 
-		return 
-		max_iteration == 0
-		?	XY_Pair< Serial<X>, Y >{Serial<X>{}, 0}
-		:	XY_Pair< Serial<X>, Y >{x, func(x)};
+		bool const success = max_iteration != 0;
+
+		if(success)
+			for
+			(	auto duo = Dual_iteration(x.begin(), xitr)
+			;	duo._1 != x.end() || then<false>( yout = func(x) )
+			;	*duo._2++ = *duo._1++
+			);
+
+		return success;
+	}
+
+
+	template<class FUNC, class XV, class X, class XITR>
+	static bool _search
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	,	XITR xitr
+	)
+	{
+		std::decay_t<decltype( func(init_x) )> y = 0;
+
+		return
+		_search
+		(	std::forward<FUNC>(func)
+		,	std::forward<XV>(init_x), radius, epsilon, max_iteration, xitr, y
+		);
+	}
+
+
+public:
+	template<size_t NOF_ARGUMENT, class FUNC, class XITR, class Y, class XV, class X>
+	static bool search
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	,	XITR xitr_out, Y& yout
+	)
+	{
+		return
+		_search
+		(	_Apply<NOF_ARGUMENT, decltype(func), X>( std::forward<FUNC>(func) )
+		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+		,	radius, epsilon, max_iteration, xitr_out, yout
+		);
+	}
+
+
+	template<size_t NOF_ARGUMENT, class FUNC, class XITR, class XV, class X>
+	static bool search
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	,	XITR xitr_out
+	)
+	{
+		return
+		_search
+		(	_Apply<NOF_ARGUMENT, decltype(func), X>( std::forward<FUNC>(func) )
+		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+		,	radius, epsilon, max_iteration, xitr_out
+		);
 	}
 
 

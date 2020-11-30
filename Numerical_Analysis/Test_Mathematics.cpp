@@ -72,6 +72,37 @@ static void Test03()
 }
 
 
+static void Test04()
+{
+	auto parabola_f
+	=	[](double x1, double x2, double x3)-> double
+		{
+			return pow(x1 - 1, 2) + pow(x2 - 2, 2) + pow(x3 + 1, 2) - 1;
+		};
+
+	enum : unsigned{DIMENSION = 3};
+
+	unsigned const maximum_iteration = 30;
+	double const search_radius = 3.0, epsilon = 1e-8;
+	auto xinit = { -.8, 4.5, -2.7};
+	double x[DIMENSION];
+	//double y;	// optional
+
+	auto converged
+	=	num::Powell<num::Extreme::MINIMUM>::template search<DIMENSION>
+		(	parabola_f, std::move(xinit), search_radius, epsilon, maximum_iteration
+		,	std::begin(x) //, y	// optional 
+		);
+
+	spec::is_True
+	(	converged
+	&&	abs(x[0] - 1.0) < 5*epsilon
+	&&	abs(x[1] - 2.0) < 5*epsilon
+	&&	abs( x[2] - (-1.0) ) < 5*epsilon
+	);
+}
+
+
 #include "Test_Mathematics.hpp"
 #include <iostream>
 
@@ -83,6 +114,7 @@ void Test_sgm_Mathematics::test()
 		::Test01();
 		::Test02();
 		::Test03();
+		::Test04();
 		
 		std::wcout << L"Mathematics Test Complete.\n";
 	}
