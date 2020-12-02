@@ -16,8 +16,33 @@ namespace sgm
 	template<class T>
 	class _Pinweight_interface;
 
+	template<class T>
+	class _TemporaryPinweight;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<class T>
+class sgm::_TemporaryPinweight
+{
+private:
+	friend class sgm::Pinweight_t
+	<	T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false, false, false> 
+	>;
+
+
+	_TemporaryPinweight(T* p) : _pval{p}{}
+
+	T* _pval;
+
+public:
+	_TemporaryPinweight(_TemporaryPinweight const&) = delete;
+	auto operator=(_TemporaryPinweight const&)-> _TemporaryPinweight& = delete;
+
+	auto operator->()-> T*{  return _pval;  }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T>
@@ -28,12 +53,12 @@ public:
 	using value_t = T;
 
 
-	_Pinweight_interface() : _cpval(new T const()), _pcount( new count_t(1) ){}
+	_Pinweight_interface() : _cpval(new value_t()), _pcount( new count_t(1) ){}
 
-	_Pinweight_interface(T const& t) : _cpval( new T const(t) ), _pcount( new count_t(1) ){}
+	_Pinweight_interface(T const& t) : _cpval( new value_t(t) ), _pcount( new count_t(1) ){}
 
 	_Pinweight_interface(T&& t)
-	:	_cpval(  new T const( std::move(t) )  ), _pcount( new count_t(1) )
+	:	_cpval(  new value_t( std::move(t) )  ), _pcount( new count_t(1) )
 	{}
 
 	_Pinweight_interface(_Pinweight_interface const& pwimpl)
@@ -51,6 +76,8 @@ public:
 	auto value() const-> T const&{  return *_cpval;  }
 	operator T const&() const{  return value();  }
 
+	auto operator->() const-> value_t const*{  return _cpval;  }
+
 
 	template<class Q>
 	bool operator==(Q&& q) const{  return *_cpval == std::forward<Q>(q);  }
@@ -67,7 +94,7 @@ public:
 
 
 protected:
-	T const* _cpval;
+	T mutable* _cpval;
 	count_t mutable* _pcount;
 
 
@@ -79,7 +106,7 @@ protected:
 		return pn;
 	}
 
-	void _my_pcount_down()
+	void _my_pcount_down() const
 	{
 		if(_pcount == nullptr)
 			return;
@@ -87,6 +114,7 @@ protected:
 			delete _cpval, _cpval = nullptr,
 			delete _pcount, _pcount = nullptr;
 	}
+
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -129,15 +157,15 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 	using impl_t = _Pinweight_interface<T>;
 
 
-	template<class Q>
-	auto _substitute(Q&& q)-> Pinweight_t&
+	template<class res_t, class Q>
+	static auto _substitute(res_t& res, Q&& q)-> res_t&
 	{
-		impl_t::_my_pcount_down();
+		res._my_pcount_down();
 
-		this->_cpval = new T const( std::forward<Q>(q) ), 
-		this->_pcount = new typename impl_t::count_t(1);
+		res._cpval = new typename impl_t::value_t( std::forward<Q>(q) ), 
+		res._pcount = new typename impl_t::count_t(1);
 
-		return *this; 			
+		return res; 			
 	}
 
 
@@ -156,8 +184,8 @@ public:
 	~Pinweight_t() = default;
 
 
-	auto operator=(T const& t)-> Pinweight_t&{  return _substitute(t);  }
-	auto operator=(T&& t)-> Pinweight_t&{  return _substitute( std::move(t) );  }
+	auto operator=(T const& t)-> Pinweight_t&{  return _substitute(*this, t);  }
+	auto operator=(T&& t)-> Pinweight_t&{  return _substitute( *this, std::move(t) );  }
 
 
 	auto operator=(Pinweight_t<T, invar> const& pw)-> Pinweight_t&
@@ -193,6 +221,15 @@ public:
 	auto operator=(Pinweight_t&& pw)-> Pinweight_t&
 	{
 		return *this = static_cast< Pinweight_t<T, invar>&& >( std::move(pw) );
+	}
+
+
+	auto operator--(int)-> _TemporaryPinweight<T>
+	{
+		if(impl_t::share_count() > 1)
+			*this = Pinweight_t(impl_t::value());
+
+		return {impl_t::_cpval};
 	}
 
 };

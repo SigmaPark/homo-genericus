@@ -125,6 +125,36 @@ static void Test7()
 
 	is_True(pw.share_count() == 1);
 }
+
+
+static void Test8()
+{
+	struct AA
+	{
+		int _a;
+
+		AA(int a = 1) : _a(a){}
+
+		int Get() const{  return _a;  }
+		int& Get(){  return _a;  }
+		void Set(int a){  _a = a;  }
+	};
+
+
+	auto pw1 = Pinweighting(AA()), pw2 = pw1;
+	constPinweight<AA> pw3 = pw1;
+
+	is_True( pw1.share_with(pw2) );
+
+	pw1--->Set(11);
+
+	is_True
+	(	!pw1.share_with(pw2) 
+	&&	pw1->Get() == 11
+	&&	pw3->Get() == 1
+	);
+
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -144,6 +174,7 @@ void Test_sgm_Pinweight::test()
 		::Test5();
 		::Test6();
 		::Test7();
+		::Test8();
 		
 		std::wcout << L"Pinweight Test Complete.\n";
 	}
