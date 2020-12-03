@@ -4,6 +4,7 @@
 #define _SGM_PINWEIGHT_
 
 #include "..\Abbreviable\Abbreviable.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 #include <atomic>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -46,47 +47,48 @@ public:
 
 
 template<class T>
-class sgm::_Pinweight_interface
+class sgm::_Pinweight_interface : public Ordering<T>, public Comparing<T>
 {
 public:
 	using count_t = std::atomic<size_t>;
 	using value_t = T;
 
 
-	_Pinweight_interface() : _cpval(new value_t()), _pcount( new count_t(1) ){}
+	_Pinweight_interface() : _cpval(new value_t()), _pcount( new count_t(1) )
+	{
+		_update_ptr(_cpval);
+	}
 
-	_Pinweight_interface(T const& t) : _cpval( new value_t(t) ), _pcount( new count_t(1) ){}
+	_Pinweight_interface(T const& t) : _cpval( new value_t(t) ), _pcount( new count_t(1) )
+	{
+		_update_ptr(_cpval);
+	}
 
 	_Pinweight_interface(T&& t)
 	:	_cpval(  new value_t( std::move(t) )  ), _pcount( new count_t(1) )
-	{}
+	{
+		_update_ptr(_cpval);
+	}
 
 	_Pinweight_interface(_Pinweight_interface const& pwimpl)
 	:	_cpval(pwimpl._cpval), _pcount( _pcount_up(pwimpl._pcount) )
-	{}
+	{
+		_update_ptr(_cpval);
+	}
 
 	_Pinweight_interface(_Pinweight_interface&& pwimpl) 
 	:	_cpval(pwimpl._cpval), _pcount(pwimpl._pcount)
 	{
-		pwimpl._cpval = nullptr, pwimpl._pcount = nullptr;
+		_update_ptr(_cpval),  pwimpl._cpval = nullptr,  pwimpl._pcount = nullptr;
 	}
 
 	~_Pinweight_interface(){  _my_pcount_down();  }
+
 
 	auto value() const-> T const&{  return *_cpval;  }
 	operator T const&() const{  return value();  }
 
 	auto operator->() const-> value_t const*{  return _cpval;  }
-
-
-	template<class Q>
-	bool operator==(Q&& q) const{  return *_cpval == std::forward<Q>(q);  }
-
-	template<class Q>
-	bool operator!=(Q&& q) const{  return !( *this == std::forward<Q>(q) );  }
-
-	bool operator==(_Pinweight_interface pw) const{  return *this == *pw._cpval;  }
-	bool operator!=(_Pinweight_interface pw) const{  return !( *this == pw );  }
 
 
 	bool share_with(_Pinweight_interface const& pw) const{  return _cpval == pw._cpval;  }
@@ -113,6 +115,13 @@ protected:
 		else if( --(*_pcount) == 0 )
 			delete _cpval, _cpval = nullptr,
 			delete _pcount, _pcount = nullptr;
+	}
+
+
+	auto _update_ptr(T* ptr)-> T const*
+	{
+		return
+		static_cast< Comparing<T>& >(*this) = static_cast< Ordering<T>& >(*this) = _cpval = ptr;		
 	}
 
 };
@@ -157,15 +166,25 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 	using impl_t = _Pinweight_interface<T>;
 
 
-	template<class res_t, class Q>
-	static auto _substitute(res_t& res, Q&& q)-> res_t&
+	template<class Q>
+	static auto _substitute(Pinweight_t& res, Q&& q)
+	->	Pinweight_t&
 	{
 		res._my_pcount_down();
-
-		res._cpval = new typename impl_t::value_t( std::forward<Q>(q) ), 
+		
+		res._update_ptr(  new typename impl_t::value_t( std::forward<Q>(q) )  );
 		res._pcount = new typename impl_t::count_t(1);
 
 		return res; 			
+	}
+
+
+	auto _detached_ptr()-> typename impl_t::value_t*
+	{
+		if(impl_t::share_count() > 1)
+			*this = Pinweight_t(impl_t::value());
+			
+		return this->_cpval;
 	}
 
 
@@ -193,9 +212,9 @@ public:
 		if(this->_cpval == pw._cpval)
 			return *this;
 
-		impl_t::_my_pcount_down(), impl_t::_pcount_up(pw._pcount);
+		impl_t::_my_pcount_down(),  impl_t::_pcount_up(pw._pcount);
 
-		this->_cpval = pw._cpval, this->_pcount = pw._pcount;
+		impl_t::_update_ptr(pw._cpval),  this->_pcount = pw._pcount;
 
 		return *this;
 	}
@@ -207,8 +226,8 @@ public:
 
 		impl_t::_my_pcount_down();
 
-		this->_cpval = pw._cpval, pw._cpval = nullptr,
-		this->_pcount = pw._pcount, pw._pcount = nullptr;
+		impl_t::_update_ptr(pw._cpval),  pw._cpval = nullptr,
+		this->_pcount = pw._pcount,  pw._pcount = nullptr;
 
 		return *this;
 	}
@@ -224,13 +243,8 @@ public:
 	}
 
 
-	auto operator--(int)-> _TemporaryPinweight<T>
-	{
-		if(impl_t::share_count() > 1)
-			*this = Pinweight_t(impl_t::value());
-
-		return {impl_t::_cpval};
-	}
+	auto operator--(int)-> _TemporaryPinweight<T>{  return {_detached_ptr()};  }
+	auto operator*()-> decltype(_detached_ptr()){  return _detached_ptr();  }
 
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

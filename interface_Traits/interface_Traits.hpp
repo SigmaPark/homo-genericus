@@ -167,6 +167,73 @@ namespace sgm
 	template<class T> struct is_Comparable : Has_Operator_Same<T>{};
 	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
 
+
+	template< class T, bool = is_Comparable<T>::value > struct Comparing;
+
+	template<class T> struct Comparing<T, false>
+	{
+		Comparing(T const* = nullptr){}  
+
+		auto operator=(T const*)-> T const*{  return nullptr;  }
+	};
+
+	template<class T>
+	struct Comparing<T, true>
+	{
+		Comparing(T const* p = nullptr) : _p(p){}
+
+		auto operator=(T const* p)-> T const*{  return _p = p;  }
+
+		template<class Q>
+		bool operator==(Q const& q) const{  return *_p == q;  }
+
+		bool operator==(Comparing const& cmp) const{  return *_p == *cmp._p;  }
+
+		template<class Q>
+		bool operator!=(Q&& q) const{  return !( *this == std::forward<Q>(q) );  }
+
+	private:
+		T const* _p;
+	};
+
+
+	template< class T, bool = is_Ordered<T>::value > struct Ordering;
+
+	template<class T> struct Ordering<T, false>
+	{
+		Ordering(T const* = nullptr){}  
+
+		auto operator=(T const*)-> T const*{  return nullptr;  }
+	};
+
+	template<class T>
+	struct Ordering<T, true>
+	{
+		Ordering(T const* p = nullptr) : _p(p){}
+
+		auto operator=(T const* p)-> T const*{  return _p = p;  }
+
+		template<class Q>
+		bool operator<(Q const& q) const{  return *_p < q;  }
+
+		template<class Q>
+		bool operator>(Q const& q) const{  return *_p > q;  }
+
+		bool operator<(Ordering const& ord) const{  return *_p < *ord._p;  }
+		bool operator>(Ordering const& ord) const{  return *_p > *ord._p;  }
+
+		template<class Q>
+		bool operator<=(Q&& q) const{  return !( *this > std::forward<Q>(q) );  }
+
+		template<class Q>
+		bool operator>=(Q&& q) const{  return !( *this < std::forward<Q>(q) );  }
+
+	private:
+		T const* _p;
+	};
+	//========//========//========//========//=======#//========//========//========//========//===
+
+
 	template<class T> 
 	struct is_iterator
 	{
@@ -296,6 +363,7 @@ namespace sgm
 		return _Travel<ITR>::prev(itr, steps);  
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
+
 
 } // end of namespace sgm
 
