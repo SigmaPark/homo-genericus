@@ -164,73 +164,106 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class T> struct is_Comparable : Has_Operator_Same<T>{};
-	template<class T> struct is_Ordered : Has_Operator_Less<T>{};
+	template<class T> 
+	struct is_Comparable 
+	:	std::bool_constant< Has_Operator_Same<T>::value && Has_Operator_NotSame<T>::value >
+	{};
 
 
-	template< class T, bool = is_Comparable<T>::value > struct Comparing;
-
-	template<class T> struct Comparing<T, false>
-	{
-		Comparing(T const* = nullptr){}  
-
-		auto operator=(T const*)-> T const*{  return nullptr;  }
-	};
-
-	template<class T>
-	struct Comparing<T, true>
-	{
-		Comparing(T const* p = nullptr) : _p(p){}
-
-		auto operator=(T const* p)-> T const*{  return _p = p;  }
-
-		template<class Q>
-		bool operator==(Q const& q) const{  return *_p == q;  }
-
-		bool operator==(Comparing const& cmp) const{  return *_p == *cmp._p;  }
-
-		template<class Q>
-		bool operator!=(Q&& q) const{  return !( *this == std::forward<Q>(q) );  }
-
-	private:
-		T const* _p;
-	};
+	template<class T> 
+	struct is_Ordered 
+	:	std::bool_constant
+		<	Has_Operator_Less<T>::value && Has_Operator_Greater<T>::value 
+		&&	Has_Operator_NotLess<T>::value && Has_Operator_NotGreater<T>::value
+		>
+	{};
 
 
-	template< class T, bool = is_Ordered<T>::value > struct Ordering;
+	template<class T> 
+	struct is_Logical 
+	:	std::bool_constant
+		<	Has_Operator_And<T>::value && Has_Operator_Or<T>::value && Has_Operator_Not<T>::value
+		>
+	{};
 
-	template<class T> struct Ordering<T, false>
-	{
-		Ordering(T const* = nullptr){}  
 
-		auto operator=(T const*)-> T const*{  return nullptr;  }
-	};
+	template<class T> 
+	struct is_Algebraic 
+	:	std::bool_constant
+		<	Has_Operator_Plus<T>::value && Has_Operator_Minus<T>::value
+		&&	Has_Operator_Multiply<T>::value && Has_Operator_Divide<T>::value
+		>
+	{};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
-	template<class T>
-	struct Ordering<T, true>
-	{
-		Ordering(T const* p = nullptr) : _p(p){}
 
-		auto operator=(T const* p)-> T const*{  return _p = p;  }
+	template< class T, bool = is_Comparable<T>::value > struct Comparable;
+	template< class T, bool = is_Ordered<T>::value > struct Ordered;
+	template< class T, bool = is_Logical<T>::value > struct Logical;
+	template< class T, bool = is_Algebraic<T>::value > struct Algebraic;
 
-		template<class Q>
-		bool operator<(Q const& q) const{  return *_p < q;  }
 
-		template<class Q>
-		bool operator>(Q const& q) const{  return *_p > q;  }
+#if !defined(_SGM_OPERATION_DECORATOR0) || !defined(_SGM_OPERATOR)
+	#define _SGM_OPERATOR(DECO_NAME, _OP)	\
+		template<class Q>	\
+		auto operator _OP(Q const& q) const	\
+		->	decltype(Declval<T>() _OP q){  return *_p _OP q;  }	\
+		\
+		auto operator _OP(DECO_NAME const& rhs) const	\
+		->	decltype(Declval<T>() _OP Declval<T>()){  return *_p _OP *rhs._p;  }
+	
+	#define _SGM_OPERATION_DECORATOR(DECO_NAME, ...)	\
+		template<class T>	\
+		struct DECO_NAME<T, true>	\
+		{	\
+			DECO_NAME(T const* p = nullptr) : _p(p){}	\
+		\
+			auto operator=(T const* p)-> T const*{  return _p = p;  }	\
+		\
+			__VA_ARGS__ \
+		\
+		private:	\
+			T const* _p;	\
+		};	\
+		\
+		template<class T> struct DECO_NAME<T, false>	\
+		{	\
+			DECO_NAME(T const* = nullptr){}	\
+		\
+			auto operator=(T const*)-> T const*{  return nullptr;  }	\
+		}
 
-		bool operator<(Ordering const& ord) const{  return *_p < *ord._p;  }
-		bool operator>(Ordering const& ord) const{  return *_p > *ord._p;  }
 
-		template<class Q>
-		bool operator<=(Q&& q) const{  return !( *this > std::forward<Q>(q) );  }
+	_SGM_OPERATION_DECORATOR
+	(	Comparable
+	,	_SGM_OPERATOR(Comparable, ==)  _SGM_OPERATOR(Comparable, !=)
+	);
 
-		template<class Q>
-		bool operator>=(Q&& q) const{  return !( *this < std::forward<Q>(q) );  }
+	_SGM_OPERATION_DECORATOR
+	(	Ordered
+	,	_SGM_OPERATOR(Ordered, <)  _SGM_OPERATOR(Ordered, >)
+		_SGM_OPERATOR(Ordered, <=)  _SGM_OPERATOR(Ordered, >=)
+	);
 
-	private:
-		T const* _p;
-	};
+	_SGM_OPERATION_DECORATOR
+	(	Logical
+	,	_SGM_OPERATOR(Logical, &&)  _SGM_OPERATOR(Logical, ||)
+		bool operator!() const{  return !*_p;  }
+	);
+
+	_SGM_OPERATION_DECORATOR
+	(	Algebraic
+	,	_SGM_OPERATOR(Algebraic, +)  _SGM_OPERATOR(Algebraic, -)
+		_SGM_OPERATOR(Algebraic, *)  _SGM_OPERATOR(Algebraic, /)
+	);
+	
+
+	#undef _SGM_OPERATION_DECORATOR
+	#undef _SGM_OPERATOR
+
+#else
+	#error _SGM_OPERATION_DECORATOR or _SGM_OPERATOR were already defined.
+#endif
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

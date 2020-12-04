@@ -47,7 +47,7 @@ public:
 
 
 template<class T>
-class sgm::_Pinweight_interface : public Ordering<T>, public Comparing<T>
+class sgm::_Pinweight_interface : public Ordered<T>, public Comparable<T>
 {
 public:
 	using count_t = std::atomic<size_t>;
@@ -121,7 +121,7 @@ protected:
 	auto _update_ptr(T* ptr)-> T const*
 	{
 		return
-		static_cast< Comparing<T>& >(*this) = static_cast< Ordering<T>& >(*this) = _cpval = ptr;		
+		static_cast< Comparable<T>& >(*this) = static_cast< Ordered<T>& >(*this) = _cpval = ptr;		
 	}
 
 };
