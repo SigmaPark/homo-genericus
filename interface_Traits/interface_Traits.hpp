@@ -187,6 +187,16 @@ namespace sgm
 	{};
 
 
+	template<class T>
+	struct is_Digital
+	:	std::bool_constant
+		<	Has_Operator_BitAnd<T>::value && Has_Operator_BitOr<T>::value
+		&&	Has_Operator_BitNot<T>::value && Has_Operator_Xor<T>::value
+		&&	Has_Operator_LShift<T>::value && Has_Operator_RShift<T>::value
+		>
+	{};
+
+
 	template<class T> 
 	struct is_Algebraic 
 	:	std::bool_constant
@@ -200,6 +210,7 @@ namespace sgm
 	template< class T, bool = is_Comparable<T>::value > struct Comparable;
 	template< class T, bool = is_Ordered<T>::value > struct Ordered;
 	template< class T, bool = is_Logical<T>::value > struct Logical;
+	template< class T, bool = is_Digital<T>::value > struct Digital;
 	template< class T, bool = is_Algebraic<T>::value > struct Algebraic;
 
 
@@ -230,7 +241,7 @@ namespace sgm
 		{	\
 			DECO_NAME(T const* = nullptr){}	\
 		\
-			auto operator=(T const*)-> T const*{  return nullptr;  }	\
+			auto operator=(T const* p)-> T const*{  return p;  }	\
 		}
 
 
@@ -252,6 +263,13 @@ namespace sgm
 	);
 
 	_SGM_OPERATION_DECORATOR
+	(	Digital
+	,	_SGM_OPERATOR(Digital, &)  _SGM_OPERATOR(Digital, |)
+		_SGM_OPERATOR(Digital, ^)  _SGM_OPERATOR(Digital, <<)  _SGM_OPERATOR(Digital, >>)
+		T operator~() const{  return ~*_p;  }
+	);
+
+	_SGM_OPERATION_DECORATOR
 	(	Algebraic
 	,	_SGM_OPERATOR(Algebraic, +)  _SGM_OPERATOR(Algebraic, -)
 		_SGM_OPERATOR(Algebraic, *)  _SGM_OPERATOR(Algebraic, /)
@@ -264,6 +282,23 @@ namespace sgm
 #else
 	#error _SGM_OPERATION_DECORATOR or _SGM_OPERATOR were already defined.
 #endif
+
+
+	template<class T>
+	struct Operation_Decorator : Comparable<T>, Ordered<T>, Logical<T>, Digital<T>, Algebraic<T>
+	{	
+		auto update_by_operator(T const* p)-> T const*
+		{
+			return
+			(	static_cast< Comparable<T>& >(*this)
+			=	static_cast< Ordered<T>& >(*this)
+			=	static_cast< Logical<T>& >(*this)
+			=	static_cast< Digital<T>& >(*this)
+			=	static_cast< Algebraic<T>& >(*this)
+			=	p
+			);
+		}
+	};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

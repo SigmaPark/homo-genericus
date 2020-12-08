@@ -94,7 +94,7 @@ static void Test6()
 
 	ppw = cpw;
 
-	std::is_same< std::decay_t<decltype(ppw.value())>, int >::value;
+	static_assert( std::is_same< std::decay_t<decltype(ppw.value())>, int >::value, "" );
 
 	pw = ppw;
 
@@ -155,6 +155,17 @@ static void Test8()
 	);
 
 }
+
+
+static void Test9()
+{
+	constPinweight<int> pwi1 = 3, pwi2 = 5;
+
+	auto i3 = pwi1 + pwi2, i4 = pwi2 - pwi1;
+	auto b1 = pwi1 > pwi2;
+
+	is_True(i3 == 8 && i4 == 2 && b1 == false);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -175,6 +186,7 @@ void Test_sgm_Pinweight::test()
 		::Test6();
 		::Test7();
 		::Test8();
+		::Test9();
 		
 		std::wcout << L"Pinweight Test Complete.\n";
 	}

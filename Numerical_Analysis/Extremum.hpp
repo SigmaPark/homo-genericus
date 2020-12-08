@@ -96,7 +96,7 @@ public:
 		X	M = iphi*(b - a), c = b - M, d = a + M;
 		Y	fc = func(c), fd = func(d);
 			
-		while( d - c > epsilon && then<true>(M *= iphi) )
+		while( d - c > epsilon && then(M *= iphi) )
 			if( Helper<XT>::Left(fc, fd) )
 				b = d,  d = c,  c = b - M,  fd = fc,  fc = func(c);
 			else
@@ -258,7 +258,7 @@ private:
 		if(success)
 			for
 			(	auto duo = Dual_iteration(x.begin(), xitr)
-			;	duo._1 != x.end() || then<false>( yout = func(x) )
+			;	duo._1 != x.end() || lastly( yout = func(x) )
 			;	*duo._2++ = *duo._1++
 			);
 

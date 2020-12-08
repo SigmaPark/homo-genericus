@@ -168,8 +168,8 @@ struct sgm::Dual_iterator
 namespace sgm
 {
 
-	template<bool B, class...ARGS>
-	static bool then(ARGS&&...){  return B;  }
+	template<class...ARGS> static bool then(ARGS&&...){  return true;  }
+	template<class...ARGS> static bool lastly(ARGS&&...){  return false;  }
 
 
 	template<class ITR1, class ITR2>
