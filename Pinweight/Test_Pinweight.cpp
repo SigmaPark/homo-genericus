@@ -187,6 +187,7 @@ void Test_sgm_Pinweight::test()
 		::Test7();
 		::Test8();
 		::Test9();
+
 		
 		std::wcout << L"Pinweight Test Complete.\n";
 	}

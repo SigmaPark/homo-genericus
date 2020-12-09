@@ -214,6 +214,24 @@ namespace sgm
 	template< class T, bool = is_Algebraic<T>::value > struct Algebraic;
 
 
+	template<class T, class HOST>
+	struct _AllocOp_Processor
+	{
+		T const* p;
+		HOST* pHost;
+		void(HOST::*pre_func)();
+		void(HOST::*post_func)();
+	};
+
+	//template<class T, class HOST>
+	//static auto AllocOp_Process
+	//(	T const* p, HOST* pHost, void(HOST::* pre_func)(), void(HOST::* post_func)() 
+	//)->	_AllocOp_Processor<T, HOST>
+	//{
+	//	return {p, pHost, pre_func, post_func};
+	//}
+
+
 #if !defined(_SGM_OPERATION_DECORATOR0) || !defined(_SGM_OPERATOR)
 	#define _SGM_OPERATOR(DECO_NAME, _OP)	\
 		template<class Q>	\
@@ -296,6 +314,22 @@ namespace sgm
 			=	static_cast< Digital<T>& >(*this)
 			=	static_cast< Algebraic<T>& >(*this)
 			=	p
+			);
+		}
+
+		template<class HOST>
+		auto update_by_operator
+		(	T const* p, HOST* pHost
+		,	void(Operation_Decorator::* pre_func)(), void(Operation_Decorator::* post_func)()
+		)->	T const*
+		{
+			return
+			(	static_cast< Comparable<T>& >(*this)
+			=	static_cast< Ordered<T>& >(*this)
+			=	static_cast< Logical<T>& >(*this)
+			=	static_cast< Digital<T>& >(*this)
+			=	static_cast< Algebraic<T>& >(*this)
+			=	_AllocOp_Processor<T, HOST>{p, pHost, pre_func, post_func}
 			);
 		}
 	};
