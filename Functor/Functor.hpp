@@ -32,13 +32,6 @@ namespace sgm::fp
 	static inline auto const Dim = Dimension<D>();
 
 
-	template<unsigned _D, class _F>
-	static decltype(auto) constexpr operator/(_F&&, Dimension<_D>);
-
-	template<unsigned _D, class _F, class..._ARGS>
-	static decltype(auto) constexpr operator/(_F&&, Dimension<_D, _ARGS...>&&);
-
-
 	template<class>
 	struct _is_Functor;
 
@@ -61,6 +54,13 @@ namespace sgm::fp
 	static auto Params(ARGS&&...);
 
 }
+
+
+template<unsigned _D, class _F>
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D>);
+
+template<unsigned _D, class _F, class..._ARGS>
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D, _ARGS...>&&);
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -98,9 +98,6 @@ public:
 			)
 		);
 };
-
-
-static sgm::fp::Blank constexpr __;
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -119,7 +116,7 @@ public:
 
 private:
 	template<unsigned _D, class _F, class..._ARGS>
-	friend decltype(auto) constexpr sgm::fp::operator/(_F&&, Dimension<_D, _ARGS...>&&);
+	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D, _ARGS...>&&);
 
 
 	Multiple<ARGS...> _mtp;
@@ -128,16 +125,16 @@ private:
 
 
 template<unsigned _D, class _F> 
-decltype(auto) constexpr sgm::fp::operator/(_F&& f, Dimension<_D>)
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 {
-	return Functor<_D, _F>( std::forward<_F>(f) );
+	return sgm::fp::Functor<_D, _F>( std::forward<_F>(f) );
 }
 
 
 template<unsigned _D, class _F, class..._ARGS>
-decltype(auto) constexpr sgm::fp::operator/(_F&& f, Dimension<_D, _ARGS...>&& d)
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, _ARGS...>&& d)
 {
-	return ( std::forward<_F>(f) / Dim<_D> )(d._mtp);
+	return ( std::forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -245,7 +242,7 @@ public:
 
 	//	Evaluation
 	template<class...ARGS>
-	auto operator()(ARGS&&...args) const
+	decltype(auto) operator()(ARGS&&...args) const
 	{
 		using eval_t = _Evaluator< D, constPinweight<F> >;
 
@@ -300,7 +297,7 @@ public:
 
 private:
 	template<unsigned _D, class _F>
-	friend decltype(auto) constexpr sgm::fp::operator/(_F&&, Dimension<_D>);
+	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D>);
 
 
 	Functor(F&& f) noexcept : _pwf( std::move(f) ){}
@@ -365,6 +362,9 @@ struct sgm::fp::_Permute_Helper<>
 
 namespace sgm::fp
 {
+
+	static sgm::fp::Blank constexpr __;
+
 
 	template<signed D>
 	inline static auto const Pass

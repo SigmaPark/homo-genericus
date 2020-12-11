@@ -19,12 +19,14 @@ struct Test_Case
 };
 
 
-using namespace sgm::fp;
 using sgm::spec::is_True;
 
 
 void Test_Case::Made_from_Generic_Lambda()
 {
+	using sgm::fp::Dim;
+	using sgm::fp::__;
+
 	is_True
 	(
 		[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(2, 3, -1) == 8
@@ -40,6 +42,8 @@ void Test_Case::Made_from_Generic_Lambda()
 
 void Test_Case::Made_from_Template_Object()
 {
+	using sgm::fp::__;
+
 	is_True
 	(	SGM_FUNCTOR(Test_Case::tfunc, 3)(2, 3, -1) == 8
 	&&	SGM_FUNCTOR(Test_Case::tfunc, 3)(__, -1)(2, 3) == 8
@@ -50,9 +54,11 @@ void Test_Case::Made_from_Template_Object()
 
 void Test_Case::Made_from_Other_Functor()
 {
-	Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
-	Functor const ftr1 = ftr(2, 3, __);
-	Functor const ftr2 = ftr(__, -1);
+	using sgm::fp::__;
+
+	sgm::fp::Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
+	sgm::fp::Functor const ftr1 = ftr(2, 3, __);
+	sgm::fp::Functor const ftr2 = ftr(__, -1);
 
 
 	is_True
@@ -65,8 +71,8 @@ void Test_Case::Made_from_Other_Functor()
 
 void Test_Case::Composition()
 {
-	Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
-	Functor const halfer = [](auto&& x) {  return x / 2;  } / Dim<1>;
+	sgm::fp::Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
+	sgm::fp::Functor const halfer = [](auto&& x) {  return x / 2;  } / sgm::fp::Dim<1>;
 
 	is_True(	(halfer | ftr)(2, 3, -1) == 4 );
 }
@@ -84,8 +90,8 @@ static void stbinding_by_family()
 
 void Test_Case::Codomain_Merge()
 {
-	Functor const ftr = [](auto&& x, auto&& y){  return x*y;  } / Dim<2>;
-	Functor const ftr2 = [](auto&& x, auto&& y){  return x-y;  } / Dim<2>;
+	sgm::fp::Functor const ftr = [](auto&& x, auto&& y){  return x*y;  } / sgm::fp::Dim<2>;
+	sgm::fp::Functor const ftr2 = [](auto&& x, auto&& y){  return x-y;  } / sgm::fp::Dim<2>;
 
 	int x1 = 3, x2 = 2, x3 = 4, x4 = 1;
 
@@ -100,14 +106,16 @@ void Test_Case::Codomain_Merge()
 
 void Test_Case::Pass_and_Permute()
 {
-	Functor const ftr3 = [](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>;
+	sgm::fp::Functor const ftr3 
+	=	[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / sgm::fp::Dim<3>;
 
 	int const val = 2;
 
 	is_True
-	(	(ftr3 | Pass<3>)(val, 3, -1) == 8
-	&&	(ftr3 | Pass<-3>)(-1, 3, 2) == 8
-	&&	( ftr3 | Pass<2> + [](auto&& x){  return x/2;  } / Dim<1> )(2, 3, -2) == 8
+	(	(ftr3 | sgm::fp::Pass<3>)(val, 3, -1) == 8
+	&&	(ftr3 | sgm::fp::Pass<-3>)(-1, 3, 2) == 8
+	&&	( ftr3 | sgm::fp::Pass<2> + [](auto&& x){  return x/2;  } / sgm::fp::Dim<1> )(2, 3, -2) 
+		==	8
 	);
 
 
@@ -115,7 +123,7 @@ void Test_Case::Pass_and_Permute()
 	auto const& cx = x;
 	double y = 0.618;
 
-	auto permuted = Permute<1, 2, 3, 0>(3, px, cx, y);
+	auto permuted = sgm::fp::Permute<1, 2, 3, 0>(3, px, cx, y);
 	
 	is_True
 	(	permuted.get<0>() == px
