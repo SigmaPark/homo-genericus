@@ -4,24 +4,7 @@
 #define _SGM_ABBREVIABLE_
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
-
-
-namespace sgm
-{
-
-	struct Mutability{  Mutability() = delete;  };
-	struct invariable : Mutability{};		using invar = invariable;
-	struct Variable :	Mutability{};			using Var = Variable;
-	
-
-	template<class T> struct is_Mutability;
-
-}
 //========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class T>
-struct sgm::is_Mutability : std::is_base_of<Mutability, T>{  is_Mutability() = delete;  };
 
 
 #ifndef SGM_ABBREVIABLE_PROXY

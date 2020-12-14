@@ -7,7 +7,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\interface_Traits\interface_Traits.hpp"
+#include "..\interface_Traits\interface_Traits17.hpp"
 #include "..\idiom\idiom.hpp"
 #include <cassert>
 

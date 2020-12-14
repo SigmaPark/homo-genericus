@@ -73,15 +73,15 @@ namespace sgm
 	};
 
 	template<bool B, class T = void> using Guaranteed_t = typename _Guaranteed<B, T>::type;
-
-
-#ifndef SGM_COMPILE_FAILED
-	#define SGM_COMPILE_FAILED(...) \
-		static_assert([]() constexpr{  return false;  }(), #__VA_ARGS__)
-#else
-	#error SGM_COMPILE_FAILED was already defined somewhere else.
-#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	struct Mutability{  Mutability() = delete;  };
+	struct invariable : Mutability{};		using invar = invariable;
+	struct Variable :	Mutability{};			using Var = Variable;
+
+	template<class T>
+	struct is_Mutability : std::is_base_of<Mutability, T>{  is_Mutability() = delete;  };
 
 
 	template< class T, bool = std::is_pointer<T>::value || std::is_reference<T>::value >

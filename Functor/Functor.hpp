@@ -268,7 +268,7 @@ public:
 
 
 	//	Merging two Functor objects into one which returns multiple output
-	template<typename FTR>
+	template<class FTR>
 	decltype(auto) operator+(FTR&& ftr) const
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator+");
