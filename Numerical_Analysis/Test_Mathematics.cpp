@@ -89,7 +89,7 @@ static void Test04()
 	//double y;	// optional
 
 	auto converged
-	=	num::Powell<num::Extreme::MINIMUM>::template search<DIMENSION>
+	=	num::Powell<num::Extreme::MINIMUM>::template search
 		(	parabola_f, std::move(xinit), search_radius, epsilon, maximum_iteration
 		,	std::begin(x) //, y	// optional 
 		);

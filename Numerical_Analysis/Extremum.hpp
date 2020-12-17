@@ -18,10 +18,6 @@ namespace sgm
 		struct XY_Pair;
 
 
-		template<class FUNC, class X>
-		struct _Result_of;
-
-
 		template<Extreme XT>
 		class GoldenSection;
 
@@ -36,14 +32,8 @@ template<class X, class Y>
 struct sgm::num::XY_Pair{  X x;  Y y;  };
 
 
+#include "..\interface_Traits\interface_Traits17.hpp"
 #include "..\Serial\Serial.hpp"
-
-
-template<class FUNC, class X>
-struct sgm::num::_Result_of : No_Making
-{
-	using type = std::decay_t< decltype( Declval<FUNC>()(Declval<X>()) ) >;
-};
 
 
 template<sgm::num::Extreme XT>
@@ -74,7 +64,7 @@ private:
 public:
 	template
 	<	class X, class FUNC
-	,	class Y = typename _Result_of<FUNC, X>::type
+	,	class Y = std::invoke_result_t<FUNC, X>
 	,	class GAMMA_DOMAIN
 	,	class 
 		=	std::enable_if_t
@@ -124,9 +114,9 @@ private:
 				Serial<G> s = x;
 
 				for
-				(	auto duo = Dual_iteration(s.begin(), u.begin()) 
-				;	duo._1 != s.end()
-				;	*duo._1 = *duo._1 + gamma * *duo._2,  duo++
+				(	auto [sitr, uitr] = Dual_iteration(s.begin(), u.begin()) 
+				;	sitr != s.end()
+				;	*sitr++ += gamma * *uitr++ 
 				);
 
 				return s;
@@ -168,8 +158,11 @@ private:
 	template<class CON>
 	static auto Minus(CON x1, CON const& x2)-> CON
 	{
-		for( auto duo = Dual_iteration(x1.begin(), x2.begin());  duo._1 != x1.end();  duo++ )
-			*duo._1 -= *duo._2;
+		for
+		(	auto[itr1, itr2] = Dual_iteration(x1.begin(), x2.begin())
+		;	itr1 != x1.end()
+		;	*itr1++ -= *itr2++
+		);
 
 		return x1;
 	}
@@ -179,20 +172,21 @@ private:
 	struct _Apply_Helper
 	{
 		template<class FUNC, class...ARGS>
-		static auto calc(FUNC&& func, Serial<X> const& vec, ARGS const&...args) SGM_DECLTYPE_AUTO
-		(
-			_Apply_Helper<N-1, X>::calc(func, vec, vec[N-1], args...)
-		)
+		static decltype(auto) calc(FUNC&& func, Serial<X> const& vec, ARGS const&...args)
+		{
+			return _Apply_Helper<N-1, X>::calc(func, vec, vec[N-1], args...);
+		}
 	};
 
 	template<class X>
 	struct _Apply_Helper<0, X>
 	{
 		template<class FUNC, class...ARGS>
-		static auto calc(FUNC&& func, Serial<X> const&, ARGS const&...args) SGM_DECLTYPE_AUTO
-		(
-			func(args...)
-		)
+		static decltype(auto) calc(FUNC&& func, Serial<X> const&, ARGS const&...args) 
+		{
+			return func(args...);
+		}
+		
 	};
 
 
@@ -207,10 +201,10 @@ private:
 
 		auto operator=(_Apply const&)-> _Apply& = delete;
 
-		auto operator()(Serial<X> const& vec) const SGM_DECLTYPE_AUTO
-		(
-			_Apply_Helper<N, X>::calc(_func, vec)
-		)
+		decltype(auto) operator()(Serial<X> const& vec) const 
+		{
+			return _Apply_Helper<N, X>::calc(_func, vec);
+		}
 	};
 
 
@@ -257,9 +251,9 @@ private:
 
 		if(success)
 			for
-			(	auto duo = Dual_iteration(x.begin(), xitr)
-			;	duo._1 != x.end() || lastly( yout = func(x) )
-			;	*duo._2++ = *duo._1++
+			(	auto[xi_in, xi_out] = Dual_iteration(x.begin(), xitr)
+			;	xi_in != x.end() || lastly( yout = func(x) )
+			;	*xi_out++ = *xi_in++
 			);
 
 		return success;
@@ -268,7 +262,7 @@ private:
 
 	template<class FUNC, class XV, class X, class XITR>
 	static bool _search
-	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
 	,	XITR xitr
 	)
 	{
@@ -283,30 +277,44 @@ private:
 
 
 public:
-	template<size_t NOF_ARGUMENT, class FUNC, class XITR, class Y, class XV, class X>
+	template
+	<	size_t NOF_ARGUMENT = ULLONG_MAX, class FUNC, class XITR, class Y, class XV, class X
+	>
 	static bool search
-	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
 	,	XITR xitr_out, Y& yout
 	)
 	{
 		return
 		_search
-		(	_Apply<NOF_ARGUMENT, decltype(func), X>( std::forward<FUNC>(func) )
+		(	_Apply
+			<	NOF_ARGUMENT == ULLONG_MAX
+				?	nof_Arguments_v<FUNC, X>
+				:	NOF_ARGUMENT
+			,	decltype(func), X
+			>
+			( std::forward<FUNC>(func) )
 		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
 		,	radius, epsilon, max_iteration, xitr_out, yout
 		);
 	}
 
 
-	template<size_t NOF_ARGUMENT, class FUNC, class XITR, class XV, class X>
+	template<size_t NOF_ARGUMENT = ULLONG_MAX, class FUNC, class XITR, class XV, class X>
 	static bool search
-	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned max_iteration
+	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
 	,	XITR xitr_out
 	)
 	{
 		return
 		_search
-		(	_Apply<NOF_ARGUMENT, decltype(func), X>( std::forward<FUNC>(func) )
+		(	_Apply
+			<	NOF_ARGUMENT == ULLONG_MAX
+				?	nof_Arguments_v<FUNC, X>
+				:	NOF_ARGUMENT
+			,	decltype(func), X
+			>
+			( std::forward<FUNC>(func) )
 		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
 		,	radius, epsilon, max_iteration, xitr_out
 		);
