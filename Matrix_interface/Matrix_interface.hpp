@@ -79,7 +79,7 @@ namespace sgm::mxi
 	<	class VECS
 	,	class
 		=	std::enable_if_t
-			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Elem_t<VECS> >
+			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Deref_t<VECS> >
 			>
 	>
 	static auto column_space(VECS&& vecs);
@@ -89,23 +89,10 @@ namespace sgm::mxi
 	<	class VECS
 	,	class
 		=	std::enable_if_t
-			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Elem_t<VECS> >
+			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Deref_t<VECS> >
 			>
 	>
 	static auto row_space(VECS&& vecs);
-
-
-	template
-	<	class S, class T, MxSize_t R, MxSize_t C
-	,	class = std::enable_if_t< std::is_scalar_v<S> >
-	>
-	static auto operator*(S s, Matrix<T, R, C> const& m);
-
-
-	template
-	<	class S, class T, MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
-	>
-	static auto operator*(S s, Vector<T, SIZE> const& v);
 
 
 	template<class T = float, MxSize_t S = MxSize::DYNAMIC>
@@ -114,18 +101,6 @@ namespace sgm::mxi
 
 	template<class elem_t = float,MxSize_t N = MxSize::DYNAMIC>
 	class OrthonormalMatrix;
-
-
-	template
-	<	class S, class T, MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
-	>
-	static auto operator*(S s, OrthonormalMatrix<T, N> const& m);
-
-
-	template
-	<	class S, class T, MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
-	>
-	static auto operator*(S s, UnitVector<T, SIZE> const& v);
 
 
 	template<class> 
@@ -151,13 +126,13 @@ private:
 	template<class, MxSize_t>				friend class Vector;
 
 
-	template< class T>
+	template<class T>
 	static auto Mx(T&& t)
 	{
 		return Matrix<T, MxSize::TEMPORARY, MxSize::TEMPORARY>( std::move(t) );
 	}
 
-	template< class T>
+	template<class T>
 	static auto Vt(T&& t)
 	{
 		return Vector<T, MxSize::TEMPORARY>( std::move(t) );
@@ -414,14 +389,17 @@ public:
 };// end of Matrix class
 
 
-template<class S, class T, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C, class>
-auto sgm::mxi::operator*(S s, Matrix<T, R, C> const& m){  return m * s;  }
+template
+<	class S, class T, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C
+,	class = std::enable_if_t< std::is_scalar_v<S> >
+>
+static auto operator*(S s, sgm::mxi::Matrix<T, R, C> const& m){  return m * s;  }
 
 
 template<class VECS, class>
 auto sgm::mxi::column_space(VECS&& vecs)
 {
-	using elem_t = typename std::decay_t< Elem_t<VECS> >::elem_t;
+	using elem_t = typename std::decay_t< Deref_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.begin()->size(), vecs.size());
 
@@ -438,7 +416,7 @@ auto sgm::mxi::column_space(VECS&& vecs)
 template<class VECS, class>
 auto sgm::mxi::row_space(VECS&& vecs)
 {
-	using elem_t = typename std::decay_t< Elem_t<VECS> >::elem_t;
+	using elem_t = typename std::decay_t< Deref_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.size(), vecs.begin()->size());
 
@@ -594,8 +572,11 @@ public:
 };// end of class Vector
 
 
-template<class S, class T, sgm::mxi::MxSize_t SIZE, class>
-auto sgm::mxi::operator*(S s, Vector<T, SIZE> const& v){  return v * s;  }
+
+template
+<	class S, class T, sgm::mxi::MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
+>
+static auto operator*(S s, sgm::mxi::Vector<T, SIZE> const& v){  return v * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -707,8 +688,11 @@ private:
 };// end of class UnitVector
 
 
-template<class S, class T, sgm::mxi::MxSize_t SIZE, class>
-auto sgm::mxi::operator*(S s, UnitVector<T, SIZE> const& v){  return v * s;  }
+template
+<	class S, class T
+,	sgm::mxi::MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
+>
+static auto operator*(S s, sgm::mxi::UnitVector<T, SIZE> const& v){  return v * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -825,8 +809,10 @@ private:
 };// end of class OrthonormalMatrix
 
 
-template<class S, class T, sgm::mxi::MxSize_t N, class>
-auto sgm::mxi::operator*(S s, OrthonormalMatrix<T, N> const& m){  return m * s;  }
+template
+<	class S, class T, sgm::mxi::MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
+>
+static auto operator*(S s, sgm::mxi::OrthonormalMatrix<T, N> const& m){  return m * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

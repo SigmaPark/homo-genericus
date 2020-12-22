@@ -400,7 +400,7 @@ namespace sgm
 		=	std::enable_if_t
 			<	is_iterable<CON1>::value && is_iterable<CON2>::value
 			&&	std::is_same
-				<	std::decay_t< Elem_t<CON1> >, std::decay_t< Elem_t<CON2> >  
+				<	std::decay_t< Deref_t<CON1> >, std::decay_t< Deref_t<CON2> >  
 				>::	value
 			>
 	>

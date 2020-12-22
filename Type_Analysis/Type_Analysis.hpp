@@ -23,7 +23,7 @@ namespace sgm
 
 
 	template<class CON>
-	using Elem_t = decltype(*Declval<CON>().begin());
+	using Deref_t = decltype(*Declval<CON>().begin());
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -76,12 +76,12 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	struct Mutability{  Mutability() = delete;  };
+	struct Mutability : No_Making{};
 	struct invariable : Mutability{};		using invar = invariable;
 	struct Variable :	Mutability{};			using Var = Variable;
 
 	template<class T>
-	struct is_Mutability : std::is_base_of<Mutability, T>{  is_Mutability() = delete;  };
+	struct is_Mutability : std::is_base_of<Mutability, T>, No_Making{};
 
 
 	template< class T, bool = std::is_pointer<T>::value || std::is_reference<T>::value >
@@ -89,7 +89,7 @@ namespace sgm
 
 
 	template<class T>
-	struct is_immutable<T, false> : std::is_const<T>{  is_immutable() = delete;  };
+	struct is_immutable<T, false> : std::is_const<T>, No_Making{};
 
 
 	template<class T>
@@ -99,36 +99,19 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	//	same to std::bool_constant in C++17
+	template<bool B>
+	struct Boolean_type : std::integral_constant<bool, B>, No_Making{};
+
+	using False_t = Boolean_type<false>;
+	using True_t = Boolean_type<true>;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
 	template<class T1, class T2>
-	struct are_mutually_convertible : No_Making
-	{
-		enum : bool
-		{	value = std::is_convertible<T1, T2>::value && std::is_convertible<T2, T1>::value
-		};
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-	template<class T>
-	struct Has_Type : No_Making
-	{
-		template<class...> class among;
-
-		template<class Q, class...TYPES>
-		class among<Q, TYPES...>
-		{
-		public: 
-			enum : bool
-			{	value 
-				=	std::is_base_of<T, Q>::value || std::is_same<T, Q>::value 
-					?	true 
-					:	among<TYPES...>::value
-			};
-		};
-
-		template<> class among<> {  public: enum : bool{value = false}; };
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	struct are_mutually_convertible 
+	:	Boolean_type< std::is_convertible<T1, T2>::value && std::is_convertible<T2, T1>::value >
+	{};
 
 
 	template< template<class...> class FUNCTOR >
@@ -138,22 +121,36 @@ namespace sgm
 
 		template<class Q, class...TYPES>
 		struct for_all<Q, TYPES...>
-		{
-			enum : bool{value = FUNCTOR<Q>::value ? for_all<TYPES...>::value : false};
-		};
+		:	Boolean_type< FUNCTOR<Q>::value && for_all<TYPES...>::value >
+		{};
 
-		template<> struct for_all<>{  enum : bool{value = true};  };
+		template<> struct for_all<> : True_t{};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
+
 
 		template<class...> struct for_any;
 
 		template<class Q, class...TYPES>
 		struct for_any<Q, TYPES...>
-		{
-			enum : bool{value = FUNCTOR<Q>::value ? true : for_any<TYPES...>::value};
-		};
+		:	Boolean_type< FUNCTOR<Q>::value || for_any<TYPES...>::value >
+		{};
 
-		template<> struct for_any<>{  enum : bool{value = false};  };
+		template<> struct for_any<> : False_t{};
+	};
+
+
+	template<class T>
+	struct Has_Type : No_Making
+	{
+	private:
+		template<class Q>
+		struct _same_or_child 
+		:	Boolean_type< std::is_base_of<T, Q>::value || std::is_same<T, Q>::value >
+		{};
+
+	public:
+		template<class...TYPES>
+		struct among : Check_All<_same_or_child>::template for_any<TYPES...>{};
 	};
 	//========//========//========//========//=======#//========//========//========//========//===
 

@@ -424,7 +424,7 @@ private:
 	struct _td< Family<T, TYPES...>, ARGS... >
 	:	_td
 		<	Family<TYPES...>
-		,	ARGS..., _Decorated_t<  std::remove_reference_t< Elem_t<T> >, FS  >
+		,	ARGS..., _Decorated_t<  std::remove_reference_t< Deref_t<T> >, FS  >
 		>
 	{};
 

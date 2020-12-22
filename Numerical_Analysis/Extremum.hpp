@@ -278,46 +278,32 @@ private:
 
 public:
 	template
-	<	size_t NOF_ARGUMENT = ULLONG_MAX, class FUNC, class XITR, class Y, class XV, class X
+	<	size_t NOF_ARGUMENT = ULLONG_MAX
+	,	class FUNC, class XITR, class XV, class X
+	,	class Y = std::nullptr_t const
 	>
 	static bool search
 	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
-	,	XITR xitr_out, Y& yout
+	,	XITR xitr_out, Y& yout = nullptr
 	)
 	{
-		return
-		_search
-		(	_Apply
-			<	NOF_ARGUMENT == ULLONG_MAX
-				?	nof_Arguments_v<FUNC, X>
-				:	NOF_ARGUMENT
-			,	decltype(func), X
-			>
-			( std::forward<FUNC>(func) )
-		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
-		,	radius, epsilon, max_iteration, xitr_out, yout
-		);
-	}
+		auto constexpr NOF_ARGS 
+		=	NOF_ARGUMENT == ULLONG_MAX ? nof_Arguments_v<FUNC, X> : NOF_ARGUMENT;	
 
-
-	template<size_t NOF_ARGUMENT = ULLONG_MAX, class FUNC, class XITR, class XV, class X>
-	static bool search
-	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
-	,	XITR xitr_out
-	)
-	{
-		return
-		_search
-		(	_Apply
-			<	NOF_ARGUMENT == ULLONG_MAX
-				?	nof_Arguments_v<FUNC, X>
-				:	NOF_ARGUMENT
-			,	decltype(func), X
-			>
-			( std::forward<FUNC>(func) )
-		,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
-		,	radius, epsilon, max_iteration, xitr_out
-		);
+		if constexpr(std::is_null_pointer_v< std::decay_t<Y> >)
+			return
+			_search
+			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )
+			,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+			,	radius, epsilon, max_iteration, xitr_out
+			);			
+		else
+			return
+			_search
+			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )
+			,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+			,	radius, epsilon, max_iteration, xitr_out, yout
+			);
 	}
 
 

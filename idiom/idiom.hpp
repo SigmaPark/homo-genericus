@@ -178,6 +178,13 @@ namespace sgm
 		return {itr1, itr2};
 	}
 
+
+	template<class T1, class T2>
+	static bool R_Comp(T1 const t1, T2 const t2, T1 const epsilon)
+	{
+		return abs(t1 - t2) < abs(epsilon);
+	}
+
 }
 
 
