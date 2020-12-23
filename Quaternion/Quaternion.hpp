@@ -91,7 +91,7 @@ public:
 
 	auto operator-() const{  return Quaternion(-w(), -v());  }
 
-	auto sqrNorm() const{  return pow(w(), 2) + v().dot(v());  }
+	auto sqrNorm() const{  return w()*w() + v().dot(v());  }
 	auto norm() const{  return sqrt(sqrNorm());  }
 
 	auto normalized() const{  return *this / norm();  }
@@ -137,9 +137,9 @@ public:
 	}
 
 
-	auto normalize()-> Quaternion&{  return *this = normalized();  }
-	auto conjugate()-> Quaternion&{  return *this = conjugated();  }
-	auto inverse()-> Quaternion&{  return *this = inversed();  }
+	auto normalize() &-> Quaternion&{  return *this = normalized();  }
+	auto conjugate() &-> Quaternion&{  return *this = conjugated();  }
+	auto inverse() &-> Quaternion&{  return *this = inversed();  }
 
 	template<class Q>
 	auto operator+=(Q&& q)-> Quaternion&{  return *this = *this + _cast<Q>(q);  }
@@ -198,15 +198,17 @@ public:
 
 
 	UnitQuaternion() : _qtn(1){}
-	UnitQuaternion(UnitVector<elem_t, 3> const& u) : _qtn(0, u){}
-	UnitQuaternion(UnitVector<elem_t, 3>&& u) : _qtn( 0, std::move(u) ){}
 
-	template
-	<	class...ARGS
-	,	class 
-		=	std::enable_if_t< sizeof...(ARGS) != 0 && std::is_constructible_v<Qtn_t, ARGS...> >
-	>
-	UnitQuaternion(ARGS&&...args) : _qtn(  Qtn_t( std::forward<ARGS>(args...) ).normalize()  ){}
+	UnitQuaternion(elem_t w, elem_t x, elem_t y, elem_t z) 
+	:	_qtn( Qtn_t(w, x, y, z).normalized() )
+	{}
+
+	template<  class V, class = std::enable_if_t< MxTraits::is_mxiVector_v<V> >  >
+	UnitQuaternion(elem_t w, V&& v) : _qtn( Qtn_t( w, std::forward<V>(v) ).normalized() ){}
+
+
+	template<  class U, class = std::enable_if_t< MxTraits::is_UnitVector_v<U> >  >
+	UnitQuaternion(U&& u) : _qtn( 0, std::forward<U>(u) ){}
 
 
 	template
@@ -254,7 +256,7 @@ public:
 		return cpy;
 	}
 
-	auto conjugate()-> UnitQuaternion&
+	auto conjugate() &-> UnitQuaternion&
 	{
 		_qtn.conjugate();
 
@@ -262,7 +264,7 @@ public:
 	}
 
 	auto inversed() const{  return conjugated();  }
-	decltype(auto) inverse(){  return conjugate();  }
+	decltype(auto) inverse() &{  return conjugate();  }
 
 
 	template<class Q> 

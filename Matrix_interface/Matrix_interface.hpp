@@ -102,19 +102,6 @@ namespace sgm::mxi
 	template<class elem_t = float,MxSize_t N = MxSize::DYNAMIC>
 	class OrthonormalMatrix;
 
-
-	template<class> 
-	struct is_UnitVector;
-
-	template<class>
-	struct is_OrthonormalMatrix;
-
-	template<class T>
-	static auto constexpr is_UnitVector_v = is_UnitVector< std::decay_t<T> >::value;
-
-	template<class T>
-	static auto constexpr is_OrthonormalMatrix_v = is_OrthonormalMatrix< std::decay_t<T> >::value;
-
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -144,34 +131,46 @@ private:
 struct sgm::mxi::MxTraits : No_Making
 {
 private:
-	template<class> struct is_mxiMatrix : std::false_type{};
+	template<class> struct is_mxiMatrix : False_t{};
 
 	template<class T, MxSize_t R, MxSize_t C>
-	struct is_mxiMatrix< Matrix<T, R, C> > : std::true_type{};
+	struct is_mxiMatrix< Matrix<T, R, C> > : True_t{};
 
 
-	template<class> struct is_mxiVector : std::false_type{};
+	template<class> struct is_mxiVector : False_t{};
 
 	template<class T, MxSize_t S>
-	struct is_mxiVector< Vector<T, S> > : std::true_type{};
+	struct is_mxiVector< Vector<T, S> > : True_t{};
 
 
 	template<class> struct is_Dynamic{  SGM_COMPILE_FAILED(is not a Matrix);  };
 
 	template<class T, MxSize_t R, MxSize_t C>
-	struct is_Dynamic< Matrix<T, R, C> > : No_Making
-	{
-		static bool constexpr value = MxSize::is_dynamic_v<R> || MxSize::is_dynamic_v<C>;
-	};
+	struct is_Dynamic< Matrix<T, R, C> > 
+	:	Boolean_type< MxSize::is_dynamic_v<R> || MxSize::is_dynamic_v<C> >
+	{};
 
 
 	template<class> struct is_Static{  SGM_COMPILE_FAILED(is not a Matrix);  };
 
 	template<class T, MxSize_t R, MxSize_t C>
-	struct is_Static< Matrix<T, R, C> > : No_Making
-	{
-		static bool constexpr value = MxSize::is_static_v<R> && MxSize::is_static_v<C>;
-	};
+	struct is_Static< Matrix<T, R, C> > 
+	:	Boolean_type< MxSize::is_static_v<R>&& MxSize::is_static_v<C> >
+	{};
+
+
+	template<class>
+	struct is_UnitVector : False_t{};
+	
+	template<class T, size_t N>
+	struct is_UnitVector< sgm::mxi::UnitVector<T, N> > : True_t{};
+	
+	
+	template<class>
+	struct is_OrthonormalMatrix : False_t{};
+	
+	template<class T, size_t N>
+	struct is_OrthonormalMatrix< sgm::mxi::OrthonormalMatrix<T, N> > : True_t{};
 
 
 public:
@@ -196,6 +195,14 @@ public:
 			else if constexpr(is_mxiVector_v<M>)
 				return MxSize::is_temporary_v<M::VEC_SIZE>;
 		}();
+
+
+	template<class T>
+	static bool constexpr is_UnitVector_v = is_UnitVector< std::decay_t<T> >::value;
+
+	template<class T>
+	static bool constexpr is_OrthonormalMatrix_v = is_OrthonormalMatrix< std::decay_t<T> >::value;
+
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -601,7 +608,7 @@ public:
 	template<class Q>
 	UnitVector(Q&& q) : _vec(  _ctor( std::forward<Q>(q) )  )
 	{
-		if constexpr(!is_UnitVector_v<Q>)
+		if constexpr(!MxTraits::is_UnitVector_v<Q>)
 			_normalize_myself();
 	}
 
@@ -679,7 +686,7 @@ private:
 	template<class Q>
 	static decltype(auto) _ctor(Q&& q)
 	{
-		if constexpr(is_UnitVector_v<Q>)
+		if constexpr(MxTraits::is_UnitVector_v<Q>)
 			return q.vec();
 		else
 			return std::forward<Q>(q);
@@ -709,7 +716,7 @@ public:
 	template<class Q>
 	OrthonormalMatrix(Q&& q) : _mat(  _ctor( std::forward<Q>(q) )  )
 	{
-		if constexpr(!is_OrthonormalMatrix_v<Q>)
+		if constexpr(!MxTraits::is_OrthonormalMatrix_v<Q>)
 			_orthonormalize_myself();
 	}
 
@@ -800,7 +807,7 @@ private:
 	template<class Q>
 	static decltype(auto) _ctor(Q&& q)
 	{
-		if constexpr(is_UnitVector_v<Q>)
+		if constexpr(MxTraits::is_UnitVector_v<Q>)
 			return q.mat();
 		else
 			return std::forward<Q>(q);
@@ -813,23 +820,6 @@ template
 <	class S, class T, sgm::mxi::MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
 >
 static auto operator*(S s, sgm::mxi::OrthonormalMatrix<T, N> const& m){  return m * s;  }
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class>
-struct sgm::mxi::is_UnitVector : No_Making, std::false_type{};
-
-template<class T, size_t N>
-struct sgm::mxi::is_UnitVector< sgm::mxi::UnitVector<T, N> > : No_Making, std::true_type{};
-
-
-template<class>
-struct sgm::mxi::is_OrthonormalMatrix : No_Making, std::false_type{};
-
-template<class T, size_t N>
-struct sgm::mxi::is_OrthonormalMatrix< sgm::mxi::OrthonormalMatrix<T, N> >
-:	No_Making, std::true_type
-{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

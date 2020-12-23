@@ -4,6 +4,8 @@
 
 
 using sgm::mxi::Quaternion;
+using sgm::mxi::UnitQuaternion;
+
 using sgm::spec::is_True;
 using sgm::R_Comp;
 
@@ -84,6 +86,15 @@ void Test<4>()
 }
 
 
+template<>
+void Test<5>()
+{
+	UnitQuaternion 
+		uq1, uq2(1.f, 4.f, 0.f, -2.f),
+		uq4(0.2f, sgm::mxi::Vector<float, 3>{5, 2, 0});
+}
+
+
 #include "Test_Quaternion.hpp"
 #include <iostream>
 
@@ -96,6 +107,8 @@ void Test_sgm_Quaternion::test()
 		::Test<2>();
 		::Test<3>();
 		::Test<4>();
+
+		::Test<5>();
 
 
 		std::wcout << L"Quaternion Test Complete.\n";
