@@ -102,6 +102,10 @@ namespace sgm::mxi
 	template<class elem_t = float,MxSize_t N = MxSize::DYNAMIC>
 	class OrthonormalMatrix;
 
+
+	template<class U>
+	static decltype(auto) nonnormalized(U&& u);
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -606,7 +610,7 @@ public:
 
 
 	template<class Q>
-	UnitVector(Q&& q) : _vec(  _ctor( std::forward<Q>(q) )  )
+	UnitVector(Q&& q) : _vec(  nonnormalized( std::forward<Q>(q) )  )
 	{
 		if constexpr(!MxTraits::is_UnitVector_v<Q>)
 			_normalize_myself();
@@ -626,7 +630,7 @@ public:
 	>
 	auto operator=(Q&& q)-> UnitVector&
 	{
-		_vec = _ctor( std::forward<Q>(q) );
+		_vec = nonnormalized( std::forward<Q>(q) );
 
 		return _normalize_myself();
 	}
@@ -682,16 +686,6 @@ private:
 		return *this;
 	}
 
-
-	template<class Q>
-	static decltype(auto) _ctor(Q&& q)
-	{
-		if constexpr(MxTraits::is_UnitVector_v<Q>)
-			return q.vec();
-		else
-			return std::forward<Q>(q);
-	}
-
 };// end of class UnitVector
 
 
@@ -714,7 +708,7 @@ public:
 	OrthonormalMatrix(size_t dim) : _mat( Mat_t::identity(dim) ){}
 
 	template<class Q>
-	OrthonormalMatrix(Q&& q) : _mat(  _ctor( std::forward<Q>(q) )  )
+	OrthonormalMatrix(Q&& q) : _mat(  nonnormalized( std::forward<Q>(q) )  )
 	{
 		if constexpr(!MxTraits::is_OrthonormalMatrix_v<Q>)
 			_orthonormalize_myself();
@@ -734,7 +728,7 @@ public:
 	>
 	auto operator=(Q&& q)-> OrthonormalMatrix&
 	{
-		_mat = _ctor( std::forward<Q>(q) );
+		_mat = nonnormalized( std::forward<Q>(q) );
 
 		return _orthonormalize_myself();
 	}
@@ -803,16 +797,6 @@ private:
 		return *this;
 	}
 
-
-	template<class Q>
-	static decltype(auto) _ctor(Q&& q)
-	{
-		if constexpr(MxTraits::is_UnitVector_v<Q>)
-			return q.mat();
-		else
-			return std::forward<Q>(q);
-	}
-
 };// end of class OrthonormalMatrix
 
 
@@ -820,6 +804,19 @@ template
 <	class S, class T, sgm::mxi::MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
 >
 static auto operator*(S s, sgm::mxi::OrthonormalMatrix<T, N> const& m){  return m * s;  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class U>
+static decltype(auto) sgm::mxi::nonnormalized(U&& u)
+{
+	if constexpr(MxTraits::is_UnitVector_v<U>)
+		return u.vec();
+	else if constexpr(MxTraits::is_OrthonormalMatrix_v<U>)
+		return u.mat();
+	else
+		return std::forward<U>(u);
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

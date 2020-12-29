@@ -23,23 +23,11 @@ namespace sgm::mxi
 	template<class elem_t = float>
 	class Quaternion;
 
-
-	template<class>
-	struct _is_Quaternion;
-
-	template<class T>
-	static bool constexpr is_Quaternion_v = _is_Quaternion< std::decay_t<T> >::value;
-
-
 	template<class elem_t = float>
 	class UnitQuaternion;
 
-
-	template<class>
-	struct _is_UnitQuaternion;
-
-	template<class T>
-	static bool constexpr is_UnitQuaternion_v = _is_UnitQuaternion< std::decay_t<T> >::value;
+	SGM_USER_DEFINED_TYPE_CHECK(Quaternion, class T, T);
+	SGM_USER_DEFINED_TYPE_CHECK(UnitQuaternion, class T, T);
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -280,21 +268,6 @@ private:
 
 template<  class S, class T, class = std::enable_if_t< std::is_arithmetic_v<S> >  >
 static auto operator*(S s, sgm::mxi::UnitQuaternion<T> const& q){  return q * s;  }
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class>
-struct sgm::mxi::_is_Quaternion : False_t{};
-
-template<class T>
-struct sgm::mxi::_is_Quaternion< sgm::mxi::Quaternion<T> > : True_t{};
-
-
-template<class>
-struct sgm::mxi::_is_UnitQuaternion : False_t{};
-
-template<class T>
-struct sgm::mxi::_is_UnitQuaternion< sgm::mxi::UnitQuaternion<T> > : True_t{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

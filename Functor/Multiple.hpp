@@ -8,6 +8,7 @@
 #endif
 
 
+#include "..\Type_Analysis\Type_Analysis17.hpp"
 #include "..\Family\Family.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -26,11 +27,8 @@ namespace sgm::fp
 	static auto Forward_as_Multiple(ARGS&&...args);
 
 
-	template<class>
-	struct _is_Multiple;
+	SGM_USER_DEFINED_TYPE_CHECK(Multiple, class...TYPES, TYPES...);
 
-	template<class T>
-	static bool constexpr is_Multiple_v = _is_Multiple< std::decay_t<T> >::value;
 
 	template<class T, class...ARGS>
 	static decltype(auto) Make_Flat_MTP(T&& t, ARGS&&...args);
@@ -254,13 +252,6 @@ auto sgm::fp::Forward_as_Multiple(ARGS&&...args)
 	return Multiple<decltype(args)...>( static_cast<decltype(args)>(args)... );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class>
-struct sgm::fp::_is_Multiple : std::false_type, No_Making{};
-
-template<class...TYPES>
-struct sgm::fp::_is_Multiple< sgm::fp::Multiple<TYPES...> > : std::true_type, No_Making{};
 
 
 template<class T, class...ARGS>

@@ -10,6 +10,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
+#include "..\idiom\idiom.hpp"
 #include "Multiple.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -32,11 +33,9 @@ namespace sgm::fp
 	static inline auto const Dim = Dimension<D>();
 
 
-	template<class>
-	struct _is_Functor;
-
-	template<class FTR>
-	static bool constexpr is_Functor_v = _is_Functor< std::decay_t<FTR> >::value;
+	SGM_USER_DEFINED_TYPE_CHECK
+	(	Functor, SGM_MACROPACK(unsigned D, class T), SGM_MACROPACK(D, T) 
+	);
 
 
 	template<unsigned D, class F>
@@ -136,14 +135,6 @@ decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, _ARGS...>&& d)
 {
 	return ( std::forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
 }
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class>
-struct sgm::fp::_is_Functor : std::false_type, No_Making{};
-
-template<unsigned D, class F>
-struct sgm::fp::_is_Functor< sgm::fp::Functor<D, F> > : std::true_type, No_Making{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
