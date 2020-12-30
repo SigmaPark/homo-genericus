@@ -336,7 +336,15 @@ public:
 
 	
 	auto det() const{  return impl_t::det();  }
-	auto inversed() const{  return _Temporary::Mx(impl_t::inversed());  }
+
+	bool is_SqrMat() const{  return rows() == cols() && cols() != 0;  }
+
+	auto inversed() const
+	{
+		assert( is_SqrMat() && abs(det()) > elem_t(0.000001) );
+
+		return _Temporary::Mx(impl_t::inversed());  
+	}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -588,6 +596,43 @@ template
 <	class S, class T, sgm::mxi::MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
 >
 static auto operator*(S s, sgm::mxi::Vector<T, SIZE> const& v){  return v * s;  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class TM, class TV, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C, sgm::mxi::MxSize_t S>
+static auto operator*(sgm::mxi::Matrix<TM, R, C> const& mat, sgm::mxi::Vector<TV, S> const& vec)
+{
+	using namespace sgm::mxi;
+	using elem_t = typename Vector<TV, S>::elem_t;
+
+	auto constexpr DIM
+	=	MxSize::is_static_v<C>
+		?	C
+		:
+		MxSize::is_static_v<S>
+		?	S
+		:	MxSize::DYNAMIC;
+
+	return Vector<elem_t, DIM>(mat*vec.colVec());
+}
+
+
+template<class TM, class TV, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C, sgm::mxi::MxSize_t S>
+static auto operator*(sgm::mxi::Vector<TV, S> const& vec, sgm::mxi::Matrix<TM, R, C> const& mat)
+{
+	using namespace sgm::mxi;
+	using elem_t = typename Vector<TV, S>::elem_t;
+
+	auto constexpr DIM
+	=	MxSize::is_static_v<R>
+		?	R
+		:
+		MxSize::is_static_v<S>
+		?	S
+		:	MxSize::DYNAMIC;
+
+	return Vector<elem_t, DIM>(vec.rowVec()*mat);
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

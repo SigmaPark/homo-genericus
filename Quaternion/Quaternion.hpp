@@ -273,4 +273,4 @@ static auto operator*(S s, sgm::mxi::UnitQuaternion<T> const& q){  return q * s;
 
 #undef _READ_WRITE_MEMFUNC
 
-#endif
+#endif // end of #ifndef _SGM_MXI_QUATERNION_
