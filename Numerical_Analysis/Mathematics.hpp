@@ -3,6 +3,12 @@
 #ifndef _SGM_NUM_MATHEMATICS_
 #define _SGM_NUM_MATHEMATICS_
 
+
+#ifndef _USE_MATH_DEFINES
+	#define _USE_MATH_DEFINES_FOR_THE_FIRST
+	#define _USE_MATH_DEFINES
+#endif
+
 #include <cfloat>
 #include <cmath>
 #include <climits>
@@ -19,33 +25,36 @@ namespace sgm
 
 struct sgm::num::Constants
 {
+private:
+	template<class T, unsigned BASE, unsigned POWER>
+	struct _Exponential
+	{
+		static T constexpr value = BASE * _Exponential<T, BASE, POWER - 1>::value;
+	};
+
+	template<class T, unsigned BASE>
+	struct _Exponential<T, BASE, 0>{  static T constexpr value = 1;  };
+
+
+public:
 	Constants() = delete;
 
 
-	template<unsigned POWER>
-	struct Decimal{  enum{value = 10 * Decimal<POWER - 1>::value};  };
+	template<class T, unsigned POWER>
+	static auto constexpr Decimal_v = _Exponential<T, 10, POWER>::value;
 
-	template<>
-	struct Decimal<0>{  enum{value = 1};  };
-
-
-	//template<class T, unsigned TOLERANCE_LEVEL = 2>
-	//static auto Epsilon()-> T const&
-	//{
-	//	static T const ep 
-	//	=	static_cast<T>(Decimal<TOLERANCE_LEVEL>::value) * std::numeric_limits<T>::epsilon();
-
-	//	return ep;
-	//}
+	template<class T, unsigned POWER>
+	static auto constexpr Binary_v = _Exponential<T, 2, POWER>::value;
 
 
-	template<class T = float>
-	static auto Pi()-> T const&
-	{
-		static T const pi = 2 * acos( T(0) );
-
-		return pi;
-	}
+	template<class T>
+	static auto constexpr Pi_v = static_cast<T>(M_PI);
 };
 
+
+#ifdef _USE_MATH_DEFINES_FOR_THE_FIRST
+	#undef _USE_MATH_DEFINES
+	#undef _USE_MATH_DEFINES_FOR_THE_FIRST
 #endif
+
+#endif // end of #ifndef _SGM_NUM_MATHEMATICS_

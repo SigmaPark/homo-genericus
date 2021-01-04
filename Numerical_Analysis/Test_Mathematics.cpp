@@ -9,17 +9,11 @@ using namespace sgm;
 static void Test01()
 {
 	spec::All_True
-	<	num::Constants::Decimal<0>::value == 1
-	,	num::Constants::Decimal<1>::value == 10
-	,	num::Constants::Decimal<2>::value == 100
-	,	num::Constants::Decimal<3>::value == 1000
+	<	num::Constants::Decimal_v<float, 0> == 1
+	,	num::Constants::Decimal_v<float, 1> == 10
+	,	num::Constants::Decimal_v<float, 2> == 100
+	,	num::Constants::Decimal_v<float, 3> == 1000
 	>();
-
-
-	//spec::is_True
-	//(	FLT_EPSILON == num::Constants::Epsilon<float, 0>() 
-	//,	DBL_EPSILON == num::Constants::Epsilon<double, 0>()
-	//);
 }
 
 
@@ -59,7 +53,7 @@ static void Test02()
 static void Test03()
 {
 	auto sine_f = [](double x)-> double{  return sin(x);  };
-	double const threshold = 1e-5, &pi = num::Constants::Pi<double>();
+	double const threshold = 1e-5, &pi = num::Constants::Pi_v<double>;
 
 	num::XY_Pair<double, double> const
 		answer{pi/2, sin(pi/2)},

@@ -284,7 +284,7 @@ public:
 	>
 	static bool search
 	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
-	,	XITR xitr_out, Y& yout = nullptr
+	,	XITR xitr_out, [[maybe_unused]]Y& yout = nullptr
 	)
 	{
 		auto constexpr NOF_ARGS 
