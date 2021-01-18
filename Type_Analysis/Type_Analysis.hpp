@@ -7,6 +7,7 @@
 	#error C++11 or higher version of language support is required.
 #endif
 
+
 #include <type_traits>
 
 namespace sgm

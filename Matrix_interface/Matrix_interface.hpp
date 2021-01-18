@@ -106,6 +106,12 @@ namespace sgm::mxi
 	template<class U>
 	static decltype(auto) nonnormalized(U&& u);
 
+
+	template<class Q>
+	static decltype(auto) regard_normalized(Q&&);
+
+	enum class _PrivateTag{};
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -643,6 +649,10 @@ class sgm::mxi::UnitVector
 
 
 public:
+	using elem_t = typename Vec_t::elem_t;
+	static auto constexpr VEC_SIZE = S;
+
+
 	UnitVector() : _vec(Vec_t::zero())
 	{
 		static_assert(MxSize::is_static_v<S>);
@@ -731,6 +741,13 @@ private:
 		return *this;
 	}
 
+
+	template<class Q>
+	friend static decltype(auto) sgm::mxi::regard_normalized(Q&&);
+
+	template<class VEC>
+	UnitVector(VEC&& v, _PrivateTag) : _vec( std::forward<VEC>(v) ){}
+
 };// end of class UnitVector
 
 
@@ -749,6 +766,10 @@ class sgm::mxi::OrthonormalMatrix
 
 
 public:
+	using elem_t = typename Mat_t::elem_t;
+	static auto constexpr MAT_SIZE = N;
+
+
 	OrthonormalMatrix() : _mat(Mat_t::identity()){  static_assert(MxSize::is_static_v<N>);  }
 	OrthonormalMatrix(size_t dim) : _mat( Mat_t::identity(dim) ){}
 
@@ -842,6 +863,14 @@ private:
 		return *this;
 	}
 
+
+	template<class Q>
+	friend static decltype(auto) sgm::mxi::regard_normalized(Q&&);
+
+	template<class MAT>
+	OrthonormalMatrix(MAT&& m, _PrivateTag) : _mat( std::forward<MAT>(m) ){}
+
+
 };// end of class OrthonormalMatrix
 
 
@@ -853,7 +882,7 @@ static auto operator*(S s, sgm::mxi::OrthonormalMatrix<T, N> const& m){  return 
 
 
 template<class U>
-static decltype(auto) sgm::mxi::nonnormalized(U&& u)
+decltype(auto) sgm::mxi::nonnormalized(U&& u)
 {
 	if constexpr(MxTraits::is_UnitVector_v<U>)
 		return u.vec();
@@ -861,6 +890,18 @@ static decltype(auto) sgm::mxi::nonnormalized(U&& u)
 		return u.mat();
 	else
 		return std::forward<U>(u);
+}
+
+
+template<class Q>
+decltype(auto) sgm::mxi::regard_normalized(Q&& q)
+{
+	if constexpr(MxTraits::is_mxiVector_v<Q>)
+		return UnitVector<typename Q::elem_t, Q::VEC_SIZE>( std::forward<Q>(q), _PrivateTag{} );
+	else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
+		return
+		OrthonormalMatrix<typename Q::elem_t, Q::MAT_SIZE>( std::forward<Q>(q), _PrivateTag{} );
+	else SGM_COMPILE_FAILED(no suitable method was found);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

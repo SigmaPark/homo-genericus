@@ -79,7 +79,7 @@ struct sgm::mxi::AffineTransform
 			return
 			(*this)
 			(	q.cols() == D
-				?	AffineTransform{Matrix<T, D< D>(q), Vector<T, D>::zero()}
+				?	AffineTransform{Matrix<T, D, D>(q), Vector<T, D>::zero()}
 				:	AffineTransform
 					{	Matrix<T, D, D>( q.block(0, 0, D, D) )
 					,	Vector<T, D>( q.block(0, D, D, 1) )
@@ -113,7 +113,7 @@ public:
 
 	
 	Rotation(_basis_t const& basis) : _basis(basis){}
-	Rotation(_basis_t&& basis) : _basis( std::move(basis) ){}
+	Rotation(_basis_t&& basis) noexcept : _basis( std::move(basis) ){}
 
 	Rotation() : Rotation(identity()){}
 
@@ -183,10 +183,12 @@ public:
 		T const c = cos(_angle), s = sin(_angle);
 
 		return 
-		Matrix<T, 2>
-		{	c, -s
-		,	s, c
-		};
+		regard_normalized
+		(	Matrix<T, 2>
+			{	c, -s
+			,	s, c
+			}
+		);
 	}
 
 	auto basis(index_t const idx) const-> UnitVector<T, 2>{  return basis().col(idx);  }
@@ -221,15 +223,39 @@ public:
 
 
 	Rotation(_uqtn_t const& uqtn) : _uqtn(uqtn){}
-	Rotation(_uqtn_t&& uqtn) : _uqtn( std::move(uqtn) ){}
+	Rotation(_uqtn_t&& uqtn) noexcept : _uqtn( std::move(uqtn) ){}
 
 	Rotation() : Rotation(identity()){}
 
-	Rotation(_basis_t const& basis);
+	Rotation(_basis_t const& basis) : Rotation( _Basis_to_Uqtn(basis) ){};
 	
-	Rotation(T const alpha, T const beta, T const gamma);
-	Rotation(T const theta, UnitVector<T, 3> const& axis);
+	Rotation(T const alpha, T const beta, T const gamma)
+	:	Rotation( _Euler_to_Uqtn(alpha, beta, gamma) )
+	{}
 
+	Rotation(T const theta, UnitVector<T, 3> const& axis)
+	:	Rotation( _Spin_to_Uqtn(theta, axis) )
+	{}
+
+
+	auto uqtn() const-> _uqtn_t const&{  return _uqtn;  }
+
+	auto basis() const-> _basis_t
+	{
+		T const
+			&w = _uqtn.w(), &x = _uqtn.x(), &y = _uqtn.y(), &z = _uqtn.z(),
+			ww = w*w, xx = x*x, yy = y*y, zz = z*z,
+			xy = x*y, yz = y*z, zx = z*x, wx = w*x, wy = w*y, wz = w*z;
+
+		return
+		regard_normalized
+		(	Matrix<T, 3, 3>
+			{	ww + xx - yy - zz, T(2)*(xy - wz), T(2)*(zx + wy)
+			,	T(2)*(xy + wz), ww - xx + yy - zz, T(2)*(yz - wx)
+			,	T(2)*(zx - wy), T(2)*(yz + wx), ww - xx - yy + zz
+			}
+		);
+	}
 
 
 	static auto identity()-> Rotation const&
@@ -242,6 +268,44 @@ public:
 
 private:
 	_uqtn_t _uqtn;
+
+
+	static auto _Euler_to_Uqtn(T const alpha, T const beta, T const gamma)-> _uqtn_t
+	{
+		T const
+			ha = T(.5)*alpha, hb = T(.5)*beta, hg = T(.5)*gamma,
+			ca = cos(ha), cb = cos(hb), cg = cos(hg),
+			sa = sin(ha), sb = sin(hb), sg = sin(hg);
+
+		return
+		regard_normalized
+		(	Quaternion<T>
+			{	ca*cb*cg + sa*sb*sg
+			,	ca*cb*sg - sa*sb*cg
+			,	ca*sb*cg + sa*cb*sg
+			,	sa*cb*cg - ca*sb*sg
+			}
+		);
+	}
+
+
+	static auto _Basis_to_Uqtn(_basis_t const& m)-> _uqtn_t
+	{
+		T const _2w = sqrt( T(1) + m(0, 0) + m(1, 1) + m(2, 2) );
+
+		Vector<T, 3> const _2v
+		=	Vector<T, 3>{m(2, 1) - m(1, 2), m(0, 2) - m(2, 0), m(1, 0) - m(0, 1)} / _2w;
+
+		return regard_normalized( T(.5)*Quaternion<T>{_2w, _2v} );
+	}
+
+
+	static auto _Spin_to_Uqtn(T const th, UnitVector<T, 3> const& u)-> _uqtn_t
+	{
+		T const hth = T(.5)*th;
+
+		return regard_normalized( Quaternion<T>{cos(hth), Vector<T, 3>( sin(hth)*u )} );
+	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

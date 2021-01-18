@@ -3,10 +3,6 @@
 #ifndef _SGM_MULTIPLE_
 #define _SGM_MULTIPLE_
 
-#if defined(_MSC_VER) && _MSC_VER < 1914
-	#error C++17 or higher version language support is required.
-#endif
-
 
 #include "..\Type_Analysis\Type_Analysis17.hpp"
 #include "..\Family\Family.hpp"

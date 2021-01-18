@@ -29,6 +29,10 @@ namespace sgm::mxi
 	SGM_USER_DEFINED_TYPE_CHECK(Quaternion, class T, T);
 	SGM_USER_DEFINED_TYPE_CHECK(UnitQuaternion, class T, T);
 
+
+	template<class Q>
+	static auto regard_normalized(Quaternion<Q> const&)-> UnitQuaternion<Q>;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -263,11 +267,25 @@ public:
 
 private:
 	Qtn_t _qtn;
+
+
+	template<class Q>
+	friend static auto sgm::mxi::regard_normalized(Quaternion<Q> const&)-> UnitQuaternion<Q>;
+
+	UnitQuaternion(Qtn_t const& qtn, _PrivateTag) : _qtn(qtn){}
+
 };
 
 
 template<  class S, class T, class = std::enable_if_t< std::is_arithmetic_v<S> >  >
 static auto operator*(S s, sgm::mxi::UnitQuaternion<T> const& q){  return q * s;  }
+
+
+template<class Q>
+static auto sgm::mxi::regard_normalized(Quaternion<Q> const& qtn)-> UnitQuaternion<Q>
+{
+	return UnitQuaternion<Q>(qtn, _PrivateTag{});
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
