@@ -11,7 +11,7 @@ namespace sgm::mxi
 {
 	
 	template<class elem_t, unsigned DIMENSION>
-	struct AffineTransform;
+	class AffineTransform;
 
 	SGM_USER_DEFINED_TYPE_CHECK
 	(	AffineTransform
@@ -31,7 +31,7 @@ namespace sgm::mxi
 
 
 	template<class elem_t, unsigned DIMENSION>
-	struct RigidBodyTransform;
+	class RigidBodyTransform;
 
 	SGM_USER_DEFINED_TYPE_CHECK
 	(	RigidBodyTransform
@@ -41,7 +41,7 @@ namespace sgm::mxi
 
 
 	template<class elem_t, unsigned DIMENSION>
-	struct ScalableBodyTransform;
+	class ScalableBodyTransform;
 
 	SGM_USER_DEFINED_TYPE_CHECK
 	(	ScalableBodyTransform
@@ -54,51 +54,6 @@ namespace sgm::mxi
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class T, unsigned D>
-struct sgm::mxi::AffineTransform
-{
-	using elem_t = std::decay_t<T>;
-	static auto constexpr DIMENSION = D;
-
-
-	Matrix<T, D, D> mat = Matrix<T, D, D>::identity();
-	Vector<T, D> vec = Vector<T, D>::zero();
-
-
-	template<class Q>
-	auto operator()(Q const& q) const
-	{
-		if constexpr(MxTraits::is_mxiVector_v<Q>)
-			return decltype(vec)(mat*q + vec);
-		else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
-		{
-			assert( q.is_SqrMat() && (q.cols() == D || q.cols() == D + 1) );
-
-			return
-			(*this)
-			(	q.cols() == D
-				?	AffineTransform{Matrix<T, D, D>(q), Vector<T, D>::zero()}
-				:	AffineTransform
-					{	Matrix<T, D, D>( q.block(0, 0, D, D) )
-					,	Vector<T, D>( q.block(0, D, D, 1) )
-					}
-			);
-		}
-		else if constexpr(is_AffineTransform_v<Q>)
-			return AffineTransform{q.mat*mat, q.mat*vec + q.vec};
-	}
-
-
-	auto inversed() const-> AffineTransform
-	{
-		decltype(mat) const im = mat.inversed();
-
-		return{im, -im*vec};
-	}
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T, unsigned D>
@@ -135,7 +90,6 @@ public:
 
 
 	auto basis() const-> _basis_t const&{  return _basis;  }
-	auto basis(index_t const idx) const-> UnitVector<T, D>{  return _basis.col(idx);  }
 
 
 	static auto identity()-> Rotation const&
@@ -190,8 +144,6 @@ public:
 			}
 		);
 	}
-
-	auto basis(index_t const idx) const-> UnitVector<T, 2>{  return basis().col(idx);  }
 
 
 	static auto identity()-> Rotation const&
@@ -310,6 +262,91 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class T, unsigned D>
+class sgm::mxi::AffineTransform
+{
+public:
+	using elem_t = std::decay_t<T>;
+	static auto constexpr DIMENSION = D;
+
+
+	AffineTransform
+	(	Matrix<T, D, D> const& mat = Matrix<T, D, D>::identity()
+	,	Vector<T, D> const& vec = Vector<T, D>::zero()
+	)
+	:	_mat(mat), _vec(vec)
+	{}
+
+
+	auto partM() const-> Matrix<T, D, D> const&{  return _mat;  }
+	auto partM()-> Matrix<T, D, D>&{  return _mat;  }
+	auto partV() const-> Vector<T, D> const&{  return _vec;  }
+	auto partV()-> Vector<T, D>&{  return _vec;  }
+
+
+	template<class Q>
+	auto operator()(Q const& q) const
+	{
+		if constexpr(MxTraits::is_mxiMatrix_v<Q>)
+		{
+			assert( q.is_SqrMat() && (q.cols() == D || q.cols() == D + 1) );
+
+			return
+			(*this)
+			(	q.cols() == D
+				?	AffineTransform( Matrix<T, D, D>(q) )
+				:	AffineTransform
+					(	Matrix<T, D, D>( q.block(0, 0, D, D) )
+					,	Vector<T, D>( q.block(0, D, D, 1) )
+					)
+			);
+		}
+		else if constexpr(is_AffineTransform_v<Q>)
+			return AffineTransform(q.partM()*partM(), q.partM()*partV() + q.partV());
+	}
+
+
+	auto inversed() const-> AffineTransform
+	{
+		Matrix<T, D, D> const im = partM().inversed();
+
+		return{im, -im*partV()};
+	}
+
+
+	auto transfer(Vector<T, D> const& q) const{  return Vector<T, D>(partM()*q + partV());  }
+
+
+	static auto identity()-> AffineTransform const&
+	{
+		static AffineTransform const res;
+
+		return res;
+	}
+
+
+private:
+	Matrix<T, D, D> _mat;
+	Vector<T, D> _vec;	
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T, unsigned D>
+class sgm::mxi::RigidBodyTransform
+{
+public:
+	using elem_t = std::decay_t<T>;
+	static auto constexpr DIMENSION = D;	
+
+	
+private:
+	Rotation<T, 3> _uqtn;
+	Vector<T, D> _vec;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 struct sgm::mxi::Affine : No_Making
 {
 
@@ -328,3 +365,11 @@ struct sgm::mxi::Affine : No_Making
 
 
 #endif
+
+
+
+#if 0 
+
+tr1(tr2).rotate(angle, uvec).translate()
+
+#endif 
