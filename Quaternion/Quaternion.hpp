@@ -33,6 +33,9 @@ namespace sgm::mxi
 	template<class Q>
 	static auto regard_normalized(Quaternion<Q> const&)-> UnitQuaternion<Q>;
 
+	template<class Q>
+	static auto regard_normalized(Quaternion<Q>&&) noexcept-> UnitQuaternion<Q>;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -272,7 +275,14 @@ private:
 	template<class Q>
 	friend static auto sgm::mxi::regard_normalized(Quaternion<Q> const&)-> UnitQuaternion<Q>;
 
-	UnitQuaternion(Qtn_t const& qtn, _PrivateTag) : _qtn(qtn){}
+	template<class Q>
+	friend static auto sgm::mxi::regard_normalized(Quaternion<Q>&&) noexcept-> UnitQuaternion<Q>;
+
+
+	template<class Q>
+	UnitQuaternion(Q&& qtn, _PrivateTag) noexcept(std::is_rvalue_reference_v<Q&&>)
+	:	_qtn( std::forward<Q>(qtn) )
+	{}
 
 };
 
@@ -285,6 +295,12 @@ template<class Q>
 static auto sgm::mxi::regard_normalized(Quaternion<Q> const& qtn)-> UnitQuaternion<Q>
 {
 	return UnitQuaternion<Q>(qtn, _PrivateTag{});
+}
+
+template<class Q>
+static auto sgm::mxi::regard_normalized(Quaternion<Q>&& qtn) noexcept-> UnitQuaternion<Q>
+{
+	return UnitQuaternion<Q>( std::move(qtn), _PrivateTag{} );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

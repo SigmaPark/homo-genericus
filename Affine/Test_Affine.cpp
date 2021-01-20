@@ -6,7 +6,7 @@ using namespace sgm;
 
 using 
 	mxi::Vector, mxi::Matrix,
-	mxi::AffineTransform, mxi::Affine,
+	mxi::AffineTransform, mxi::RigidBodyTransform,
 	spec::is_True;
 
 
@@ -39,21 +39,35 @@ void Test<1>()
 	);
 
 	is_True
-	(	is_same_pos(	aft.transfer(Vector<float>{1, 0, 0}), Vector<float>{0, 2, 0}  )
-	&&	is_same_pos
-		(	aft.inversed().transfer(Vector<float>{0, 2, 0}), Vector<float>{1, 0, 0}  
-		)
-	&&	is_same_pos
-		(	Affine::inverse(aft).transfer(Vector<float>{0, 2, 0}), Vector<float>{1, 0, 0}  
-		)
+	(	is_same_pos( aft.transfer(Vector<float>{1, 0, 0}), Vector<float>{0, 2, 0} )
+	&&	is_same_pos( aft.inversed().transfer(Vector<float>{0, 2, 0}), Vector<float>{1, 0, 0} )
 	);
 
 	AffineTransform<float, 3> aft2;
 
 	is_True
-	(	is_same_pos(  aft2.transfer(Vector<float>{1, 0, 0}), Vector<float>{1, 0, 0}  )
-	&&	is_same_pos(  aft2.transfer(Vector<float>{1, 1, -1}), Vector<float>{1, 1, -1}  )
-	&&	is_same_pos(  aft2(aft).transfer(Vector<float>{1, 0, 0}), Vector<float>{0, 2, 0}  )
+	(	is_same_pos( aft2.transfer(Vector<float>{1, 0, 0}), Vector<float>{1, 0, 0} )
+	&&	is_same_pos( aft2.transfer(Vector<float>{1, 1, -1}), Vector<float>{1, 1, -1} )
+	&&	is_same_pos( aft2.affine(aft).transfer(Vector<float>{1, 0, 0}), Vector<float>{0, 2, 0} )
+	&&	is_same_pos
+		(	aft2.affine(aft.partM(), aft.partV()).transfer(Vector<float>{1, 0, 0})
+		,	Vector<float>{0, 2, 0}
+		)
+	);
+}
+
+
+template<>
+void Test<2>()
+{
+	RigidBodyTransform<float, 3> rbt1
+	(	mxi::Rotation<float, 3>( acos(0.f), mxi::UnitVector<float, 3>{0, 0, 1} )
+	);
+
+	AffineTransform<float, 3> aft1 = rbt1;
+
+	is_True
+	(	is_same_pos( aft1.transfer(Vector<float>{1, 0, 0}), Vector<float, 3>{0, 1, 0} )
 	);
 }
 
@@ -67,6 +81,7 @@ void Test_sgm_Affine::test()
 	try
 	{
 		::Test<1>();
+		::Test<2>();
 
 		std::wcout << L"Affine Test Complete.\n";
 	}

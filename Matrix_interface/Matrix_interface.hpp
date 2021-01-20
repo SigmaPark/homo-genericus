@@ -900,7 +900,7 @@ decltype(auto) sgm::mxi::regard_normalized(Q&& q)
 		return UnitVector<typename Q::elem_t, Q::VEC_SIZE>( std::forward<Q>(q), _PrivateTag{} );
 	else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 		return
-		OrthonormalMatrix<typename Q::elem_t, Q::MAT_SIZE>( std::forward<Q>(q), _PrivateTag{} );
+		OrthonormalMatrix<typename Q::elem_t, Q::COL_SIZE>( std::forward<Q>(q), _PrivateTag{} );
 	else SGM_COMPILE_FAILED(no suitable method was found);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

@@ -50,7 +50,7 @@ namespace sgm::mxi
 	);
 
 	
-	struct Affine;
+	//struct Affine;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -270,11 +270,14 @@ public:
 	static auto constexpr DIMENSION = D;
 
 
-	AffineTransform
-	(	Matrix<T, D, D> const& mat = Matrix<T, D, D>::identity()
-	,	Vector<T, D> const& vec = Vector<T, D>::zero()
-	)
-	:	_mat(mat), _vec(vec)
+	template
+	<	class MAT = Matrix<T, D, D>, class VEC = Vector<T, D> 
+	,	class 
+		=	std::enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
+	>
+	AffineTransform(MAT&& mat = MAT::identity(), VEC&& vec = VEC::zero())
+	noexcept( std::is_rvalue_reference_v<MAT&&> && std::is_rvalue_reference_v<VEC&&> )
+	:	_mat( std::forward<MAT>(mat) ), _vec( std::forward<VEC>(vec) )
 	{}
 
 
@@ -285,14 +288,14 @@ public:
 
 
 	template<class Q>
-	auto operator()(Q const& q) const
+	auto affine(Q const& q) const
 	{
 		if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 		{
 			assert( q.is_SqrMat() && (q.cols() == D || q.cols() == D + 1) );
 
 			return
-			(*this)
+			affine
 			(	q.cols() == D
 				?	AffineTransform( Matrix<T, D, D>(q) )
 				:	AffineTransform
@@ -303,6 +306,18 @@ public:
 		}
 		else if constexpr(is_AffineTransform_v<Q>)
 			return AffineTransform(q.partM()*partM(), q.partM()*partV() + q.partV());
+		else if constexpr(std::is_convertible_v<Q, AffineTransform>)
+			return affine( static_cast<AffineTransform>(q) );
+	}
+
+	template
+	<	class MAT, class VEC
+	,	class 
+		=	std::enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
+	>
+	auto affine(MAT&& mat, VEC&& vec) const
+	{
+		return affine(  AffineTransform( std::forward<MAT>(mat), std::forward<VEC>(vec) )  );
 	}
 
 
@@ -339,29 +354,46 @@ public:
 	using elem_t = std::decay_t<T>;
 	static auto constexpr DIMENSION = D;	
 
+
+	template< class ROT = Rotation<T, D>, class VEC = Vector<T, D> >
+	RigidBodyTransform(ROT&& rot = {}, VEC&& vec = VEC::zero()) 
+	noexcept( std::is_rvalue_reference_v<ROT&&> && std::is_rvalue_reference_v<VEC&&> )
+	:	_rot( std::forward<ROT>(rot) ), _vec(std::forward<VEC>(vec) )
+	{}
+
+
+	operator AffineTransform<T, D>() const{  return {_rot.basis().mat(), _vec};  }
+
+
+	//auto partR() const-> Rotation<T, D> const&{  return _rot;  }
+	//auto partR()-> Rotation<T, D>&{  return _rot;  }
+	auto partV() const-> Vector<T, D> const&{  return _vec;  }
+	auto partV()-> Vector<T, D>&{  return _vec;  }
+
+
 	
 private:
-	Rotation<T, 3> _uqtn;
+	Rotation<T, D> _rot;
 	Vector<T, D> _vec;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-struct sgm::mxi::Affine : No_Making
-{
-
-	template<class T, unsigned D>
-	static auto inverse(AffineTransform<T, D> const& aft){  return aft.inversed();  }
-
-	template<class T, unsigned D>
-	static auto identity()-> AffineTransform<T, D> const&
-	{
-		static AffineTransform<T, D> const res;
-		
-		return res;
-	}
-
-};
+//struct sgm::mxi::Affine : No_Making
+//{
+//
+//	template<class T, unsigned D>
+//	static auto inverse(AffineTransform<T, D> const& aft){  return aft.inversed();  }
+//
+//	template<class T, unsigned D>
+//	static auto identity()-> AffineTransform<T, D> const&
+//	{
+//		static AffineTransform<T, D> const res;
+//		
+//		return res;
+//	}
+//
+//};
 
 
 #endif
