@@ -8,6 +8,7 @@
 #define _SGM_FAMILY_
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
+#include <type_traits>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

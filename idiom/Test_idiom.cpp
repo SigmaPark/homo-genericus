@@ -8,7 +8,6 @@ using spec::is_True;
 
 static void Test01()
 {
-	Freezer<int> fz(5);
 }
 
 

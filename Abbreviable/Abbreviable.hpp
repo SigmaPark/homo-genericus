@@ -16,7 +16,7 @@
 	<	class T, class M	\
 	,	bool IS_NESTED_PROXY = is_##PROXYNAME<T>::value	\
 	,	bool IS_IMMUTABLE = is_immutable<T>::value	\
-	,	bool IS_REFERENCE = std::is_reference<T>::value	\
+	,	bool IS_REFERENCE = isReference<T>::value	\
 	>	\
 	struct PROXYNAME##_T_Helper;	\
 	\
@@ -28,15 +28,11 @@
 	template<class T, class M, bool IS_NESTED_PROXY, bool IS_IMMUTABLE, bool IS_REFERENCE>	\
 	struct PROXYNAME##_T_Helper		\
 	{	\
-	private:	\
-		template<class Q>	\
-		using _No_RC_t = std::remove_const_t< std::remove_reference_t<Q> >;	\
-		\
 	public:	\
 		using Parent_t	\
-		=	std::conditional_t	\
+		=	Selective_t	\
 			<	IS_NESTED_PROXY	\
-			,	std::conditional_t	\
+			,	Selective_t	\
 				<	IS_IMMUTABLE	\
 				,	PROXYNAME##_t< typename is_##PROXYNAME<T>::Q_type, invar >	\
 				,	PROXYNAME##_t	\
@@ -44,13 +40,13 @@
 					,	typename is_##PROXYNAME<T>::M_type	\
 					>	\
 				>	\
-			,	std::conditional_t	\
+			,	Selective_t	\
 				<	IS_IMMUTABLE	\
-				,	PROXYNAME##_t< _No_RC_t<T>, invar >	\
-				,	std::conditional_t	\
+				,	PROXYNAME##_t< Decay_t<T>, invar >	\
+				,	Selective_t	\
 					<	IS_REFERENCE	\
-					,	PROXYNAME##_t< _No_RC_t<T>, M >	\
-					,	std::false_type	\
+					,	PROXYNAME##_t< Decay_t<T>, M >	\
+					,	False_t	\
 					>	\
 				>	\
 			>;	\
@@ -63,27 +59,25 @@
 	struct is_##PROXYNAME	\
 	{	\
 	private:	\
-		template<class Q> struct Eval : std::false_type	\
+		template<class Q> struct Eval : False_t	\
 		{	\
 			using Q_type = Q;	\
 			using M_type = void;	\
 		};	\
 		\
 		template<class Q, class M, class...TYPES>		\
-		struct Eval< PROXYNAME##_t<Q, M, TYPES...> > : std::true_type	\
+		struct Eval< PROXYNAME##_t<Q, M, TYPES...> > : True_t	\
 		{	\
 			using Q_type = Q;	\
 			using M_type = M;	\
 		};	\
 		\
-		template<class Q>	\
-		using _No_RC_t = std::remove_const_t< std::remove_reference_t<Q> >;	\
 		\
 	public: \
-		enum : bool{  value = Eval< _No_RC_t<T> >::value  };	\
+		enum : bool{  value = Eval< Decay_t<T> >::value  };	\
 		\
-		using Q_type = typename Eval< _No_RC_t<T> >::Q_type;	\
-		using M_type = typename Eval< _No_RC_t<T> >::M_type;	\
+		using Q_type = typename Eval< Decay_t<T> >::Q_type;	\
+		using M_type = typename Eval< Decay_t<T> >::M_type;	\
 	};	\
 	\
 	\
@@ -94,7 +88,7 @@
 	public:		\
 		template<class...QS>	\
 		PROXYNAME##_t(QS&&...qs) \
-		:	PROXYNAME##_T_Helper<T, M, BS...>::Parent_t( std::forward<QS>(qs)... ){}	\
+		:	PROXYNAME##_T_Helper<T, M, BS...>::Parent_t( Forward<QS>(qs)... ){}	\
 	};	\
 	\
 	\
@@ -102,17 +96,12 @@
 	struct is_const##PROXYNAME	\
 	{	\
 	private:	\
-		\
-		template<class Q>	\
-		using _is_immutable \
-		=	std::is_const<  std::remove_pointer_t< std::remove_reference_t<Q> >  >;	\
-		\
 		template<class Q>	\
 		struct PROXYNAME##Mutability	\
 		{	\
 			using type	\
-			=	std::conditional_t	\
-				<	_is_immutable<Q>::value	 && is_##PROXYNAME<Q>::value	\
+			=	Selective_t	\
+				<	is_immutable<Q>::value	 && is_##PROXYNAME<Q>::value	\
 				,	invar, void		\
 				>;	\
 		};	\
@@ -123,12 +112,12 @@
 		>	\
 		{	\
 			using type	\
-			=	std::conditional_t	\
-				<	std::is_same<M, invar>::value || _is_immutable<Q>::value	\
+			=	Selective_t	\
+				<	isSame<M, invar>::value || is_immutable<Q>::value	\
 				,	invar	\
-				,	std::conditional_t		\
+				,	Selective_t		\
 					<	is_##PROXYNAME<Q>::value	\
-					,	typename PROXYNAME##Mutability< std::remove_reference_t<Q> >::type	\
+					,	typename PROXYNAME##Mutability< Referenceless_t<Q> >::type	\
 					,	Var	\
 					>	\
 				>;	\
@@ -138,8 +127,8 @@
 	public:	\
 		enum : bool	\
 		{	value	\
-			=	std::is_same	\
-				<	typename PROXYNAME##Mutability< std::remove_reference_t<T> >::type	\
+			=	isSame	\
+				<	typename PROXYNAME##Mutability< Referenceless_t<T> >::type	\
 				,	invar	\
 				>::	value	\
 		};	\
@@ -153,14 +142,6 @@
 	:	is_const##PROXYNAME< PROXYNAME##_t<T, ARGS...> >	\
 	{}
 	
-
-	//
-	//namespace std
-	//{
-	//	template<class T, class...ARGS>
-	//	struct decay< PROXYNAME##_t<T, ARGS...> > : decay<T>{}
-	//}
-
 
 #else
 	#error SGM_ABBREVIABLE_PROXY was already defined somewhere else.

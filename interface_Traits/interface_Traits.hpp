@@ -4,13 +4,15 @@
 #define _SGM_INTERFACE_TRAITS_
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
+#include <type_traits>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm
 {
 
-	template<class...> using Void_t = void;
+	template<class...ARGS> struct isConvertible : std::is_convertible<ARGS...>{};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 #ifndef SGM_INTERFACE_CHECK
@@ -21,19 +23,14 @@ namespace sgm
 		private:	\
 			template<class _QCLASS>	\
 			static auto _calc(_QCLASS*)	\
-			->	typename std::is_convertible	\
-				<	std::add_pointer_t	\
-					<	std::decay_t<decltype(__VA_ARGS__)>	\
-					>	\
-				,	void*	\
-				>::	type;	\
+			->	typename std::is_convertible< Decay_t<decltype(__VA_ARGS__)>*, void* >::type;	\
 		\
-			template<class> static auto _calc(...)-> std::false_type;	\
+			template<class> static auto _calc(...)-> False_t;	\
 		\
 		public:	\
 			NAME() = delete;	\
 		\
-			enum : bool{value = decltype( _calc< std::decay_t<_CLASS> >(nullptr) )::value};	\
+			enum : bool{value = decltype( _calc< Decay_t<_CLASS> >(nullptr) )::value};	\
 		}
 
 #else
@@ -166,13 +163,13 @@ namespace sgm
 
 	template<class T> 
 	struct is_Comparable 
-	:	std::bool_constant< Has_Operator_Same<T>::value && Has_Operator_NotSame<T>::value >
+	:	Boolean_type< Has_Operator_Same<T>::value && Has_Operator_NotSame<T>::value >
 	{};
 
 
 	template<class T> 
 	struct is_Ordered 
-	:	std::bool_constant
+	:	Boolean_type
 		<	Has_Operator_Less<T>::value && Has_Operator_Greater<T>::value 
 		&&	Has_Operator_NotLess<T>::value && Has_Operator_NotGreater<T>::value
 		>
@@ -181,7 +178,7 @@ namespace sgm
 
 	template<class T> 
 	struct is_Logical 
-	:	std::bool_constant
+	:	Boolean_type
 		<	Has_Operator_And<T>::value && Has_Operator_Or<T>::value && Has_Operator_Not<T>::value
 		>
 	{};
@@ -189,7 +186,7 @@ namespace sgm
 
 	template<class T>
 	struct is_Digital
-	:	std::bool_constant
+	:	Boolean_type
 		<	Has_Operator_BitAnd<T>::value && Has_Operator_BitOr<T>::value
 		&&	Has_Operator_BitNot<T>::value && Has_Operator_Xor<T>::value
 		&&	Has_Operator_LShift<T>::value && Has_Operator_RShift<T>::value
@@ -199,7 +196,7 @@ namespace sgm
 
 	template<class T> 
 	struct is_Algebraic 
-	:	std::bool_constant
+	:	Boolean_type
 		<	Has_Operator_Plus<T>::value && Has_Operator_Minus<T>::value
 		&&	Has_Operator_Multiply<T>::value && Has_Operator_Divide<T>::value
 		>
@@ -345,7 +342,7 @@ namespace sgm
 					&&	Has_Operator_Post_increase<T>::value
 					&&	Has_Operator_NotSame<T>::value
 					)
-				||	std::is_pointer<T>::value
+				||	isPointer<T>::value
 				)
 		};
 
@@ -355,7 +352,7 @@ namespace sgm
 
 	template<class T>
 	struct is_random_access_iterator 
-	:	std::conditional_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >
+	:	Selective_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >
 	{};
 
 
@@ -368,15 +365,13 @@ namespace sgm
 			template<class Q>	\
 			static auto _has_##METHOD(Q*)	\
 			->	typename std::is_convertible	\
-				<	std::add_pointer_t	\
-					<	std::decay_t< decltype( DEREF Declval<Q>().METHOD() ) >  \
-					>	\
+				<	Decay_t< decltype( DEREF Declval<Q>().METHOD() ) >*	\
 				,	TYPE* \
 				>::	type;	\
 			\
-			template<class> static auto _has_##METHOD(...)-> std::false_type;	\
+			template<class> static auto _has_##METHOD(...)-> False_t;	\
 			\
-			using has_##METHOD = decltype( _has_##METHOD< std::decay_t<CON> >(nullptr) )
+			using has_##METHOD = decltype( _has_##METHOD< Decay_t<CON> >(nullptr) )
 
 		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(begin, T, *);
 		_HAS_ITERABLE_METHOD_WHOSE_NAME_IS(end, T, *);
@@ -397,11 +392,9 @@ namespace sgm
 	template
 	<	class CON1, class CON2
 	,	class 
-		=	std::enable_if_t
+		=	Guaranteed_t
 			<	is_iterable<CON1>::value && is_iterable<CON2>::value
-			&&	std::is_same
-				<	std::decay_t< Deref_t<CON1> >, std::decay_t< Deref_t<CON2> >  
-				>::	value
+			&&	isSame<  Decay_t< Deref_t<CON1> >, Decay_t< Deref_t<CON2> >  >::value
 			>
 	>
 	static auto iterable_cast(CON2&& con)-> CON1{  return CON1(con.begin(), con.end());  }

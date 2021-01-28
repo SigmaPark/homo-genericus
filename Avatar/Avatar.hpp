@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include "..\Abbreviable\Abbreviable.hpp"
+#include <type_traits>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

@@ -32,6 +32,9 @@ namespace sgm
 	};
 
 
+	template<bool TEMP_HOST> struct Move_if;
+
+
 	template<class T, size_t S = srSize::DYNAMIC>
 	class Serial;
 
@@ -257,6 +260,25 @@ private:
 	{
 		return _sr_iterator_Helper<T>::template Less<IS_FORWARD>(itr1._idx, itr2._idx);
 	}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+#include <type_traits>
+
+
+template<>
+struct sgm::Move_if<false> : No_Making
+{
+	template<class T>
+	static auto cast(T&& t)-> decltype( std::forward<T>(t) ){  return std::forward<T>(t);  }
+};
+
+template<>
+struct sgm::Move_if<true> : No_Making
+{
+	template<class T>
+	static auto cast(T&& t)-> decltype( std::move(t) ){  return std::move(t);  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

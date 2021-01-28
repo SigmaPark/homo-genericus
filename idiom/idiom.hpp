@@ -24,10 +24,6 @@ namespace sgm
 	struct Violation;
 
 
-	struct Freezer_Violation;
-	template<class T> class Freezer;
-
-
 	template<class ITR1, class ITR2> struct Dual_iterator;
 
 
@@ -59,8 +55,6 @@ struct sgm::Violation
 		}
 
 
-		_SGM_VIOLATION(Freezer_Violation, template<class> friend class Freezer);
-
 		_SGM_VIOLATION
 		(	Over_instantiation_Violation, template<size_t, class> friend struct Limited
 		);
@@ -70,34 +64,6 @@ struct sgm::Violation
 #else
 	#error _SGM_VIOLATION was already defined somewhere else.
 #endif
-//========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class T>
-class sgm::Freezer
-{
-public:
-	Freezer(T const& t) : _t(t), _frozen(false){}
-	Freezer(T&& t) : _t( static_cast<T&&>(t) ), _frozen(false){}
-
-	void freeze(){  _frozen = true;  }
-	bool frozen() const{  return _frozen;  }
-	
-	operator T const&() const{  return _t;  }
-
-	auto value()-> T&
-	{
-		if(frozen())
-			throw Freezer_Violation();
-		else
-			return _t;  
-	}
-
-
-private:
-	T _t;
-	bool _frozen;
-};
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
