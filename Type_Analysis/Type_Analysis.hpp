@@ -16,6 +16,10 @@ namespace sgm
 
 
 	template<class...> using Void_t = void;
+
+
+	enum class None_t{NONE};
+	static auto const None = None_t::NONE;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -66,11 +70,27 @@ namespace sgm
 
 
 	template<class T>
+	struct isVoid : isSame<T, void>{};
+
+
+	template<class T>
+	struct isNone : isSame<T, None_t>{};
+
+
+	template<class T>
 	struct isConst : Boolean_type<  !isSame< T, Constless_t<T> >::value  >{};
 
 
+	template<class T> struct isLvalueReference : False_t{};
+	template<class T> struct isLvalueReference<T&> : True_t{};
+
+	template<class T> struct isRvalueReference : False_t{};
+	template<class T> struct isRvalueReference<T&&> : True_t{};
+
 	template<class T> 
-	struct isReference : Boolean_type<  !isSame< T, Referenceless_t<T> >::value  >{};
+	struct isReference 
+	:	Boolean_type< isLvalueReference<T>::value || isRvalueReference<T>::value >
+	{};
 
 
 	template<class T>
@@ -82,7 +102,6 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	//	same to std::declval in <utility>
 	template<class T>
 	static auto Declval()-> T { return *(Referenceless_t<T>*)nullptr; }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -98,6 +117,73 @@ namespace sgm
 
 	template<bool CONDITION, class T1, class T2>
 	using Selective_t = typename _Selective<CONDITION, T1, T2>::type;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<bool B, class T = void> struct Enable_if : No_Making{};
+	template<class T> struct Enable_if<true, T> : No_Making{  using type = T;  };
+
+	template<bool B, class T = void>
+	using Enable_if_t = typename Enable_if<B, T>::type;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<class FROM, class TO>
+	struct isConvertible
+	{
+	private:
+		template<class F, class T>
+		static auto _calc(int)
+		->	typename isPointer< decltype( static_cast<T>(Declval<F>()) )* >::type;
+
+		template<class, class>
+		static auto _calc(...)-> False_t;
+
+	public:
+		enum : bool
+		{	value 
+			=	(	decltype( _calc<FROM, TO>(0) )::value
+				||	(isVoid<FROM>::value && isVoid<TO>::value)
+				)
+		};
+	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<class T>
+	struct isClass
+	{
+	private:
+		template<class Q> static auto _calc(int Q::*)-> True_t;
+		template<class> static auto _calc(...)-> False_t;
+
+	public:
+		enum : bool{value = decltype( _calc< Decay_t<T> >(0) )::value};
+	};
+
+
+	template<class DERV, class BASE>
+	struct is_inherited_from
+	{
+	private:
+		template<class B> static auto _calc(B const volatile*)-> True_t;
+		template<class> static auto _calc(void const volatile*)-> False_t;
+
+
+		template<class D, class B>
+		static auto _test(int)-> decltype(  _calc<B>( (D*)nullptr )  );
+
+		template<class, class>
+		static auto _test(...)-> False_t;
+
+	public:
+		enum : bool
+		{	value
+			=	(	isClass<DERV>::value && isClass<BASE>::value
+				&&	decltype( _test<DERV, BASE>(0) )::value
+				)
+		};
+	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -177,7 +263,7 @@ namespace sgm
 		template<class...> struct for_any;
 
 		template<class Q, class...TYPES>
-		struct for_any<Q, TYPES...>
+		struct for_any<Q, TYPES...> 
 		:	Boolean_type< FUNCTOR<Q>::value || for_any<TYPES...>::value >
 		{};
 
@@ -189,8 +275,7 @@ namespace sgm
 	struct Has_Type : No_Making
 	{
 	private:
-		template<class Q>
-		struct _Same_to_T : isSame<T, Q>{};
+		template<class Q> struct _Same_to_T : is_inherited_from<Q, T>{};
 
 	public:
 		template<class...TYPES>
@@ -206,11 +291,8 @@ namespace sgm
 	static auto Forward(Referenceless_t<T>&& t) throw()-> T&&{  return static_cast<T&&>(t);  }
 
 
-	template<class T>
-	static auto Move(T&& t) throw()-> Referenceless_t<T>&&
-	{
-		return static_cast< Referenceless_t<T>&& >(t);
-	}
+	template< class T, class Res_t = Referenceless_t<T>&& >
+	static auto Move(T&& t) throw()-> Res_t{  return static_cast<Res_t>(t);  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

@@ -84,7 +84,7 @@ namespace sgm
 
 
 template<class maybe_Par>
-struct sgm::ht::is_Par : std::is_base_of<par::_Parallel_Helper, maybe_Par>{};
+struct sgm::ht::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
 
 
 /**	
@@ -104,9 +104,9 @@ struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : Flag< Par<AUTO_OR, N> >, par::Paralle
 	void operator()(size_t const nof_iteration, F&& func) const
 	{
 		if(par::Parallel<>::number_of_task() != 1)
-			par::Parallel<>::operator()( nof_iteration, std::forward<F>(func) );
+			par::Parallel<>::operator()( nof_iteration, Forward<F>(func) );
 		else
-			par::Parallel<N>()( nof_iteration, std::forward<F>(func) );
+			par::Parallel<N>()( nof_iteration, Forward<F>(func) );
 	}
 };
 
@@ -195,7 +195,7 @@ struct sgm::ht::_Filter_impl<FS, sgm::ht::_impl_Mode::SEQUANCIAL>
 {
 	template
 	<	class CON, class FUNC
-	,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
+	,	class x_t = Referenceless_t< decltype(*Declval<CON>().begin()) >
 	,	class elem_t = _Decorated_t<x_t, FS>
 	>
 	static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
@@ -216,14 +216,14 @@ struct sgm::ht::_Filter_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 {
 	template
 	<	class CON, class FUNC
-	,	class x_t = std::remove_reference_t< decltype(*Declval<CON>().begin()) >
+	,	class x_t = Referenceless_t< decltype(*Declval<CON>().begin()) >
 	,	class elem_t = _Decorated_t<x_t, FS>
 	>
 	static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
 	{
 		auto const truth_table
 		=	_Morph_impl<  Flag< Satisfying_flag<is_Par, FS> >  >::calc
-			(	con, std::forward<FUNC>(func) 
+			(	con, Forward<FUNC>(func) 
 			);
 
 		auto const nof_true
@@ -292,7 +292,7 @@ struct sgm::ht::_Fold_impl<true, FWD, FS, sgm::ht::_impl_Mode::SEQUANCIAL> : _Fo
 		return
 		Accumulate
 		(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
-		,	std::forward<FUNC>(func), std::forward<res_t>(res)
+		,	Forward<FUNC>(func), Forward<res_t>(res)
 		);
 	}
 };
@@ -302,14 +302,14 @@ template<bool FWD, class FS>
 struct sgm::ht::_Fold_impl<false, FWD, FS, sgm::ht::_impl_Mode::SEQUANCIAL> : _Fold_Helper
 {
 	template<class CON, class FUNC>
-	static auto calc(CON&& con, FUNC&& func, std::nullptr_t)
-	->	std::decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
+	static auto calc(CON&& con, FUNC&& func, None_t)
+	->	Decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
 	{
 		auto const bi = itrMethod<FWD>::begin(con), ei = itrMethod<FWD>::end(con);
 
 		assert(bi != ei && L"the container has nothing to fold.\n");
 
-		return Accumulate( Next(bi), ei, std::forward<FUNC>(func), *bi );
+		return Accumulate( Next(bi), ei, Forward<FUNC>(func), *bi );
 	}
 };
 
@@ -322,21 +322,21 @@ private:
 	static auto _Seq_Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 	(
 		_Fold_impl<false, FWD, FS, _impl_Mode::SEQUANCIAL>::calc
-		(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
+		(	Forward<CON>(con), Forward<FUNC>(func), None
 		)		
 	)
 
 public:
 	template
 	<	class CON, class FUNC
-	,	class res_t = std::decay_t<  decltype(*Declval< std::decay_t<CON> >().begin())  >
+	,	class res_t = Decay_t<  decltype(*Declval< Decay_t<CON> >().begin())  >
 	>
-	static auto calc(CON&& con, FUNC&& func, std::nullptr_t)-> res_t
+	static auto calc(CON&& con, FUNC&& func, None_t)-> res_t
 	{
 		auto const tasker = Satisfying_flag<is_Par, FS>();
 
 		if(con.size() <= tasker.number_of_task())
-			return _Seq_Fold( std::forward<CON>(con), std::forward<FUNC>(func) );
+			return _Seq_Fold( Forward<CON>(con), Forward<FUNC>(func) );
 		else
 		{
 			Serial<res_t> sum( static_cast<size_t>(tasker.number_of_task()), *con.begin() );
@@ -356,7 +356,7 @@ public:
 				}
 			);
 
-			return _Seq_Fold( sum, std::forward<FUNC>(func) );
+			return _Seq_Fold( sum, Forward<FUNC>(func) );
 		}
 	}
 };
@@ -374,7 +374,7 @@ private:
 		template<class FUNC, class T1, class T2>
 		static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
 		(
-			func( std::forward<T1>(t1), std::forward<T2>(t2) )
+			func( Forward<T1>(t1), Forward<T2>(t2) )
 		)
 	};
 
@@ -384,7 +384,7 @@ private:
 		template<class FUNC, class T1, class T2>
 		static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
 		(
-			func( std::forward<T2>(t2), std::forward<T1>(t1) )
+			func( Forward<T2>(t2), Forward<T1>(t1) )
 		)
 	};
 
@@ -394,15 +394,15 @@ public:
 	static auto calc(CON&& con, FUNC&& func, res_t&& res)-> res_t
 	{
 		static_assert
-		(	std::is_convertible< res_t, std::decay_t<decltype(*con.begin())> >::value
+		(	isConvertible< res_t, Decay_t<decltype(*con.begin())> >::value
 		,	"for parallelization, folding function should be asocciative."
 		);
 
 		return 
 		_Last_fold<FWD>::calc
-		(	func, std::forward<res_t>(res)
+		(	func, Forward<res_t>(res)
 		,	_Fold_impl<false, FWD, FS, _impl_Mode::MULTI_THREAD>::calc
-			(	std::forward<CON>(con), func, nullptr
+			(	Forward<CON>(con), func, None
 			)
 		);
 	}
@@ -424,7 +424,7 @@ private:
 	struct _td< Family<T, TYPES...>, ARGS... >
 	:	_td
 		<	Family<TYPES...>
-		,	ARGS..., _Decorated_t<  std::remove_reference_t< Deref_t<T> >, FS  >
+		,	ARGS..., _Decorated_t<  Referenceless_t< Deref_t<T> >, FS  >
 		>
 	{};
 
@@ -439,7 +439,7 @@ public:
 	template<class...ARGS>
 	static auto calc(size_t const, ARGS&&...args)-> res_t
 	{
-		return {std::forward<ARGS>(args)...};
+		return {Forward<ARGS>(args)...};
 	}
 };
 
@@ -453,7 +453,7 @@ struct sgm::ht::_Plait_Helper
 	{
 		return
 		_Plait_Helper<D - 1, FS, CONS...>::calc
-		(	idx, std::forward<ARGS>(args)..., *Next(con.begin(), idx)
+		(	idx, Forward<ARGS>(args)..., *Next(con.begin(), idx)
 		);
 	}
 };
@@ -527,7 +527,7 @@ namespace sgm
 		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Morph_impl< Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func)
+			(	Forward<CON>(con), Forward<FUNC>(func)
 			)
 		)
 		
@@ -539,7 +539,7 @@ namespace sgm
 		static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Filter_impl< Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func)
+			(	Forward<CON>(con), Forward<FUNC>(func)
 			)
 		)
 		
@@ -551,7 +551,7 @@ namespace sgm
 		static auto Fold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, true, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<init_t>(init)
+			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
 		
@@ -562,7 +562,7 @@ namespace sgm
 		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, true, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
+			(	Forward<CON>(con), Forward<FUNC>(func), None
 			)
 		)
 		
@@ -574,7 +574,7 @@ namespace sgm
 		static auto rFold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, false, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), std::forward<init_t>(init)
+			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
 		
@@ -585,7 +585,7 @@ namespace sgm
 		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, false, Flag<FLAGS...> >::calc
-			(	std::forward<CON>(con), std::forward<FUNC>(func), nullptr
+			(	Forward<CON>(con), Forward<FUNC>(func), None
 			)
 		)
 
@@ -593,7 +593,7 @@ namespace sgm
 		template<class...FLAGS, class...CONS>
 		static auto Plait(CONS&&...cons) SGM_DECLTYPE_AUTO
 		(
-			_Plait_impl< Flag<FLAGS...> >::calc( std::forward<CONS>(cons)... )
+			_Plait_impl< Flag<FLAGS...> >::calc( Forward<CONS>(cons)... )
 		)
 
 	}

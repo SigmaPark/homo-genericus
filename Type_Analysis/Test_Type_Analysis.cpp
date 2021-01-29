@@ -18,8 +18,8 @@ static void Test_Declval()
 	class BB;
 
 	static_assert
-	(	(	std::is_same<AA, decltype(Declval<AA>())>::value
-		&&	std::is_same<BB, decltype(Declval<BB>())>::value
+	(	(	isSame<AA, decltype(Declval<AA>())>::value
+		&&	isSame<BB, decltype(Declval<BB>())>::value
 		)
 	,	""
 	);

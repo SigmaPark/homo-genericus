@@ -3,6 +3,7 @@
 #ifndef _SGM_CONCURRENCY_
 #define _SGM_CONCURRENCY_
 
+#include "..\Type_Analysis\Type_Analysis.hpp"
 #include <future>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -46,12 +47,7 @@ struct sgm::par::_Parallel_Helper::_Ranger
 	:	_idx_begin(idx_begin)
 	,	_nof_task( static_cast<size_t>(nof_task) )
 	,	_total_size
-		(	[idx_begin, idx_end]()-> decltype(_total_size)
-			{
-				//assert(idx_begin <= idx_end && L"invalid index range.\n");
-
-				return idx_end - idx_begin;
-			}()
+		(	[idx_begin, idx_end]()-> decltype(_total_size){  return idx_end - idx_begin;  }()
 		)
 	,	_loop_q(_total_size / _nof_task)
 	,	_loop_r(_total_size % _nof_task)
@@ -126,7 +122,7 @@ public:
 	template<class F>
 	void operator()(size_t const nof_iteration, F&& func) const
 	{
-		(*this)( 0, nof_iteration, std::forward<F>(func) );
+		(*this)( 0, nof_iteration, Forward<F>(func) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -211,7 +207,7 @@ public:
 	template<class F>
 	void operator()(size_t const nof_iteration, F&& func) const
 	{
-		(*this)( 0, nof_iteration, std::forward<F>(func) );
+		(*this)( 0, nof_iteration, Forward<F>(func) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -235,7 +231,7 @@ struct sgm::par::Parallel<1> : _Parallel_Helper
 	template<class F>
 	void operator()(size_t const nof_iteration, F&& func) const
 	{
-		(*this)( 0, nof_iteration, std::forward<F>(func) );
+		(*this)( 0, nof_iteration, Forward<F>(func) );
 	}			
 };
 

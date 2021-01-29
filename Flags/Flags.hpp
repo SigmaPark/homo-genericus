@@ -32,54 +32,42 @@ namespace sgm
 
 
 		template<class F>
-		struct has : No_Making
-		{
-			enum : bool{value = Has_Type<F>::template among<FLAGS...>::value};
-		};
+		struct has : Has_Type<F>::template among<FLAGS...>{};
 
 
 		template<class> struct is_superset_of;
 		template<class> struct is_subset_of;
 
-		template<class FS> struct has_same_flags_to : std::false_type
+		template<class FS> struct has_same_flags_to : False_t
 		{
 			static_assert(is_FlagSet<FS>::value, "not a set of sgm::Flag");
 		};
 
 		template<class..._FS>
 		struct has_same_flags_to< Flag<_FS...> >
-		{
-			enum : bool
-			{	value 
-				=	(	is_superset_of< Flag<_FS...> >::value
-					&&	is_subset_of< Flag<_FS...> >::value
-					)
-			};
-		};
+		:	Boolean_type
+			<	is_superset_of< Flag<_FS...> >::value && is_subset_of< Flag<_FS...> >::value
+			>
+		{};
 
 
 	private:
-		template<> struct is_superset_of<Flag<>> : std::true_type{};
+		template<> struct is_superset_of<Flag<>> : True_t{};
 		
 		template<class F, class..._FS>
 		struct is_superset_of< Flag<F, _FS...> >
-		{
-			enum : bool
-			{	value 
-				=	Has_Type<F>::template among<FLAGS...>::value
-					?	is_superset_of< Flag<_FS...> >::value
-					:	false 
-			};
-		};
+		:	Selective_t
+			<	Has_Type<F>::template among<FLAGS...>::value
+			,	is_superset_of< Flag<_FS...> >
+			,	False_t
+			>
+		{};
 
 
 		template<class..._FS>
 		struct is_subset_of< Flag<_FS...> >
-		{
-			enum : bool
-			{	value = Flag<_FS...>::template is_superset_of< Flag<FLAGS...> >::value
-			};
-		};
+		:	Flag<_FS...>::template is_superset_of< Flag<FLAGS...> >
+		{};
 	};
 
 
@@ -87,14 +75,10 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 
-	template<class FLAG>
-	struct is_Flag : No_Making
-	{
-		enum : bool{value = std::is_convertible< FLAG, Flag<FLAG> >::value};
-	};
+	template<class FLAG> struct is_Flag : isConvertible< FLAG, Flag<FLAG> >{};
 
-	template<class> struct is_FlagSet : std::false_type{};
-	template<class...FLAGS> struct is_FlagSet< Flag<FLAGS...> > : std::true_type{};
+	template<class> struct is_FlagSet : False_t{};
+	template<class...FLAGS> struct is_FlagSet< Flag<FLAGS...> > : True_t{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -105,7 +89,7 @@ namespace sgm
 	struct _Satisfying< CONDITION, Flag<F, FLAGS...> >
 	{
 		using flag 
-		=	std::conditional_t
+		=	Selective_t
 			<	CONDITION<F>::value
 			,	F
 			,	typename _Satisfying< CONDITION, Flag<FLAGS...> >::flag

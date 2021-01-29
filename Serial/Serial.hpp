@@ -8,6 +8,7 @@
 #include "..\interface_Traits\interface_Traits.hpp"
 #include "..\idiom\idiom.hpp"
 
+
 #ifndef _SGM_NOEXCEPT
 	#define _SGM_NOEXCEPT throw()
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -126,11 +127,11 @@ struct sgm::_iterator_Distance<ITR, false> : No_Making
 template<class T, bool IS_MUTABLE, bool IS_FORWARD>
 class sgm::Serial_iterator
 {
-	static_assert(!std::is_const<T>::value, "T should be mutable here");
+	static_assert(!isConst<T>::value, "T should be mutable here");
 
 	friend class _sr_iterator_Helper<T>;
 
-	using value_t = std::conditional_t<IS_MUTABLE, T, T const>;
+	using value_t = Selective_t<IS_MUTABLE, T, T const>;
 	using iter_t = Serial_iterator;
 	
 
@@ -145,7 +146,7 @@ public:
 	template
 	<	bool _M, bool _F
 	,	class 
-		=	std::enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
+		=	Enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 	>
 	auto operator=(Serial_iterator<T, _M, _F> const itr)-> iter_t&
 	{
@@ -264,21 +265,18 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-#include <type_traits>
-
-
 template<>
 struct sgm::Move_if<false> : No_Making
 {
 	template<class T>
-	static auto cast(T&& t)-> decltype( std::forward<T>(t) ){  return std::forward<T>(t);  }
+	static auto cast(T&& t)-> decltype( Forward<T>(t) ){  return Forward<T>(t);  }
 };
 
 template<>
 struct sgm::Move_if<true> : No_Making
 {
 	template<class T>
-	static auto cast(T&& t)-> decltype( std::move(t) ){  return std::move(t);  }
+	static auto cast(T&& t)-> decltype( Move(t) ){  return Move(t);  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -294,7 +292,7 @@ protected:
 	template
 	<	bool TEMP_HOST = false, class ITR, class CON
 	,	class RES_ITR = decltype(Declval<CON>().begin())
-	,	class = std::enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
+	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
 	>
 	static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> Dual_iterator<ITR, RES_ITR>
 	{
@@ -328,7 +326,7 @@ public:
 		for
 		(	auto itr = begin(), sitr = sr.begin()
 		;	itr != end()
-		;	*itr++ = std::move(*sitr++)
+		;	*itr++ = Move(*sitr++)
 		);
 
 		return *this;
@@ -378,26 +376,26 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	std::enable_if_t
+		=	Enable_if_t
 			<	is_iterable<CON>::value
 			&&	S != srSize::INTERFACE
-			&&	!std::is_same< std::decay_t<CON>, Serial >::value  
+			&&	!isSame< Decay_t<CON>, Serial >::value  
 			>
 	> 
-	operator CON() const{  return std::decay_t<CON>(begin(), end());  }
+	operator CON() const{  return Decay_t<CON>(begin(), end());  }
 
 
 	template
 	<	class CON
 	,	class 
-		=	std::enable_if_t
+		=	Enable_if_t
 			<	is_iterable<CON>::value && S != srSize::INTERFACE
-			&&	!std::is_same< std::decay_t<CON>, Serial >::value  
+			&&	!isSame< Decay_t<CON>, Serial >::value  
 			>
 	> 
 	auto operator=(CON&& con)-> Serial&
 	{
-		_copy_AMAP< std::is_rvalue_reference<decltype(con)>::value >
+		_copy_AMAP< isRvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), *this
 		);
 
@@ -408,7 +406,7 @@ public:
 	template
 	<	class Q
 	,	class 
-		=	std::enable_if_t< S != srSize::INTERFACE && std::is_convertible<Q, T>::value >
+		=	Enable_if_t< S != srSize::INTERFACE && isConvertible<Q, T>::value >
 	>
 	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 	{
@@ -437,11 +435,11 @@ public:
 template<class T>
 class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 {
-	static_assert(!std::is_const<T>::value, "T should be mutable for dynamic allocation");
+	static_assert(!isConst<T>::value, "T should be mutable for dynamic allocation");
 
 
 	using Helper = Serial<T, srSize::INTERFACE>;
-	using value_t = std::remove_reference_t<T>;
+	using value_t = Referenceless_t<T>;
 	using Helper::_core;
 
 	size_t _capacity, _size;
@@ -460,7 +458,7 @@ class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 
 	template
 	<	bool TEMP_HOST = false, class ITR
-	,	class = std::enable_if_t< is_iterator<ITR>::value >  
+	,	class = Enable_if_t< is_iterator<ITR>::value >  
 	>
 	auto _cloning(ITR const bi, ITR const ei, size_t const length)-> Serial&
 	{
@@ -477,7 +475,7 @@ public:
 	Serial() : _capacity(0), _size(0){  _core = nullptr;  }
 
 
-	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	Serial(ITR bi, ITR const ei) 
 	{
 		_alloc( _iterator_Distance<ITR>::calc(bi, ei) ), 
@@ -488,21 +486,18 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	std::enable_if_t
-			<	is_iterable<CON>::value 
-			&&	!std::is_same< Serial, std::decay_t<CON> >::value
-			>
+		=	Enable_if_t<  is_iterable<CON>::value && !isSame< Serial, Decay_t<CON> >::value  >
 	>
 	Serial(CON&& con)
 	{
 		_alloc(con.size()), 
-		_cloning< std::is_rvalue_reference<decltype(con)>::value >
+		_cloning< isRvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), capacity()
 		);
 	}
 
 
-	template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
+	template<  class Q, class = Enable_if_t< isConvertible<Q, T>::value >  >
 	Serial(std::initializer_list<Q>&& iL)
 	{
 		_alloc(iL.size()),  _cloning<true>(iL.begin(), iL.end(), capacity());
@@ -552,21 +547,18 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	std::enable_if_t
-			<	is_iterable<CON>::value 
-			&&	!std::is_same< std::decay_t<CON>, Serial >::value  
-			>  
+		=	Enable_if_t<  is_iterable<CON>::value && !isSame< Decay_t<CON>, Serial >::value  >
 	>
 	auto operator=(CON&& con)-> Serial&
 	{
 		return 
-		_cloning< std::is_rvalue_reference<decltype(con)>::value >
+		_cloning< isRvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), con.size()
 		);
 	}
 
 
-	template<  class Q, class = std::enable_if_t< std::is_convertible<Q, T>::value >  >
+	template<  class Q, class = Enable_if_t< isConvertible<Q, T>::value >  >
 	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 	{
 		return _cloning<true>(iL.begin(), iL.end(), iL.size());
@@ -585,19 +577,19 @@ public:
 	{
 		assert(size() < capacity() && L"can't emplace_back : out of index.\n");
 
-		new(_core + _size++) value_t( std::forward<ARGS>(args)... );
+		new(_core + _size++) value_t( Forward<ARGS>(args)... );
 
 		return *this;
 	}
 
 
 	template<class Q>
-	auto operator>>(Q&& q)-> Serial&{  return emplace_back( std::forward<Q>(q) );  }
+	auto operator>>(Q&& q)-> Serial&{  return emplace_back( Forward<Q>(q) );  }
 
 
 	template
 	<	bool TEMP_HOST = false, class ITR
-	,	class = std::enable_if_t< is_iterator<ITR>::value >  
+	,	class = Enable_if_t< is_iterator<ITR>::value >  
 	>
 	auto merge_back(ITR bi, ITR const ei)-> Serial&
 	{
@@ -614,7 +606,7 @@ public:
 	}
 
 
-	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	auto pop_back_from(ITR const itr)-> Serial&
 	{
 		for(auto d = end() - itr;  d-->0;  _core[--_size].~value_t());
@@ -664,12 +656,11 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	std::enable_if_t
-			<	is_iterable<CON>::value 
-			&&	!std::is_same< std::decay_t<CON>, Serial >::value
+		=	Enable_if_t
+			<	is_iterable<CON>::value && !isSame< Decay_t<CON>, Serial >::value
 			>
 	> 
-	operator CON() const{  return std::decay_t<CON>(Helper::begin(), end());  }
+	operator CON() const{  return Decay_t<CON>(Helper::begin(), end());  }
 };// end of class Serial
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -687,11 +678,11 @@ public:
 template<class T, bool M, bool F>
 struct std::iterator_traits< sgm::Serial_iterator<T, M, F> >
 {
-	using iterator_category = std::random_access_iterator_tag;
+	using iterator_category = random_access_iterator_tag;
 	using value_type = T;
 	using difference_type = long long;
-	using pointer = std::conditional_t<M, T*, T const*>;
-	using reference = std::conditional_t<M, T&, T const&>;
+	using pointer = conditional_t<M, T*, T const*>;
+	using reference = conditional_t<M, T&, T const&>;
 };
 
 

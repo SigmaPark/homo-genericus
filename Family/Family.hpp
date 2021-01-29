@@ -8,7 +8,6 @@
 #define _SGM_FAMILY_
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
-#include <type_traits>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -39,7 +38,7 @@ namespace sgm
 
 	template<class FAM1, class FAM2>
 	static auto Merge_Families(FAM1&& fam1, FAM2&& fam2)
-	->	typename _Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::res_t;
+	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t;
 
 
 	template<class T>
@@ -172,7 +171,7 @@ public:
 	{}
 
 	Family(Family&& fam) throw()
-	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( std::forward<T>(fam._val) )
+	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( Forward<T>(fam._val) )
 	{}
 
 
@@ -186,7 +185,7 @@ public:
 
 	auto operator=(Family&& fam) throw()-> Family&
 	{
-		_val = std::forward<T>(fam._val),
+		_val = Forward<T>(fam._val),
 		static_cast<_upper_t&>(*this) = static_cast<_upper_t&&>(fam);
 
 		return *this;
@@ -209,7 +208,7 @@ public:
 
 template<> struct sgm::Family_member<0, sgm::Family<>>
 {
-	using type = std::nullptr_t;
+	using type = None_t;
 	using family_type = Family<>;	
 };
 
@@ -228,7 +227,7 @@ struct sgm::Family_member< N, sgm::Family<T, TYPES...> >
 
 template<> struct sgm::Family_member<0, sgm::Family<> const>
 {
-	using type = std::nullptr_t;
+	using type = None_t;
 	using family_type = Family<> const;
 };
 
@@ -247,7 +246,7 @@ struct sgm::Family_member< N, sgm::Family<T, TYPES...> const >
 
 
 template<class T>
-struct sgm::is_Family : std::is_base_of< Family<>, std::decay_t<T> >, No_Making{};
+struct sgm::is_Family : is_inherited_from< Decay_t<T>, Family<> >, No_Making{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -261,7 +260,7 @@ auto sgm::Make_Family(TYPES...types)-> Family<TYPES...>
 template<class...TYPES>
 auto sgm::Forward_as_Family(TYPES&&...types)-> Family<TYPES&&...>
 {
-	return Family<TYPES&&...>( std::forward<TYPES>(types)... );
+	return Family<TYPES&&...>( Forward<TYPES>(types)... );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -293,7 +292,7 @@ struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > 
 		template<class FAM1, class FAM2, class...ARGS>
 		static auto calc(FAM1&&, FAM2&&, ARGS&&...args)-> res_t
 		{
-			return Family<TYPES1..., TYPES2...>( std::forward<ARGS>(args)... );
+			return Family<TYPES1..., TYPES2...>( Forward<ARGS>(args)... );
 		}
 	};
 
@@ -305,8 +304,8 @@ struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > 
 		{
 			return
 			Nth<IDX + 1>::calc
-			(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2), std::forward<ARGS>(args)...
-			,	std::forward< Nth_t<IDX, TYPES1...> >( std::get<IDX>(fam1) )
+			(	Forward<FAM1>(fam1), Forward<FAM2>(fam2), Forward<ARGS>(args)...
+			,	Forward< Nth_t<IDX, TYPES1...> >( std::get<IDX>(fam1) )
 			);
 		}
 	};
@@ -319,8 +318,8 @@ struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > 
 		{
 			return
 			Nth<IDX + 1>::calc
-			(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2), std::forward<ARGS>(args)...
-			,	std::forward< Nth_t<IDX - sizeof...(TYPES1), TYPES2...> >
+			(	Forward<FAM1>(fam1), Forward<FAM2>(fam2), Forward<ARGS>(args)...
+			,	Forward< Nth_t<IDX - sizeof...(TYPES1), TYPES2...> >
 				(	std::get<IDX - sizeof...(TYPES1)>(fam2) 
 				)
 			);
@@ -331,11 +330,11 @@ struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > 
 
 template<class FAM1, class FAM2>
 auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2)
-->	typename _Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::res_t
+->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
 {
 	return
-	_Merge_Fam_Helper< std::decay_t<FAM1>, std::decay_t<FAM2> >::template Nth<>::calc
-	(	std::forward<FAM1>(fam1), std::forward<FAM2>(fam2)
+	_Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::template Nth<>::calc
+	(	Forward<FAM1>(fam1), Forward<FAM2>(fam2)
 	);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -345,7 +344,7 @@ template<class T>
 struct sgm::remove_aleph
 {
 	using type
-	=	std::conditional_t< std::is_rvalue_reference<T>::value, std::remove_reference_t<T>, T >;
+	=	Selective_t< isRvalueReference<T>::value, Referenceless_t<T>, T >;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -361,7 +360,7 @@ template< template<class...> class TL, class...TYPES >
 auto sgm::Harden(TL<TYPES...>&& tL)
 ->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t
 {
-	return _Harden_Helper<sizeof...(TYPES) == 0, TL, TYPES...>::calc( std::move(tL) );
+	return _Harden_Helper<sizeof...(TYPES) == 0, TL, TYPES...>::calc( Move(tL) );
 }
 
 
@@ -371,7 +370,7 @@ struct sgm::_Harden_Helper<true, TL, TYPES...> : No_Making
 	using res_t = TL< remove_aleph_t<TYPES>... >;
 	
 	template<class Q, class...ARGS>
-	static auto calc(Q&&, ARGS&&...args)-> res_t{  return {std::forward<ARGS>(args)...};  }
+	static auto calc(Q&&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
 };
 
 template< template<class...> class TL, class...TYPES >
@@ -386,7 +385,7 @@ struct sgm::_Harden_Helper<false, TL, TYPES...> : No_Making
 
 		return
 		sgm::_Harden_Helper<IDX + 1 == sizeof...(TYPES), TL, TYPES...>::calc
-		(	std::forward<Q>(q), std::forward<ARGS>(args)...
+		(	Forward<Q>(q), Forward<ARGS>(args)...
 		,	static_cast< remove_aleph_t<elem_t>&& >( std::get<IDX>(q) )
 		);
 	}

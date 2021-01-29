@@ -13,7 +13,7 @@ namespace sgm
 
 
 	template<class T> 
-	struct is_Type_Decorator : std::is_base_of< Type_Decorator, std::decay_t<T> >{};
+	struct is_Type_Decorator : is_inherited_from< Decay_t<T>, Type_Decorator >{};
 
 
 	template<class T>
@@ -22,7 +22,7 @@ namespace sgm
 		template<class Q = void, class...QS>
 		struct by
 		:	Decorated
-			<	std::conditional_t
+			<	Selective_t
 				<	is_Type_Decorator<Q>::value, typename Q:: template type<T>, T
 				>
 			>::	template by<QS...>

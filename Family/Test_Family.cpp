@@ -1,6 +1,6 @@
 #include "Family.hpp"
 #include "..\Specification\Specification.hpp"
-
+#include <type_traits>
 
 using namespace sgm;
 using spec::Specimen;

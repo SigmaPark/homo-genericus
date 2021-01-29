@@ -65,7 +65,7 @@ public:
 	}
 
 	_Pinweight_interface(T&& t)
-	:	_cpval(  new value_t( std::move(t) )  ), _pcount( new count_t(1) )
+	:	_cpval(  new value_t( Move(t) )  ), _pcount( new count_t(1) )
 	{
 		_update_ptr(_cpval);
 	}
@@ -140,13 +140,13 @@ public:
 	Pinweight_t() = default;
 
 	Pinweight_t(T const& t) : impl_t(t){}
-	Pinweight_t(T&& t) : impl_t( std::move(t) ){}
+	Pinweight_t(T&& t) : impl_t( Move(t) ){}
 
 	Pinweight_t(_Pinweight_interface<T> const& pwimpl) : impl_t(pwimpl){}
-	Pinweight_t(_Pinweight_interface<T>&& pwimpl) : impl_t( std::move(pwimpl) ){}
+	Pinweight_t(_Pinweight_interface<T>&& pwimpl) : impl_t( Move(pwimpl) ){}
 
 	Pinweight_t(Pinweight_t const& pw) : impl_t(pw){}
-	Pinweight_t(Pinweight_t&& pw) : impl_t( std::move(pw) ){}
+	Pinweight_t(Pinweight_t&& pw) : impl_t( Move(pw) ){}
 
 	~Pinweight_t() = default;
 
@@ -171,7 +171,7 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 	{
 		res._my_pcount_down();
 		
-		res._update_ptr(  new typename impl_t::value_t( std::forward<Q>(q) )  );
+		res._update_ptr(  new typename impl_t::value_t( Forward<Q>(q) )  );
 		res._pcount = new typename impl_t::count_t(1);
 
 		return res; 			
@@ -191,19 +191,19 @@ public:
 	Pinweight_t() = default;
 
 	Pinweight_t(T const& t) : impl_t(t){}
-	Pinweight_t(T&& t) : impl_t( std::move(t) ){}
+	Pinweight_t(T&& t) : impl_t( Move(t) ){}
 
 	Pinweight_t(_Pinweight_interface<T> const& pwimpl) : impl_t(pwimpl){}
-	Pinweight_t(_Pinweight_interface<T>&& pwimpl) : impl_t( std::move(pwimpl) ){}
+	Pinweight_t(_Pinweight_interface<T>&& pwimpl) : impl_t( Move(pwimpl) ){}
 
 	Pinweight_t(Pinweight_t const& pw) : impl_t(pw){}
-	Pinweight_t(Pinweight_t&& pw) : impl_t( std::move(pw) ){}
+	Pinweight_t(Pinweight_t&& pw) : impl_t( Move(pw) ){}
 
 	~Pinweight_t() = default;
 
 
 	auto operator=(T const& t)-> Pinweight_t&{  return _substitute(*this, t);  }
-	auto operator=(T&& t)-> Pinweight_t&{  return _substitute( *this, std::move(t) );  }
+	auto operator=(T&& t)-> Pinweight_t&{  return _substitute( *this, Move(t) );  }
 
 
 	auto operator=(Pinweight_t<T, invar> const& pw)-> Pinweight_t&
@@ -238,7 +238,7 @@ public:
 
 	auto operator=(Pinweight_t&& pw)-> Pinweight_t&
 	{
-		return *this = static_cast< Pinweight_t<T, invar>&& >( std::move(pw) );
+		return *this = static_cast< Pinweight_t<T, invar>&& >( Move(pw) );
 	}
 
 
@@ -253,9 +253,9 @@ namespace sgm
 {
 
 	template<class T>
-	static auto Pinweighting(T&& t)-> Pinweight< std::remove_reference_t<T> >
+	static auto Pinweighting(T&& t)-> Pinweight< Referenceless_t<T> >
 	{
-		return Pinweight< std::remove_reference_t<T> >( std::forward<T>(t) );
+		return Pinweight< Referenceless_t<T> >( Forward<T>(t) );
 	}
 
 }

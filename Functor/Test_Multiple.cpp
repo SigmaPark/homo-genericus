@@ -1,6 +1,6 @@
 #include "Multiple.hpp"
 #include "..\Specification\Specification.hpp"
-
+#include <type_traits>
 
 using namespace sgm;
 using fp::Multiple, spec::Specimen, spec::is_True;

@@ -14,10 +14,10 @@ namespace sgm
 	//class Recursor;
 
 
-	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	class constChain;
 
-	template<  class ITR, class = std::enable_if_t< is_iterator<ITR>::value >  >
+	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	class Chain;
 
 }
@@ -36,11 +36,11 @@ protected:
 public:
 	constChain(ITR h, ITR t) : _head(h), _tail(t){}
 
-	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
+	template<  class CON, class = Enable_if_t< is_iterable<CON>::value >  >
 	constChain(CON& con) : constChain(con.begin(), con.end()){}
 
 
-	template<  class CON, class = std::enable_if_t< is_iterable<CON>::value >  >
+	template<  class CON, class = Enable_if_t< is_iterable<CON>::value >  >
 	auto operator=(CON&& con)-> constChain&
 	{
 		return *this = constChain(con.begin(), con.end());  
@@ -96,9 +96,9 @@ namespace sgm
 
 	template<class ITR>
 	static auto Chaining(ITR head, ITR tail)	
-	->	std::enable_if_t
+	->	Enable_if_t
 		<	is_iterator<ITR>::value
-		,	std::conditional_t
+		,	Selective_t
 			<	is_immutable<decltype(*head)>::value, constChain<ITR>, Chain<ITR> 
 			>
 		>
@@ -109,12 +109,12 @@ namespace sgm
 
 	template<class CON>
 	static auto Chaining(CON& con)
-	->	std::enable_if_t
+	->	Enable_if_t
 		<	is_iterable<CON>::value
-		,	std::conditional_t
+		,	Selective_t
 			<	is_immutable<decltype(*con.begin())>::value
-			,	constChain< std::decay_t<decltype(con.begin())> >
-			,	Chain< std::decay_t<decltype(con.begin())> >
+			,	constChain< Decay_t<decltype(con.begin())> >
+			,	Chain< Decay_t<decltype(con.begin())> >
 			>
 		>
 	{

@@ -25,6 +25,9 @@ namespace sgm
 }
 
 
+#include <type_traits>
+
+
 template<class FUNC, class...ARGS>
 size_t constexpr sgm::_Nof_Arguments()
 {

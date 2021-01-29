@@ -30,57 +30,8 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
 
 
-		//template<class T1, class T2, class...TYPES>
-		//static void are_Equivalent(T1&& t1, T2&& t2, TYPES&&...types)
-		//{
-		//	if(t1 != t2)
-		//		throw Exception();
-		//	else
-		//		are_Equivalent( std::forward<T2>(t2), std::forward<TYPES>(types)... );
-		//}
-
-
-		//template<class T>
-		//static void are_Equivalent(T&&){}
-
-
-		//template
-		//<	class COMP, class T1, class T2, class...TYPES
-		//,	class 
-		//	=	std::enable_if_t
-		//		<	std::is_same
-		//			<	decltype( Declval<COMP>()(Declval<T1>(), Declval<T2>()) ), bool
-		//			>::	value
-		//		>
-		//>
-		//static void are_Equivalent_by(COMP&& comp, T1&& t1, T2&& t2, TYPES&&...types)
-		//{
-		//	if( !comp(t1, t2) )
-		//		throw Exception();
-		//	else
-		//		are_Equivalent_by
-		//		(	std::forward<COMP>(comp)
-		//		,	std::forward<T2>(t2)
-		//		,	std::forward<TYPES>(types)...
-		//		);
-		//}
-
-
-		//template
-		//<	class COMP, class T
-		//,	class 
-		//	=	std::enable_if_t
-		//		<	std::is_same
-		//			<	decltype( Declval<COMP>()(Declval<T>(), Declval<T>()) ), bool
-		//			>::	value
-		//		>
-		//>
-		//static void are_Equivalent_by(COMP&&, T&&){}
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
-
-
 		template<int B = 1, int...BS>
-		struct All_True : std::conditional_t< B == 1, All_True<BS...>, Guaranteed_t<B> >{};
+		struct All_True : Selective_t< B == 1, All_True<BS...>, Guaranteed_t<B> >{};
 
 		template<> 
 		struct All_True<>{};
@@ -92,7 +43,7 @@ namespace sgm
 			template
 			<	class CON1, class CON2
 			,	class 
-				=	std::enable_if_t< is_iterable<CON1>::value && is_iterable<CON2>::value >
+				=	Enable_if_t< is_iterable<CON1>::value && is_iterable<CON2>::value >
 			>
 			static bool have_the_same(CON1&& con1, CON2&& con2)
 			{
@@ -109,7 +60,7 @@ namespace sgm
 
 
 			template
-			<	class ITR, class T, class = std::enable_if_t< is_iterator<ITR>::value >  
+			<	class ITR, class T, class = Enable_if_t< is_iterator<ITR>::value >  
 			>
 			static bool are_all_same_to(ITR const bi, size_t const n, T const& t)
 			{
@@ -121,7 +72,7 @@ namespace sgm
 
 
 			template
-			<	class CON, class T, class = std::enable_if_t< is_iterable<CON>::value >  
+			<	class CON, class T, class = Enable_if_t< is_iterable<CON>::value >  
 			>
 			static bool are_all_same_to(CON const& con, T const& t)
 			{
@@ -130,7 +81,7 @@ namespace sgm
 
 
 			template
-			<	class ITR, class T, class = std::enable_if_t< is_iterator<ITR>::value >  
+			<	class ITR, class T, class = Enable_if_t< is_iterator<ITR>::value >  
 			>
 			static bool are_all_same_to(ITR const bi, ITR const ei, T const& t)
 			{
