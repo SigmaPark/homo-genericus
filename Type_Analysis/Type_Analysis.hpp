@@ -103,7 +103,7 @@ namespace sgm
 
 
 	template<class T>
-	static auto Declval()-> T { return *(Referenceless_t<T>*)nullptr; }
+	static auto Declval()-> T{  return *static_cast< Referenceless_t<T>* >(nullptr);  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -125,6 +125,10 @@ namespace sgm
 
 	template<bool B, class T = void>
 	using Enable_if_t = typename Enable_if<B, T>::type;
+
+
+	template<class TEST, class T = True_t>
+	using SFINAE_t = decltype( (void)Declval<TEST>(), Declval<T>() );
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -133,8 +137,7 @@ namespace sgm
 	{
 	private:
 		template<class F, class T>
-		static auto _calc(int)
-		->	typename isPointer< decltype( static_cast<T>(Declval<F>()) )* >::type;
+		static auto _calc(int)-> SFINAE_t< decltype( static_cast<T>(Declval<F>()) ) >;
 
 		template<class, class>
 		static auto _calc(...)-> False_t;
@@ -284,15 +287,15 @@ namespace sgm
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	template< class T, class Res_t = Referenceless_t<T>&& >
+	static auto Move(T&& t) throw()-> Res_t{  return static_cast<Res_t>(t);  }
+
+
 	template<class T>
 	static auto Forward(Referenceless_t<T>& t)-> T&&{  return static_cast<T&&>(t);  }
 
 	template<class T>
-	static auto Forward(Referenceless_t<T>&& t) throw()-> T&&{  return static_cast<T&&>(t);  }
-
-
-	template< class T, class Res_t = Referenceless_t<T>&& >
-	static auto Move(T&& t) throw()-> Res_t{  return static_cast<Res_t>(t);  }
+	static auto Forward(Referenceless_t<T>&& t) throw()-> T&&{  return Move(t);  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

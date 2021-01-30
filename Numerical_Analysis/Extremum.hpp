@@ -280,17 +280,17 @@ public:
 	template
 	<	size_t NOF_ARGUMENT = ULLONG_MAX
 	,	class FUNC, class XITR, class XV, class X
-	,	class Y = std::nullptr_t const
+	,	class Y = None_t const
 	>
 	static bool search
 	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
-	,	XITR xitr_out, [[maybe_unused]]Y& yout = nullptr
+	,	XITR xitr_out, [[maybe_unused]]Y& yout = None
 	)
 	{
 		auto constexpr NOF_ARGS 
 		=	NOF_ARGUMENT == ULLONG_MAX ? nof_Arguments_v<FUNC, X> : NOF_ARGUMENT;	
 
-		if constexpr(std::is_null_pointer_v< std::decay_t<Y> >)
+		if constexpr(isNone_v< std::decay_t<Y> >)
 			return
 			_search
 			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )

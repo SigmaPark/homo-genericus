@@ -17,16 +17,13 @@ namespace sgm
 		struct NAME	\
 		{	\
 		private:	\
-			template<class _QCLASS>	\
-			static auto _calc(_QCLASS*)	\
-			->	typename isPointer< Decay_t<decltype(__VA_ARGS__)>* >::type; \
-		\
+			template<class _QCLASS>	 static auto _calc(int)-> SFINAE_t< decltype(__VA_ARGS__) >;\
 			template<class> static auto _calc(...)-> False_t;	\
 		\
 		public:	\
 			NAME() = delete;	\
 		\
-			enum : bool{value = decltype( _calc< Decay_t<_CLASS> >(nullptr) )::value};	\
+			enum : bool{value = decltype( _calc< Decay_t<_CLASS> >(0) )::value};	\
 		}
 
 #else
@@ -331,19 +328,14 @@ namespace sgm
 
 	template<class T> 
 	struct is_iterator
-	{
-		enum : bool
-		{	value 
-			=	(	(	Has_Operator_Deref<T>::value 
-					&&	Has_Operator_Post_increase<T>::value
-					&&	Has_Operator_NotSame<T>::value
-					)
-				||	isPointer<T>::value
-				)
-		};
-
-		is_iterator() = delete;
-	};
+	:	Boolean_type
+		<	isPointer<T>::value
+		||	(	Has_Operator_Deref<T>::value 
+			&&	Has_Operator_Post_increase<T>::value
+			&&	Has_Operator_NotSame<T>::value
+			)
+		>
+	{};
 
 
 	template<class T>
@@ -357,68 +349,39 @@ namespace sgm
 	{
 	private:
 		template<class Q>
-		static auto _begin_T(Q*)
-		->	typename isSame<  Decay_t< decltype(*Declval<Q>().begin()) >*, T*  >::type;
-
-		template<class> static auto _begin_T(...)-> False_t;
-
-
-		template<class Q>
-		static auto _end_T(Q*)
-		->	typename isSame<  Decay_t< decltype(*Declval<Q>().end()) >*, T*  >::type;
-
-		template<class> static auto _end_T(...)-> False_t;
-
-
-	public:
-		enum : bool
-		{	value 
-			=	(	is_iterable<CON, void>::value
-				&&	decltype( _begin_T< Decay_t<CON> >(nullptr) )::value
-				&&	decltype( _end_T< Decay_t<CON> >(nullptr) )::value
-				)
-		};
-	};
-
-
-	template<class CON>
-	struct is_iterable<CON, void>
-	{
-	private:
-		template<class Q>
-		static auto _has_begin(Q*)
-		->	typename isPointer<  Decay_t< decltype(*Declval<Q>().begin()) >*  >::type;
+		static auto _has_begin(int)
+		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().begin()) ) >;
 
 		template<class> static auto _has_begin(...)-> False_t;
 
 
 		template<class Q>
-		static auto _has_end(Q*)
-		->	typename isPointer<  Decay_t< decltype(*Declval<Q>().end()) >*  >::type;
+		static auto _has_end(int)
+		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().end()) ) >;
 
-		template<class> static auto _has_end(...)-> False_t;		
+		template<class> static auto _has_end(...)-> False_t;
 
 
-		template<class Q>
-		static auto _has_size(Q*)
-		->	typename isSame<  Decay_t< decltype(Declval<Q>().size()) >, size_t  >::type;
+		template<class Q> static auto _has_size(int)
+		->	SFINAE_t< decltype( static_cast<size_t>(Declval<Q>().size()) ) >;
 
 		template<class> static auto _has_size(...)-> False_t;
+
 
 	public:
 		enum : bool
 		{	value
-			=	(	decltype( _has_begin< Decay_t<CON> >(nullptr) )::value
-				&&	decltype( _has_end< Decay_t<CON> >(nullptr) )::value
-				&&	decltype( _has_size< Decay_t<CON> >(nullptr) )::value
+			=	(	decltype( _has_begin< Decay_t<CON> >(0) )::value
+				&&	decltype( _has_end< Decay_t<CON> >(0) )::value
+				&&	decltype( _has_size< Decay_t<CON> >(0) )::value
 				)
 		};
-	};
+	};	
+
 
 	template<class T, size_t N> struct is_iterable<T[N], void> : True_t{};
 	template<class T, size_t N> struct is_iterable<T[N], T> : True_t{};
 	
-
 
 	template
 	<	class CON1, class CON2

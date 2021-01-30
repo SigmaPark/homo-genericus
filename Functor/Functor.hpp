@@ -237,7 +237,7 @@ public:
 	{
 		using eval_t = _Evaluator< D, constPinweight<F> >;
 
-		if constexpr( Check_All<_is_Multiple>::template for_any< std::decay_t<ARGS>... >::value )
+		if constexpr( Check_All<is_Multiple>::template for_any< std::decay_t<ARGS>... >::value )
 			return Apply(  eval_t(_pwf), Params( std::forward<ARGS>(args)... )  );
 		else
 			return eval_t(_pwf)( std::forward<ARGS>(args)... );

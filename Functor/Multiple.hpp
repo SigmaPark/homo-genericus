@@ -237,9 +237,7 @@ template<class...ARGS>
 auto sgm::fp::Make_Multiple(ARGS&&...args)
 {
 	return
-	Multiple< Referenceless_t<ARGS>... >
-	(	static_cast< Referenceless_t<ARGS> >(args)...
-	);
+	Multiple< Referenceless_t<ARGS>... >( static_cast< Referenceless_t<ARGS> >(args)... );
 }
 
 template<class...ARGS>
