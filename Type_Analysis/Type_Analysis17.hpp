@@ -20,19 +20,15 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#ifndef SGM_USER_DEFINED_TYPE_CHECK
-	#define SGM_USER_DEFINED_TYPE_CHECK(NAME, TEM_SIGNATURES, TEM_PARAMS)		\
-		template<class>	\
-		struct is_##NAME : sgm::False_t{  is_##NAME() = delete;  };	\
+#if defined(SGM_USER_DEFINED_TYPE_CHECK) && !defined(SGM_USER_DEFINED_TYPE_CHECK17)
+	#define SGM_USER_DEFINED_TYPE_CHECK17(PRE, TITLE, TEM_SIGNATURES, TEM_PARAMS)	\
+		SGM_USER_DEFINED_TYPE_CHECK(PRE, TITLE, TEM_SIGNATURES, TEM_PARAMS);	\
 		\
-		template<TEM_SIGNATURES>	\
-		struct is_##NAME< NAME<TEM_PARAMS> > : sgm::True_t{  is_##NAME() = delete;  };	\
-		\
-		template<class T>	\
-		static bool constexpr is_##NAME##_v = is_##NAME< sgm::Decay_t<T> >::value
+		template<class...ARGS>	\
+		static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
 
 #else
-	#error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.
+	#error SGM_USER_DEFINED_TYPE_CHECK17 was already defined somewhere else.
 #endif
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -49,18 +45,19 @@
 
 	namespace sgm
 	{
-		_SGM_TEMPLATE_ALIAS(Same);
-		_SGM_TEMPLATE_ALIAS(Convertible);
-		_SGM_TEMPLATE_ALIAS(Const);
-		_SGM_TEMPLATE_ALIAS(LvalueReference);
-		_SGM_TEMPLATE_ALIAS(RvalueReference);
-		_SGM_TEMPLATE_ALIAS(Volatile);
+		_SGM_TEMPLATE_ALIAS(_Same);
+		_SGM_TEMPLATE_ALIAS(_Convertible);
+		_SGM_TEMPLATE_ALIAS(_Const);
+		_SGM_TEMPLATE_ALIAS(_LvalueReference);
+		_SGM_TEMPLATE_ALIAS(_RvalueReference);
+		_SGM_TEMPLATE_ALIAS(_Reference);
+		_SGM_TEMPLATE_ALIAS(_Volatile);
 
-		_SGM_DECAY_TEMPLATE_ALIAS(Pointer);
-		_SGM_DECAY_TEMPLATE_ALIAS(Class);
+		_SGM_DECAY_TEMPLATE_ALIAS(_Pointer);
+		_SGM_DECAY_TEMPLATE_ALIAS(_Class);
 		_SGM_DECAY_TEMPLATE_ALIAS(_inherited_from);
-		_SGM_DECAY_TEMPLATE_ALIAS(Void);
-		_SGM_DECAY_TEMPLATE_ALIAS(None);
+		_SGM_DECAY_TEMPLATE_ALIAS(_Void);
+		_SGM_DECAY_TEMPLATE_ALIAS(_None);
 		_SGM_DECAY_TEMPLATE_ALIAS(_Mutability);
 		_SGM_DECAY_TEMPLATE_ALIAS(_immutable);
 	}

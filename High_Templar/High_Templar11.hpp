@@ -394,7 +394,7 @@ public:
 	static auto calc(CON&& con, FUNC&& func, res_t&& res)-> res_t
 	{
 		static_assert
-		(	isConvertible< res_t, Decay_t<decltype(*con.begin())> >::value
+		(	is_Convertible< res_t, Decay_t<decltype(*con.begin())> >::value
 		,	"for parallelization, folding function should be asocciative."
 		);
 

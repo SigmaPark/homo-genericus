@@ -290,7 +290,7 @@ public:
 		auto constexpr NOF_ARGS 
 		=	NOF_ARGUMENT == ULLONG_MAX ? nof_Arguments_v<FUNC, X> : NOF_ARGUMENT;	
 
-		if constexpr(isNone_v< std::decay_t<Y> >)
+		if constexpr(is_None_v< std::decay_t<Y> >)
 			return
 			_search
 			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )

@@ -329,7 +329,7 @@ namespace sgm
 	template<class T> 
 	struct is_iterator
 	:	Boolean_type
-		<	isPointer<T>::value
+		<	is_Pointer<T>::value
 		||	(	Has_Operator_Deref<T>::value 
 			&&	Has_Operator_Post_increase<T>::value
 			&&	Has_Operator_NotSame<T>::value
@@ -388,7 +388,7 @@ namespace sgm
 	,	class 
 		=	Guaranteed_t
 			<	is_iterable<CON1>::value && is_iterable<CON2>::value
-			&&	isSame<  Decay_t< Deref_t<CON1> >, Decay_t< Deref_t<CON2> >  >::value
+			&&	is_Same<  Decay_t< Deref_t<CON1> >, Decay_t< Deref_t<CON2> >  >::value
 			>
 	>
 	static auto iterable_cast(CON2&& con)-> CON1{  return CON1(con.begin(), con.end());  }

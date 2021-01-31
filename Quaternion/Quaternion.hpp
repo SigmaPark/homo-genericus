@@ -26,8 +26,8 @@ namespace sgm::mxi
 	template<class elem_t = float>
 	class UnitQuaternion;
 
-	SGM_USER_DEFINED_TYPE_CHECK(Quaternion, class T, T);
-	SGM_USER_DEFINED_TYPE_CHECK(UnitQuaternion, class T, T);
+	SGM_USER_DEFINED_TYPE_CHECK17(_, Quaternion, class T, T);
+	SGM_USER_DEFINED_TYPE_CHECK17(_, UnitQuaternion, class T, T);
 
 
 	template<class Q>

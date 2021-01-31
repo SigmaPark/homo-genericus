@@ -65,40 +65,40 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class, class> struct isSame : False_t{};
-	template<class T> struct isSame<T, T> : True_t{};
+	template<class, class> struct is_Same : False_t{};
+	template<class T> struct is_Same<T, T> : True_t{};
 
 
 	template<class T>
-	struct isVoid : isSame<T, void>{};
+	struct is_Void : is_Same<T, void>{};
 
 
 	template<class T>
-	struct isNone : isSame<T, None_t>{};
+	struct is_None : is_Same<T, None_t>{};
 
 
 	template<class T>
-	struct isConst : Boolean_type<  !isSame< T, Constless_t<T> >::value  >{};
+	struct is_Const : Boolean_type<  !is_Same< T, Constless_t<T> >::value  >{};
 
 
-	template<class T> struct isLvalueReference : False_t{};
-	template<class T> struct isLvalueReference<T&> : True_t{};
+	template<class T> struct is_LvalueReference : False_t{};
+	template<class T> struct is_LvalueReference<T&> : True_t{};
 
-	template<class T> struct isRvalueReference : False_t{};
-	template<class T> struct isRvalueReference<T&&> : True_t{};
+	template<class T> struct is_RvalueReference : False_t{};
+	template<class T> struct is_RvalueReference<T&&> : True_t{};
 
 	template<class T> 
-	struct isReference 
-	:	Boolean_type< isLvalueReference<T>::value || isRvalueReference<T>::value >
+	struct is_Reference 
+	:	Boolean_type< is_LvalueReference<T>::value || is_RvalueReference<T>::value >
 	{};
 
 
 	template<class T>
-	struct isVolatile : Boolean_type<  !isSame< T, Volatileless_t<T> >::value  >{};
+	struct is_Volatile : Boolean_type<  !is_Same< T, Volatileless_t<T> >::value  >{};
 
 
 	template<class T>
-	struct isPointer : Boolean_type<  !isSame< T, Pointerless_t<T> >::value  >{};
+	struct is_Pointer : Boolean_type<  !is_Same< T, Pointerless_t<T> >::value  >{};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -133,11 +133,11 @@ namespace sgm
 
 
 	template<class FROM, class TO>
-	struct isConvertible
+	struct is_Convertible
 	{
 	private:
 		template<class F, class T>
-		static auto _calc(int)-> SFINAE_t< decltype( static_cast<T>(Declval<F>()) ) >;
+		static auto _calc(int)-> SFINAE_t< decltype( Declval<void(*)(T)>()(Declval<F>()) ) >;
 
 		template<class, class>
 		static auto _calc(...)-> False_t;
@@ -146,7 +146,7 @@ namespace sgm
 		enum : bool
 		{	value 
 			=	(	decltype( _calc<FROM, TO>(0) )::value
-				||	(isVoid<FROM>::value && isVoid<TO>::value)
+				||	(is_Void<FROM>::value && is_Void<TO>::value)
 				)
 		};
 	};
@@ -154,7 +154,7 @@ namespace sgm
 
 
 	template<class T>
-	struct isClass
+	struct is_Class
 	{
 	private:
 		template<class Q> static auto _calc(int Q::*)-> True_t;
@@ -182,7 +182,7 @@ namespace sgm
 	public:
 		enum : bool
 		{	value
-			=	(	isClass<DERV>::value && isClass<BASE>::value
+			=	(	is_Class<DERV>::value && is_Class<BASE>::value
 				&&	decltype( _test<DERV, BASE>(0) )::value
 				)
 		};
@@ -233,15 +233,15 @@ namespace sgm
 	struct Variable : No_Making{};		using Var = Variable;
 
 	template<class T>
-	struct is_Mutability : Boolean_type< isSame<T, invar>::value || isSame<T, Var>::value >{};
+	struct is_Mutability : Boolean_type< is_Same<T, invar>::value || is_Same<T, Var>::value >{};
 
 
-	template< class T, bool = isPointer<T>::value || isReference<T>::value >
+	template< class T, bool = is_Pointer<T>::value || is_Reference<T>::value >
 	struct is_immutable;
 
 
 	template<class T>
-	struct is_immutable<T, false> : isConst<T>{};
+	struct is_immutable<T, false> : is_Const<T>{};
 
 
 	template<class T>
@@ -300,5 +300,18 @@ namespace sgm
 
 
 }
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#ifndef SGM_USER_DEFINED_TYPE_CHECK
+	#define SGM_USER_DEFINED_TYPE_CHECK(PRE, NAME, TEM_SIGNATURES, TEM_PARAMS)		\
+		template<class> struct is##PRE##NAME : sgm::False_t{};		\
+		template<TEM_SIGNATURES> struct is##PRE##NAME< NAME<TEM_PARAMS> > : sgm::True_t{}
+
+#else
+	#error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.
+#endif
+//========//========//========//========//=======#//========//========//========//========//=======#
+
 
 #endif

@@ -24,12 +24,12 @@ namespace sgm::mxi
 	template<class T>
 	static bool constexpr is_Oriented_v = _is_Oriented<T>::value;
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	Plane, SGM_MACROPACK(class T, unsigned DIMENSION), SGM_MACROPACK(T, DIMENSION)
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, Plane, SGM_MACROPACK(class T, unsigned DIMENSION), SGM_MACROPACK(T, DIMENSION)
 	);
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	Line, SGM_MACROPACK(class T, unsigned DIMENSION), SGM_MACROPACK(T, DIMENSION)
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, Line, SGM_MACROPACK(class T, unsigned DIMENSION), SGM_MACROPACK(T, DIMENSION)
 	);
 
 

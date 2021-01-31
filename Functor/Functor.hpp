@@ -33,8 +33,8 @@ namespace sgm::fp
 	static inline auto const Dim = Dimension<D>();
 
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	Functor, SGM_MACROPACK(unsigned D, class T), SGM_MACROPACK(D, T) 
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, Functor, SGM_MACROPACK(unsigned D, class T), SGM_MACROPACK(D, T) 
 	);
 
 

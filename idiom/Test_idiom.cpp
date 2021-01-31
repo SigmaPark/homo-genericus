@@ -20,19 +20,19 @@ static void Test01()
 
 
 	static_assert
-	(	(	!isLvalueReference<int>::value
-		&&	isLvalueReference<int const&>::value
-		&&	!isLvalueReference<int&&>::value
-		&&	isLvalueReference<int&>::value
+	(	(	!is_LvalueReference<int>::value
+		&&	is_LvalueReference<int const&>::value
+		&&	!is_LvalueReference<int&&>::value
+		&&	is_LvalueReference<int&>::value
 		)
 	,	""
 	);
 
 
 	static_assert
-	(	(	isConvertible<int, double>::value
-		&&	isConvertible<int, int>::value
-		&&	!isConvertible<int const&, int&>::value
+	(	(	is_Convertible<int, double>::value
+		&&	is_Convertible<int, int>::value
+		&&	!is_Convertible<int const&, int&>::value
 		)
 	,	""
 	);
@@ -41,7 +41,7 @@ static void Test01()
 	class BB : public AA{};
 
 	static_assert
-	(	(	isClass<AA>::value && !isClass<double>::value
+	(	(	is_Class<AA>::value && !is_Class<double>::value
 		&&	is_inherited_from<BB, AA>::value
 		&&	!is_inherited_from<AA, BB>::value
 		&&	is_inherited_from<AA, AA>::value

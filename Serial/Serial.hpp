@@ -127,7 +127,7 @@ struct sgm::_iterator_Distance<ITR, false> : No_Making
 template<class T, bool IS_MUTABLE, bool IS_FORWARD>
 class sgm::Serial_iterator
 {
-	static_assert(!isConst<T>::value, "T should be mutable here");
+	static_assert(!is_Const<T>::value, "T should be mutable here");
 
 	friend class _sr_iterator_Helper<T>;
 
@@ -379,7 +379,7 @@ public:
 		=	Enable_if_t
 			<	is_iterable<CON>::value
 			&&	S != srSize::INTERFACE
-			&&	!isSame< Decay_t<CON>, Serial >::value  
+			&&	!is_Same< Decay_t<CON>, Serial >::value  
 			>
 	> 
 	operator CON() const{  return Decay_t<CON>(begin(), end());  }
@@ -390,12 +390,12 @@ public:
 	,	class 
 		=	Enable_if_t
 			<	is_iterable<CON>::value && S != srSize::INTERFACE
-			&&	!isSame< Decay_t<CON>, Serial >::value  
+			&&	!is_Same< Decay_t<CON>, Serial >::value  
 			>
 	> 
 	auto operator=(CON&& con)-> Serial&
 	{
-		_copy_AMAP< isRvalueReference<decltype(con)>::value >
+		_copy_AMAP< is_RvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), *this
 		);
 
@@ -406,7 +406,7 @@ public:
 	template
 	<	class Q
 	,	class 
-		=	Enable_if_t< S != srSize::INTERFACE && isConvertible<Q, T>::value >
+		=	Enable_if_t< S != srSize::INTERFACE && is_Convertible<Q, T>::value >
 	>
 	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 	{
@@ -435,7 +435,7 @@ public:
 template<class T>
 class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 {
-	static_assert(!isConst<T>::value, "T should be mutable for dynamic allocation");
+	static_assert(!is_Const<T>::value, "T should be mutable for dynamic allocation");
 
 
 	using Helper = Serial<T, srSize::INTERFACE>;
@@ -486,18 +486,18 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	Enable_if_t<  is_iterable<CON>::value && !isSame< Serial, Decay_t<CON> >::value  >
+		=	Enable_if_t<  is_iterable<CON>::value && !is_Same< Serial, Decay_t<CON> >::value  >
 	>
 	Serial(CON&& con)
 	{
 		_alloc(con.size()), 
-		_cloning< isRvalueReference<decltype(con)>::value >
+		_cloning< is_RvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), capacity()
 		);
 	}
 
 
-	template<  class Q, class = Enable_if_t< isConvertible<Q, T>::value >  >
+	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
 	Serial(std::initializer_list<Q>&& iL)
 	{
 		_alloc(iL.size()),  _cloning<true>(iL.begin(), iL.end(), capacity());
@@ -547,18 +547,18 @@ public:
 	template
 	<	class CON
 	,	class 
-		=	Enable_if_t<  is_iterable<CON>::value && !isSame< Decay_t<CON>, Serial >::value  >
+		=	Enable_if_t<  is_iterable<CON>::value && !is_Same< Decay_t<CON>, Serial >::value  >
 	>
 	auto operator=(CON&& con)-> Serial&
 	{
 		return 
-		_cloning< isRvalueReference<decltype(con)>::value >
+		_cloning< is_RvalueReference<decltype(con)>::value >
 		(	con.begin(), con.end(), con.size()
 		);
 	}
 
 
-	template<  class Q, class = Enable_if_t< isConvertible<Q, T>::value >  >
+	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
 	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 	{
 		return _cloning<true>(iL.begin(), iL.end(), iL.size());
@@ -657,7 +657,7 @@ public:
 	<	class CON
 	,	class 
 		=	Enable_if_t
-			<	is_iterable<CON>::value && !isSame< Decay_t<CON>, Serial >::value
+			<	is_iterable<CON>::value && !is_Same< Decay_t<CON>, Serial >::value
 			>
 	> 
 	operator CON() const{  return Decay_t<CON>(Helper::begin(), end());  }

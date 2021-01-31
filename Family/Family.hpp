@@ -344,7 +344,7 @@ template<class T>
 struct sgm::remove_aleph
 {
 	using type
-	=	Selective_t< isRvalueReference<T>::value, Referenceless_t<T>, T >;
+	=	Selective_t< is_RvalueReference<T>::value, Referenceless_t<T>, T >;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

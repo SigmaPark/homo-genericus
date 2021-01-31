@@ -23,7 +23,7 @@ namespace sgm::fp
 	static auto Forward_as_Multiple(ARGS&&...args);
 
 
-	SGM_USER_DEFINED_TYPE_CHECK(Multiple, class...TYPES, TYPES...);
+	SGM_USER_DEFINED_TYPE_CHECK17(_, Multiple, class...TYPES, TYPES...);
 
 
 	template<class T, class...ARGS>
@@ -120,7 +120,7 @@ public:
 		{
 			using elem_t = Nth_t<IDX, TYPES...>;
 
-			static_assert(!isLvalueReference<elem_t>::value);
+			static_assert(!is_LvalueReference<elem_t>::value);
 			
 			return static_cast<elem_t>(get<IDX>());
 		}
@@ -131,7 +131,7 @@ public:
 
 	auto hardened() const
 	{
-		static_assert(Type_Check_by<isRvalueReference>::for_none_v<TYPES...>);
+		static_assert(Type_Check_by<is_RvalueReference>::for_none_v<TYPES...>);
 
 		return *this;
 	}

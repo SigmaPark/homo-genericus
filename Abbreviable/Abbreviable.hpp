@@ -16,7 +16,7 @@
 	<	class T, class M	\
 	,	bool IS_NESTED_PROXY = is_##PROXYNAME<T>::value	\
 	,	bool IS_IMMUTABLE = is_immutable<T>::value	\
-	,	bool IS_REFERENCE = isReference<T>::value	\
+	,	bool IS_REFERENCE = is_Reference<T>::value	\
 	>	\
 	struct PROXYNAME##_T_Helper;	\
 	\
@@ -113,7 +113,7 @@
 		{	\
 			using type	\
 			=	Selective_t	\
-				<	isSame<M, invar>::value || is_immutable<Q>::value	\
+				<	is_Same<M, invar>::value || is_immutable<Q>::value	\
 				,	invar	\
 				,	Selective_t		\
 					<	is_##PROXYNAME<Q>::value	\
@@ -127,7 +127,7 @@
 	public:	\
 		enum : bool	\
 		{	value	\
-			=	isSame	\
+			=	is_Same	\
 				<	typename PROXYNAME##Mutability< Referenceless_t<T> >::type	\
 				,	invar	\
 				>::	value	\

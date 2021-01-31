@@ -75,7 +75,7 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
 
-	template<class FLAG> struct is_Flag : isConvertible< FLAG, Flag<FLAG> >{};
+	template<class FLAG> struct is_Flag : is_Convertible< FLAG, Flag<FLAG> >{};
 
 	template<class> struct is_FlagSet : False_t{};
 	template<class...FLAGS> struct is_FlagSet< Flag<FLAGS...> > : True_t{};

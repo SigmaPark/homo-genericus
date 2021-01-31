@@ -13,8 +13,8 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class AffineTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	AffineTransform
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, AffineTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
 	);
@@ -23,8 +23,8 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class Rotation;
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	Rotation
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_,	Rotation
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
 	);
@@ -33,8 +33,8 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class RigidBodyTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	RigidBodyTransform
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, RigidBodyTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
 	);
@@ -43,8 +43,8 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class ScalableBodyTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	ScalableBodyTransform
+	SGM_USER_DEFINED_TYPE_CHECK17
+	(	_, ScalableBodyTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
 	);
