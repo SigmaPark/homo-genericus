@@ -61,14 +61,26 @@ private:
 	static T middle(T const& a, T const& b){  return T(.5)*(a + b);  }
 
 
+	template<class T>
+	static void set_increasing_order(T& a, T& b)
+	{
+		if(a > b)
+		{
+			T t = a;
+
+			a = b, b = t;		
+		}
+	}
+
+
 public:
 	template
 	<	class X, class FUNC
-	,	class Y = std::invoke_result_t<FUNC, X>
+	,	class Y = decltype( Declval<FUNC>()(Declval<X>()) )
 	,	class GAMMA_DOMAIN
 	,	class 
-		=	std::enable_if_t
-			<	std::is_scalar<X>::value && is_iterable<GAMMA_DOMAIN, X>::value
+		=	Enable_if_t
+			<	is_Convertible<X, double>::value && is_iterable<GAMMA_DOMAIN, X>::value
 			>
 	>
 	static auto search(FUNC&& func, GAMMA_DOMAIN&& x_domain, X epsilon)-> XY_Pair<X, Y>
@@ -80,11 +92,10 @@ public:
 
 		X a = *x_domain.begin(), b = *Next(x_domain.begin());
 
-		if(a > b)
-			std::swap(a, b);
-	
-		X	M = iphi*(b - a), c = b - M, d = a + M;
-		Y	fc = func(c), fd = func(d);
+		set_increasing_order<X>(a, b);
+
+		X M = iphi*(b - a), c = b - M, d = a + M;
+		Y fc = func(c), fd = func(d);
 			
 		while( d - c > epsilon && then(M *= iphi) )
 			if( Helper<XT>::Left(fc, fd) )
@@ -266,12 +277,11 @@ private:
 	,	XITR xitr
 	)
 	{
-		std::decay_t<decltype( func(init_x) )> y = 0;
+		Decay_t<decltype( func(init_x) )> y = 0;
 
 		return
 		_search
-		(	std::forward<FUNC>(func)
-		,	std::forward<XV>(init_x), radius, epsilon, max_iteration, xitr, y
+		(	Forward<FUNC>(func), Forward<XV>(init_x), radius, epsilon, max_iteration, xitr, y
 		);
 	}
 
@@ -290,18 +300,18 @@ public:
 		auto constexpr NOF_ARGS 
 		=	NOF_ARGUMENT == ULLONG_MAX ? nof_Arguments_v<FUNC, X> : NOF_ARGUMENT;	
 
-		if constexpr(is_None_v< std::decay_t<Y> >)
+		if constexpr(is_None_v< Decay_t<Y> >)
 			return
 			_search
-			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )
-			,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+			(	_Apply<NOF_ARGS, decltype(func), X>( Forward<FUNC>(func) )
+			,	iterable_cast< Serial<X> >( Forward<XV>(init_x) )
 			,	radius, epsilon, max_iteration, xitr_out
 			);			
 		else
 			return
 			_search
-			(	_Apply<NOF_ARGS, decltype(func), X>( std::forward<FUNC>(func) )
-			,	iterable_cast< Serial<X> >( std::forward<XV>(init_x) )
+			(	_Apply<NOF_ARGS, decltype(func), X>( Forward<FUNC>(func) )
+			,	iterable_cast< Serial<X> >( Forward<XV>(init_x) )
 			,	radius, epsilon, max_iteration, xitr_out, yout
 			);
 	}

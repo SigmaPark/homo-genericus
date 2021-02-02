@@ -34,32 +34,32 @@
 
 
 #if !defined(_SGM_TEMPLATE_ALIAS) && !defined(_SGM_DECAY_TEMPLATE_ALIAS)
-	#define _SGM_TEMPLATE_ALIAS(TITLE)	\
+	#define _SGM_TEMPLATE_ALIAS(PRE, TITLE)	\
 		template<class...ARGS>	\
-		static auto constexpr is##TITLE##_v = is##TITLE<ARGS...>::value
+		static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE<ARGS...>::value
 
-	#define _SGM_DECAY_TEMPLATE_ALIAS(TITLE)	\
+	#define _SGM_DECAY_TEMPLATE_ALIAS(PRE, TITLE)	\
 		template<class...ARGS>	\
-		static auto constexpr is##TITLE##_v = is##TITLE< Decay_t<ARGS>... >::value
+		static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
 
 
 	namespace sgm
 	{
-		_SGM_TEMPLATE_ALIAS(_Same);
-		_SGM_TEMPLATE_ALIAS(_Convertible);
-		_SGM_TEMPLATE_ALIAS(_Const);
-		_SGM_TEMPLATE_ALIAS(_LvalueReference);
-		_SGM_TEMPLATE_ALIAS(_RvalueReference);
-		_SGM_TEMPLATE_ALIAS(_Reference);
-		_SGM_TEMPLATE_ALIAS(_Volatile);
+		_SGM_TEMPLATE_ALIAS(_, Same);
+		_SGM_TEMPLATE_ALIAS(_, Convertible);
+		_SGM_TEMPLATE_ALIAS(_, Const);
+		_SGM_TEMPLATE_ALIAS(_, LvalueReference);
+		_SGM_TEMPLATE_ALIAS(_, RvalueReference);
+		_SGM_TEMPLATE_ALIAS(_, Reference);
+		_SGM_TEMPLATE_ALIAS(_, Volatile);
 
-		_SGM_DECAY_TEMPLATE_ALIAS(_Pointer);
-		_SGM_DECAY_TEMPLATE_ALIAS(_Class);
-		_SGM_DECAY_TEMPLATE_ALIAS(_inherited_from);
-		_SGM_DECAY_TEMPLATE_ALIAS(_Void);
-		_SGM_DECAY_TEMPLATE_ALIAS(_None);
-		_SGM_DECAY_TEMPLATE_ALIAS(_Mutability);
-		_SGM_DECAY_TEMPLATE_ALIAS(_immutable);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, Pointer);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, Class);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, inherited_from);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, Void);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, None);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, Mutability);
+		_SGM_DECAY_TEMPLATE_ALIAS(_, immutable);
 	}
 		
 

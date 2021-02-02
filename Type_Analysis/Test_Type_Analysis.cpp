@@ -37,6 +37,7 @@ void Test_sgm_Type_Analysis::test()
 		::Test_No_Making();
 		::Test_Declval();
 
+
 		std::wcout << L"Type_Analysis Test Complete.\n";
 	}
 	catch(...)
