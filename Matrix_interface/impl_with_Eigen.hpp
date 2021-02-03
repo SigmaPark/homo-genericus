@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Matrix_interface.hpp"
+#include "..\interface_Traits\interface_Traits.hpp"
 
 #include "..\3rd_Party_Libraries\Eigen_ver_3.3.9\Dense"
-#include <cmath>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -15,7 +15,7 @@ namespace sgm::mxi
 
 	template<class Q>
 	using Maybe_reference_t
-	=	std::conditional_t< is_immutable<Q>::value, std::decay_t<Q>, std::decay_t<Q>& >;
+	=	Selective_t< is_immutable<Q>::value, Decay_t<Q>, Decay_t<Q>& >;
 
 
 	template<class T>
@@ -32,11 +32,11 @@ template<class T, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C>
 class sgm::mxi::Mx_implementation
 {
 	using core_t
-	=	std::conditional_t
+	=	Selective_t
 		<	MxSize::is_temporary_v<R>
-		,	std::remove_reference_t<T>
+		,	Referenceless_t<T>
 		,	Eigen::Matrix
-			<	std::decay_t<T>
+			<	Decay_t<T>
 			,	MxSize::is_dynamic_v<R> ? Eigen::Dynamic : static_cast<egnSize_t>(R)
 			,	MxSize::is_dynamic_v<C> ? Eigen::Dynamic : static_cast<egnSize_t>(C)
 			>
@@ -49,12 +49,12 @@ class sgm::mxi::Mx_implementation
 
 
 protected:
-	using elem_t = std::decay_t< decltype( _core(0) ) >;
+	using elem_t = Decay_t< decltype( _core(0) ) >;
 
 
 	template
 	<	class CON
-	,	class = std::enable_if_t< is_iterable<CON>::value && !MxTraits::is_mxiMatrix_v<CON> >
+	,	class = Enable_if_t< is_iterable<CON>::value && !MxTraits::is_mxiMatrix_v<CON> >
 	>
 	Mx_implementation(CON&& con, MxSize_t r, MxSize_t c)
 	:	_core
@@ -72,7 +72,7 @@ protected:
 				)
 					res.resize(r, c);
 
-				for(  auto[itr, i] = std::pair( con.begin(), MxSize_t(0) ); i < r; ++i  )
+				for(  auto[itr, i] = Dual_iteration( con.begin(), MxSize_t(0) );  i < r;  ++i  )
 					for(index_t j = 0; j < c; ++j, ++itr)
 						res(i, j) = static_cast<elem_t>(*itr);
 					
@@ -91,8 +91,8 @@ protected:
 					return q.core();
 				else if constexpr(MxSize::is_temporary_v<R>)
 					return
-					std::conditional_t
-					<	is_immutable<Q>::value, decltype(q), std::decay_t<Q>&&
+					Selective_t
+					<	is_immutable<Q>::value, decltype(q), Decay_t<Q>&&
 					>
 					(q);
 				else SGM_COMPILE_FAILED(no suitable method was found.);
@@ -181,11 +181,11 @@ template<class T, sgm::mxi::MxSize_t S>
 class sgm::mxi::Vt_implementation
 {
 	using core_t
-	=	std::conditional_t
+	=	Selective_t
 		<	MxSize::is_temporary_v<S>
-		,	std::remove_reference_t<T>
+		,	Referenceless_t<T>
 		,	egnVector_t
-			<	std::decay_t<T>
+			<	Decay_t<T>
 			,	MxSize::is_dynamic_v<S> ? Eigen::Dynamic : static_cast<egnSize_t>(S)
 			>
 		>;
@@ -194,7 +194,7 @@ class sgm::mxi::Vt_implementation
 
 
 protected:
-	using elem_t = std::decay_t< decltype( _core(0) ) >;
+	using elem_t = Decay_t< decltype( _core(0) ) >;
 
 
 	template<class Q>
@@ -202,7 +202,7 @@ protected:
 	:	_core
 		(	[&q]()-> core_t
 			{
-				if constexpr(MxSize::is_dynamic_v<S> && std::is_integral_v< std::decay_t<Q> >)
+				if constexpr(MxSize::is_dynamic_v<S> && is_Convertible_v< Decay_t<Q>, int >)
 					return core_t(q, 1);
 				else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 				{
@@ -219,8 +219,8 @@ protected:
 					return q.core();
 				else if constexpr(MxSize::is_temporary_v<S>)
 					return
-					std::conditional_t
-					<	is_immutable<Q>::value, decltype(q), std::decay_t<Q>&&
+					Selective_t
+					<	is_immutable<Q>::value, decltype(q), Decay_t<Q>&&
 					>
 					(q);
 				else if constexpr(is_iterable<Q>::value)
@@ -237,7 +237,7 @@ protected:
 						res.resize(qsize, 1);
 
 					for
-					(	auto[itr, p] = std::pair( q.begin(), &res(0) )
+					(	auto[itr, p] = Dual_iteration( q.begin(), &res(0) )
 					;	itr != q.end()
 					;	*p++ = static_cast<elem_t>(*itr++)
 					);
@@ -299,7 +299,7 @@ protected:
 
 
 	template<class Q>
-	auto dot(Q&& q) const{  return _core.dot( std::forward<Q>(q) );  }
+	auto dot(Q&& q) const{  return _core.dot( Forward<Q>(q) );  }
 
 
 	template<class Q>

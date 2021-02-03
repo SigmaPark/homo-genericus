@@ -7,9 +7,10 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\interface_Traits\interface_Traits17.hpp"
+#include "..\Type_Analysis\Type_Analysis17.hpp"
 #include "..\idiom\idiom.hpp"
 #include <cassert>
+#include <initializer_list>
 
 
 #ifndef _READ_WRITE_MEMFUNC
@@ -27,7 +28,7 @@ namespace sgm::mxi
 	
 	struct MxSize : No_Making 
 	{ 
-		static size_t constexpr DYNAMIC = ULLONG_MAX;
+		static size_t constexpr DYNAMIC = 0xffffffffffffffffui64;
 		static auto constexpr TEMPORARY = DYNAMIC - 1;
 		
 		template<size_t N> static bool constexpr is_dynamic_v = N == DYNAMIC;
@@ -70,7 +71,7 @@ namespace sgm::mxi
 	template
 	<	MxSize_t S1 = MxSize::DYNAMIC, MxSize_t S2 = MxSize::DYNAMIC
 	,	class T
-	,	class = std::enable_if_t< MxTraits::is_mxiMatrix_v<T> || MxTraits::is_mxiVector_v<T> >
+	,	class = Enable_if_t< MxTraits::is_mxiMatrix_v<T> || MxTraits::is_mxiVector_v<T> >
 	>
 	static decltype(auto) fetch(T&& t);
 
@@ -78,7 +79,7 @@ namespace sgm::mxi
 	template
 	<	class VECS
 	,	class
-		=	std::enable_if_t
+		=	Enable_if_t
 			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Deref_t<VECS> >
 			>
 	>
@@ -88,7 +89,7 @@ namespace sgm::mxi
 	template
 	<	class VECS
 	,	class
-		=	std::enable_if_t
+		=	Enable_if_t
 			<	is_iterable<VECS>::value && MxTraits::is_mxiVector_v< Deref_t<VECS> >
 			>
 	>
@@ -126,13 +127,13 @@ private:
 	template<class T>
 	static auto Mx(T&& t)
 	{
-		return Matrix<T, MxSize::TEMPORARY, MxSize::TEMPORARY>( std::move(t) );
+		return Matrix<T, MxSize::TEMPORARY, MxSize::TEMPORARY>( Move(t) );
 	}
 
 	template<class T>
 	static auto Vt(T&& t)
 	{
-		return Vector<T, MxSize::TEMPORARY>( std::move(t) );
+		return Vector<T, MxSize::TEMPORARY>( Move(t) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -184,17 +185,20 @@ private:
 
 
 public:
+	template<class S>
+	static bool constexpr is_Real_v = is_Convertible_v<S, double>;
+
 	template<class M>
-	static bool constexpr is_mxiMatrix_v = is_mxiMatrix< std::decay_t<M> >::value;
+	static bool constexpr is_mxiMatrix_v = is_mxiMatrix< Decay_t<M> >::value;
 
 	template<class V>
-	static bool constexpr is_mxiVector_v = is_mxiVector< std::decay_t<V> >::value;
+	static bool constexpr is_mxiVector_v = is_mxiVector< Decay_t<V> >::value;
 
 	template<class M>
-	static bool constexpr is_DynamicMx_v = is_Dynamic< std::decay_t<M> >::value;
+	static bool constexpr is_DynamicMx_v = is_Dynamic< Decay_t<M> >::value;
 
 	template<class M> 
-	static bool constexpr is_StaticMx_v = is_Static< std::decay_t<M> >::value;
+	static bool constexpr is_StaticMx_v = is_Static< Decay_t<M> >::value;
 
 	template<class M>
 	static bool constexpr is_Temporary_v
@@ -208,10 +212,10 @@ public:
 
 
 	template<class T>
-	static bool constexpr is_UnitVector_v = is_UnitVector< std::decay_t<T> >::value;
+	static bool constexpr is_UnitVector_v = is_UnitVector< Decay_t<T> >::value;
 
 	template<class T>
-	static bool constexpr is_OrthonormalMatrix_v = is_OrthonormalMatrix< std::decay_t<T> >::value;
+	static bool constexpr is_OrthonormalMatrix_v = is_OrthonormalMatrix< Decay_t<T> >::value;
 
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -232,7 +236,7 @@ public:
 
 
 	template
-	<	class = std::enable_if_t< !MxSize::is_static_v<R> && !MxSize::is_static_v<C> > 
+	<	class = Enable_if_t< !MxSize::is_static_v<R> && !MxSize::is_static_v<C> > 
 	>
 	Matrix(MxSize_t r, MxSize_t c) : Matrix(){  this->resize(r, c);  }
 
@@ -240,22 +244,22 @@ public:
 	template
 	<	class Q
 	,	class 
-		=	std::enable_if_t
-			<	std::is_scalar_v<Q> && (MxSize::is_static_v<R> || MxSize::is_static_v<C>)
+		=	Enable_if_t
+			<	MxTraits::is_Real_v<Q> && (MxSize::is_static_v<R> || MxSize::is_static_v<C>)
 			>
 	>
-	Matrix(std::initializer_list<Q>&& iL) : impl_t( std::move(iL), R, C ){}
+	Matrix(std::initializer_list<Q>&& iL) : impl_t( Move(iL), R, C ){}
 
 
 	template
 	<	class CON
 	,	class
-		=	std::enable_if_t
+		=	Enable_if_t
 			<	is_iterable<CON, elem_t>::value && MxTraits::is_DynamicMx_v<Matrix>
 			>
 	>
 	Matrix(CON&& con, MxSize_t r = R, MxSize_t c = C) 
-	:	impl_t( std::forward<CON>(con), r, c )
+	:	impl_t( Forward<CON>(con), r, c )
 	{
 		assert
 		(	(MxSize::is_dynamic_v<R> || R == r) && (MxSize::is_dynamic_v<C> || C == c)
@@ -265,11 +269,11 @@ public:
 
 
 	template<class Q>
-	Matrix(Q&& q) : impl_t( std::forward<Q>(q) ){}
+	Matrix(Q&& q) : impl_t( Forward<Q>(q) ){}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
 	auto operator=(Q&& q)-> Matrix&
 	{
 		impl_t::core() = q.core();
@@ -347,7 +351,9 @@ public:
 
 	auto inversed() const
 	{
-		assert( is_SqrMat() && abs(det()) > elem_t(0.000001) );
+		auto is_not_0 = [eps = .000001](auto t)-> bool{  return t < -eps || eps < t;  };
+
+		assert( is_SqrMat() && is_not_0(det()) );
 
 		return _Temporary::Mx(impl_t::inversed());  
 	}
@@ -356,43 +362,43 @@ public:
 
 	auto operator-() const{  return _Temporary::Mx(-impl_t::core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
 	auto operator+(Q&& q) const{  return _Temporary::Mx(impl_t::core() + q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
-	auto operator+=(Q&& q)-> Matrix&{  return *this = *this + std::forward<Q>(q);  }
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	auto operator+=(Q&& q)-> Matrix&{  return *this = *this + Forward<Q>(q);  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
 	auto operator-(Q&& q) const{  return _Temporary::Mx(impl_t::core() - q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
-	auto operator-=(Q&& q)-> Matrix&{  return *this = *this - std::forward<Q>(q);  }
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	auto operator-=(Q&& q)-> Matrix&{  return *this = *this - Forward<Q>(q);  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
 	auto operator*(Q&& q) const{  return _Temporary::Mx(impl_t::core() * q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
-	auto operator*=(Q&& q)-> Matrix&{  return *this = *this * std::forward<Q>(q);  }
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiMatrix_v<Q> >  >
+	auto operator*=(Q&& q)-> Matrix&{  return *this = *this * Forward<Q>(q);  }
 
-	template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
+	template<  class S, class = Enable_if_t< MxTraits::is_Real_v<S> >  >
 	auto operator*(S s) const{  return _Temporary::Mx(impl_t::core() * s);  }
 
-	template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
+	template<  class S, class = Enable_if_t< MxTraits::is_Real_v<S> >  >
 	auto operator*=(S s) const{  return *this = *this * s;  }
 
-	template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
+	template<  class S, class = Enable_if_t< MxTraits::is_Real_v<S> >  >
 	auto operator/(S s) const{  return _Temporary::Mx(impl_t::core() / s);  }
 
-	template<  class S, class = std::enable_if_t< std::is_scalar_v<S> >  >
+	template<  class S, class = Enable_if_t< MxTraits::is_Real_v<S> >  >
 	auto operator/=(S s) const{  return *this = *this / s;  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<  class = std::enable_if_t< !MxTraits::is_StaticMx_v<Matrix> || R==C >  >
+	template<  class = Enable_if_t< !MxTraits::is_StaticMx_v<Matrix> || R==C >  >
 	static auto identity(){  return _Temporary::Mx(impl_t::identity());  }
 
 	template
-	<	class = std::enable_if_t< MxSize::is_dynamic_v<R> && MxSize::is_dynamic_v<C> >
+	<	class = Enable_if_t< MxSize::is_dynamic_v<R> && MxSize::is_dynamic_v<C> >
 	>
 	static auto identity(MxSize_t size)
 	{
@@ -400,11 +406,11 @@ public:
 	}
 
 
-	template<  class = std::enable_if_t< MxTraits::is_StaticMx_v<Matrix> >  >
+	template<  class = Enable_if_t< MxTraits::is_StaticMx_v<Matrix> >  >
 	static auto zero(){  return _Temporary::Mx(impl_t::zero());  }
 
 	template
-	<	class = std::enable_if_t< MxSize::is_dynamic_v<R> && MxSize::is_dynamic_v<C> >
+	<	class = Enable_if_t< MxSize::is_dynamic_v<R> && MxSize::is_dynamic_v<C> >
 	>
 	static auto zero(MxSize_t r, MxSize_t c)
 	{
@@ -416,7 +422,7 @@ public:
 
 template
 <	class S, class T, sgm::mxi::MxSize_t R, sgm::mxi::MxSize_t C
-,	class = std::enable_if_t< std::is_scalar_v<S> >
+,	class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >
 >
 static auto operator*(S s, sgm::mxi::Matrix<T, R, C> const& m){  return m * s;  }
 
@@ -424,7 +430,7 @@ static auto operator*(S s, sgm::mxi::Matrix<T, R, C> const& m){  return m * s;  
 template<class VECS, class>
 auto sgm::mxi::column_space(VECS&& vecs)
 {
-	using elem_t = typename std::decay_t< Deref_t<VECS> >::elem_t;
+	using elem_t = typename Decay_t< Deref_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.begin()->size(), vecs.size());
 
@@ -441,7 +447,7 @@ auto sgm::mxi::column_space(VECS&& vecs)
 template<class VECS, class>
 auto sgm::mxi::row_space(VECS&& vecs)
 {
-	using elem_t = typename std::decay_t< Deref_t<VECS> >::elem_t;
+	using elem_t = typename Decay_t< Deref_t<VECS> >::elem_t;
 
 	Matrix<elem_t> res(vecs.size(), vecs.begin()->size());
 
@@ -469,16 +475,16 @@ public:
 	Vector() = default;
 
 
-	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-	Vector(std::initializer_list<Q>&& iL) : impl_t( std::move(iL) ){}
+	template<  class Q, class = Enable_if_t< MxTraits::is_Real_v<Q> >  >
+	Vector(std::initializer_list<Q>&& iL) : impl_t( Move(iL) ){}
 
 
 	template<class Q>
-	Vector(Q&& q) : impl_t( std::forward<Q>(q) ){}
+	Vector(Q&& q) : impl_t( Forward<Q>(q) ){}
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto operator=(Q&& q)-> Vector&
 	{
 		impl_t::core() = q.core();
@@ -547,51 +553,51 @@ public:
 
 	auto operator-() const{  return _Temporary::Vt(-impl_t::core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto operator+(Q&& q) const{  return _Temporary::Vt(impl_t::core() + q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
-	auto operator+=(Q&& q)-> Vector&{  return *this = *this + std::forward<Q>(q);  }
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	auto operator+=(Q&& q)-> Vector&{  return *this = *this + Forward<Q>(q);  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto operator-(Q&& q) const{  return _Temporary::Vt(impl_t::core() - q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
-	auto operator-=(Q&& q)-> Vector&{  return *this = *this - std::forward<Q>(q);  }
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	auto operator-=(Q&& q)-> Vector&{  return *this = *this - Forward<Q>(q);  }
 
-	template<  class U, class = std::enable_if_t< std::is_scalar_v<U> >  >
+	template<  class U, class = Enable_if_t< MxTraits::is_Real_v<U> >  >
 	auto operator*(U u) const{  return _Temporary::Vt(impl_t::core() * u);  }
 
-	template<  class U, class = std::enable_if_t< std::is_scalar_v<U> >  >
+	template<  class U, class = Enable_if_t< MxTraits::is_Real_v<U> >  >
 	auto operator*=(U u)-> Vector&{  return *this = *this * u;  }
 
-	template<  class U, class = std::enable_if_t< std::is_scalar_v<U> >  >
+	template<  class U, class = Enable_if_t< MxTraits::is_Real_v<U> >  >
 	auto operator/(U u) const{  return _Temporary::Vt(impl_t::core() / u);  }
 
-	template<  class U, class = std::enable_if_t< std::is_scalar_v<U> >  >
+	template<  class U, class = Enable_if_t< MxTraits::is_Real_v<U> >  >
 	auto operator/=(U u)-> Vector&{  return *this = *this / u;  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto dot(Q&& q) const{  return impl_t::dot(q.core());  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto cross(Q&& q) const{  return _Temporary::Vt( impl_t::cross(q.core()) );  }
 
-	template<  class Q, class = std::enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
+	template<  class Q, class = Enable_if_t< MxTraits::is_mxiVector_v<Q> >  >
 	auto dyad(Q&& q) const{  return _Temporary::Mx( impl_t::dyad(q.core()) );  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<  class = std::enable_if_t< MxSize::is_static_v<S> >  >
+	template<  class = Enable_if_t< MxSize::is_static_v<S> >  >
 	static auto zero(){  return _Temporary::Vt(impl_t::zero());  }
 
-	template<  class = std::enable_if_t< MxSize::is_dynamic_v<S> >  >
+	template<  class = Enable_if_t< MxSize::is_dynamic_v<S> >  >
 	static auto zero(MxSize_t s){  return _Temporary::Vt( impl_t::zero(s) );  }
 
-	template<  class = std::enable_if_t< MxSize::is_static_v<S> >  >
+	template<  class = Enable_if_t< MxSize::is_static_v<S> >  >
 	static auto ones(){  return _Temporary::Vt(impl_t::ones());  }
 
-	template<  class = std::enable_if_t< MxSize::is_dynamic_v<S> >  >
+	template<  class = Enable_if_t< MxSize::is_dynamic_v<S> >  >
 	static auto ones(MxSize_t s){  return _Temporary::Vt( impl_t::ones(s) );  }
 
 };// end of class Vector
@@ -599,7 +605,8 @@ public:
 
 
 template
-<	class S, class T, sgm::mxi::MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
+<	class S, class T, sgm::mxi::MxSize_t SIZE
+,	class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >  
 >
 static auto operator*(S s, sgm::mxi::Vector<T, SIZE> const& v){  return v * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -665,15 +672,15 @@ public:
 
 
 	template<class Q>
-	UnitVector(Q&& q) : _vec(  nonnormalized( std::forward<Q>(q) )  )
+	UnitVector(Q&& q) : _vec(  nonnormalized( Forward<Q>(q) )  )
 	{
 		if constexpr(!MxTraits::is_UnitVector_v<Q>)
 			_normalize_myself();
 	}
 
 
-	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-	UnitVector(std::initializer_list<Q>&& iL) : _vec( std::move(iL) )
+	template<  class Q, class = Enable_if_t< MxTraits::is_Real_v<Q> >  >
+	UnitVector(std::initializer_list<Q>&& iL) : _vec( Move(iL) )
 	{
 		_normalize_myself();
 	}
@@ -681,11 +688,11 @@ public:
 
 	template
 	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, UnitVector >  >
+	,	class = Enable_if_t<  !is_Same_v< Decay_t<Q>, UnitVector >  >
 	>
 	auto operator=(Q&& q)-> UnitVector&
 	{
-		_vec = nonnormalized( std::forward<Q>(q) );
+		_vec = nonnormalized( Forward<Q>(q) );
 
 		return _normalize_myself();
 	}
@@ -714,20 +721,20 @@ public:
 
 
 	template<class Q> 
-	decltype(auto) operator*(Q&& q) const{  return vec() * std::forward<Q>(q);  }
+	decltype(auto) operator*(Q&& q) const{  return vec() * Forward<Q>(q);  }
 
 	template<class Q>
-	decltype(auto) operator/(Q&& q) const{  return vec() / std::forward<Q>(q);  }
+	decltype(auto) operator/(Q&& q) const{  return vec() / Forward<Q>(q);  }
 
 
 	template<class Q>
-	decltype(auto) dot(Q&& q) const{  return vec().dot( std::forward<Q>(q) );  }
+	decltype(auto) dot(Q&& q) const{  return vec().dot( Forward<Q>(q) );  }
 
 	template<class Q>
-	decltype(auto) cross(Q&& q) const{  return vec().cross( std::forward<Q>(q) );  }
+	decltype(auto) cross(Q&& q) const{  return vec().cross( Forward<Q>(q) );  }
 
 	template<class Q>
-	decltype(auto) dyad(Q&& q) const{  return vec().dyad( std::forward<Q>(q) );  }
+	decltype(auto) dyad(Q&& q) const{  return vec().dyad( Forward<Q>(q) );  }
 
 
 private:
@@ -746,14 +753,14 @@ private:
 	friend static decltype(auto) sgm::mxi::regard_normalized(Q&&);
 
 	template<class VEC>
-	UnitVector(VEC&& v, _PrivateTag) : _vec( std::forward<VEC>(v) ){}
+	UnitVector(VEC&& v, _PrivateTag) : _vec( Forward<VEC>(v) ){}
 
 };// end of class UnitVector
 
 
 template
 <	class S, class T
-,	sgm::mxi::MxSize_t SIZE, class = std::enable_if_t< std::is_scalar_v<S> >  
+,	sgm::mxi::MxSize_t SIZE, class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >  
 >
 static auto operator*(S s, sgm::mxi::UnitVector<T, SIZE> const& v){  return v * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -774,15 +781,15 @@ public:
 	OrthonormalMatrix(size_t dim) : _mat( Mat_t::identity(dim) ){}
 
 	template<class Q>
-	OrthonormalMatrix(Q&& q) : _mat(  nonnormalized( std::forward<Q>(q) )  )
+	OrthonormalMatrix(Q&& q) : _mat(  nonnormalized( Forward<Q>(q) )  )
 	{
 		if constexpr(!MxTraits::is_OrthonormalMatrix_v<Q>)
 			_orthonormalize_myself();
 	}
 
 
-	template<  class Q, class = std::enable_if_t< std::is_scalar_v<Q> >  >
-	OrthonormalMatrix(std::initializer_list<Q>&& iL) : _mat( std::move(iL) )
+	template<  class Q, class = Enable_if_t< MxTraits::is_Real_v<Q> >  >
+	OrthonormalMatrix(std::initializer_list<Q>&& iL) : _mat( Move(iL) )
 	{
 		_orthonormalize_myself();
 	}
@@ -790,11 +797,11 @@ public:
 
 	template
 	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, OrthonormalMatrix >  >
+	,	class = Enable_if_t<  !is_Same_v< Decay_t<Q>, OrthonormalMatrix >  >
 	>
 	auto operator=(Q&& q)-> OrthonormalMatrix&
 	{
-		_mat = nonnormalized( std::forward<Q>(q) );
+		_mat = nonnormalized( Forward<Q>(q) );
 
 		return _orthonormalize_myself();
 	}
@@ -835,10 +842,10 @@ public:
 	auto inversed() const{  return transposed();  }
 
 	template<class Q> 
-	decltype(auto) operator*(Q&& q) const{  return mat() * std::forward<Q>(q);  }
+	decltype(auto) operator*(Q&& q) const{  return mat() * Forward<Q>(q);  }
 
 	template<class Q>
-	decltype(auto) operator/(Q&& q) const{  return mat() / std::forward<Q>(q);  }
+	decltype(auto) operator/(Q&& q) const{  return mat() / Forward<Q>(q);  }
 
 
 private:
@@ -868,14 +875,15 @@ private:
 	friend static decltype(auto) sgm::mxi::regard_normalized(Q&&);
 
 	template<class MAT>
-	OrthonormalMatrix(MAT&& m, _PrivateTag) : _mat( std::forward<MAT>(m) ){}
+	OrthonormalMatrix(MAT&& m, _PrivateTag) : _mat( Forward<MAT>(m) ){}
 
 
 };// end of class OrthonormalMatrix
 
 
 template
-<	class S, class T, sgm::mxi::MxSize_t N, class = std::enable_if_t< std::is_scalar_v<S> >
+<	class S, class T, sgm::mxi::MxSize_t N
+,	class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >
 >
 static auto operator*(S s, sgm::mxi::OrthonormalMatrix<T, N> const& m){  return m * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -889,7 +897,7 @@ decltype(auto) sgm::mxi::nonnormalized(U&& u)
 	else if constexpr(MxTraits::is_OrthonormalMatrix_v<U>)
 		return u.mat();
 	else
-		return std::forward<U>(u);
+		return Forward<U>(u);
 }
 
 
@@ -897,10 +905,10 @@ template<class Q>
 decltype(auto) sgm::mxi::regard_normalized(Q&& q)
 {
 	if constexpr(MxTraits::is_mxiVector_v<Q>)
-		return UnitVector<typename Q::elem_t, Q::VEC_SIZE>( std::forward<Q>(q), _PrivateTag{} );
+		return UnitVector<typename Q::elem_t, Q::VEC_SIZE>( Forward<Q>(q), _PrivateTag{} );
 	else if constexpr(MxTraits::is_mxiMatrix_v<Q>)
 		return
-		OrthonormalMatrix<typename Q::elem_t, Q::COL_SIZE>( std::forward<Q>(q), _PrivateTag{} );
+		OrthonormalMatrix<typename Q::elem_t, Q::COL_SIZE>( Forward<Q>(q), _PrivateTag{} );
 	else SGM_COMPILE_FAILED(no suitable method was found);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -910,7 +918,7 @@ template<sgm::mxi::MxSize_t S1, sgm::mxi::MxSize_t S2, class T, class>
 decltype(auto) sgm::mxi::fetch(T&& t)
 {
 	if constexpr(!MxTraits::is_Temporary_v<T>)
-		return std::forward<T>(t);
+		return Forward<T>(t);
 	else if constexpr(MxTraits::is_mxiMatrix_v<T>)
 		return static_cast< Matrix<typename T::elem_t, S1, S2> >(t);
 	else if constexpr(MxTraits::is_mxiVector_v<T>)

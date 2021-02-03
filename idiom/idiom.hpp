@@ -138,6 +138,10 @@ namespace sgm
 	template<class...ARGS> static bool lastly(ARGS&&...){  return false;  }
 
 
+	template<class T>
+	static T Abs(T t){  return t > 0 ? t : -t;  }
+
+
 	template<class ITR1, class ITR2>
 	static auto Dual_iteration(ITR1 itr1, ITR2 itr2)-> Dual_iterator<ITR1, ITR2>
 	{
@@ -148,7 +152,7 @@ namespace sgm
 	template<class T1, class T2>
 	static bool R_Comp(T1 const t1, T2 const t2, T1 const epsilon)
 	{
-		return abs(t1 - t2) < abs(epsilon);
+		return Abs(t1 - t2) < Abs(epsilon);
 	}
 
 }
