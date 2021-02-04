@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include "..\Abbreviable\Abbreviable.hpp"
-#include <type_traits>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -22,7 +21,7 @@ class sgm::Avatar_t< T, M, sgm::Avatar_T_Helper<T, M, false, false, false> >
 public:
 	enum : bool{IS_CONST = is_constAvatar<Avatar_t>::value};
 
-	using value_t = std::conditional_t< IS_CONST, std::add_const_t<T>, T >;
+	using value_t = Selective_t< IS_CONST, T const, T >;
 
 
 	bool is_yet() const	{  return _state == State::YET;  }
@@ -32,23 +31,23 @@ public:
 
 	Avatar_t() : _pval(nullptr), _state(State::YET){}
 
-	template< class Q, class = std::enable_if_t< !is_Avatar<Q>::value >  >
+	template< class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
 	Avatar_t(Q& q) : _pval(&q), _state(State::OWNING){}
 
 	Avatar_t(T&&) = delete;
 
-	template<  class _M, class = std::enable_if_t< IS_CONST || !Avatar_t<T, _M>::IS_CONST >  >
+	template<  class _M, class = Enable_if_t< IS_CONST || !Avatar_t<T, _M>::IS_CONST >  >
 	Avatar_t(Avatar_t<T, _M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){}
 
 
-	void distruct() throw(){  _pval = nullptr, _state = State::GONE;  }
+	void distruct() SGM_NOEXCEPT{  _pval = nullptr, _state = State::GONE;  }
 	~Avatar_t(){  distruct();  }
 
 
 	auto value() const-> T const&	{  return *_pval;  }
 	operator T const&() const		{  return value();  }
 
-	auto value()-> std::conditional_t<IS_CONST, T const&, T&>{  return *_pval;  }
+	auto value()-> Selective_t<IS_CONST, T const&, T&>{  return *_pval;  }
 
 
 	auto operator=(Avatar_t const& avt)-> Avatar_t&
@@ -66,15 +65,13 @@ public:
 	template
 	<	class Q
 	,	class 
-		=	std::enable_if_t
-			<	!IS_CONST && !is_Avatar<Q>::value && std::is_convertible<Q, T>::value
-			>  
+		=	Enable_if_t< !IS_CONST && !is_Avatar<Q>::value && is_Convertible<Q, T>::value >  
 	>
 	auto operator=(Q&& q)-> Avatar_t&
 	{
 		assert(is_owning() && L"Avatar_t has nothing");
 
-		*_pval = std::forward<Q>(q);
+		*_pval = Forward<Q>(q);
 
 		return *this;
 	}
@@ -90,7 +87,7 @@ public:
 		return *this;
 	}
 
-	template< class Q, class = std::enable_if_t< !is_Avatar<Q>::value >  >
+	template< class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
 	auto operator()(Q& q)-> Avatar_t
 	{
 		static_assert
@@ -106,10 +103,10 @@ public:
 
 
 	template<class Q>
-	bool operator==(Q&& q) const{  return *_pval == std::forward<Q>(q);  }
+	bool operator==(Q&& q) const{  return *_pval == Forward<Q>(q);  }
 
 	template<class Q>
-	bool operator!=(Q&& q) const{  return !( *this == std::forward<Q>(q) );  }
+	bool operator!=(Q&& q) const{  return !( *this == Forward<Q>(q) );  }
 
 
 	template<class _M>
@@ -141,17 +138,17 @@ private:
 namespace sgm
 {
 
-	template<  class T, class = std::enable_if_t< !is_Avatar<T>::value >  >
-	static auto Refer(T& t)-> Avatar< std::remove_reference_t<T> >
+	template<  class T, class = Enable_if_t< !is_Avatar<T>::value >  >
+	static auto Refer(T& t)-> Avatar< Referenceless_t<T> >
 	{
-		return Avatar< std::remove_reference_t<T> >(t);
+		return t;
 	}
 
 
-	template<  class T, class = std::enable_if_t< is_Avatar<T>::value >  >
+	template<  class T, class = Enable_if_t< is_Avatar<T>::value >  >
 	static auto Refer(T t)-> Avatar<typename T::value_t>
 	{  
-		return Avatar<typename T::value_t>(t.value());
+		return t.value();
 	}
 
 

@@ -4,7 +4,7 @@
 #define _SGM_MULTIPLE_
 
 
-#include "..\Type_Analysis\Type_Analysis17.hpp"
+#include "..\Type_Analysis\Type_Analysis.hpp"
 #include "..\Family\Family.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -23,7 +23,7 @@ namespace sgm::fp
 	static auto Forward_as_Multiple(ARGS&&...args);
 
 
-	SGM_USER_DEFINED_TYPE_CHECK17(_, Multiple, class...TYPES, TYPES...);
+	SGM_USER_DEFINED_TYPE_CHECK14(_, Multiple, class...TYPES, TYPES...);
 
 
 	template<class T, class...ARGS>

@@ -7,10 +7,6 @@
 #include <cassert>
 #include "..\interface_Traits\interface_Traits.hpp"
 #include "..\idiom\idiom.hpp"
-
-
-#ifndef _SGM_NOEXCEPT
-	#define _SGM_NOEXCEPT throw()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -321,7 +317,7 @@ public:
 
 	auto operator=(Serial const&)-> Serial& = default;
 
-	auto operator=(Serial&& sr) _SGM_NOEXCEPT-> Serial&
+	auto operator=(Serial&& sr) SGM_NOEXCEPT-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -416,7 +412,7 @@ public:
 	}
 
 
-	auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
+	auto swap(Serial& sr) SGM_NOEXCEPT-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -507,7 +503,7 @@ public:
 	Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
 
 
-	Serial(Serial&& sr) _SGM_NOEXCEPT : _capacity(sr.capacity()), _size(sr.size())
+	Serial(Serial&& sr) SGM_NOEXCEPT : _capacity(sr.capacity()), _size(sr.size())
 	{
 		_core = sr._core,  sr._capacity = sr._size = 0,  sr._core = nullptr;
 	}
@@ -535,7 +531,7 @@ public:
 	}
 
 
-	auto operator=(Serial&& sr) _SGM_NOEXCEPT-> Serial&
+	auto operator=(Serial&& sr) SGM_NOEXCEPT-> Serial&
 	{
 		_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
 		sr._capacity = sr._size = 0,  sr._core = nullptr;
@@ -626,7 +622,7 @@ public:
 	auto clear()-> Serial&{  return pop_back_from(Helper::begin());  }
 
 
-	auto swap(Serial& sr) _SGM_NOEXCEPT-> Serial&
+	auto swap(Serial& sr) SGM_NOEXCEPT-> Serial&
 	{
 		using std::swap;
 
@@ -665,10 +661,7 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-	#undef _SGM_NOEXCEPT
-#else
-	#error _SGM_NOEXCEPT was already defined somewhere else.
-#endif // end of #ifndef _SGM_NOEXCEPT
+
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

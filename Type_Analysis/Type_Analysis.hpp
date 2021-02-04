@@ -8,6 +8,18 @@
 #endif
 
 
+#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
+	( defined(__cplusplus) && __cplusplus >= 201102 )	||	\
+	( defined(__clang__) && __clang_major__ >= 3 )	||	\
+	( defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 )	||	\
+	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1400 )
+
+	#define SGM_NOEXCEPT noexcept
+#else
+	#define SGM_NOEXCEPT throw()
+#endif
+
+
 namespace sgm
 {
 	
@@ -288,18 +300,59 @@ namespace sgm
 
 
 	template< class T, class Res_t = Referenceless_t<T>&& >
-	static auto Move(T&& t) throw()-> Res_t{  return static_cast<Res_t>(t);  }
+	static auto Move(T&& t) SGM_NOEXCEPT-> Res_t{  return static_cast<Res_t>(t);  }
 
 
 	template<class T>
 	static auto Forward(Referenceless_t<T>& t)-> T&&{  return static_cast<T&&>(t);  }
 
 	template<class T>
-	static auto Forward(Referenceless_t<T>&& t) throw()-> T&&{  return Move(t);  }
+	static auto Forward(Referenceless_t<T>&& t) SGM_NOEXCEPT-> T&&{  return Move(t);  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
+	template<unsigned IDX>
+	struct _Nth_element : No_Making
+	{
+		template<class T, class...ARGS>
+		static auto calc(T&& t, ARGS&&...args)-> Nth_t<IDX - 1, ARGS&&...>
+		{
+			return _Nth_element<IDX - 1>::calc( Forward<ARGS>(args)... );
+		}
+	};
+
+	template<>
+	struct _Nth_element<0> : No_Making
+	{
+		template<class T, class...ARGS>
+		static auto calc(T&& t, ARGS&&...)-> T&&{  return Forward<T>(t);  }
+	};
+
+	template<unsigned IDX, class...ARGS>
+	static auto Nth_elem(ARGS&&...args)-> Nth_t<IDX, ARGS&&...>
+	{
+		return _Nth_element<IDX>::calc( Forward<ARGS>(args)... );
+	}
+
+
 }
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201703 )	||	\
+	( defined(__cplusplus) && __cplusplus >= 201703 )	||	\
+	( defined(__clang__) && __clang_major__ >= 5 )	||	\
+	( defined(__GNUC__) && __GNUC__ >= 7 )	||	\
+	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1900 )
+
+	#ifndef SGM_COMPILE_FAILED
+		#define SGM_COMPILE_FAILED(...) \
+			static_assert([]() constexpr{  return false;  }(), #__VA_ARGS__)
+	#else
+		#error SGM_COMPILE_FAILED was already defined somewhere else.
+	#endif
+
+#endif
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -311,7 +364,67 @@ namespace sgm
 #else
 	#error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.
 #endif
-//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
+	( defined(__cplusplus) && __cplusplus >= 201402 )	||	\
+	( defined(__clang__) && __clang_major__ >= 3 && __clang_minor__ >= 4 )	||	\
+	( defined(__GNUC__) && __GNUC__ >= 5 )	||	\
+	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1700 )
+
+
+	#if defined(SGM_USER_DEFINED_TYPE_CHECK) && !defined(SGM_USER_DEFINED_TYPE_CHECK14)
+		#define SGM_USER_DEFINED_TYPE_CHECK14(PRE, TITLE, TEM_SIGNATURES, TEM_PARAMS)	\
+			SGM_USER_DEFINED_TYPE_CHECK(PRE, TITLE, TEM_SIGNATURES, TEM_PARAMS);	\
+			\
+			template<class...ARGS>	\
+			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
+	
+	#else
+		#error SGM_USER_DEFINED_TYPE_CHECK14 was already defined somewhere else.
+	#endif
+	
+	
+	#if !defined(_SGM_TEMPLATE_ALIAS) && !defined(_SGM_DECAY_TEMPLATE_ALIAS)
+		#define _SGM_TEMPLATE_ALIAS(PRE, TITLE)	\
+			template<class...ARGS>	\
+			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE<ARGS...>::value
+	
+		#define _SGM_DECAY_TEMPLATE_ALIAS(PRE, TITLE)	\
+			template<class...ARGS>	\
+			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
+	
+	
+		namespace sgm
+		{
+			_SGM_TEMPLATE_ALIAS(_, Same);
+			_SGM_TEMPLATE_ALIAS(_, Convertible);
+			_SGM_TEMPLATE_ALIAS(_, Const);
+			_SGM_TEMPLATE_ALIAS(_, LvalueReference);
+			_SGM_TEMPLATE_ALIAS(_, RvalueReference);
+			_SGM_TEMPLATE_ALIAS(_, Reference);
+			_SGM_TEMPLATE_ALIAS(_, Volatile);
+	
+			_SGM_DECAY_TEMPLATE_ALIAS(_, Pointer);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, Class);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, inherited_from);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, Void);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, None);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, Mutability);
+			_SGM_DECAY_TEMPLATE_ALIAS(_, immutable);
+		}
+			
+	
+		#undef _SGM_DECAY_TEMPLATE_ALIAS
+		#undef _SGM_TEMPLATE_ALIAS
+	#else
+		#error _SGM_TEMPLATE_ALIAS/_SGM_DECAY_TEMPLATE_ALIAS was already defined \
+		somewhere else.
+	#endif
 
 
 #endif
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#endif	// end of #ifndef _SGM_TYPE_ANALYSIS_

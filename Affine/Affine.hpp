@@ -13,7 +13,7 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class AffineTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK17
+	SGM_USER_DEFINED_TYPE_CHECK14
 	(	_, AffineTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
@@ -23,7 +23,7 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class Rotation;
 
-	SGM_USER_DEFINED_TYPE_CHECK17
+	SGM_USER_DEFINED_TYPE_CHECK14
 	(	_,	Rotation
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
@@ -33,7 +33,7 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class RigidBodyTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK17
+	SGM_USER_DEFINED_TYPE_CHECK14
 	(	_, RigidBodyTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
@@ -43,7 +43,7 @@ namespace sgm::mxi
 	template<class elem_t, unsigned DIMENSION>
 	class ScalableBodyTransform;
 
-	SGM_USER_DEFINED_TYPE_CHECK17
+	SGM_USER_DEFINED_TYPE_CHECK14
 	(	_, ScalableBodyTransform
 	,	SGM_MACROPACK(class T, unsigned DIMENSION)
 	,	SGM_MACROPACK(T, DIMENSION)
@@ -90,6 +90,24 @@ public:
 
 
 	auto basis() const-> _basis_t const&{  return _basis;  }
+
+
+	template<class...ARGS>
+	auto rotated(ARGS&&...args) const-> Rotation
+	{
+		if constexpr
+		(	sizeof...(ARGS) == 1 && is_Same_v<  Decay_t< First_t<ARGS...> >, Rotation  >
+		)
+			return Rotation(  Nth_elem<0>( Forward<ARGS>(args)... ).basis()*basis()  );
+		else 
+			return rotated(  Rotation( Forward<ARGS>(args)... )  );
+	}
+
+	template<class...ARGS>
+	auto rotate(ARGS&&...args)-> Rotation&
+	{
+		return *this = rotated( Forward<ARGS>(args)... );
+	}
 
 
 	static auto identity()-> Rotation const&
@@ -143,6 +161,24 @@ public:
 			,	s, c
 			}
 		);
+	}
+
+
+	template<class...ARGS>
+	auto rotated(ARGS&&...args) const-> Rotation
+	{
+		if constexpr
+		(	sizeof...(ARGS) == 1 && is_Same_v<  Decay_t< First_t<ARGS...> >, Rotation  >
+		)
+			return Rotation(  Nth_elem<0>( Forward<ARGS>(args)... ).basis()*basis()  );
+		else 
+			return rotated(  Rotation( Forward<ARGS>(args)... )  );
+	}
+
+	template<class...ARGS>
+	auto rotate(ARGS&&...args)-> Rotation&
+	{
+		return *this = rotated( Forward<ARGS>(args)... );
 	}
 
 
@@ -207,6 +243,24 @@ public:
 			,	T(2)*(zx - wy), T(2)*(yz + wx), ww - xx - yy + zz
 			}
 		);
+	}
+
+
+	template<class...ARGS>
+	auto rotated(ARGS&&...args) const-> Rotation
+	{
+		if constexpr
+		(	sizeof...(ARGS) == 1 && is_Same_v<  Decay_t< First_t<ARGS...> >, Rotation  >
+		)
+			return Rotation(  Nth_elem<0>( Forward<ARGS>(args)... ).uqtn()*uqtn()  );
+		else 
+			return rotated(  Rotation( Forward<ARGS>(args)... )  );
+	}
+
+	template<class...ARGS>
+	auto rotate(ARGS&&...args)-> Rotation&
+	{
+		return *this = rotated( Forward<ARGS>(args)... );
 	}
 
 
@@ -365,8 +419,8 @@ public:
 	operator AffineTransform<T, D>() const{  return {_rot.basis().mat(), _vec};  }
 
 
-	//auto partR() const-> Rotation<T, D> const&{  return _rot;  }
-	//auto partR()-> Rotation<T, D>&{  return _rot;  }
+	auto partR() const-> Rotation<T, D> const&{  return _rot;  }
+	auto partR()-> Rotation<T, D>&{  return _rot;  }
 	auto partV() const-> Vector<T, D> const&{  return _vec;  }
 	auto partV()-> Vector<T, D>&{  return _vec;  }
 

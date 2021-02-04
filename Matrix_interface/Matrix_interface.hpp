@@ -7,7 +7,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\Type_Analysis\Type_Analysis17.hpp"
+#include "..\Type_Analysis\Type_Analysis.hpp"
 #include "..\idiom\idiom.hpp"
 #include <cassert>
 #include <initializer_list>
