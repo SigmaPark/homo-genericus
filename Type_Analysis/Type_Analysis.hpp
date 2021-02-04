@@ -338,19 +338,18 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201703 )	||	\
-	( defined(__cplusplus) && __cplusplus >= 201703 )	||	\
-	( defined(__clang__) && __clang_major__ >= 5 )	||	\
-	( defined(__GNUC__) && __GNUC__ >= 7 )	||	\
-	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1900 )
+#ifndef SGM_COMPILE_FAILED
+	#define SGM_COMPILE_FAILED(...) \
+		void* no_compile \
+		=	[]	\
+			{	\
+				enum : bool{value = false};	\
+				\
+				static_assert(value, #__VA_ARGS__);	\
+			}()
 
-	#ifndef SGM_COMPILE_FAILED
-		#define SGM_COMPILE_FAILED(...) \
-			static_assert([]() constexpr{  return false;  }(), #__VA_ARGS__)
-	#else
-		#error SGM_COMPILE_FAILED was already defined somewhere else.
-	#endif
-
+#else
+	#error SGM_COMPILE_FAILED was already defined somewhere else.
 #endif
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -420,6 +419,17 @@ namespace sgm
 		#error _SGM_TEMPLATE_ALIAS/_SGM_DECAY_TEMPLATE_ALIAS was already defined \
 		somewhere else.
 	#endif
+
+
+#endif
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201703 )	||	\
+	( defined(__cplusplus) && __cplusplus >= 201703 )	||	\
+	( defined(__clang__) && __clang_major__ >= 5 )	||	\
+	( defined(__GNUC__) && __GNUC__ >= 7 )	||	\
+	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1900 )
 
 
 #endif
