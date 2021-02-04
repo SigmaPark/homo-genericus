@@ -20,6 +20,15 @@
 #endif
 
 
+#ifndef SGM_COMPILE_FAILED
+	#define SGM_COMPILE_FAILED(...) \
+		void* no_compile = []{  static_assert(false, #__VA_ARGS__);  }()
+
+#else
+	#error SGM_COMPILE_FAILED was already defined somewhere else.
+#endif
+
+
 namespace sgm
 {
 	
@@ -143,6 +152,18 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+	template<bool B, class T> 
+	struct _Guaranteed : No_Making
+	{
+		static_assert(B, "type guarantee failed.");
+
+		using type = T;
+	};
+
+	template<bool B, class T = void> using Guaranteed_t = typename _Guaranteed<B, T>::type;
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
 	template<class FROM, class TO>
 	struct is_Convertible
 	{
@@ -225,18 +246,6 @@ namespace sgm
 	
 	template<class...TYPES> 
 	using Last_t = Nth_t<sizeof...(TYPES) - 1, TYPES...>;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
-
-
-	template<bool B, class T> 
-	struct _Guaranteed : No_Making
-	{
-		static_assert(B, "type guarantee failed.");
-
-		using type = T;
-	};
-
-	template<bool B, class T = void> using Guaranteed_t = typename _Guaranteed<B, T>::type;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -338,22 +347,6 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#ifndef SGM_COMPILE_FAILED
-	#define SGM_COMPILE_FAILED(...) \
-		void* no_compile \
-		=	[]	\
-			{	\
-				enum : bool{value = false};	\
-				\
-				static_assert(value, #__VA_ARGS__);	\
-			}()
-
-#else
-	#error SGM_COMPILE_FAILED was already defined somewhere else.
-#endif
-//========//========//========//========//=======#//========//========//========//========//=======#
-
-
 #ifndef SGM_USER_DEFINED_TYPE_CHECK
 	#define SGM_USER_DEFINED_TYPE_CHECK(PRE, NAME, TEM_SIGNATURES, TEM_PARAMS)		\
 		template<class> struct is##PRE##NAME : sgm::False_t{};		\
@@ -424,16 +417,6 @@ namespace sgm
 #endif
 //========//========//========//========//=======#//========//========//========//========//=======#
 
-
-#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201703 )	||	\
-	( defined(__cplusplus) && __cplusplus >= 201703 )	||	\
-	( defined(__clang__) && __clang_major__ >= 5 )	||	\
-	( defined(__GNUC__) && __GNUC__ >= 7 )	||	\
-	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1900 )
-
-
-#endif
-//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #endif	// end of #ifndef _SGM_TYPE_ANALYSIS_
