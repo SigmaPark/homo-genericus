@@ -3,7 +3,12 @@
 #ifndef _SGM_TYPE_ANALYSIS_
 #define _SGM_TYPE_ANALYSIS_
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
+//	minimum versions for C++11 major syntex support.
+#if	( defined(_MSVC_LANG) && _MSVC_LANG < 201102 )	||	\
+	( defined(__clang__) && __clang_major__ * 1000 + __clang_minor__ * 100 < 3100 )	||	\
+	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 < 4700 )	||	\
+	( defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1300 )
+
 	#error C++11 or higher version of language support is required.
 #endif
 
@@ -11,7 +16,7 @@
 #if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
 	( defined(__cplusplus) && __cplusplus >= 201102 )	||	\
 	( defined(__clang__) && __clang_major__ >= 3 )	||	\
-	( defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 )	||	\
+	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 >= 4600 )	||	\
 	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1400 )
 
 	#define SGM_NOEXCEPT noexcept
@@ -357,6 +362,7 @@ namespace sgm
 #endif
 
 
+//	minimum version requirement for template variable.
 #if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
 	( defined(__cplusplus) && __cplusplus >= 201402 )	||	\
 	( defined(__clang__) && __clang_major__ >= 3 && __clang_minor__ >= 4 )	||	\
