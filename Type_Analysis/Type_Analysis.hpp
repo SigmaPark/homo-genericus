@@ -30,8 +30,7 @@ namespace sgm
 	template<class...> using Void_t = void;
 
 
-	enum class None_t{NONE};
-	static auto const None = None_t::NONE;
+	enum class None_t{} static const None = {};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
