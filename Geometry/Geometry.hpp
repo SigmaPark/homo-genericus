@@ -116,11 +116,8 @@ template<class ORN>
 struct sgm::mxi::_is_Oriented : No_Making
 {
 private:
-	template<class>
-	static False_t _calc(...);	//	Declaration only.
-
-	template<class T, unsigned DIM>
-	static True_t _calc(Oriented<T, DIM>);	//	Declaration only.
+	template<class> /* Declaration Only */ static False_t _calc(...);
+	template<class T, unsigned DIM> /* Declaration Only */ static True_t _calc(Oriented<T, DIM>);
 
 public:
 	static bool constexpr value = decltype( _calc(Declval<ORN>()) )::value;

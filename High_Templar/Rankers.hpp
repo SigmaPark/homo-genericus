@@ -19,9 +19,8 @@ namespace sgm
 		<	class CON, class FUNC = _increasing_order<CON>
 		,	class = Enable_if_t< is_iterable<CON>::value >  
 		>
-		static auto Rankers
-		(	CON&& con, size_t const nof_ranker, FUNC&& comp = _increasing_order<CON>()
-		)->	Serial< Decay_t<decltype(*con.begin())> >;
+		static auto Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp = {})
+		->	Serial< Decay_t<decltype(*con.begin())> >;
 
 	}
 }

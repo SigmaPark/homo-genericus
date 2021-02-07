@@ -212,10 +212,9 @@ namespace sgm
 
 
 		template<class D, class B> /* Declaration Only */ 
-		static auto _test(int)-> decltype(  _calc<B>( (D*)nullptr )  );
+		static auto _test(int)-> decltype(  _calc<B>( static_cast<D*>(nullptr) )  );
 
-		template<class, class> /* Declaration Only */ 
-		static auto _test(...)-> False_t;
+		template<class, class> /* Declaration Only */ static auto _test(...)-> False_t;
 
 	public:
 		enum : bool
