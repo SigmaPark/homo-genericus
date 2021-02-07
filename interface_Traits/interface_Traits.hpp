@@ -17,8 +17,10 @@ namespace sgm
 		struct NAME	\
 		{	\
 		private:	\
-			template<class _QCLASS>	 static auto _calc(int)-> SFINAE_t< decltype(__VA_ARGS__) >;\
-			template<class> static auto _calc(...)-> False_t;	\
+			template<class _QCLASS>	 /* Declaration Only */		\
+			static auto _calc(int)-> SFINAE_t< decltype(__VA_ARGS__) >;\
+			\
+			template<class> /* Declaration Only */ static auto _calc(...)-> False_t;	\
 		\
 		public:	\
 			NAME() = delete;	\
@@ -348,24 +350,25 @@ namespace sgm
 	struct is_iterable
 	{
 	private:
-		template<class Q>
+		template<class Q> /* Declaration Only */ 
 		static auto _has_begin(int)
 		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().begin()) ) >;
 
-		template<class> static auto _has_begin(...)-> False_t;
+		template<class> /* Declaration Only */ static auto _has_begin(...)-> False_t;
 
 
-		template<class Q>
+		template<class Q> /* Declaration Only */ 
 		static auto _has_end(int)
 		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().end()) ) >;
 
-		template<class> static auto _has_end(...)-> False_t;
+		 template<class> /* Declaration Only */ static auto _has_end(...)-> False_t;
 
 
-		template<class Q> static auto _has_size(int)
+		template<class Q> /* Declaration Only */
+		static auto _has_size(int)
 		->	SFINAE_t< decltype( static_cast<size_t>(Declval<Q>().size()) ) >;
 
-		template<class> static auto _has_size(...)-> False_t;
+		template<class> /* Declaration Only */ static auto _has_size(...)-> False_t;
 
 
 	public:

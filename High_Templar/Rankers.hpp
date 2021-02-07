@@ -3,8 +3,6 @@
 #ifndef _SGM_RANKERS_
 #define _SGM_RANKERS_
 
-#include <list>
-#include <algorithm>
 #include "..\Serial\Serial.hpp"
 
 
@@ -19,11 +17,11 @@ namespace sgm
 
 		template
 		<	class CON, class FUNC = _increasing_order<CON>
-		,	class = std::enable_if_t< is_iterable<CON>::value >  
+		,	class = Enable_if_t< is_iterable<CON>::value >  
 		>
 		static auto Rankers
 		(	CON&& con, size_t const nof_ranker, FUNC&& comp = _increasing_order<CON>()
-		)->	Serial< std::decay_t<decltype(*con.begin())> >;
+		)->	Serial< Decay_t<decltype(*con.begin())> >;
 
 	}
 }
@@ -34,18 +32,22 @@ template<class CON>
 struct sgm::ht::_increasing_order
 {
 private:
-	using type = std::decay_t<  decltype( *Declval<CON>().begin() )  >;
+	using type = Decay_t<  decltype( *Declval<CON>().begin() )  >;
 
 public:
 	bool operator()(type const& t1, type const& t2) const{  return t1 < t2;  }
 };
 
 
+#include <list>
+#include <algorithm>
+
+
 template<class CON, class FUNC, class>
 static auto sgm::ht::Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
-->	Serial< std::decay_t<decltype(*con.begin())> >
+->	Serial< Decay_t<decltype(*con.begin())> >
 {
-	using elem_t = std::decay_t<decltype( *con.begin() )>;
+	using elem_t = Decay_t<decltype( *con.begin() )>;
 
 	size_t const k = std::min(nof_ranker, con.size());
 	std::list<elem_t> kset;
@@ -57,10 +59,9 @@ static auto sgm::ht::Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
 	kset.sort(comp);
 
 	if(k == nof_ranker)
-		for(auto LBitr = kset.begin();  itr != con.end();  ++itr)
+		for(;  itr != con.end();  ++itr)
 			if( comp(*itr, kset.back()) )
-				LBitr = std::lower_bound(kset.begin(), kset.end(), *itr, comp),
-				kset.emplace(LBitr, *itr),
+				kset.emplace( std::lower_bound(kset.begin(), kset.end(), *itr, comp), *itr ),
 				kset.pop_back();
 
 	return Serial<elem_t>(kset);

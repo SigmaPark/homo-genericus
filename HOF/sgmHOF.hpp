@@ -22,13 +22,11 @@ namespace sgm::hof
 		=	[](auto&&...args)	\
 			{	\
 				if constexpr( sizeof...(TYPES) == 0 )	\
-					return temfunc( std::forward<decltype(args)>(args)... );	\
+					return temfunc( Forward<decltype(args)>(args)... );	\
 				else	\
-					return temfunc<TYPES...>( std::forward<decltype(args)>(args)... );	\
+					return temfunc<TYPES...>( Forward<decltype(args)>(args)... );	\
 			} / Dim<D>
-#else
-	#error SGM_HOF_FACTORY was already defined elsewhere.
-#endif
+
 
 	using namespace fp;
 	using namespace ht;
@@ -40,7 +38,11 @@ namespace sgm::hof
 	SGM_HOF_FACTORY(Rankers);
 	SGM_HOF_FACTORY(Plait);
 
+
 	#undef SGM_HOF_FACTORY
+#else
+	#error SGM_HOF_FACTORY was already defined elsewhere.
+#endif
 
 }
 

@@ -43,34 +43,35 @@ namespace sgm::mxi
 template<class T>
 class sgm::mxi::Quaternion
 {
-	using _raw_t = std::decay_t<T>;
+	using _raw_t = Decay_t<T>;
 
-	static_assert(std::is_arithmetic_v< _raw_t >, "Quaternion elememnt should be real.");
+	static_assert(MxTraits::is_Real_v< _raw_t >, "Quaternion elememnt should be real.");
 
 
 public:
-	using elem_t = std::conditional_t< std::is_integral_v<_raw_t>, float, _raw_t >;
+	using elem_t = Selective_t< is_Same_v<double, _raw_t>, double, float >;
+
 
 	Quaternion(elem_t w = 0, elem_t x = 0, elem_t y = 0, elem_t z = 0)
 	:	_w(w), _v(Vector<elem_t, 3>{x, y, z})
 	{}
 
 	Quaternion(elem_t w, Vector<elem_t, 3> const& v) : _w(w), _v(v){}
-	Quaternion(elem_t w, Vector<elem_t, 3>&& v) : _w(w), _v( std::move(v) ){}
+	Quaternion(elem_t w, Vector<elem_t, 3>&& v) : _w(w), _v( Move(v) ){}
 
 
 	template
 	<	class Q
 	,	class 
-		=	std::enable_if_t
-			<	!std::is_same_v< Quaternion, std::decay_t<Q> > && is_Quaternion_v<Q>  
+		=	Enable_if_t
+			<	!is_Same_v< Quaternion, Decay_t<Q> > && is_Quaternion_v<Q>  
 			>
 	>
 	Quaternion(Q&& q) : Quaternion( _cast<Q>(q) ){}
 
 	
 	template
-	<	class Q, class = std::enable_if_t<  !std::is_same_v< Quaternion, std::decay_t<Q> >  >
+	<	class Q, class = Enable_if_t<  !is_Same_v< Quaternion, Decay_t<Q> >  >
 	>
 	auto operator=(Q&& q)-> Quaternion&{  return *this = _cast<Q>(q);  }
 
@@ -110,7 +111,7 @@ public:
 	template<class Q>
 	auto operator*(Q&& q_) const
 	{
-		if constexpr(std::is_arithmetic_v< std::decay_t<Q> >)
+		if constexpr(MxTraits::is_Real_v< Decay_t<Q> >)
 			return Quaternion(w()*q_, v()*q_);
 		else
 		{
@@ -156,29 +157,29 @@ private:
 	template<class Q>
 	static decltype(auto) _cast_Helper(Q&& q)
 	{
-		if constexpr(std::is_same_v< Quaternion, std::decay_t<Q> >)
-			return std::forward<Q>(q);
+		if constexpr(is_Same_v< Quaternion, Decay_t<Q> >)
+			return Forward<Q>(q);
 		else if constexpr(is_Quaternion_v<Q>)
 			return Quaternion(q.w(), q.x(), q.y(), q.z());
-		else if constexpr(std::is_arithmetic_v< std::decay_t<Q> >)
+		else if constexpr(MxTraits::is_Real_v< Decay_t<Q> >)
 			return Quaternion( static_cast<elem_t>(q) );
 		else SGM_COMPILE_FAILED(No suitable method was found.);
 	}
 
 
 	template<class Q>
-	static decltype(auto) _cast(std::remove_reference_t<Q>& q){  return _cast_Helper(q);  }
+	static decltype(auto) _cast(Referenceless_t<Q>& q){  return _cast_Helper(q);  }
 
 	template<class Q>
-	static decltype(auto) _cast(std::remove_reference_t<Q>&& q)
+	static decltype(auto) _cast(Referenceless_t<Q>&& q)
 	{
-		return _cast_Helper( std::move(q) );
+		return _cast_Helper( Move(q) );
 	}
 
 };
 
 
-template<  class S, class T, class = std::enable_if_t< std::is_arithmetic_v<S> >  >
+template<  class S, class T, class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >  >
 static auto operator*(S s, sgm::mxi::Quaternion<T> const& q){  return q * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -198,24 +199,24 @@ public:
 	:	_qtn( Qtn_t(w, x, y, z).normalized() )
 	{}
 
-	template<  class V, class = std::enable_if_t< MxTraits::is_mxiVector_v<V> >  >
-	UnitQuaternion(elem_t w, V&& v) : _qtn( Qtn_t( w, std::forward<V>(v) ).normalized() ){}
+	template<  class V, class = Enable_if_t< MxTraits::is_mxiVector_v<V> >  >
+	UnitQuaternion(elem_t w, V&& v) : _qtn( Qtn_t( w, Forward<V>(v) ).normalized() ){}
 
 
-	template<  class U, class = std::enable_if_t< MxTraits::is_UnitVector_v<U> >  >
-	UnitQuaternion(U&& u) : _qtn( 0, std::forward<U>(u) ){}
+	template<  class U, class = Enable_if_t< MxTraits::is_UnitVector_v<U> >  >
+	UnitQuaternion(U&& u) : _qtn( 0, Forward<U>(u) ){}
 
 
 	template
 	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< UnitQuaternion, std::decay_t<Q> >  >
+	,	class = Enable_if_t<  !is_Same_v< UnitQuaternion, Decay_t<Q> >  >
 	>
 	auto operator=(Q&& q)-> UnitQuaternion&
 	{
 		if constexpr(is_UnitQuaternion_v<Q>)
 			_qtn = q.qtn();
 		else
-			_qtn = std::forward<Q>(q);
+			_qtn = Forward<Q>(q);
 		
 		_qtn.normalize();
 
@@ -263,7 +264,7 @@ public:
 
 
 	template<class Q> 
-	decltype(auto) operator*(Q&& q) const{  return qtn() * std::forward<Q>(q);  }
+	decltype(auto) operator*(Q&& q) const{  return qtn() * Forward<Q>(q);  }
 
 	decltype(auto) operator/(elem_t s) const{  return qtn() / s;  }
 
@@ -280,14 +281,14 @@ private:
 
 
 	template<class Q>
-	UnitQuaternion(Q&& qtn, _PrivateTag) noexcept(std::is_rvalue_reference_v<Q&&>)
-	:	_qtn( std::forward<Q>(qtn) )
+	UnitQuaternion(Q&& qtn, _PrivateTag) noexcept(is_RvalueReference_v<Q&&>)
+	:	_qtn( Forward<Q>(qtn) )
 	{}
 
 };
 
 
-template<  class S, class T, class = std::enable_if_t< std::is_arithmetic_v<S> >  >
+template<  class S, class T, class = sgm::Enable_if_t< sgm::mxi::MxTraits::is_Real_v<S> >  >
 static auto operator*(S s, sgm::mxi::UnitQuaternion<T> const& q){  return q * s;  }
 
 
@@ -300,7 +301,7 @@ static auto sgm::mxi::regard_normalized(Quaternion<Q> const& qtn)-> UnitQuaterni
 template<class Q>
 static auto sgm::mxi::regard_normalized(Quaternion<Q>&& qtn) noexcept-> UnitQuaternion<Q>
 {
-	return UnitQuaternion<Q>( std::move(qtn), _PrivateTag{} );
+	return UnitQuaternion<Q>( Move(qtn), _PrivateTag{} );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

@@ -44,10 +44,10 @@ namespace sgm::mxi
 template<class T, unsigned DIM>
 struct sgm::mxi::Oriented
 {
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static unsigned constexpr DIMENSION = DIM;
 
-	static_assert(std::is_floating_point_v<elem_t> && DIMENSION > 1);
+	static_assert( (is_Same_v<float, elem_t> || is_Same_v<double, elem_t>) && DIMENSION > 1 );
 
 	using Point_t = Vector<elem_t, DIMENSION>;
 
@@ -145,6 +145,9 @@ struct sgm::mxi::Projection
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+#include <climits>
+
+
 struct sgm::mxi::Direction : No_Making
 {
 private:
@@ -158,7 +161,7 @@ private:
 
 
 public:
-	template<  class U1, class U2, class real_t = std::decay_t< decltype(Declval<U1>()(0)) >  >
+	template<  class U1, class U2, class real_t = Decay_t< decltype(Declval<U1>()(0)) >  >
 	static bool is_perpendicular
 	(	U1 const& u1, U2 const& u2
 	,	real_t const epsilon = 1000 * std::numeric_limits<real_t>::epsilon()
@@ -168,7 +171,7 @@ public:
 	}
 
 
-	template<  class U1, class U2, class real_t = std::decay_t< decltype(Declval<U1>()(0)) >  >
+	template<  class U1, class U2, class real_t = Decay_t< decltype(Declval<U1>()(0)) >  >
 	static bool is_parallel
 	(	U1 const& u1, U2 const& u2
 	,	real_t const epsilon = 1000 * std::numeric_limits<real_t>::epsilon()

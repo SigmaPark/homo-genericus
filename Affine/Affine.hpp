@@ -63,12 +63,12 @@ private:
 	using _basis_t = OrthonormalMatrix<T, D>;
 
 public:
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static auto constexpr DIMENSION = D;
 
 	
 	Rotation(_basis_t const& basis) : _basis(basis){}
-	Rotation(_basis_t&& basis) noexcept : _basis( std::move(basis) ){}
+	Rotation(_basis_t&& basis) noexcept : _basis( Move(basis) ){}
 
 	Rotation() : Rotation(identity()){}
 
@@ -76,14 +76,13 @@ public:
 	template
 	<	class Q
 	,	class
-		=	std::enable_if_t
-			<	std::is_same_v< std::decay_t<Q>, _basis_t >
-			&&	!std::is_same_v< std::decay_t<Q>, Rotation >
+		=	Enable_if_t
+			<	is_Same_v< Decay_t<Q>, _basis_t > && !is_Same_v< Decay_t<Q>, Rotation >
 			>
 	>
 	auto operator=(Q&& basis)-> Rotation&
 	{
-		_basis = std::forward<Q>(basis);
+		_basis = Forward<Q>(basis);
 
 		return *this;
 	}
@@ -127,7 +126,7 @@ template<class T>
 class sgm::mxi::Rotation<T, 2>
 {
 public:
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static auto constexpr DIMENSION = 2;
 
 
@@ -135,12 +134,10 @@ public:
 	Rotation(OrthonormalMatrix<T, 2> const& onx) : _angle(  acos( onx(0, 0) )  ){}
 
 
-	template
-	<	class Q, class = std::enable_if_t<  !std::is_same_v< std::decay_t<Q>, Rotation >  > 
-	>
+	template<   class Q, class = Enable_if_t<  !is_Same_v< Decay_t<Q>, Rotation >  >   >
 	auto operator=(Q&& q)-> Rotation&
 	{
-		if constexpr(std::is_scalar_v< std::decay_t<Q> >)
+		if constexpr(is_Convertible_v< Decay_t<Q>, double >)
 			_angle = q;
 		else if constexpr(MxTraits::is_OrthonormalMatrix_v<Q>)
 			*this = Rotation(q);
@@ -206,12 +203,12 @@ private:
 	using _basis_t = OrthonormalMatrix<T, 3>;
 
 public:
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static auto constexpr DIMENSION = 3;
 
 
 	Rotation(_uqtn_t const& uqtn) : _uqtn(uqtn){}
-	Rotation(_uqtn_t&& uqtn) noexcept : _uqtn( std::move(uqtn) ){}
+	Rotation(_uqtn_t&& uqtn) noexcept : _uqtn( Move(uqtn) ){}
 
 	Rotation() : Rotation(identity()){}
 
@@ -320,18 +317,17 @@ template<class T, unsigned D>
 class sgm::mxi::AffineTransform
 {
 public:
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static auto constexpr DIMENSION = D;
 
 
 	template
 	<	class MAT = Matrix<T, D, D>, class VEC = Vector<T, D> 
-	,	class 
-		=	std::enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
+	,	class = Enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
 	>
 	AffineTransform(MAT&& mat = MAT::identity(), VEC&& vec = VEC::zero())
-	noexcept( std::is_rvalue_reference_v<MAT&&> && std::is_rvalue_reference_v<VEC&&> )
-	:	_mat( std::forward<MAT>(mat) ), _vec( std::forward<VEC>(vec) )
+	noexcept( is_RvalueReference_v<MAT&&> && is_RvalueReference_v<VEC&&> )
+	:	_mat( Forward<MAT>(mat) ), _vec( Forward<VEC>(vec) )
 	{}
 
 
@@ -360,18 +356,17 @@ public:
 		}
 		else if constexpr(is_AffineTransform_v<Q>)
 			return AffineTransform(q.partM()*partM(), q.partM()*partV() + q.partV());
-		else if constexpr(std::is_convertible_v<Q, AffineTransform>)
+		else if constexpr(is_Convertible_v<Q, AffineTransform>)
 			return affine( static_cast<AffineTransform>(q) );
 	}
 
 	template
 	<	class MAT, class VEC
-	,	class 
-		=	std::enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
+	,	class = Enable_if_t< MxTraits::is_mxiMatrix_v<MAT> && MxTraits::is_mxiVector_v<VEC> >
 	>
 	auto affine(MAT&& mat, VEC&& vec) const
 	{
-		return affine(  AffineTransform( std::forward<MAT>(mat), std::forward<VEC>(vec) )  );
+		return affine(  AffineTransform( Forward<MAT>(mat), Forward<VEC>(vec) )  );
 	}
 
 
@@ -405,14 +400,14 @@ template<class T, unsigned D>
 class sgm::mxi::RigidBodyTransform
 {
 public:
-	using elem_t = std::decay_t<T>;
+	using elem_t = Decay_t<T>;
 	static auto constexpr DIMENSION = D;	
 
 
 	template< class ROT = Rotation<T, D>, class VEC = Vector<T, D> >
 	RigidBodyTransform(ROT&& rot = {}, VEC&& vec = VEC::zero()) 
-	noexcept( std::is_rvalue_reference_v<ROT&&> && std::is_rvalue_reference_v<VEC&&> )
-	:	_rot( std::forward<ROT>(rot) ), _vec(std::forward<VEC>(vec) )
+	noexcept( is_RvalueReference_v<ROT&&> && is_RvalueReference_v<VEC&&> )
+	:	_rot( Forward<ROT>(rot) ), _vec( Forward<VEC>(vec) )
 	{}
 
 

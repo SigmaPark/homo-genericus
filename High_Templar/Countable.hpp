@@ -3,7 +3,6 @@
 #ifndef _SGM_COUNTABLE_
 #define _SGM_COUNTABLE_
 
-#include <type_traits>
 #include <cassert>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -86,13 +85,13 @@ namespace sgm
 			return iter;
 		}
 
-		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
 		auto operator+(_N const interval) const-> iter_t
 		{	
 			return iter_t(  _shifted<true>( **this, static_cast<N>(interval) )  );
 		}
 
-		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
 		auto operator-(_N const interval) const-> iter_t
 		{
 			return iter_t(  _shifted<false>( **this, static_cast<N>(interval) )  );
@@ -103,7 +102,7 @@ namespace sgm
 			bool const greater_mine = **this > *itr;
 			N const du = greater_mine ? **this - *itr : *itr - **this;
 
-			assert(du <= LLONG_MAX && L"the difference exceeds maximum capacity.");
+			assert(du <= 9223372036854775807i64 && L"the difference exceeds maximum capacity.");
 
 			return
 			INCREASING == greater_mine
@@ -111,10 +110,10 @@ namespace sgm
 			:	-static_cast<long long>(du);
 		}
 
-		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
 		auto operator+=(_N const interval)-> iter_t&{  return *this = *this + interval;  }
 		
-		template<  class _N, class = std::enable_if_t< std::is_convertible<_N, N>::value >  >
+		template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
 		auto operator-=(_N const interval)-> iter_t&{  return *this = *this - interval;  }
 
 		auto operator++()-> iter_t&{  return *this += 1;  }

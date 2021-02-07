@@ -69,7 +69,7 @@ private:
 	template<unsigned N, typename T, typename...TYPES>
 	static unsigned constexpr _count_Blank()
 	{
-		if constexpr(std::is_same_v< Blank, std::decay_t<T> >)
+		if constexpr(is_Same_v< Blank, Decay_t<T> >)
 			return _count_Blank<N + 1, TYPES...>();
 		else
 			return _count_Blank<N, TYPES...>();
@@ -82,11 +82,11 @@ private:
 public:
 	template<class...ARGS>
 	static bool constexpr has_front_blank_v
-	=	std::is_same_v<  std::decay_t< First_t<ARGS...> >, Blank  >;
+	=	is_Same_v<  Decay_t< First_t<ARGS...> >, Blank  >;
 
 	template<class...ARGS>
 	static bool constexpr has_rear_blank_v
-	=	std::is_same_v<  std::decay_t< Last_t<ARGS...> >, Blank  >;
+	=	is_Same_v<  Decay_t< Last_t<ARGS...> >, Blank  >;
 
 
 	template<class...ARGS>
@@ -126,14 +126,14 @@ private:
 template<unsigned _D, class _F> 
 decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 {
-	return sgm::fp::Functor<_D, _F>( std::forward<_F>(f) );
+	return sgm::fp::Functor<_D, _F>( sgm::Forward<_F>(f) );
 }
 
 
 template<unsigned _D, class _F, class..._ARGS>
 decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, _ARGS...>&& d)
 {
-	return ( std::forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
+	return ( sgm::Forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -151,11 +151,11 @@ public:
 		static_assert(Blank::is_well_used_v<ARGS...>, "Blank is misused.");
 
 		if constexpr(Blank::has_front_blank_v<ARGS...>)
-			return _cut_front( std::forward<ARGS>(args)... );
+			return _cut_front( Forward<ARGS>(args)... );
 		else if constexpr(Blank::has_rear_blank_v<ARGS...>)
-			return _cut_rear( std::forward<ARGS>(args)... );
+			return _cut_rear( Forward<ARGS>(args)... );
 		else if constexpr( sizeof...(ARGS) == D )
-			return _pwf.value()( std::forward<ARGS>(args)... );
+			return _pwf.value()( Forward<ARGS>(args)... );
 	}
 
 
@@ -169,7 +169,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( args..., std::forward<decltype(params)>(params)... );
+			return cpy_pwf.value()( args..., Forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -183,7 +183,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( std::forward<decltype(params)>(params)..., args... );
+			return cpy_pwf.value()( Forward<decltype(params)>(params)..., args... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -191,7 +191,7 @@ private:
 	template<class T, class...TYPES>
 	decltype(auto) _cut_front(T&&, TYPES&&...types) const
 	{
-		return _push_rear( std::forward<TYPES>(types)... );
+		return _push_rear( Forward<TYPES>(types)... );
 	}
 
 
@@ -201,11 +201,11 @@ private:
 	)	const
 	{
 		if constexpr(N == 0)
-			return _push_front( std::forward<ARGS>(args)... );
+			return _push_front( Forward<ARGS>(args)... );
 		else
 			return
 			_cut_rear_helper<N - 1>
-			(	std::move(mtp), mtp.template forward<N - 1>(), std::forward<ARGS>(args)...
+			(	Move(mtp), mtp.template forward<N - 1>(), Forward<ARGS>(args)...
 			);
 	}
 
@@ -214,7 +214,7 @@ private:
 	{
 		return
 		_cut_rear_helper<sizeof...(TYPES) - 1>
-		(	Forward_as_Multiple( std::forward<TYPES>(types)... )
+		(	Forward_as_Multiple( Forward<TYPES>(types)... )
 		);
 	}
 
@@ -237,10 +237,10 @@ public:
 	{
 		using eval_t = _Evaluator< D, constPinweight<F> >;
 
-		if constexpr( Check_All<is_Multiple>::template for_any< std::decay_t<ARGS>... >::value )
-			return Apply(  eval_t(_pwf), Params( std::forward<ARGS>(args)... )  );
+		if constexpr( Check_All<is_Multiple>::template for_any< Decay_t<ARGS>... >::value )
+			return Apply(  eval_t(_pwf), Params( Forward<ARGS>(args)... )  );
 		else
-			return eval_t(_pwf)( std::forward<ARGS>(args)... );
+			return eval_t(_pwf)( Forward<ARGS>(args)... );
 	}
 
 
@@ -253,8 +253,8 @@ public:
 		return
 		[clone = *this, ftr](auto&&...args)
 		{	
-			return clone(  ftr( std::forward<decltype(args)>(args)... )  );
-		} / Dim< std::decay_t<FTR>::DIMENSION >;
+			return clone(  ftr( Forward<decltype(args)>(args)... )  );
+		} / Dim< Decay_t<FTR>::DIMENSION >;
 	}
 
 
@@ -269,18 +269,14 @@ public:
 		return
 		[clone = *this, ftr](auto&&...args)
 		{
-			auto[mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( std::forward<decltype(args)>(args)... );
+			auto[mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( Forward<decltype(args)>(args)... );
 
 			using res1_t = decltype( clone(mtp1) );
 			using res2_t = decltype( ftr(mtp2) );
 
 			return
-			(	std::conditional_t< is_Multiple_v<res1_t>, res1_t, Multiple<res1_t> >
-				(	clone(mtp1) 
-				)
-			+	std::conditional_t< is_Multiple_v<res2_t>, res2_t, Multiple<res2_t> >	
-				(	ftr(mtp2)
-				)
+			(	Selective_t< is_Multiple_v<res1_t>, res1_t, Multiple<res1_t> >( clone(mtp1) )
+			+	Selective_t< is_Multiple_v<res2_t>, res2_t, Multiple<res2_t> >( ftr(mtp2) )
 			);
 		} / Dim<D + D2>;
 	}
@@ -291,7 +287,7 @@ private:
 	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D>);
 
 
-	Functor(F&& f) noexcept : _pwf( std::move(f) ){}
+	Functor(F&& f) noexcept : _pwf( Move(f) ){}
 	Functor(F const& f) : _pwf(f){}
 
 
@@ -303,7 +299,7 @@ private:
 template<class...ARGS>
 auto sgm::fp::Params(ARGS&&...args)
 {  
-	return Forward_as_Flat_MTP( std::forward<ARGS>(args)... );  
+	return Forward_as_Flat_MTP( Forward<ARGS>(args)... );  
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -314,12 +310,10 @@ struct sgm::fp::_rPass_Helper : No_Making
 	static decltype(auto) calc([[maybe_unused]]MTP&& mtp, ARGS&&...args)
 	{
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  mtp.DIMENSION == IDX )
-			return Forward_as_Multiple( std::forward<ARGS>(args)... );
+			return Forward_as_Multiple( Forward<ARGS>(args)... );
 		else
 			return 
-			calc
-			(	std::forward<MTP>(mtp), mtp.template forward<IDX>(), std::forward<ARGS>(args)...  
-			);
+			calc( Forward<MTP>(mtp), mtp.template forward<IDX>(), Forward<ARGS>(args)... );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -333,7 +327,7 @@ struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 	{
 		return 
 		_Permute_Helper<INDICES...>::calc
-		(	std::move(mtp), std::forward<ARGS>(args)..., mtp.template forward<IDX>()
+		(	Move(mtp), Forward<ARGS>(args)..., mtp.template forward<IDX>()
 		);
 	}
 };
@@ -345,7 +339,7 @@ struct sgm::fp::_Permute_Helper<>
 	template<class...TYPES, class...ARGS>
 	static decltype(auto) calc(Multiple<TYPES...>&&, ARGS&&...args)
 	{
-		return Params( std::forward<ARGS>(args)... );
+		return Params( Forward<ARGS>(args)... );
 	}
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -362,9 +356,9 @@ namespace sgm::fp
 	=	[](auto&&...args)
 		{
 			if constexpr(D >= 0)
-				return Params( std::forward<decltype(args)>(args)... );
+				return Params( Forward<decltype(args)>(args)... );
 			else
-				return _rPass_Helper::calc(  Params( std::forward<decltype(args)>(args)... )  );
+				return _rPass_Helper::calc(  Params( Forward<decltype(args)>(args)... )  );
 		} / Dim<(D >= 0 ? D : -D)>;
 
 
@@ -374,7 +368,7 @@ namespace sgm::fp
 		{
 			return
 			_Permute_Helper<INDICES...>::calc
-			(	Params( std::forward<decltype(args)>(args)... )  
+			(	Params( Forward<decltype(args)>(args)... )  
 			);
 		} / Dim<sizeof...(INDICES)>;
 
@@ -390,7 +384,7 @@ namespace sgm::fp
 	#define SGM_FUNCTOR(TemFunc, Dimension, ...)	\
 	(	[](auto&&...args)		\
 		{	\
-			return TemFunc __VA_ARGS__ ( std::forward<decltype(args)>(args)... );	\
+			return TemFunc __VA_ARGS__ ( sgm::Forward<decltype(args)>(args)... );	\
 		}	\
 	/	sgm::fp::Dim<(Dimension)>	\
 	)

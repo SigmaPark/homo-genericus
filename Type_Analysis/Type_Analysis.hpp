@@ -173,10 +173,11 @@ namespace sgm
 	struct is_Convertible
 	{
 	private:
-		template<class F, class T>
-		static auto _calc(int)-> SFINAE_t< decltype( Declval<void(*)(T)>()(Declval<F>()) ) >;
+		template<class F, class T> /* Declaration Only */ 
+		static auto _calc(int)
+		->	SFINAE_t< decltype( Declval<void(*)(T)>()(Declval<F>()) ) >;
 
-		template<class, class>
+		template<class, class> /* Declaration Only */ 
 		static auto _calc(...)-> False_t;
 
 	public:
@@ -194,8 +195,8 @@ namespace sgm
 	struct is_Class
 	{
 	private:
-		template<class Q> static auto _calc(int Q::*)-> True_t;
-		template<class> static auto _calc(...)-> False_t;
+		template<class Q> /* Declaration Only */ static auto _calc(int Q::*)-> True_t;
+		template<class> /* Declaration Only */ static auto _calc(...)-> False_t;
 
 	public:
 		enum : bool{value = decltype( _calc< Decay_t<T> >(0) )::value};
@@ -206,14 +207,14 @@ namespace sgm
 	struct is_inherited_from
 	{
 	private:
-		template<class B> static auto _calc(B const volatile*)-> True_t;
-		template<class> static auto _calc(void const volatile*)-> False_t;
+		template<class B> /* Declaration Only */ static auto _calc(B const volatile*)-> True_t;
+		template<class> /* Declaration Only */ static auto _calc(void const volatile*)-> False_t;
 
 
-		template<class D, class B>
+		template<class D, class B> /* Declaration Only */ 
 		static auto _test(int)-> decltype(  _calc<B>( (D*)nullptr )  );
 
-		template<class, class>
+		template<class, class> /* Declaration Only */ 
 		static auto _test(...)-> False_t;
 
 	public:
