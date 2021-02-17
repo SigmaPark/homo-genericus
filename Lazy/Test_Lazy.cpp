@@ -27,18 +27,37 @@ void Test<1>()
 
 
 using sgm::Lazy;
+using sgm::spec::Specimen;
 
 
 template<>
 void Test<2>()
 {
-	Lazy Lz([]{  return sgm::spec::Specimen(3);  });
+	Lazy Lz = []{  return Specimen(3);  };
 
-	sgm::spec::is_True( *Lz == sgm::spec::Specimen(3) );
+	sgm::spec::is_True( *Lz == Specimen(3) );
 
-	Lz.destruct();
+	Specimen s1;
 
-	sgm::spec::is_True( *Lz == sgm::spec::Specimen(3) );
+	s1 = Lz;
+
+	static_cast<Specimen&>(Lz) = Specimen(24);
+
+	sgm::spec::is_True( *Lz == Specimen(24) );
+
+	Specimen& rz = Lz;
+	Lazy const Lz2 = Lz;
+
+
+
+	rz = 15;
+
+	sgm::spec::is_True( *Lz == Specimen(15) && *Lz2 == 24 );
+
+
+	Lz.~Lazy();
+
+	sgm::spec::is_True(Lz.is_destructed() && s1 == 3);
 }
 
 
