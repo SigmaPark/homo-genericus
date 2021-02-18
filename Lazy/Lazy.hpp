@@ -4,8 +4,8 @@
 #ifndef _SGM_LAZY_
 #define _SGM_LAZY_
 
-#include <new>
 #include "..\Type_Analysis\Type_Analysis.hpp"
+#include <new>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -13,74 +13,97 @@ namespace sgm
 {
 
 	template<class F>
-	struct Lazy
-	{
-	public:
-		using type = Referenceless_t< decltype(Declval<F>()()) >;
+	struct Lazy;	
 
-	
-		Lazy(F f) : _f(f), _is_evaluated(false), _p(nullptr){}
-
-		Lazy(Lazy const& z) 
-		:	_f(z._f), _is_evaluated(z._is_evaluated), _p( z ? new(_buf) type(*z._p) : nullptr )
-		{}
-
-		Lazy(Lazy&& z) noexcept 
-		:	_f( Move(z._f) ), _is_evaluated(z._is_evaluated)
-		,	_p(  z ? new(_buf) type( Move(*z._p) ) : nullptr  )
-		{}
-
-		~Lazy()
-		{
-			if(_p != nullptr)
-				_p->~type(),  _p = nullptr;
-			
-			_is_evaluated = true;
-		}
+	SGM_USER_DEFINED_TYPE_CHECK(_, Lazy, class F, F);
 
 
-		void clear()
-		{
-			this->~Lazy();  
+	template<class F>
+	static auto Make_Lazy(F&& f)-> Lazy< Referenceless_t<F> >;
 
-			for(auto& c : _buf)
-				c = char(0);
-		}
-
-		decltype(auto) get() const{  return _deref(*this);  }
-		decltype(auto) get(){  return _deref(*this);  }
-
-		auto operator=(Lazy const&)-> Lazy& = delete;
-		auto operator=(type const& t)-> Lazy&{  return( void(get() = t),  *this );  }
-		auto operator=(type&& t)-> Lazy&{  return(  void( get() = Move(t) ),  *this  );  }
-	
-		decltype(auto) operator*() const{  return get();  }
-		decltype(auto) operator*(){  return get();  }
-		operator type&(){  return get();  }
-		operator type const&() const{  return get();  }
-
-		bool is_evaluated() const{  return _is_evaluated;  }
-		bool is_destructed() const{  return is_evaluated() && _p == nullptr;  }
-		operator bool() const{  return is_evaluated() && _p != nullptr;  }
-
-
-	private:
-		char mutable _buf[sizeof(type)] = {0, };
-		F _f;
-		bool mutable _is_evaluated;
-		type mutable *_p;
-		
-	
-		template<class Q>
-		static decltype(auto) _deref(Q&& q)
-		{
-			if(!q.is_evaluated())
-				q._p = new(q._buf) type(q._f()),  q._is_evaluated = true;
-	
-			return *q._p;
-		}
-	};	
+	template
+	<	class LAZY, class _lazy_t = Referenceless_t<LAZY>
+	,	class = Guaranteed_t< is_Lazy<_lazy_t>::value >
+	>
+	using Lazy_value_t = typename _lazy_t::type;
 
 }
+//========//========//========//========//=======#//========//========//========//========//=======#
 
-#endif
+
+template<class F>
+struct sgm::Lazy
+{
+public:
+	using type = Referenceless_t< decltype(Declval<F>()()) >;
+
+
+	Lazy(F f) : _f(f), _yet(true), _p(nullptr){}
+
+	Lazy(Lazy const& z) 
+	:	_f(z._f), _yet(z.has_yet())
+	,	_p( z.is_evaluated() ? new(_buf) type(*z._p) : nullptr )
+	{}
+
+	Lazy(Lazy&& z) SGM_NOEXCEPT
+	:	_f( Move(z._f) ), _yet(z.has_yet())
+	,	_p(  z.is_evaluated() ? new(_buf) type( Move(*z._p) ) : nullptr  )
+	{}
+
+	~Lazy()
+	{
+		if(_p != nullptr)
+			_p->~type(),  _p = nullptr;
+		
+		_yet = false;
+	}
+
+
+	void clear()
+	{
+		this->~Lazy();
+
+		for(auto& c : _buf)
+			c = char(0);
+	}
+
+	auto get() const-> type const&{  return _deref(*this);  }
+	auto get()-> type&{  return _deref(*this);  }
+
+	void operator=(Lazy const&) = delete;
+	auto operator=(type const& t)-> Lazy&{  return( void(get() = t),  *this );  }
+	auto operator=(type&& t) SGM_NOEXCEPT-> Lazy&{  return(  void( get() = Move(t) ),  *this  );  }
+
+	auto operator*() const-> type const&{  return get();  }
+	auto operator*()-> type&{  return get();  }
+	operator type&(){  return get();  }
+	operator type const&() const{  return get();  }
+
+	bool has_yet() const{  return _yet;  }
+	bool is_destructed() const{  return !has_yet() && _p == nullptr;  }
+	bool is_evaluated() const{  return !has_yet() && _p != nullptr;  }
+
+
+private:
+	char mutable _buf[sizeof(type)] = {0, };
+	F _f;
+	bool mutable _yet;
+	type mutable *_p;
+	
+
+	template<class Z>
+	static auto _deref(Z&& z)-> decltype(*z._p)
+	{
+		if(z.has_yet())
+			z._p = new(z._buf) type(z._f()),  z._yet = false;
+
+		return *z._p;
+	}
+};	
+
+
+template<class F>
+auto sgm::Make_Lazy(F&& f)-> Lazy< Referenceless_t<F> >{  return Forward<F>(f);  }
+
+
+#endif // end of #ifndef _SGM_LAZY_

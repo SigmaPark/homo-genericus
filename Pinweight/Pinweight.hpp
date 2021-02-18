@@ -33,7 +33,7 @@ private:
 	>;
 
 
-	_TemporaryPinweight(T* p) : _pval{p}{}
+	_TemporaryPinweight(T* p) : _pval(p){}
 
 	T* _pval;
 
@@ -253,10 +253,7 @@ namespace sgm
 {
 
 	template<class T>
-	static auto Pinweighting(T&& t)-> Pinweight< Referenceless_t<T> >
-	{
-		return Pinweight< Referenceless_t<T> >( Forward<T>(t) );
-	}
+	static auto Pinweighting(T&& t)-> Pinweight< Referenceless_t<T> >{  return Forward<T>(t);  }
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

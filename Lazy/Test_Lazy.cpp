@@ -6,38 +6,23 @@ template<unsigned>
 static void Test();
 
 
-template<class F>
-struct AA
-{
-	AA(F f) : _f(f){}
-
-	F _f;
-};
-
-
-template<>
-void Test<1>()
-{
-	int x = 11;
-
-	AA aa([&x]{  return double(x);  }), aa2 = aa;
-
-	sgm::spec::is_True(aa2._f() == 11.0);
-}
-
-
 using sgm::Lazy;
+using sgm::Make_Lazy;
 using sgm::spec::Specimen;
 
 
 template<>
 void Test<2>()
 {
-	Lazy Lz = []{  return Specimen(3);  };
+	int number = 333;
+
+	auto Lz = Make_Lazy( [&number]{  return Specimen(number);  } );
+
+	number = 3;
 
 	sgm::spec::is_True( *Lz == Specimen(3) );
 
-	Specimen s1;
+	sgm::Lazy_value_t<decltype(Lz)> s1 = Lz;
 
 	s1 = Lz;
 
@@ -45,15 +30,13 @@ void Test<2>()
 
 	sgm::spec::is_True( *Lz == Specimen(24) );
 
+	auto const Lz2 = Lz;
+
 	Specimen& rz = Lz;
-	Lazy const Lz2 = Lz;
-
-
 
 	rz = 15;
 
 	sgm::spec::is_True( *Lz == Specimen(15) && *Lz2 == 24 );
-
 
 	Lz.~Lazy();
 
@@ -69,7 +52,7 @@ void Test_sgm_Lazy::test()
 {
 	try
 	{
-		::Test<1>();
+		//::Test<1>();
 		::Test<2>();
 
 		std::wcout << L"Lazy Test Complete.\n";

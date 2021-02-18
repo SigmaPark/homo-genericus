@@ -153,7 +153,7 @@ namespace sgm
 
 
 	template<class TEST, class T = True_t>
-	using SFINAE_t = decltype( (void)Declval<TEST>(), Declval<T>() );
+	using SFINAE_t = decltype( (void)Declval<TEST>(),  Declval<T>() );
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
