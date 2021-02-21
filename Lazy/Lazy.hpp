@@ -71,8 +71,8 @@ public:
 	auto get()-> type&{  return _deref(*this);  }
 
 	void operator=(Lazy const&) = delete;
-	auto operator=(type const& t)-> Lazy&{  return( void(get() = t),  *this );  }
-	auto operator=(type&& t) SGM_NOEXCEPT-> Lazy&{  return(  void( get() = Move(t) ),  *this  );  }
+	auto operator=(type const& t)-> Lazy&{  return void(get() = t),  *this;  }
+	auto operator=(type&& t) SGM_NOEXCEPT-> Lazy&{  return void( get() = Move(t) ),  *this;  }
 
 	auto operator*() const-> type const&{  return get();  }
 	auto operator*()-> type&{  return get();  }

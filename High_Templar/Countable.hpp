@@ -61,28 +61,22 @@ namespace sgm
 
 		auto operator=(Count_iterator<N, !INCREASING> const itr)-> iter_t
 		{
-			_number = *itr;
-
-			return *this;
+			return _number = *itr,  *this;
 		}
 
 
 		auto operator++(int)-> iter_t
 		{
-			iter_t iter = *this;
+			iter_t const iter = *this;
 
-			_number = _shifted<true>(**this);
-
-			return iter;
+			return _number = _shifted<true>(**this),  iter;
 		}
 
 		auto operator--(int)-> iter_t
 		{
-			iter_t iter = *this;
+			iter_t const iter = *this;
 
-			_number = _shifted<false>(**this);
-
-			return iter;
+			return _number = _shifted<false>(**this),  iter;
 		}
 
 		template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
@@ -157,7 +151,7 @@ namespace sgm
 		auto end() const-> iterator_t{  return cend();  }
 
 		auto crbegin() const-> riterator_t{  return riterator_t(_offset + _length - 1);  }
-		auto crend() const-> riterator_t{ return riterator_t(_offset - 1);  }
+		auto crend() const-> riterator_t{  return riterator_t(_offset - 1);  }
 		auto rbegin() const-> riterator_t{  return crbegin();  }
 		auto rend() const-> riterator_t{  return crend();  }
 	};
