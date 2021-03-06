@@ -72,6 +72,13 @@ struct Vector_Case : No_Making
 };
 
 
+struct Matrix_Vector_Operation : No_Making
+{
+	static void Test01();
+	static void Test02();
+};
+
+
 struct UnitVector_Case : No_Making
 {
 	static void Constructions();
@@ -747,6 +754,36 @@ void Vector_Case::Algebra()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+void Matrix_Vector_Operation::Test01()
+{
+	Matrix<float, 2, 2> m1
+	{	1, 2
+	,	3, -1
+	};
+
+	Vector<float, 2> v1{1, -1};
+
+	is_True
+	(	is_Equal(v1 * m1, Vector<float>{-2, 3})
+	&&	is_Equal(m1 * v1, Vector<float>{-1, 4})
+	);
+
+	Matrix<float, 1, 1> x = (v1 * m1).rowVec() * v1.colVec();
+
+	is_True(  is_Equal( x(0, 0), -5 )  );
+}
+
+
+void Matrix_Vector_Operation::Test02()
+{
+	Matrix<float, 2, 2> m1
+	{	-1, 2
+	,	1, -1
+	};
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 using sgm::mxi::UnitVector;
 
 
@@ -838,6 +875,8 @@ void Test_sgm_Matrix::test()
 		Vector_Case::Normalization();
 		Vector_Case::Special_Vectors();
 		Vector_Case::Algebra();
+
+		Matrix_Vector_Operation::Test01();
 
 		UnitVector_Case::Constructions();
 		UnitVector_Case::Substitutions();
