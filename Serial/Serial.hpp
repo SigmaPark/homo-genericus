@@ -317,7 +317,7 @@ public:
 
 	auto operator=(Serial const&)-> Serial& = default;
 
-	auto operator=(Serial&& sr) SGM_NOEXCEPT-> Serial&
+	auto operator=(Serial&& sr) noexcept-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -412,7 +412,7 @@ public:
 	}
 
 
-	auto swap(Serial& sr) SGM_NOEXCEPT-> Serial&
+	auto swap(Serial& sr) noexcept-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -503,7 +503,7 @@ public:
 	Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
 
 
-	Serial(Serial&& sr) SGM_NOEXCEPT : _capacity(sr.capacity()), _size(sr.size())
+	Serial(Serial&& sr) noexcept : _capacity(sr.capacity()), _size(sr.size())
 	{
 		_core = sr._core,  sr._capacity = sr._size = 0,  sr._core = nullptr;
 	}
@@ -531,7 +531,7 @@ public:
 	}
 
 
-	auto operator=(Serial&& sr) SGM_NOEXCEPT-> Serial&
+	auto operator=(Serial&& sr) noexcept-> Serial&
 	{
 		_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
 		sr._capacity = sr._size = 0,  sr._core = nullptr;
@@ -622,7 +622,7 @@ public:
 	auto clear()-> Serial&{  return pop_back_from(Helper::begin());  }
 
 
-	auto swap(Serial& sr) SGM_NOEXCEPT-> Serial&
+	auto swap(Serial& sr) noexcept-> Serial&
 	{
 		using std::swap;
 

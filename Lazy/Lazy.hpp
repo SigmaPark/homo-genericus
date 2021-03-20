@@ -45,7 +45,7 @@ public:
 	,	_p( z.is_evaluated() ? new(_buf) type(*z._p) : nullptr )
 	{}
 
-	Lazy(Lazy&& z) SGM_NOEXCEPT
+	Lazy(Lazy&& z) noexcept
 	:	_f( Move(z._f) ), _yet(z.has_yet())
 	,	_p(  z.is_evaluated() ? new(_buf) type( Move(*z._p) ) : nullptr  )
 	{}
@@ -72,7 +72,7 @@ public:
 
 	void operator=(Lazy const&) = delete;
 	auto operator=(type const& t)-> Lazy&{  return void(get() = t),  *this;  }
-	auto operator=(type&& t) SGM_NOEXCEPT-> Lazy&{  return void( get() = Move(t) ),  *this;  }
+	auto operator=(type&& t) noexcept-> Lazy&{  return void( get() = Move(t) ),  *this;  }
 
 	auto operator*() const-> type const&{  return get();  }
 	auto operator*()-> type&{  return get();  }

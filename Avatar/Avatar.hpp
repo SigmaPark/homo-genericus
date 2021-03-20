@@ -19,7 +19,7 @@ template<class T, class M>
 class sgm::Avatar_t< T, M, sgm::Avatar_T_Helper<T, M, false, false, false> >
 {
 public:
-	enum : bool{IS_CONST = is_constAvatar<Avatar_t>::value};
+	static bool constexpr IS_CONST = is_constAvatar<Avatar_t>::value;
 
 	using value_t = Selective_t< IS_CONST, T const, T >;
 
@@ -40,7 +40,7 @@ public:
 	Avatar_t(Avatar_t<T, _M> const& avt) : _pval(&avt.value()), _state( get_state(avt) ){}
 
 
-	void distruct() SGM_NOEXCEPT{  _pval = nullptr, _state = State::GONE;  }
+	void distruct() noexcept{  _pval = nullptr, _state = State::GONE;  }
 	~Avatar_t(){  distruct();  }
 
 

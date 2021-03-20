@@ -1,33 +1,21 @@
 #pragma once
 
+
 #ifndef _SGM_TYPE_ANALYSIS_
 #define _SGM_TYPE_ANALYSIS_
 
-//	minimum versions for C++11 major syntex support.
-#if	( defined(_MSVC_LANG) && _MSVC_LANG < 201102 )	||	\
-	( defined(__clang__) && __clang_major__ * 1000 + __clang_minor__ * 100 < 3100 )	||	\
-	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 < 4700 )	||	\
-	( defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1300 )
+//	minimum versions for C++11 main syntex support.
+#if	( defined(_MSC_VER) && _MSC_VER < 1900 )	||	\
+	( defined(__clang__) && __clang_major__ * 1000 + __clang_minor__ * 100 < 3300 )	||	\
+	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 < 4700 )
 
 	#error C++11 or higher version of language support is required.
 #endif
 
 
-#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
-	( defined(__cplusplus) && __cplusplus >= 201102 )	||	\
-	( defined(__clang__) && __clang_major__ >= 3 )	||	\
-	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 >= 4600 )	||	\
-	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1400 )
-
-	#define SGM_NOEXCEPT noexcept
-#else
-	#define SGM_NOEXCEPT throw()
-#endif
-
-
 #ifndef SGM_COMPILE_FAILED
 	#define SGM_COMPILE_FAILED(...) \
-		void* no_compile = []{  static_assert(false, #__VA_ARGS__);  }()
+		void const* const no_compile = []{  static_assert(false, #__VA_ARGS__);  }()
 
 #else
 	#error SGM_COMPILE_FAILED was already defined somewhere else.
@@ -51,7 +39,8 @@ namespace sgm
 	template<bool B>
 	struct Boolean_type : No_Making
 	{
-		enum : bool{value = B};  
+		static bool constexpr value = B;
+
 		using type = Boolean_type;
 	};
 
@@ -181,12 +170,10 @@ namespace sgm
 		static auto _calc(...)-> False_t;
 
 	public:
-		enum : bool
-		{	value 
-			=	(	decltype( _calc<FROM, TO>(0) )::value
-				||	(is_Void<FROM>::value && is_Void<TO>::value)
-				)
-		};
+		static bool constexpr value 
+		=	(	decltype( _calc<FROM, TO>(0) )::value
+			||	(is_Void<FROM>::value && is_Void<TO>::value)
+			);
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -199,7 +186,7 @@ namespace sgm
 		template<class> /* Declaration Only */ static auto _calc(...)-> False_t;
 
 	public:
-		enum : bool{value = decltype( _calc< Decay_t<T> >(0) )::value};
+		static bool constexpr value = decltype( _calc< Decay_t<T> >(0) )::value;
 	};
 
 
@@ -217,12 +204,10 @@ namespace sgm
 		template<class, class> /* Declaration Only */ static auto _test(...)-> False_t;
 
 	public:
-		enum : bool
-		{	value
-			=	(	is_Class<DERV>::value && is_Class<BASE>::value
-				&&	decltype( _test<DERV, BASE>(0) )::value
-				)
-		};
+		static bool constexpr value
+		=	(	is_Class<DERV>::value && is_Class<BASE>::value
+			&&	decltype( _test<DERV, BASE>(0) )::value
+			);
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -313,14 +298,14 @@ namespace sgm
 
 
 	template< class T, class Res_t = Referenceless_t<T>&& >
-	static auto Move(T&& t) SGM_NOEXCEPT-> Res_t{  return static_cast<Res_t>(t);  }
+	static auto Move(T&& t) noexcept-> Res_t{  return static_cast<Res_t>(t);  }
 
 
 	template<class T>
 	static auto Forward(Referenceless_t<T>& t)-> T&&{  return static_cast<T&&>(t);  }
 
 	template<class T>
-	static auto Forward(Referenceless_t<T>&& t) SGM_NOEXCEPT-> T&&{  return Move(t);  }
+	static auto Forward(Referenceless_t<T>&& t) noexcept-> T&&{  return Move(t);  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -363,11 +348,9 @@ namespace sgm
 
 
 //	minimum version requirement for template variable.
-#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402 )	||	\
-	( defined(__cplusplus) && __cplusplus >= 201402 )	||	\
-	( defined(__clang__) && __clang_major__ >= 3 && __clang_minor__ >= 4 )	||	\
-	( defined(__GNUC__) && __GNUC__ >= 5 )	||	\
-	( defined(__INTEL_COMPILER) && __INTEL_COMPILER >= 1700 )
+#if	( defined(_MSVC_LANG) && _MSVC_LANG >= 201402L )	||	\
+	( defined(__clang__) && __clang_major__ * 1000 + __clang_minor__ * 100 >= 3400 )	||	\
+	( defined(__GNUC__) && __GNUC__ >= 5 )
 
 
 	#if defined(SGM_USER_DEFINED_TYPE_CHECK) && !defined(SGM_USER_DEFINED_TYPE_CHECK14)

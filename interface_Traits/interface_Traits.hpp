@@ -25,7 +25,7 @@ namespace sgm
 		public:	\
 			NAME() = delete;	\
 		\
-			enum : bool{value = decltype( _calc< Decay_t<_CLASS> >(0) )::value};	\
+			static bool constexpr value = decltype( _calc< Decay_t<_CLASS> >(0) )::value;	\
 		}
 
 #else
@@ -372,13 +372,11 @@ namespace sgm
 
 
 	public:
-		enum : bool
-		{	value
-			=	(	decltype( _has_begin< Decay_t<CON> >(0) )::value
-				&&	decltype( _has_end< Decay_t<CON> >(0) )::value
-				&&	decltype( _has_size< Decay_t<CON> >(0) )::value
-				)
-		};
+		static bool constexpr value
+		=	(	decltype( _has_begin< Decay_t<CON> >(0) )::value
+			&&	decltype( _has_end< Decay_t<CON> >(0) )::value
+			&&	decltype( _has_size< Decay_t<CON> >(0) )::value
+			);
 	};	
 
 

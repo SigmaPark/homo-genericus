@@ -166,8 +166,7 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 
 
 	template<class Q>
-	static auto _substitute(Pinweight_t& res, Q&& q)
-	->	Pinweight_t&
+	static auto _substitute(Pinweight_t& res, Q&& q)-> Pinweight_t&
 	{
 		res._my_pcount_down();
 		

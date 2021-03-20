@@ -89,7 +89,7 @@ namespace std
 	}
 
 	template<size_t N, class...TYPES>
-	static auto get(sgm::Family<TYPES...>&& fam) SGM_NOEXCEPT
+	static auto get(sgm::Family<TYPES...>&& fam) noexcept
 	->	typename sgm::Family_member< N, sgm::Family<TYPES...> >::type&&
 	{
 		return
@@ -170,7 +170,7 @@ public:
 	:	_upper_t( static_cast<_upper_t const&>(fam) ), _val( static_cast<T>(fam._val) )
 	{}
 
-	Family(Family&& fam) SGM_NOEXCEPT
+	Family(Family&& fam) noexcept
 	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( Forward<T>(fam._val) )
 	{}
 
@@ -183,7 +183,7 @@ public:
 		return *this;
 	}
 
-	auto operator=(Family&& fam) SGM_NOEXCEPT-> Family&
+	auto operator=(Family&& fam) noexcept-> Family&
 	{
 		_val = Forward<T>(fam._val),
 		static_cast<_upper_t&>(*this) = static_cast<_upper_t&&>(fam);

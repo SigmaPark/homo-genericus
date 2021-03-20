@@ -74,7 +74,7 @@
 		\
 		\
 	public: \
-		enum : bool{  value = Eval< Decay_t<T> >::value  };	\
+		static bool constexpr value = Eval< Decay_t<T> >::value;	\
 		\
 		using Q_type = typename Eval< Decay_t<T> >::Q_type;	\
 		using M_type = typename Eval< Decay_t<T> >::M_type;	\
@@ -125,13 +125,12 @@
 		\
 		\
 	public:	\
-		enum : bool	\
-		{	value	\
-			=	is_Same	\
-				<	typename PROXYNAME##Mutability< Referenceless_t<T> >::type	\
-				,	invar	\
-				>::	value	\
-		};	\
+		static bool constexpr value		\
+		=	is_Same	\
+			<	typename PROXYNAME##Mutability< Referenceless_t<T> >::type	\
+			,	invar	\
+			>::	value;	\
+		\
 		\
 		is_const##PROXYNAME() = delete;	\
 	};	\
