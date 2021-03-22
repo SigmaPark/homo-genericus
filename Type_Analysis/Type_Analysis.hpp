@@ -158,6 +158,17 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+#if 1
+	template<class FROM, class TO, class = void>
+	struct is_Convertible : Boolean_type< is_Void<FROM>::value && is_Void<TO>::value >{};
+
+	template<class FROM, class TO>
+	struct is_Convertible
+	<	FROM, TO, Void_t< decltype( Declval<void(*)(TO)>()(Declval<FROM>()) ) >  
+	>
+	:	True_t
+	{};
+#else
 	template<class FROM, class TO>
 	struct is_Convertible
 	{
@@ -174,10 +185,23 @@ namespace sgm
 		=	(	decltype( _calc<FROM, TO>(0) )::value
 			||	(is_Void<FROM>::value && is_Void<TO>::value)
 			);
+
+		using type = Boolean_type<value>;
 	};
+#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
+#if 1
+	template<class, class = void> struct is_Class : False_t{};
+
+	template<class T>
+	struct is_Class
+	<	T, Void_t<  decltype( static_cast< int Decay_t<T>::* >(0) )  >   
+	>
+	:	True_t
+	{};
+#else
 	template<class T>
 	struct is_Class
 	{
@@ -188,6 +212,7 @@ namespace sgm
 	public:
 		static bool constexpr value = decltype( _calc< Decay_t<T> >(0) )::value;
 	};
+#endif
 
 
 	template<class DERV, class BASE>
