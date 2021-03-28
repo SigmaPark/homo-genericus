@@ -77,7 +77,7 @@ namespace sgm
 	_BINARY_OPERATOR_INTERFACE(ModAlloc, %=);
 	_BINARY_OPERATOR_INTERFACE(BitAndAlloc, &=);
 	_BINARY_OPERATOR_INTERFACE(BitOrAlloc, |=);
-	_BINARY_OPERATOR_INTERFACE(BitXorAlloc, ^=);
+	_BINARY_OPERATOR_INTERFACE(XorAlloc, ^=);
 	_BINARY_OPERATOR_INTERFACE(LShiftAlloc, <<=);
 	_BINARY_OPERATOR_INTERFACE(RShiftAlloc, >>=);
 
@@ -86,6 +86,14 @@ namespace sgm
 #else
 	#error _BINARY_OPERATOR_INTERFACE was already defined somewhere else.
 #endif
+
+	template<class T1, class T2 = T1, class = void>
+	struct Has_Operator_Comma : False_t{};
+
+	template<class T1, class T2>
+	struct Has_Operator_Comma<  T1, T2, Void_t< decltype(Declval<T1>(), Declval<T2>()) >  >
+	:	True_t
+	{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -206,24 +214,6 @@ namespace sgm
 	template< class T, bool = is_Algebraic<T>::value > struct Algebraic;
 
 
-	template<class T, class HOST>
-	struct _AllocOp_Processor
-	{
-		T const* p;
-		HOST* pHost;
-		void(HOST::*pre_func)();
-		void(HOST::*post_func)();
-	};
-
-	//template<class T, class HOST>
-	//static auto AllocOp_Process
-	//(	T const* p, HOST* pHost, void(HOST::* pre_func)(), void(HOST::* post_func)() 
-	//)->	_AllocOp_Processor<T, HOST>
-	//{
-	//	return {p, pHost, pre_func, post_func};
-	//}
-
-
 #if !defined(_SGM_OPERATION_DECORATOR0) || !defined(_SGM_OPERATOR)
 	#define _SGM_OPERATOR(DECO_NAME, _OP)	\
 		template<class Q>	\
@@ -308,23 +298,11 @@ namespace sgm
 			=	p
 			);
 		}
-
-		template<class HOST>
-		auto update_by_operator
-		(	T const* p, HOST* pHost
-		,	void(Operation_Decorator::* pre_func)(), void(Operation_Decorator::* post_func)()
-		)->	T const*
-		{
-			return
-			(	static_cast< Comparable<T>& >(*this)
-			=	static_cast< Ordered<T>& >(*this)
-			=	static_cast< Logical<T>& >(*this)
-			=	static_cast< Digital<T>& >(*this)
-			=	static_cast< Algebraic<T>& >(*this)
-			=	_AllocOp_Processor<T, HOST>{p, pHost, pre_func, post_func}
-			);
-		}
 	};
+
+
+	template<class T>
+	class Operator_interface;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -456,5 +434,108 @@ namespace sgm
 
 
 } // end of namespace sgm
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+
+
+template<class T>
+class sgm::Operator_interface
+{
+private:
+	using _self = Operator_interface;
+
+	T *_p;
+
+public:
+	Operator_interface(T *p = nullptr) : _p(p){}
+
+	auto operator=(T *p)-> T*{  return _p = p;  }
+
+
+#ifndef _SGM_UNARY_OP
+	#define _SGM_UNARY_OP(SYM, NAME, SPEC)	\
+		template<  class = Enable_if_t< Has_Operator_##NAME<T SPEC>::value >  >	\
+		auto operator SYM() SPEC-> SPEC decltype(SYM*_p){  return SYM*_p;  }
+
+
+	_SGM_UNARY_OP(+, Posit, const)
+	_SGM_UNARY_OP(-, Negate, const)
+	_SGM_UNARY_OP(++, Pre_increase, /**/)
+	_SGM_UNARY_OP(--, Pre_Decrease, /**/)
+	_SGM_UNARY_OP(*, Deref, const)
+	_SGM_UNARY_OP(*, Deref, /**/)
+	_SGM_UNARY_OP(&, Ref, const)
+	_SGM_UNARY_OP(&, Ref, /**/)
+	_SGM_UNARY_OP(!, Not, const)
+	_SGM_UNARY_OP(~, BitNot, const)
+
+	#undef _SGM_UNARY_OP
+#else
+	#error _SGM_UNARY_OP was already defined somewhere else.
+#endif
+
+	auto operator++(Enable_if_t< Has_Operator_Post_increase<T>::value, int >)
+	->	decltype( (*_p)++ ){  return (*_p)++;  }
+
+	auto operator--(Enable_if_t< Has_Operator_Post_Decrease<T>::value, int >)
+	->	decltype( (*_p)-- ){  return (*_p)--;  }
+
+
+#ifndef _SGM_BINARY_OP
+	#define _SGM_BINARY_OP(SYM, NAME, SPEC)	\
+		template<  class RHS, class = Enable_if_t< Has_Operator_##NAME<T SPEC, RHS>::value >  >	\
+		auto operator SYM(RHS const& rhs) SPEC	\
+		->	SPEC decltype( _p->operator SYM(rhs) ){  return _p->operator SYM(rhs);  }	\
+		\
+		auto operator SYM(Enable_if_t< Has_Operator_##NAME<T SPEC>::value, _self const& > rhs) \
+		SPEC-> SPEC decltype( _p->operator SYM(*rhs._p) ){  return _p->operator SYM(*rhs._p);  }
+
+
+	_SGM_BINARY_OP(+, Plus, const)
+	_SGM_BINARY_OP(-, Minus, const)
+	_SGM_BINARY_OP(*, Multiply, const)
+	_SGM_BINARY_OP(/, Divide, const)
+	_SGM_BINARY_OP(%, Mod, const)
+	_SGM_BINARY_OP(==, Same, const)
+	_SGM_BINARY_OP(!=, NotSame, const)
+	_SGM_BINARY_OP(<, Less, const)
+	_SGM_BINARY_OP(>, Greater, const)
+	_SGM_BINARY_OP(<=, NotGreater, const)
+	_SGM_BINARY_OP(>=, NotLess, const)
+	_SGM_BINARY_OP(&&, And, const)
+	_SGM_BINARY_OP(||, Or, const)
+	_SGM_BINARY_OP(&, BitAnd, const)
+	_SGM_BINARY_OP(|, BitOr, const)
+	_SGM_BINARY_OP(^, Xor, const)
+	_SGM_BINARY_OP(<<, LShift, const)
+	_SGM_BINARY_OP(>>, RShift, const)
+	_SGM_BINARY_OP([], index, const)
+	_SGM_BINARY_OP([], index, /**/)
+	_SGM_BINARY_OP(+=, PlusAlloc, /**/)
+	_SGM_BINARY_OP(-=, MinusAlloc, /**/)
+	_SGM_BINARY_OP(*=, MultiplyAlloc, /**/)
+	_SGM_BINARY_OP(/=, DivideAlloc, /**/)
+	_SGM_BINARY_OP(%=, ModAlloc, /**/)
+	_SGM_BINARY_OP(&=, BitAndAlloc, /**/)
+	_SGM_BINARY_OP(|=, BitOrAlloc, /**/)
+	_SGM_BINARY_OP(^=, XorAlloc, /**/)
+	_SGM_BINARY_OP(<<=, LShiftAlloc, /**/)
+	_SGM_BINARY_OP(>>=, RShiftAlloc, /**/)
+
+	#undef _SGM_BINARY_OP
+#else
+	#error _SGM_BINARY_OP was already defined somewhere else.
+#endif
+
+	template<  class RHS, class = Enable_if_t< Has_Operator_Comma<T const, RHS>::value >  >
+	auto operator,(RHS const& rhs) const
+	->	const decltype( _p->operator,(rhs) ){  return _p->operator,(rhs);  }
+
+	auto operator,(Enable_if_t< Has_Operator_Comma<T const>::value, _self const& > rhs) const
+	->	const decltype( _p->operator,(*rhs._p) ){  return _p->operator,(*rhs._p);  }
+
+};
+
 
 #endif // end of #ifndef _SGM_INTERFACE_TRAITS_
