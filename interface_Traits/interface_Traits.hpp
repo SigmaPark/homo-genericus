@@ -26,6 +26,7 @@ namespace sgm
 			NAME() = delete;	\
 		\
 			static bool constexpr value = decltype( _calc< Decay_t<_CLASS> >(0) )::value;	\
+			using type = Boolean_type<value>;	\
 		}
 
 #else
@@ -81,6 +82,8 @@ namespace sgm
 	_BINARY_OPERATOR_INTERFACE(LShiftAlloc, <<=);
 	_BINARY_OPERATOR_INTERFACE(RShiftAlloc, >>=);
 
+	_BINARY_OPERATOR_INTERFACE(Ptr2Mem, ->*);
+
 	
 	#undef _BINARY_OPERATOR_INTERFACE
 #else
@@ -91,7 +94,9 @@ namespace sgm
 	struct Has_Operator_Comma : False_t{};
 
 	template<class T1, class T2>
-	struct Has_Operator_Comma<  T1, T2, Void_t< decltype(Declval<T1>(), Declval<T2>()) >  >
+	struct Has_Operator_Comma
+	<	T1, T2, Void_t< decltype( Declval<T1>().operator,(Declval<T2>()) ) >  
+	>
 	:	True_t
 	{};
 	//========//========//========//========//=======#//========//========//========//========//===
@@ -451,7 +456,9 @@ public:
 	Operator_interface(T *p = nullptr) : _p(p){}
 
 	auto operator=(T *p)-> T*{  return _p = p;  }
-
+	
+	operator T const&() const{  return *_p;  }
+	operator T&(){  return *_p;  }
 
 #ifndef _SGM_UNARY_OP
 	#define _SGM_UNARY_OP(SYM, NAME, SPEC)	\
@@ -486,10 +493,10 @@ public:
 	#define _SGM_BINARY_OP(SYM, NAME, SPEC)	\
 		template<  class RHS, class = Enable_if_t< Has_Operator_##NAME<T SPEC, RHS>::value >  >	\
 		auto operator SYM(RHS const& rhs) SPEC	\
-		->	SPEC decltype( _p->operator SYM(rhs) ){  return _p->operator SYM(rhs);  }	\
+		->	SPEC decltype(*_p SYM rhs){  return *_p SYM rhs;  }	\
 		\
 		auto operator SYM(Enable_if_t< Has_Operator_##NAME<T SPEC>::value, _self const& > rhs) \
-		SPEC-> SPEC decltype( _p->operator SYM(*rhs._p) ){  return _p->operator SYM(*rhs._p);  }
+		SPEC-> SPEC decltype(*_p SYM *rhs._p){  return *_p SYM *rhs._p;  }
 
 
 	_SGM_BINARY_OP(+, Plus, const)
@@ -510,8 +517,8 @@ public:
 	_SGM_BINARY_OP(^, Xor, const)
 	_SGM_BINARY_OP(<<, LShift, const)
 	_SGM_BINARY_OP(>>, RShift, const)
-	_SGM_BINARY_OP([], index, const)
-	_SGM_BINARY_OP([], index, /**/)
+	_SGM_BINARY_OP(->*, Ptr2Mem, const)
+	_SGM_BINARY_OP(->*, Ptr2Mem, /**/)
 	_SGM_BINARY_OP(+=, PlusAlloc, /**/)
 	_SGM_BINARY_OP(-=, MinusAlloc, /**/)
 	_SGM_BINARY_OP(*=, MultiplyAlloc, /**/)
@@ -523,10 +530,26 @@ public:
 	_SGM_BINARY_OP(<<=, LShiftAlloc, /**/)
 	_SGM_BINARY_OP(>>=, RShiftAlloc, /**/)
 
+
 	#undef _SGM_BINARY_OP
 #else
 	#error _SGM_BINARY_OP was already defined somewhere else.
 #endif
+
+	template<  class RHS, class = Enable_if_t< Has_Operator_index<T const, RHS>::value >  >
+	auto operator[](RHS const& rhs) const
+	->	const decltype( _p->operator[](rhs) ){  return _p->operator[](rhs);  }
+
+	auto operator[](Enable_if_t< Has_Operator_index<T const, T>::value, _self const& > rhs) const
+	->	const decltype( _p->operator[](*rhs._p) ){  return _p->operator[](*rhs._p);  }
+
+	template<  class RHS, class = Enable_if_t< Has_Operator_index<T, RHS>::value >  >
+	auto operator[](RHS const& rhs)
+	->	decltype( _p->operator[](rhs) ){  return _p->operator[](rhs);  }
+
+	auto operator[](Enable_if_t< Has_Operator_index<T, T>::value, _self const& > rhs)
+	->	decltype( _p->operator[](*rhs._p) ){  return _p->operator[](*rhs._p);  }
+
 
 	template<  class RHS, class = Enable_if_t< Has_Operator_Comma<T const, RHS>::value >  >
 	auto operator,(RHS const& rhs) const
@@ -534,6 +557,7 @@ public:
 
 	auto operator,(Enable_if_t< Has_Operator_Comma<T const>::value, _self const& > rhs) const
 	->	const decltype( _p->operator,(*rhs._p) ){  return _p->operator,(*rhs._p);  }
+
 
 };
 
