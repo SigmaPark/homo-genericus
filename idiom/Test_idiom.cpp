@@ -98,18 +98,18 @@ private:
 	T *_p;
 
 
-	template<class S>
+	template<class Q>
 	struct _Help
 	{
-		static auto calc(S *p)-> const decltype(!*p){  return !*p;  }		
+		static auto calc(Q *p) SGM_DECLTYPE_AUTO(!*p)	
 	};
 
 
 public:
 	_Proxy(T *p) : _p(p){}
 
-	template<  class H = _Help<T>  >
-	auto operator!() const-> const decltype( H::calc(_p) ){  return H::calc(_p);  }
+	template< class H = _Help<T> >
+	auto operator!() const SGM_DECLTYPE_AUTO( H::calc(_p) )
 };
 
 class pxKK : public _Proxy<KK>
@@ -121,7 +121,7 @@ public:
 	pxKK(KK *pkk) : pxk_t(pkk){}
 
 	//bool operator!() const{  return !pxk_t::operator!();  }
-	bool operator!() const = delete;
+	//bool operator!() const = delete;
 };
 
 
@@ -131,7 +131,7 @@ static void Test03()
 
 	pxKK px(&kk);
 
-	//bool const b = !px;
+	bool const b = !px;
 }
 
 
