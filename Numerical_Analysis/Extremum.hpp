@@ -290,11 +290,11 @@ public:
 	template
 	<	size_t NOF_ARGUMENT = ULLONG_MAX
 	,	class FUNC, class XITR, class XV, class X
-	,	class Y = None_t const
+	,	class Y = None const
 	>
 	static bool search
 	(	FUNC&& func, XV&& init_x, X const radius, X const epsilon, unsigned const max_iteration
-	,	XITR xitr_out, [[maybe_unused]]Y& yout = None
+	,	XITR xitr_out, [[maybe_unused]]Y& yout = none
 	)
 	{
 		auto constexpr NOF_ARGS 

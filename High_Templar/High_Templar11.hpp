@@ -302,7 +302,7 @@ template<bool FWD, class FS>
 struct sgm::ht::_Fold_impl<false, FWD, FS, sgm::ht::_impl_Mode::SEQUANCIAL> : _Fold_Helper
 {
 	template<class CON, class FUNC>
-	static auto calc(CON&& con, FUNC&& func, None_t)
+	static auto calc(CON&& con, FUNC&& func, None)
 	->	Decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
 	{
 		auto const bi = itrMethod<FWD>::begin(con), ei = itrMethod<FWD>::end(con);
@@ -322,7 +322,7 @@ private:
 	static auto _Seq_Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 	(
 		_Fold_impl<false, FWD, FS, _impl_Mode::SEQUANCIAL>::calc
-		(	Forward<CON>(con), Forward<FUNC>(func), None
+		(	Forward<CON>(con), Forward<FUNC>(func), none
 		)		
 	)
 
@@ -331,7 +331,7 @@ public:
 	<	class CON, class FUNC
 	,	class res_t = Decay_t<  decltype(*Declval< Decay_t<CON> >().begin())  >
 	>
-	static auto calc(CON&& con, FUNC&& func, None_t)-> res_t
+	static auto calc(CON&& con, FUNC&& func, None)-> res_t
 	{
 		auto const tasker = Satisfying_flag<is_Par, FS>();
 
@@ -402,7 +402,7 @@ public:
 		_Last_fold<FWD>::calc
 		(	func, Forward<res_t>(res)
 		,	_Fold_impl<false, FWD, FS, _impl_Mode::MULTI_THREAD>::calc
-			(	Forward<CON>(con), func, None
+			(	Forward<CON>(con), func, none
 			)
 		);
 	}
@@ -562,7 +562,7 @@ namespace sgm
 		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, true, Flag<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), None
+			(	Forward<CON>(con), Forward<FUNC>(func), none
 			)
 		)
 		
@@ -585,7 +585,7 @@ namespace sgm
 		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, false, Flag<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), None
+			(	Forward<CON>(con), Forward<FUNC>(func), none
 			)
 		)
 

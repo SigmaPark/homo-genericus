@@ -79,6 +79,62 @@ static void Test02()
 }
 
 
+
+class KK
+{
+public: 
+	KK(int x) : _x(x){}
+
+	bool operator!() const{  return _x == 0;  }
+
+private:
+	int _x;
+};
+
+template<class T>
+class _Proxy
+{
+private:
+	T *_p;
+
+
+	template<class S>
+	struct _Help
+	{
+		static auto calc(S *p)-> const decltype(!*p){  return !*p;  }		
+	};
+
+
+public:
+	_Proxy(T *p) : _p(p){}
+
+	template<  class H = _Help<T>  >
+	auto operator!() const-> const decltype( H::calc(_p) ){  return H::calc(_p);  }
+};
+
+class pxKK : public _Proxy<KK>
+{
+private:
+	using pxk_t = _Proxy<KK>;
+
+public:
+	pxKK(KK *pkk) : pxk_t(pkk){}
+
+	//bool operator!() const{  return !pxk_t::operator!();  }
+	bool operator!() const = delete;
+};
+
+
+static void Test03()
+{
+	KK kk(3);
+
+	pxKK px(&kk);
+
+	//bool const b = !px;
+}
+
+
 #include "Test_idiom.hpp"
 #include <iostream>
 
@@ -89,6 +145,7 @@ void Test_sgm_idiom::test()
 	{
 		::Test01();
 		::Test02();
+		::Test03();
 
 		std::wcout << L"idiom Test Complete.\n";
 	}

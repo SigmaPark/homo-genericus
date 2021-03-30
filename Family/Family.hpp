@@ -208,7 +208,7 @@ public:
 
 template<> struct sgm::Family_member<0, sgm::Family<>>
 {
-	using type = None_t;
+	using type = None;
 	using family_type = Family<>;	
 };
 
@@ -227,7 +227,7 @@ struct sgm::Family_member< N, sgm::Family<T, TYPES...> >
 
 template<> struct sgm::Family_member<0, sgm::Family<> const>
 {
-	using type = None_t;
+	using type = None;
 	using family_type = Family<> const;
 };
 

@@ -32,7 +32,7 @@ namespace sgm
 	template<class...> using Void_t = void;
 
 
-	enum class None_t{} static const None = {};
+	enum class None{} static constexpr none{};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -88,7 +88,7 @@ namespace sgm
 
 
 	template<class T>
-	struct is_None : is_Same<T, None_t>{};
+	struct is_None : is_Same<T, None>{};
 
 
 	template<class T>
