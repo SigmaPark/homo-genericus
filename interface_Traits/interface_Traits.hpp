@@ -460,10 +460,19 @@ public:
 	operator T const&() const{  return *_p;  }
 	operator T&(){  return *_p;  }
 
+
 #ifndef _SGM_UNARY_OP
 	#define _SGM_UNARY_OP(SYM, NAME, SPEC)	\
-		template<  class = Enable_if_t< Has_Operator_##NAME<T SPEC>::value >  >	\
-		auto operator SYM() SPEC-> SPEC decltype(SYM*_p){  return SYM*_p;  }
+		private:		\
+			template<class Q>	\
+			struct _op_##SPEC##NAME##_Helper	\
+			{	\
+				static auto calc(Q *p) SGM_DECLTYPE_AUTO(SYM *p)	\
+			};	\
+			\
+		public:	\
+			template< class Q = _op_##SPEC##NAME##_Helper<T SPEC> >	\
+			auto operator SYM() SPEC SGM_DECLTYPE_AUTO( Q::calc(_p) )
 
 
 	_SGM_UNARY_OP(+, Posit, const)
@@ -482,11 +491,28 @@ public:
 	#error _SGM_UNARY_OP was already defined somewhere else.
 #endif
 
-	auto operator++(Enable_if_t< Has_Operator_Post_increase<T>::value, int >)
-	->	decltype( (*_p)++ ){  return (*_p)++;  }
+private:
+	template<class Q, int>
+	struct _op_Post_step_Helper;
 
-	auto operator--(Enable_if_t< Has_Operator_Post_Decrease<T>::value, int >)
-	->	decltype( (*_p)-- ){  return (*_p)--;  }
+	template<class Q>
+	struct _op_Post_step_Helper<Q, +1>
+	{
+		static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)++ )
+	};
+
+	template<class Q>
+	struct _op_Post_step_Helper<Q, -1>
+	{
+		static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)-- )
+	};
+
+public:
+	template< class Q = _op_Post_step_Helper<T, +1> >
+	auto operator++(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
+
+	template< class Q = _op_Post_step_Helper<T, -1> >
+	auto operator--(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
 
 
 #ifndef _SGM_BINARY_OP

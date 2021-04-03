@@ -86,6 +86,17 @@ public:
 	KK(int x) : _x(x){}
 
 	bool operator!() const{  return _x == 0;  }
+	auto operator++(int){  return _x++;  }
+
+	//auto operator^(unsigned power) const-> KK
+	//{
+	//	int res = 1;
+
+	//	while(power-->0)
+	//		res *= _x;
+
+	//	return {res};
+	//}
 
 private:
 	int _x;
@@ -109,7 +120,21 @@ public:
 	_Proxy(T *p) : _p(p){}
 
 	template< class H = _Help<T> >
-	auto operator!() const SGM_DECLTYPE_AUTO( H::calc(_p) )
+	auto operator!(void) const SGM_DECLTYPE_AUTO( H::calc(_p) )
+
+
+	template<class Q>
+	struct _increase_Helper
+	{
+		static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)++ )
+	};
+
+	template< class Q = _increase_Helper<T> >
+	auto operator++(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
+
+
+	template<class RHS>
+	auto operator^(RHS const& rhs) const{  return *_p ^ rhs;  }
 };
 
 class pxKK : public _Proxy<KK>
@@ -132,6 +157,10 @@ static void Test03()
 	pxKK px(&kk);
 
 	bool const b = !px;
+
+	px++;
+
+	//auto px2 = px^3;
 }
 
 
