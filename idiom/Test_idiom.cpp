@@ -79,6 +79,10 @@ static void Test02()
 }
 
 
+class KK;
+
+static auto operator^(int x, KK k)-> KK;
+
 
 class KK
 {
@@ -98,55 +102,33 @@ public:
 	//	return {res};
 	//}
 
+	int x() const{  return _x;  }
+
 private:
 	int _x;
+
+	friend auto ::operator^(int, KK)-> KK;
 };
 
-template<class T>
-class _Proxy
+auto operator^(int x, KK k)-> KK
+{
+	int res = 1;
+
+	while(k._x-->0)
+		res *= x;
+
+	return res;
+}
+
+
+class pxKK : public sgm::Operator_interface<KK>
 {
 private:
-	T *_p;
-
-
-	template<class Q>
-	struct _Help
-	{
-		static auto calc(Q *p) SGM_DECLTYPE_AUTO(!*p)	
-	};
-
-
-public:
-	_Proxy(T *p) : _p(p){}
-
-	template< class H = _Help<T> >
-	auto operator!(void) const SGM_DECLTYPE_AUTO( H::calc(_p) )
-
-
-	template<class Q>
-	struct _increase_Helper
-	{
-		static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)++ )
-	};
-
-	template< class Q = _increase_Helper<T> >
-	auto operator++(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
-
-
-	template<class RHS>
-	auto operator^(RHS const& rhs) const{  return *_p ^ rhs;  }
-};
-
-class pxKK : public _Proxy<KK>
-{
-private:
-	using pxk_t = _Proxy<KK>;
+	using pxk_t = sgm::Operator_interface<KK>;
 
 public:
 	pxKK(KK *pkk) : pxk_t(pkk){}
 
-	//bool operator!() const{  return !pxk_t::operator!();  }
-	//bool operator!() const = delete;
 };
 
 
@@ -156,11 +138,10 @@ static void Test03()
 
 	pxKK px(&kk);
 
-	bool const b = !px;
-
-	px++;
-
-	//auto px2 = px^3;
+	is_True(!px == false);
+	is_True(px++ == 3);
+	is_True(px->x() == 4);
+	is_True( (2^px).x() == 16 );
 }
 
 
