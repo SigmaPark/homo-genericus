@@ -570,7 +570,10 @@ public:
 
 private:
 	template<class Q>
-	struct _op_Arrow_Helper{  static auto calc(Q *p) SGM_DECLTYPE_AUTO(p)  };
+	struct _op_Arrow_Helper
+	{
+		static auto calc(Q *p) SGM_DECLTYPE_AUTO(p->operator->())  
+	};
 	
 public:
 	template< class Q = _op_Arrow_Helper<T> >

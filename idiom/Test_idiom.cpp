@@ -83,6 +83,8 @@ class KK;
 
 static auto operator^(int x, KK k)-> KK;
 
+struct JJ{  int j;  };
+
 
 class KK
 {
@@ -90,7 +92,7 @@ public:
 	KK(int x) : _x(x){}
 
 	bool operator!() const{  return _x == 0;  }
-	auto operator++(int){  return _x++;  }
+	auto operator++(int)-> int{  return _x++;  }
 
 	//auto operator^(unsigned power) const-> KK
 	//{
@@ -102,10 +104,14 @@ public:
 	//	return {res};
 	//}
 
-	int x() const{  return _x;  }
+	auto operator->()-> JJ*{  return &_j;  }
+
+	auto operator*() const-> int const&{  return _x;  }
+	//auto operator*()-> int&{  return _x;  }
 
 private:
 	int _x;
+	JJ _j = {33};
 
 	friend auto ::operator^(int, KK)-> KK;
 };
@@ -140,8 +146,9 @@ static void Test03()
 
 	is_True(!px == false);
 	is_True(px++ == 3);
-	is_True(px->x() == 4);
-	is_True( (2^px).x() == 16 );
+	is_True(*px == 4);
+	//is_True(px->j == 33);
+	is_True( *(2^px) == 16 );
 }
 
 
