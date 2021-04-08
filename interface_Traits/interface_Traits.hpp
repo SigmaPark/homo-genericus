@@ -444,230 +444,238 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#ifndef _SGM_GLOBAL_BINARY_OP_DECL
-	#define _SGM_GLOBAL_BINARY_OP_DECL(SYM, SPEC)	\
-		template	\
-		<	class LHS, class Q		\
-		,	class _rawL = sgm::Decay_t<LHS>, class _rawQ = sgm::Decay_t<Q>	\
-		,	class \
-			=	sgm::Enable_if_t	\
-				<	!sgm::is_Same<_rawL, _rawQ>::value	\
-				&&	!sgm::is_Same< _rawL, sgm::Operator_interface<_rawQ> >::value	\
-				>	\
-		>	\
-		static auto operator SYM(LHS SPEC& lhs, sgm::Operator_interface<Q> const& opi)	\
-		->	decltype( lhs SYM static_cast<Q const&>(opi) );	\
-		\
-		template<class Q, class RHS>	\
-		static auto operator SYM(sgm::Operator_interface<Q> SPEC& opi, RHS const& rhs)	\
-		->	decltype( static_cast<Q SPEC&>(opi) SYM rhs )
-
-
-	_SGM_GLOBAL_BINARY_OP_DECL(+, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(-, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(*, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(/, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(%, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(==, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(!=, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(<, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(>, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(<=, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(>=, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(&&, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(||, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(&, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(|, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(^, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(<<, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(>>, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(->*, const);
-	_SGM_GLOBAL_BINARY_OP_DECL(->*, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(+=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(-=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(*=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(/=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(%=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(&=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(|=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(^=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(<<=, /**/);
-	_SGM_GLOBAL_BINARY_OP_DECL(>>=, /**/);
-
-	#undef _SGM_GLOBAL_BINARY_OP_DECL
-#else
-	#error _SGM_GLOBAL_BINARY_OP_DECL was already defined somewhere else.
-#endif
-
-
 template<class T>
 class sgm::Operator_interface
 {
 private:
-	using _self = Operator_interface;
-
 	T *_p;
+
 
 public:
 	using value_type = T;
-
 
 	Operator_interface(T *p = nullptr) : _p(p){}
 
 	auto operator=(T *p)-> T*{  return _p = p;  }
 	
-	operator T const&() const{  return *_p;  }
-	operator T&(){  return *_p;  }
+	operator T const&() const&{  return *_p;  }
+	operator T&() &{  return *_p;  }
+	operator T&&() &&{  return *_p;  }
 
 
-#ifndef _SGM_UNARY_OP
-	#define _SGM_UNARY_OP(SYM, NAME, SPEC)	\
-		private:		\
-			template<class Q>	\
-			struct _op_##SPEC##NAME##_Helper	\
+#if !defined(_SGM_UNARY_OPERATOR_WITH_PARAM) && !defined(_SGM_UNARY_OPERATOR)
+	#define _SGM_UNARY_OPERATOR_WITH_PARAM(SYM, NAME, PARAM_TYPE, PARAM)	\
+		private:	\
+			template<class, class = void> struct _Has##NAME : False_t{};	\
+			\
+			template<class Q> \
+			struct _Has##NAME<  Q, Void_t< decltype( Declval<Q>().operator SYM(PARAM) ) >  >	\
+			:	True_t	\
+			{};	\
+			\
+			template	\
+			<	class Q, bool IS_MUT_METHOD		\
+			,	int	\
+				=	_Has##NAME<Q>::value && IS_MUT_METHOD ? 0		\
+				:	_Has##NAME<Q const>::value ? 1	\
+				:	-1	\
+			>	\
+			struct _op##NAME##Helper;	\
+			\
+			template<class Q, bool M>	\
+			struct _op##NAME##Helper<Q, M, 0>	\
 			{	\
-				static auto calc(Q *p) SGM_DECLTYPE_AUTO(SYM *p)	\
+				static auto calc(Constless_t<Q> *p)	\
+				->	SGM_DECLTYPE_AUTO( p->operator SYM(PARAM) )	\
+			};	\
+			\
+			template<class Q, bool M>	\
+			struct _op##NAME##Helper<Q, M, 1>	\
+			{	\
+				static auto calc(Q const *p)-> SGM_DECLTYPE_AUTO( p->operator SYM(PARAM) )\
+			};	\
+			\
+			template<class Q, bool M>	\
+			struct _op##NAME##Helper<Q, M, -1>	\
+			{	\
+				static auto calc(...)-> None = delete;	\
 			};	\
 			\
 		public:	\
-			template< class Q = _op_##SPEC##NAME##_Helper<T SPEC> >	\
-			auto operator SYM() SPEC SGM_DECLTYPE_AUTO( Q::calc(_p) )
+			template< class Q = _op##NAME##Helper<T, true> >	\
+			auto operator SYM(PARAM_TYPE)-> SGM_DECLTYPE_AUTO( Q::calc(_p) )	\
+			\
+			template< class Q = _op##NAME##Helper<T, false> >	\
+			auto operator SYM(PARAM_TYPE) const-> SGM_DECLTYPE_AUTO( Q::calc(_p) )
 
 
-	_SGM_UNARY_OP(+, Posit, const)
-	_SGM_UNARY_OP(-, Negate, const)
-	_SGM_UNARY_OP(++, Pre_increase, /**/)
-	_SGM_UNARY_OP(--, Pre_Decrease, /**/)
-	_SGM_UNARY_OP(*, Deref, const)
-	_SGM_UNARY_OP(*, Deref, /**/)
-	_SGM_UNARY_OP(&, Ref, const)
-	_SGM_UNARY_OP(&, Ref, /**/)
-	_SGM_UNARY_OP(!, Not, const)
-	_SGM_UNARY_OP(~, BitNot, const)
+	_SGM_UNARY_OPERATOR_WITH_PARAM(++, Post_increase, int, 0)
+	_SGM_UNARY_OPERATOR_WITH_PARAM(--, Post_Decrease, int, 0)
+	
 
-	#undef _SGM_UNARY_OP
+	#define _SGM_UNARY_OPERATOR(SYM, NAME) \
+		_SGM_UNARY_OPERATOR_WITH_PARAM(SYM, NAME, /**/, /**/)
+
+
+	_SGM_UNARY_OPERATOR(+, Posit)
+	_SGM_UNARY_OPERATOR(-, Negate)
+	_SGM_UNARY_OPERATOR(++, Pre_increase)
+	_SGM_UNARY_OPERATOR(--, Pre_Decrease)
+	_SGM_UNARY_OPERATOR(*, Deref)
+	_SGM_UNARY_OPERATOR(&, Ref)
+	_SGM_UNARY_OPERATOR(!, Not)
+	_SGM_UNARY_OPERATOR(~, BitNot)
+	_SGM_UNARY_OPERATOR(->, Arrow)
+
+	#undef _SGM_UNARY_OPERATOR
+	#undef _SGM_UNARY_OPERATOR_WITH_PARAM
 #else
-	#error _SGM_UNARY_OP was already defined somewhere else.
-#endif
-
-private:
-	template<class Q, int>
-	struct _op_Post_step_Helper;
-
-	template<class Q>
-	struct _op_Post_step_Helper<Q, +1>{  static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)++ )  };
-
-	template<class Q>
-	struct _op_Post_step_Helper<Q, -1>{  static auto calc(Q *p) SGM_DECLTYPE_AUTO( (*p)-- )  };
-
-public:
-	template< class Q = _op_Post_step_Helper<T, +1> >
-	auto operator++(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
-
-	template< class Q = _op_Post_step_Helper<T, -1> >
-	auto operator--(int) SGM_DECLTYPE_AUTO( Q::calc(_p) )
+	#error _SGM_UNARY_OPERATOR_WITH_PARAM was already defined somewhere else.
+#endif // end of #if !defined(_SGM_UNARY_OPERATOR_WITH_PARAM) && !defined(_SGM_UNARY_OPERATOR)
 
 
-private:
-	template<class Q>
-	struct _op_Arrow_Helper
-	{
-		static auto calc(Q *p) SGM_DECLTYPE_AUTO(p->operator->())  
-	};
+#ifndef _SGM_BINARY_OPERATOR
+	#define _SGM_BINARY_OPERATOR(SYM, NAME)	\
+	private:	\
+		template<class, class, class = void> struct _Has##NAME : False_t{};	\
+		\
+		template<class Q, class R>	\
+		struct _Has##NAME	\
+		<	Q, R, Void_t< decltype( Declref<Q>().operator SYM(Declref<R>()) ) >	\
+		>	\
+		:	True_t	\
+		{};	\
+		\
+		template	\
+		<	class Q, class R, bool IS_MUT_METHOD		\
+		,	int	\
+			=	_Has##NAME<Q, R>::value && IS_MUT_METHOD ? 0	\
+			:	_Has##NAME<Q const, R>::value ? 1	\
+			:	-1	\
+		>	\
+		struct _op##NAME##Helper;	\
+		\
+		template<class Q, class R, bool M>	\
+		struct _op##NAME##Helper<Q, R, M, 0>	\
+		{	\
+			static auto calc(Constless_t<Q> *p, R r)	\
+			->	SGM_DECLTYPE_AUTO(  p->operator SYM( static_cast<R>(r) )  )	\
+		};	\
+		\
+		template<class Q, class R, bool M>	\
+		struct _op##NAME##Helper<Q, R, M, 1>	\
+		{	\
+			static auto calc(Q const *p, R r)	\
+			->	SGM_DECLTYPE_AUTO(  p->operator SYM( static_cast<R>(r) )  )	\
+		};	\
+		\
+		template<class Q, class R, bool M>	\
+		struct _op##NAME##Helper<Q, R, M, -1>	\
+		{	\
+			static auto calc(...)-> None = delete;	\
+		};	\
+		\
+	public:	\
+		template< class R, class Q = _op##NAME##Helper<T, R&&, true> >	\
+		auto operator SYM(R&& r)-> SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<R>(r) )  )	\
+		\
+		template< class R, class Q = _op##NAME##Helper<T, R&&, false> >	\
+		auto operator SYM(R&& r) const-> SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<R>(r) )  )
 	
-public:
-	template< class Q = _op_Arrow_Helper<T> >
-	auto operator->() SGM_DECLTYPE_AUTO( Q::calc(_p) )
 
-	template< class Q = _op_Arrow_Helper<T const> >
-	auto operator->() const SGM_DECLTYPE_AUTO( Q::calc(_p) )
+	_SGM_BINARY_OPERATOR([], index)	
+	_SGM_BINARY_OPERATOR(+, Plus)
+	_SGM_BINARY_OPERATOR(-, Minus)
+	_SGM_BINARY_OPERATOR(*, Multiply)
+	_SGM_BINARY_OPERATOR(/, Divide)
+	_SGM_BINARY_OPERATOR(%, Mod)
+	_SGM_BINARY_OPERATOR(==, Equal)
+	_SGM_BINARY_OPERATOR(!=, NotEqual)
+	_SGM_BINARY_OPERATOR(<, Less)
+	_SGM_BINARY_OPERATOR(>, Greater)
+	_SGM_BINARY_OPERATOR(<=, NotGreater)
+	_SGM_BINARY_OPERATOR(>=, NotLess)
+	_SGM_BINARY_OPERATOR(&&, And)
+	_SGM_BINARY_OPERATOR(||, Or)
+	_SGM_BINARY_OPERATOR(&, BitAnd)
+	_SGM_BINARY_OPERATOR(|, BitOr)
+	_SGM_BINARY_OPERATOR(^, Xor)
+	_SGM_BINARY_OPERATOR(<<, LShift)
+	_SGM_BINARY_OPERATOR(>>, RShift)
+	_SGM_BINARY_OPERATOR(->*, ArrowStar)
+	_SGM_BINARY_OPERATOR(+=, PlusAlloc)
+	_SGM_BINARY_OPERATOR(-=, MinusAlloc)
+	_SGM_BINARY_OPERATOR(*=, MultiplyAlloc)
+	_SGM_BINARY_OPERATOR(/=, DivideAlloc)
+	_SGM_BINARY_OPERATOR(%=, ModAlloc)
+	_SGM_BINARY_OPERATOR(&=, BitAndAlloc)
+	_SGM_BINARY_OPERATOR(|=, BitOrAlloc)
+	_SGM_BINARY_OPERATOR(^=, XorAlloc)
+	_SGM_BINARY_OPERATOR(<<=, LShiftAlloc)
+	_SGM_BINARY_OPERATOR(>>=, RShiftAlloc)
+
+	#undef _SGM_BINARY_OPERATOR
+#else
+	#error _SGM_BINARY_OPERATOR was already defined somewhere else.
+#endif // end of #ifndef _SGM_BINARY_OPERATOR
 
 
 private:
-	template<class Q>
-	struct _op_index_Helper
+	template<class Q, class...ARGS>	/* Declaration Only */
+	static auto _hasBracket(int)
+	->	SFINAE_t< decltype( Declval<Q>().operator()(Declref<ARGS>()...) ) >;
+
+	template<class...>	/* Declaration Only */
+	static auto _hasBracket(...)-> False_t;
+
+	template<bool IS_MUT_METHOD, class Q, class...ARGS>
+	struct _opBracketCase
 	{
-		template<class RHS>
-		static auto calc(Q *p, RHS &&rhs) SGM_DECLTYPE_AUTO( (*p)[Forward<RHS>(rhs)] )
+		static int constexpr value 
+		=	decltype( _hasBracket<Q, ARGS...>(0) )::value && IS_MUT_METHOD ? 0
+		:	decltype( _hasBracket<Q const, ARGS...>(0) )::value ? 1
+		:	-1;
+	};
+
+	template<int>	struct _opBracketHelper;
+
+	template<>
+	struct _opBracketHelper<0>
+	{
+		template<class Q, class...ARGS>
+		static auto calc(Q *p, ARGS&&...args)
+		->	SGM_DECLTYPE_AUTO(  p->operator()( Forward<ARGS>(args)... )  )
+	};
+
+	template<>
+	struct _opBracketHelper<1>
+	{
+		template<class Q, class...ARGS>
+		static auto calc(Q const *p, ARGS&&...args)
+		->	SGM_DECLTYPE_AUTO(  p->operator()( Forward<ARGS>(args)... )  )
+	};
+
+	template<>
+	struct _opBracketHelper<-1>
+	{
+		template<class...>
+		static auto calc(...)-> None = delete;
 	};
 
 public:
-	template< class RHS, class Q = _op_index_Helper<T> >
-	auto operator[](RHS&& rhs) SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<RHS>(rhs) )  )
-	
-	template< class RHS, class Q = _op_index_Helper<T const> >
-	auto operator[](RHS&& rhs) const SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<RHS>(rhs) )  )
+	template
+	<	class...ARGS, class Q = _opBracketHelper< _opBracketCase<true, T, ARGS&&...>::value >
+	>
+	auto operator()(ARGS&&...args)
+	->	SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
 
-
-private:
-	template<class Q>
-	struct _op_Bracket_Helper
-	{
-		template<class...ARGS>
-		static auto calc(Q *p, ARGS&&...args) SGM_DECLTYPE_AUTO
-		(
-			(*p)( Forward<ARGS>(args)... )
-		)
-	};
-
-public:
-	template< class...ARGS, class Q = _op_Bracket_Helper<T> >
-	auto operator()(ARGS&&...args) SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
-
-	template< class...ARGS, class Q = _op_Bracket_Helper<T const> >
+	template
+	<	class...ARGS, class Q = _opBracketHelper< _opBracketCase<false, T, ARGS&&...>::value > 
+	>
 	auto operator()(ARGS&&...args) const
-	SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
+	->	SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
 
 };
-
-
-#ifndef _SGM_GLOBAL_BINARY_OP_IMPL
-	#define _SGM_GLOBAL_BINARY_OP_IMPL(SYM, SPEC)	\
-		template<class LHS, class Q, class, class, class>	\
-		auto operator SYM(LHS SPEC& lhs, sgm::Operator_interface<Q> const& opi)	\
-		SGM_DECLTYPE_AUTO( lhs SYM static_cast<Q const&>(opi) )		\
-		\
-		template<class Q, class RHS>	\
-		auto operator SYM(sgm::Operator_interface<Q> SPEC& opi, RHS const& rhs)	\
-		SGM_DECLTYPE_AUTO( static_cast<Q SPEC&>(opi) SYM rhs )
-
-
-	_SGM_GLOBAL_BINARY_OP_IMPL(+, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(-, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(*, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(/, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(%, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(==, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(!=, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(<, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(>, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(<=, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(>=, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(&&, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(||, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(&, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(|, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(^, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(<<, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(>>, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(->*, const);
-	_SGM_GLOBAL_BINARY_OP_IMPL(->*, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(+=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(-=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(*=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(/=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(%=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(&=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(|=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(^=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(<<=, /**/);
-	_SGM_GLOBAL_BINARY_OP_IMPL(>>=, /**/);
-
-	#undef _SGM_GLOBAL_BINARY_OP_IMPL
-#else
-#endif
-
-
 
 
 #endif // end of #ifndef _SGM_INTERFACE_TRAITS_

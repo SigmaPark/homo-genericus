@@ -12,7 +12,7 @@
 
 
 #ifndef SGM_DECLTYPE_AUTO
-	#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
+	#define SGM_DECLTYPE_AUTO(...)	 decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
 

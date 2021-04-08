@@ -23,7 +23,7 @@
 
 
 #ifndef SGM_DECLTYPE_AUTO
-	#define SGM_DECLTYPE_AUTO(...)	-> decltype(__VA_ARGS__){  return __VA_ARGS__;  }
+	#define SGM_DECLTYPE_AUTO(...)	 decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
 
@@ -121,8 +121,8 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class T>
-	static auto Declval()-> T{  return *static_cast< Referenceless_t<T>* >(nullptr);  }
+	template<class T> /* Declaration Only */ static auto Declval() noexcept-> T;
+	template<class T> /* Declaration Only */ static auto Declref() noexcept-> T&&;
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -163,7 +163,6 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-#if 1
 	template<class FROM, class TO, class = void>
 	struct is_Convertible : Boolean_type< is_Void<FROM>::value && is_Void<TO>::value >{};
 
@@ -173,31 +172,9 @@ namespace sgm
 	>
 	:	True_t
 	{};
-#else
-	template<class FROM, class TO>
-	struct is_Convertible
-	{
-	private:
-		template<class F, class T> /* Declaration Only */ 
-		static auto _calc(int)
-		->	SFINAE_t< decltype( Declval<void(*)(T)>()(Declval<F>()) ) >;
-
-		template<class, class> /* Declaration Only */ 
-		static auto _calc(...)-> False_t;
-
-	public:
-		static bool constexpr value 
-		=	(	decltype( _calc<FROM, TO>(0) )::value
-			||	(is_Void<FROM>::value && is_Void<TO>::value)
-			);
-
-		using type = Boolean_type<value>;
-	};
-#endif
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-#if 1
 	template<class, class = void> struct is_Class : False_t{};
 
 	template<class T>
@@ -206,18 +183,6 @@ namespace sgm
 	>
 	:	True_t
 	{};
-#else
-	template<class T>
-	struct is_Class
-	{
-	private:
-		template<class Q> /* Declaration Only */ static auto _calc(int Q::*)-> True_t;
-		template<class> /* Declaration Only */ static auto _calc(...)-> False_t;
-
-	public:
-		static bool constexpr value = decltype( _calc< Decay_t<T> >(0) )::value;
-	};
-#endif
 
 
 	template<class DERV, class BASE>
@@ -336,6 +301,11 @@ namespace sgm
 
 	template<class T>
 	static auto Forward(Referenceless_t<T>&& t) noexcept-> T&&{  return Move(t);  }
+
+
+	template<class T> static auto immut(T &t)-> T const&{  return t;  }
+	template<class T> static auto immut(T *p)-> T const*{  return p;  }
+	template<class T> static auto immut(T&&) = delete;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

@@ -270,15 +270,15 @@ protected:
 	template<>
 	struct itrMethod<true>
 	{
-		template<class CON> static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.begin()  )
-		template<class CON> static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.end()  )
+		template<class CON> static auto begin(CON&& con)-> SGM_DECLTYPE_AUTO(  con.begin()  )
+		template<class CON> static auto end(CON&& con)-> SGM_DECLTYPE_AUTO(  con.end()  )
 	};
 
 	template<>
 	struct itrMethod<false>
 	{
-		template<class CON> static auto begin(CON&& con) SGM_DECLTYPE_AUTO(  con.rbegin()  )
-		template<class CON> static auto end(CON&& con) SGM_DECLTYPE_AUTO(  con.rend()  )
+		template<class CON> static auto begin(CON&& con)-> SGM_DECLTYPE_AUTO(  con.rbegin()  )
+		template<class CON> static auto end(CON&& con)-> SGM_DECLTYPE_AUTO(  con.rend()  )
 	};
 };
 
@@ -319,7 +319,7 @@ struct sgm::ht::_Fold_impl<false, FWD, FS, sgm::ht::_impl_Mode::MULTI_THREAD> : 
 {
 private:
 	template<class CON, class FUNC>
-	static auto _Seq_Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+	static auto _Seq_Fold(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 	(
 		_Fold_impl<false, FWD, FS, _impl_Mode::SEQUANCIAL>::calc
 		(	Forward<CON>(con), Forward<FUNC>(func), none
@@ -372,7 +372,7 @@ private:
 	struct _Last_fold<true> : No_Making
 	{
 		template<class FUNC, class T1, class T2>
-		static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
+		static auto calc(FUNC&& func, T1&& t1, T2&& t2)-> SGM_DECLTYPE_AUTO
 		(
 			func( Forward<T1>(t1), Forward<T2>(t2) )
 		)
@@ -382,7 +382,7 @@ private:
 	struct _Last_fold<false> : No_Making
 	{
 		template<class FUNC, class T1, class T2>
-		static auto calc(FUNC&& func, T1&& t1, T2&& t2) SGM_DECLTYPE_AUTO
+		static auto calc(FUNC&& func, T1&& t1, T2&& t2)-> SGM_DECLTYPE_AUTO
 		(
 			func( Forward<T2>(t2), Forward<T1>(t1) )
 		)
@@ -524,7 +524,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto Morph(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		static auto Morph(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
 			_Morph_impl< Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func)
@@ -536,7 +536,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto Filter(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		static auto Filter(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
 			_Filter_impl< Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func)
@@ -548,7 +548,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC, class init_t
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto Fold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
+		static auto Fold(CON&& con, FUNC&& func, init_t&& init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, true, Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
@@ -559,7 +559,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto Fold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		static auto Fold(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, true, Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), none
@@ -571,7 +571,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC, class init_t
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto rFold(CON&& con, FUNC&& func, init_t&& init) SGM_DECLTYPE_AUTO
+		static auto rFold(CON&& con, FUNC&& func, init_t&& init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, false, Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
@@ -582,7 +582,7 @@ namespace sgm
 		<	class...FLAGS, class CON, class FUNC
 		,	class = Guaranteed_t< is_iterable<CON>::value >
 		>
-		static auto rFold(CON&& con, FUNC&& func) SGM_DECLTYPE_AUTO
+		static auto rFold(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, false, Flag<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), none
@@ -591,7 +591,7 @@ namespace sgm
 
 
 		template<class...FLAGS, class...CONS>
-		static auto Plait(CONS&&...cons) SGM_DECLTYPE_AUTO
+		static auto Plait(CONS&&...cons)-> SGM_DECLTYPE_AUTO
 		(
 			_Plait_impl< Flag<FLAGS...> >::calc( Forward<CONS>(cons)... )
 		)

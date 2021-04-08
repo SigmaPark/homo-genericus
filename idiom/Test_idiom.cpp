@@ -81,7 +81,10 @@ static void Test02()
 
 class KK;
 
-static auto operator^(int x, KK k)-> KK;
+static auto operator^(int x, KK const &k)-> KK;
+static auto operator^(int x, KK &k)-> KK;
+
+//static auto operator+=(KK &kk, int x)-> KK&;
 
 struct JJ{  int j;  };
 
@@ -109,22 +112,43 @@ public:
 	auto operator*() const-> int const&{  return _x;  }
 	//auto operator*()-> int&{  return _x;  }
 
+	auto operator+=(int &d)-> KK&{  return _x + d,  *this;  }
+
+	auto operator()(double, int const*)-> KK&{  return *this;  }
+
 private:
 	int _x;
 	JJ _j = {33};
 
-	friend auto ::operator^(int, KK)-> KK;
+	friend auto ::operator^(int, KK const&)-> KK;
+	friend auto ::operator^(int, KK&)-> KK;
+
+	//friend auto ::operator+=(KK &kk, int x)-> KK&;
 };
 
-auto operator^(int x, KK k)-> KK
+auto operator^(int x, KK const &k_)-> KK
 {
 	int res = 1;
+	auto k = k_;
 
 	while(k._x-->0)
 		res *= x;
 
 	return res;
 }
+
+auto operator^(int x, KK &k_)-> KK
+{
+	int res = 1;
+	auto k = k_;
+
+	while(k._x-->0)
+		res *= x;
+
+	return res;
+}
+
+//auto operator+=(KK &kk, int x)-> KK&{  return kk._x += x,  kk;  }
 
 
 class pxKK : public sgm::Operator_interface<KK>
@@ -143,12 +167,22 @@ static void Test03()
 	KK kk(3);
 
 	pxKK px(&kk);
+	pxKK const cpx(&kk);
 
 	is_True(!px == false);
 	is_True(px++ == 3);
 	is_True(*px == 4);
-	//is_True(px->j == 33);
+
+	px->j = 21;
+
+	is_True(px->j == 21);
 	is_True( *(2^px) == 16 );
+
+	//is_True(cpx->j == 21);	// Compile Error.
+	int s = 2;
+	px += s;
+
+	px(2.3, nullptr);
 }
 
 
