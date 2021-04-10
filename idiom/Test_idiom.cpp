@@ -184,6 +184,122 @@ static void Test03()
 
 	px(2.3, nullptr);
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class Bar
+{
+public:
+	Bar(int k = 0) : _k(k){}
+
+	auto get() const-> int const&{  return _k;  }
+	auto get()-> int&{  return _k;  }
+
+private:
+	int _k;
+};
+
+
+struct OpFoo
+{
+	int *p;
+	Bar *pbar;
+
+	auto operator+() const-> int{  return +(*p);  }
+	auto operator-() const-> int{  return -(*p);  }
+	auto operator++()-> OpFoo&{  return ++(*p),  *this;  }
+	auto operator--()-> OpFoo&{  return --(*p),  *this;  }
+	auto operator++(int)-> OpFoo{  return (*p)++,  *this;  }
+	auto operator--(int)-> OpFoo{  return (*p)--,  *this;  }
+	auto operator*() const-> int const&{  return *p;  }
+	auto operator*()-> int&{  return *p;  }
+	auto operator&() const-> int const*{  return p;  }
+	auto operator&()-> int*&{  return p;  }
+	auto operator!() const-> bool{  return *p == 0;  }
+	auto operator~() const-> bool{  return *p < 0;  }
+	auto operator->() const-> Bar const*{  return pbar;  }
+	auto operator->()-> Bar*{  return pbar;  }
+
+	auto operator[](int) const-> int{  return *p;  }
+	auto operator[](int)-> int&{  return *p;  }
+	
+	auto operator+(int x) const-> int{  return *p + x;  }
+	auto operator-(int x) const-> int{  return *p - x;  }
+	auto operator*(int x) const-> int{  return *p * x;  }
+	auto operator/(int x) const-> int{  return *p / x;  }
+	auto operator%(int x) const-> int{  return *p % x;  }
+	auto operator==(int x) const-> bool{  return *p == x;  }
+	auto operator!=(int x) const-> bool{  return *p != x;  }
+	auto operator<(int x) const-> bool{  return *p < x;  }
+	auto operator>(int x) const-> bool{  return *p > x;  }
+	auto operator<=(int x) const-> bool{  return *p <= x;  }
+	auto operator>=(int x) const-> bool{  return *p >= x;  }
+	auto operator&&(bool b) const-> bool{  return *p != 0 && b;  }
+	auto operator||(bool b) const-> bool{  return *p != 0 || b;  }
+	auto operator&(int x) const-> int{  return *p + 10*x;  }
+	auto operator|(int x) const-> int{  return *p + 100*x;  }
+	auto operator^(int x) const-> int{  return *p + 1000*x;  }
+	auto operator<<(int x) const-> int{  return *p + 10000*x;  }
+	auto operator>>(int x) const-> int{  return *p + 100000*x;  }
+	auto operator->*(Bar b) const-> int{  return *p + b.get();  }
+	auto operator->*(Bar b)-> int&{  return *p = *p + b.get(),  *p;  }
+
+	auto operator+=(int x)-> OpFoo&{  return *p += x,  *this;  }
+	auto operator-=(int x)-> OpFoo&{  return *p -= x,  *this;  }
+	auto operator*=(int x)-> OpFoo&{  return *p *= x,  *this;  }
+	auto operator/=(int x)-> OpFoo&{  return *p /= x,  *this;  }
+	auto operator%=(int x)-> OpFoo&{  return *p %= x,  *this;  }
+	auto operator&=(int x)-> OpFoo&{  return *p += 10*x,  *this;  }
+	auto operator|=(int x)-> OpFoo&{  return *p += 100*x,  *this;  }
+	auto operator^=(int x)-> OpFoo&{  return *p += 1000*x,  *this;  }
+	auto operator<<=(int x)-> OpFoo&{  return *p += 10000*x,  *this;  }
+	auto operator>>=(int x)-> OpFoo&{  return *p += 100000*x,  *this;  }
+
+	auto operator,(int x) const-> int{  return *p*x;  }
+};
+
+
+class Lon : public sgm::Operator_interface<OpFoo>
+{
+public:
+	Lon(OpFoo *p) : sgm::Operator_interface<OpFoo>(p){}
+};
+
+
+static void Test04()
+{
+	int a;
+	Bar bar;
+	OpFoo *pfoo = new OpFoo{&a, &bar};
+	Lon L = pfoo;
+	Lon const &cL = L;
+	
+	auto Reset_f 
+	=	[&a, &bar, &pfoo]
+		{
+			a = 3,  bar.get() = 7; 
+			pfoo->p = &a,  pfoo->pbar = &bar;
+		};
+
+	Reset_f();
+
+	is_True(*cL == 3);
+	*L = 5,  is_True(*L == 5);  Reset_f();
+
+	is_True(+cL == +3);
+	is_True(-cL == -3);
+	is_True( *(++L) == 3 + 1 ),  Reset_f();
+	is_True( *(--L) == 3 - 1 ),  Reset_f();
+	is_True( *(L++) == 3 + 1 );  Reset_f();
+	is_True( *(L--) == 3 - 1 );  Reset_f();
+	is_True(&cL == &a);
+	&L = &a,  is_True(&L == &a),  Reset_f();
+
+
+
+	delete pfoo,  pfoo = nullptr;
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 #include "Test_idiom.hpp"
@@ -197,6 +313,7 @@ void Test_sgm_idiom::test()
 		::Test01();
 		::Test02();
 		::Test03();
+		::Test04();
 
 		std::wcout << L"idiom Test Complete.\n";
 	}
