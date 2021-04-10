@@ -284,18 +284,47 @@ static void Test04()
 	Reset_f();
 
 	is_True(*cL == 3);
-	*L = 5,  is_True(*L == 5);  Reset_f();
+	*L = 5;  is_True(*L == 5);  Reset_f();
 
-	is_True(+cL == +3);
-	is_True(-cL == -3);
-	is_True( *(++L) == 3 + 1 ),  Reset_f();
-	is_True( *(--L) == 3 - 1 ),  Reset_f();
-	is_True( *(L++) == 3 + 1 );  Reset_f();
-	is_True( *(L--) == 3 - 1 );  Reset_f();
+	is_True(+cL == +3);  is_True(-cL == -3);
+
+	is_True( *(++L) == 3 + 1 );  Reset_f();  is_True( *(--L) == 3 - 1 );  Reset_f();
+	is_True( *(L++) == 3 + 1 );  Reset_f();  is_True( *(L--) == 3 - 1 );  Reset_f();
+
 	is_True(&cL == &a);
-	&L = &a,  is_True(&L == &a),  Reset_f();
+	&L = nullptr;  is_True(&L == nullptr);  Reset_f();
 
+	is_True(!L == false);  is_True(~L == false);
 
+	is_True(cL[2] == 3);
+	L[1] = 44;  is_True(*L == 44);  Reset_f();
+
+	is_True(cL + 22 == 25);  is_True(cL - 1 == 2);  
+	is_True(cL * 4 == 12);  is_True(cL / 2 == 1);  is_True(cL % 2 == 1);
+
+	is_True(cL == 3);  is_True(cL != -3);
+	is_True(cL < 4);  is_True(cL > 2);
+	is_True(cL <= 3);  is_True(cL >= 3);
+	
+	is_True(cL && true);  is_True(cL || false);
+	is_True( (cL & 2) == 23 );  is_True( (cL | 4) == 403 );  is_True( (cL ^ 5) == 5003 );  
+	is_True( (cL << 7) == 70003 );  is_True( (cL >> 8) == 800003 );
+
+	is_True(cL->*bar == 10);
+	L->*bar;  is_True(*L == 10);  Reset_f();
+
+	L += 6;  is_True(*L == 9);  Reset_f();
+	L -= 6;  is_True(*L == -3);  Reset_f();
+	L *= 4;  is_True(*L == 12);  Reset_f();
+	L /= 2;  is_True(*L == 1);  Reset_f();
+	L %= 2;  is_True(*L == 1);  Reset_f();
+	L &= 2;  is_True(*L == 23);  Reset_f();
+	L |= 2;  is_True(*L == 203);  Reset_f();
+	L ^= 2;  is_True(*L == 2003);  Reset_f();
+	L <<= 2;  is_True(*L == 20003);  Reset_f();
+	L >>= 2;  is_True(*L == 200003);  Reset_f();
+
+	is_True( (cL, 5) == 15 );
 
 	delete pfoo,  pfoo = nullptr;
 }

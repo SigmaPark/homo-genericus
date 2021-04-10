@@ -6,8 +6,6 @@
 
 #ifndef SGM_MACROPACK
 	#define SGM_MACROPACK(...) __VA_ARGS__
-#else
-	#error SGM_MACROPACK was already defined somewhere else.
 #endif
 
 

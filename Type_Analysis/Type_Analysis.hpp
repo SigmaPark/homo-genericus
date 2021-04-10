@@ -27,6 +27,11 @@
 #endif
 
 
+#ifndef SGM_MACROPACK
+	#define SGM_MACROPACK(...) __VA_ARGS__
+#endif
+
+
 namespace sgm
 {
 	

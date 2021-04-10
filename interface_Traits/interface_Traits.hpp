@@ -613,6 +613,7 @@ public:
 	_SGM_BINARY_OPERATOR(^=, XorAlloc)
 	_SGM_BINARY_OPERATOR(<<=, LShiftAlloc)
 	_SGM_BINARY_OPERATOR(>>=, RShiftAlloc)
+	_SGM_BINARY_OPERATOR( SGM_MACROPACK(,), Comma )
 
 	#undef _SGM_BINARY_OPERATOR
 #else
