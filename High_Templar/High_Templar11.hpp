@@ -372,20 +372,16 @@ private:
 	struct _Last_fold<true> : No_Making
 	{
 		template<class FUNC, class T1, class T2>
-		static auto calc(FUNC&& func, T1&& t1, T2&& t2)-> SGM_DECLTYPE_AUTO
-		(
-			func( Forward<T1>(t1), Forward<T2>(t2) )
-		)
+		static auto calc(FUNC&& func, T1&& t1, T2&& t2)
+		->	SGM_DECLTYPE_AUTO(  func( Forward<T1>(t1), Forward<T2>(t2) )  )
 	};
 
 	template<>
 	struct _Last_fold<false> : No_Making
 	{
 		template<class FUNC, class T1, class T2>
-		static auto calc(FUNC&& func, T1&& t1, T2&& t2)-> SGM_DECLTYPE_AUTO
-		(
-			func( Forward<T2>(t2), Forward<T1>(t1) )
-		)
+		static auto calc(FUNC&& func, T1&& t1, T2&& t2)
+		->	SGM_DECLTYPE_AUTO(  func( Forward<T2>(t2), Forward<T1>(t1) )  )
 	};
 
 

@@ -141,8 +141,7 @@ public:
 
 	template
 	<	bool _M, bool _F
-	,	class 
-		=	Enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
+	,	class = Enable_if_t<IS_MUTABLE  ?  IS_FORWARD != _F  :  _M || _F != IS_FORWARD>
 	>
 	auto operator=(Serial_iterator<T, _M, _F> const itr)-> iter_t&
 	{
@@ -401,8 +400,7 @@ public:
 
 	template
 	<	class Q
-	,	class 
-		=	Enable_if_t< S != srSize::INTERFACE && is_Convertible<Q, T>::value >
+	,	class = Enable_if_t< S != srSize::INTERFACE && is_Convertible<Q, T>::value >
 	>
 	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
 	{
@@ -448,7 +446,7 @@ class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 			(	capa != 0 ? ::operator new( sizeof(value_t) * capa ) : nullptr  
 			);
 
-		_capacity = capa, _size = 0;
+		_capacity = capa,  _size = 0;
 	}
 
 

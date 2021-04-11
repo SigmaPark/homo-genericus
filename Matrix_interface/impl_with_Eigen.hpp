@@ -3,7 +3,7 @@
 #include "Matrix_interface.hpp"
 #include "..\interface_Traits\interface_Traits.hpp"
 
-#include "..\3rd_Party_Libraries\Eigen_ver_3.3.9\Dense"
+#include "Eigen\Dense"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

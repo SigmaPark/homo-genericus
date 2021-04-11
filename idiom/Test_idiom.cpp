@@ -335,6 +335,26 @@ static void Test04()
 
 	delete pfoo,  pfoo = nullptr;
 }
+
+
+class CLon : public sgm::Operator_interface<OpFoo const>
+{
+public:
+	CLon(OpFoo const *p) : sgm::Operator_interface<OpFoo const>(p){}
+};
+
+
+static void Test05()
+{
+	int a;
+	Bar bar;
+	OpFoo const *pfoo = new OpFoo{&a, &bar};
+	CLon cL = pfoo;
+
+	cL + 3;
+
+	//cL += 3;
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -350,6 +370,7 @@ void Test_sgm_idiom::test()
 		::Test02();
 		::Test03();
 		::Test04();
+		::Test05();
 
 		std::wcout << L"idiom Test Complete.\n";
 	}

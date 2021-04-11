@@ -88,7 +88,6 @@ static void Test6()
 	Pinweight<  Pinweight< Pinweight<int> >  > ppw = 24;
 	Pinweight<int const> cpw = 53;
 
-
 //	cpw = pw;	// Compile Failed because it is deleted
 //	cpw = 32;	// Compile Failed because it is deleted
 
@@ -153,6 +152,7 @@ static void Test8()
 	&&	pw1->Get() == 11
 	&&	pw3->Get() == 1
 	);
+
 
 }
 

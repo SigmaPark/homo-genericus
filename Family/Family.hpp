@@ -273,12 +273,9 @@ struct sgm::_Merge_Fam_Helper< sgm::Family<TYPES1...>, sgm::Family<TYPES2...> > 
 	template
 	<	unsigned IDX = 0 
 	,	unsigned
-		=	IDX == sizeof...(TYPES1) + sizeof...(TYPES2)
-			?	0
-			:	
-			( IDX < sizeof...(TYPES1) )
-			?	1
-			:	2
+		=	IDX == sizeof...(TYPES1) + sizeof...(TYPES2) ? 0
+		:	( IDX < sizeof...(TYPES1) ) ? 1
+		:	2
 	>
 	struct Nth;
 #pragma warning(pop)
@@ -343,8 +340,7 @@ auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2)
 template<class T>
 struct sgm::remove_aleph
 {
-	using type
-	=	Selective_t< is_RvalueReference<T>::value, Referenceless_t<T>, T >;
+	using type = Selective_t< is_RvalueReference<T>::value, Referenceless_t<T>, T >;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

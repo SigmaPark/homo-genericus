@@ -512,10 +512,14 @@ public:
 
 
 	#define _SGM_GENERIC_OPERATOR(ARG1, ARG2, SYM, NAME, PARAM1, PARAM2)	\
-		template<  ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<true, T  ARG2>::value >  >\
+		template	\
+		<	ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<true, T  ARG2>::value >	\
+		>	\
 		auto operator SYM(PARAM1)-> SGM_DECLTYPE_AUTO(  Q::calc(_p  PARAM2)  )	\
 		\
-		template<  ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<false, T  ARG2>::value >  >\
+		template	\
+		<	ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<false, T  ARG2>::value >	\
+		>	\
 		auto operator SYM(PARAM1) const-> SGM_DECLTYPE_AUTO(  Q::calc(_p  PARAM2)  )
 
 
@@ -538,11 +542,19 @@ public:
 	_SGM_UNARY_OPERATOR(++, Pre_increase)
 	_SGM_UNARY_OPERATOR(--, Pre_Decrease)
 
+
 	_SGM_OPERATOR_HELPER(++, Post_increase)
-	_SGM_GENERIC_OPERATOR( /**/, SGM_MACROPACK(, int), ++, Post_increase, int, SGM_MACROPACK(, 0) )
+
+	_SGM_GENERIC_OPERATOR
+	(	/**/, SGM_MACROPACK(, int), ++, Post_increase, int, SGM_MACROPACK(, 0) 
+	)
 
 	_SGM_OPERATOR_HELPER(--, Post_Decrease)
-	_SGM_GENERIC_OPERATOR( /**/, SGM_MACROPACK(, int), --, Post_Decrease, int, SGM_MACROPACK(, 0) )
+	
+	_SGM_GENERIC_OPERATOR
+	(	/**/, SGM_MACROPACK(, int), --, Post_Decrease, int, SGM_MACROPACK(, 0) 
+	)
+
 
 	_SGM_PARAMETRIC_OPERATOR(+, Plus)
 	_SGM_PARAMETRIC_OPERATOR(-, Minus)
