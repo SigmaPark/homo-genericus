@@ -463,218 +463,132 @@ public:
 	operator T&&() &&{  return *_p;  }
 
 
-#if !defined(_SGM_UNARY_OPERATOR_WITH_PARAM) && !defined(_SGM_UNARY_OPERATOR)
-	#define _SGM_UNARY_OPERATOR_WITH_PARAM(SYM, NAME, PARAM_TYPE, PARAM)	\
+#if	!defined(_SGM_OPERATOR_HELPER) && !defined(_SGM_GENERIC_OPERATOR) &&	\
+	!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_PARAMETRIC_OPERATOR)
+
+	#define _SGM_OPERATOR_HELPER(SYM, NAME)	\
 		private:	\
-			template<class, class = void> struct _Has##NAME : False_t{};	\
+			template<class Q, class...ARGS>	/* Declaration Only */	\
+			static auto _has##NAME(int)	\
+			->	SFINAE_t< decltype( Declval<Q>().operator SYM(Declval<ARGS>()...) ) >;	\
 			\
-			template<class Q> \
-			struct _Has##NAME<  Q, Void_t< decltype( Declval<Q>().operator SYM(PARAM) ) >  >	\
-			:	True_t	\
-			{};	\
+			template<class...> /* Declaration Only */	\
+			static auto _has##NAME(...)-> False_t;	\
 			\
-			template	\
-			<	class Q, bool IS_MUT_METHOD		\
-			,	int	\
-				=	_Has##NAME<Q>::value && IS_MUT_METHOD ? 0		\
-				:	_Has##NAME<Q const>::value ? 1	\
-				:	-1	\
-			>	\
-			struct _op##NAME##Helper;	\
-			\
-			template<class Q, bool M>	\
-			struct _op##NAME##Helper<Q, M, 0>	\
+			template<bool IS_MUT_METHOD, class Q, class...ARGS>	\
+			struct _op##NAME##Case		\
 			{	\
-				static auto calc(Constless_t<Q> *p)	\
-				->	SGM_DECLTYPE_AUTO( p->operator SYM(PARAM) )	\
+				static int constexpr value	\
+				=	decltype( _has##NAME<Q, ARGS...>(0) )::value && IS_MUT_METHOD ? 1	\
+				:	decltype( _has##NAME<Q const, ARGS...>(0) )::value ? 0	\
+				:	-1;	\
 			};	\
 			\
-			template<class Q, bool M>	\
-			struct _op##NAME##Helper<Q, M, 1>	\
+			template<int> struct _op##NAME##Helper;	\
+			\
+			template<>	\
+			struct _op##NAME##Helper<1>	\
 			{	\
-				static auto calc(Q const *p)-> SGM_DECLTYPE_AUTO( p->operator SYM(PARAM) )\
+				template<class Q, class...ARGS>	\
+				static auto calc(Q *p, ARGS&&...args)	\
+				->	SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 			};	\
 			\
-			template<class Q, bool M>	\
-			struct _op##NAME##Helper<Q, M, -1>	\
+			template<>	\
+			struct _op##NAME##Helper<0>	\
 			{	\
-				static auto calc(...)-> None = delete;	\
+				template<class Q, class...ARGS>	\
+				static auto calc(Q const *p, ARGS&&...args)	\
+				->	SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 			};	\
 			\
-		public:	\
-			template< class Q = _op##NAME##Helper<T, true> >	\
-			auto operator SYM(PARAM_TYPE)-> SGM_DECLTYPE_AUTO( Q::calc(_p) )	\
+			template<>	\
+			struct _op##NAME##Helper<-1>	\
+			{	\
+				template<class...> static void calc(...) = delete;	\
+			};	\
 			\
-			template< class Q = _op##NAME##Helper<T, false> >	\
-			auto operator SYM(PARAM_TYPE) const-> SGM_DECLTYPE_AUTO( Q::calc(_p) )
+		public:
 
 
-	_SGM_UNARY_OPERATOR_WITH_PARAM(++, Post_increase, int, 0)
-	_SGM_UNARY_OPERATOR_WITH_PARAM(--, Post_Decrease, int, 0)
-	
+	#define _SGM_GENERIC_OPERATOR(ARG1, ARG2, SYM, NAME, PARAM1, PARAM2)	\
+		template<  ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<true, T  ARG2>::value >  >\
+		auto operator SYM(PARAM1)-> SGM_DECLTYPE_AUTO(  Q::calc(_p  PARAM2)  )	\
+		\
+		template<  ARG1  class Q = _op##NAME##Helper< _op##NAME##Case<false, T  ARG2>::value >  >\
+		auto operator SYM(PARAM1) const-> SGM_DECLTYPE_AUTO(  Q::calc(_p  PARAM2)  )
 
-	#define _SGM_UNARY_OPERATOR(SYM, NAME) \
-		_SGM_UNARY_OPERATOR_WITH_PARAM(SYM, NAME, /**/, /**/)
+
+	#define _SGM_PARAMETRIC_OPERATOR(SYM, NAME)	\
+		_SGM_OPERATOR_HELPER(SYM, NAME)	\
+		_SGM_GENERIC_OPERATOR	\
+		(	SGM_MACROPACK(class...ARGS,), SGM_MACROPACK(, ARGS&&...)	\
+		,	SYM, NAME	\
+		,	ARGS&&...args, SGM_MACROPACK(, Forward<ARGS>(args)...)	\
+		)
+
+	#define _SGM_UNARY_OPERATOR(SYM, NAME)	\
+		_SGM_OPERATOR_HELPER(SYM, NAME)	\
+		_SGM_GENERIC_OPERATOR(/**/, /**/, SYM, NAME, /**/, /**/)
 
 
-	_SGM_UNARY_OPERATOR(+, Posit)
-	_SGM_UNARY_OPERATOR(-, Negate)
-	_SGM_UNARY_OPERATOR(++, Pre_increase)
-	_SGM_UNARY_OPERATOR(--, Pre_Decrease)
-	_SGM_UNARY_OPERATOR(*, Deref)
-	_SGM_UNARY_OPERATOR(&, Ref)
 	_SGM_UNARY_OPERATOR(!, Not)
 	_SGM_UNARY_OPERATOR(~, BitNot)
 	_SGM_UNARY_OPERATOR(->, Arrow)
+	_SGM_UNARY_OPERATOR(++, Pre_increase)
+	_SGM_UNARY_OPERATOR(--, Pre_Decrease)
+
+	_SGM_OPERATOR_HELPER(++, Post_increase)
+	_SGM_GENERIC_OPERATOR( /**/, SGM_MACROPACK(, int), ++, Post_increase, int, SGM_MACROPACK(, 0) )
+
+	_SGM_OPERATOR_HELPER(--, Post_Decrease)
+	_SGM_GENERIC_OPERATOR( /**/, SGM_MACROPACK(, int), --, Post_Decrease, int, SGM_MACROPACK(, 0) )
+
+	_SGM_PARAMETRIC_OPERATOR(+, Plus)
+	_SGM_PARAMETRIC_OPERATOR(-, Minus)
+	_SGM_PARAMETRIC_OPERATOR(*, Star)
+	_SGM_PARAMETRIC_OPERATOR(&, Ampersand)
+	_SGM_PARAMETRIC_OPERATOR([], index)
+	_SGM_PARAMETRIC_OPERATOR((), invoke)
+	_SGM_PARAMETRIC_OPERATOR(/, Divide)
+	_SGM_PARAMETRIC_OPERATOR(%, Mod)
+	_SGM_PARAMETRIC_OPERATOR(==, Equal)
+	_SGM_PARAMETRIC_OPERATOR(!=, NotEqual)
+	_SGM_PARAMETRIC_OPERATOR(<, Less)
+	_SGM_PARAMETRIC_OPERATOR(>, Greater)
+	_SGM_PARAMETRIC_OPERATOR(<=, NotGreater)
+	_SGM_PARAMETRIC_OPERATOR(>=, NotLess)
+	_SGM_PARAMETRIC_OPERATOR(&&, And)
+	_SGM_PARAMETRIC_OPERATOR(||, Or)
+	_SGM_PARAMETRIC_OPERATOR(|, BitOr)
+	_SGM_PARAMETRIC_OPERATOR(^, Xor)
+	_SGM_PARAMETRIC_OPERATOR(<<, LShift)
+	_SGM_PARAMETRIC_OPERATOR(>>, RShift)
+	_SGM_PARAMETRIC_OPERATOR(->*, ArrowStar)
+	_SGM_PARAMETRIC_OPERATOR(+=, PlusAlloc)
+	_SGM_PARAMETRIC_OPERATOR(-=, MinusAlloc)
+	_SGM_PARAMETRIC_OPERATOR(*=, MultiplyAlloc)
+	_SGM_PARAMETRIC_OPERATOR(/=, DivideAlloc)
+	_SGM_PARAMETRIC_OPERATOR(%=, ModAlloc)
+	_SGM_PARAMETRIC_OPERATOR(&=, BitAndAlloc)
+	_SGM_PARAMETRIC_OPERATOR(|=, BitOrAlloc)
+	_SGM_PARAMETRIC_OPERATOR(^=, XorAlloc)
+	_SGM_PARAMETRIC_OPERATOR(<<=, LShiftAlloc)
+	_SGM_PARAMETRIC_OPERATOR(>>=, RShiftAlloc)
+	_SGM_PARAMETRIC_OPERATOR( SGM_MACROPACK(,), Comma )
+
 
 	#undef _SGM_UNARY_OPERATOR
-	#undef _SGM_UNARY_OPERATOR_WITH_PARAM
+	#undef _SGM_PARAMETRIC_OPERATOR
+	#undef _SGM_GENERIC_OPERATOR
+	#undef _SGM_OPERATOR_HELPER
 #else
-	#error _SGM_UNARY_OPERATOR_WITH_PARAM was already defined somewhere else.
-#endif // end of #if !defined(_SGM_UNARY_OPERATOR_WITH_PARAM) && !defined(_SGM_UNARY_OPERATOR)
-
-
-#ifndef _SGM_BINARY_OPERATOR
-	#define _SGM_BINARY_OPERATOR(SYM, NAME)	\
-	private:	\
-		template<class, class, class = void> struct _Has##NAME : False_t{};	\
-		\
-		template<class Q, class R>	\
-		struct _Has##NAME	\
-		<	Q, R, Void_t< decltype( Declref<Q>().operator SYM(Declref<R>()) ) >	\
-		>	\
-		:	True_t	\
-		{};	\
-		\
-		template	\
-		<	class Q, class R, bool IS_MUT_METHOD		\
-		,	int	\
-			=	_Has##NAME<Q, R>::value && IS_MUT_METHOD ? 0	\
-			:	_Has##NAME<Q const, R>::value ? 1	\
-			:	-1	\
-		>	\
-		struct _op##NAME##Helper;	\
-		\
-		template<class Q, class R, bool M>	\
-		struct _op##NAME##Helper<Q, R, M, 0>	\
-		{	\
-			static auto calc(Constless_t<Q> *p, R r)	\
-			->	SGM_DECLTYPE_AUTO(  p->operator SYM( static_cast<R>(r) )  )	\
-		};	\
-		\
-		template<class Q, class R, bool M>	\
-		struct _op##NAME##Helper<Q, R, M, 1>	\
-		{	\
-			static auto calc(Q const *p, R r)	\
-			->	SGM_DECLTYPE_AUTO(  p->operator SYM( static_cast<R>(r) )  )	\
-		};	\
-		\
-		template<class Q, class R, bool M>	\
-		struct _op##NAME##Helper<Q, R, M, -1>	\
-		{	\
-			static auto calc(...)-> None = delete;	\
-		};	\
-		\
-	public:	\
-		template< class R, class Q = _op##NAME##Helper<T, R&&, true> >	\
-		auto operator SYM(R&& r)-> SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<R>(r) )  )	\
-		\
-		template< class R, class Q = _op##NAME##Helper<T, R&&, false> >	\
-		auto operator SYM(R&& r) const-> SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<R>(r) )  )
-	
-
-	_SGM_BINARY_OPERATOR([], index)	
-	_SGM_BINARY_OPERATOR(+, Plus)
-	_SGM_BINARY_OPERATOR(-, Minus)
-	_SGM_BINARY_OPERATOR(*, Multiply)
-	_SGM_BINARY_OPERATOR(/, Divide)
-	_SGM_BINARY_OPERATOR(%, Mod)
-	_SGM_BINARY_OPERATOR(==, Equal)
-	_SGM_BINARY_OPERATOR(!=, NotEqual)
-	_SGM_BINARY_OPERATOR(<, Less)
-	_SGM_BINARY_OPERATOR(>, Greater)
-	_SGM_BINARY_OPERATOR(<=, NotGreater)
-	_SGM_BINARY_OPERATOR(>=, NotLess)
-	_SGM_BINARY_OPERATOR(&&, And)
-	_SGM_BINARY_OPERATOR(||, Or)
-	_SGM_BINARY_OPERATOR(&, BitAnd)
-	_SGM_BINARY_OPERATOR(|, BitOr)
-	_SGM_BINARY_OPERATOR(^, Xor)
-	_SGM_BINARY_OPERATOR(<<, LShift)
-	_SGM_BINARY_OPERATOR(>>, RShift)
-	_SGM_BINARY_OPERATOR(->*, ArrowStar)
-	_SGM_BINARY_OPERATOR(+=, PlusAlloc)
-	_SGM_BINARY_OPERATOR(-=, MinusAlloc)
-	_SGM_BINARY_OPERATOR(*=, MultiplyAlloc)
-	_SGM_BINARY_OPERATOR(/=, DivideAlloc)
-	_SGM_BINARY_OPERATOR(%=, ModAlloc)
-	_SGM_BINARY_OPERATOR(&=, BitAndAlloc)
-	_SGM_BINARY_OPERATOR(|=, BitOrAlloc)
-	_SGM_BINARY_OPERATOR(^=, XorAlloc)
-	_SGM_BINARY_OPERATOR(<<=, LShiftAlloc)
-	_SGM_BINARY_OPERATOR(>>=, RShiftAlloc)
-	_SGM_BINARY_OPERATOR( SGM_MACROPACK(,), Comma )
-
-	#undef _SGM_BINARY_OPERATOR
-#else
-	#error _SGM_BINARY_OPERATOR was already defined somewhere else.
-#endif // end of #ifndef _SGM_BINARY_OPERATOR
-
-
-private:
-	template<class Q, class...ARGS>	/* Declaration Only */
-	static auto _hasBracket(int)
-	->	SFINAE_t< decltype( Declval<Q>().operator()(Declref<ARGS>()...) ) >;
-
-	template<class...>	/* Declaration Only */
-	static auto _hasBracket(...)-> False_t;
-
-	template<bool IS_MUT_METHOD, class Q, class...ARGS>
-	struct _opBracketCase
-	{
-		static int constexpr value 
-		=	decltype( _hasBracket<Q, ARGS...>(0) )::value && IS_MUT_METHOD ? 0
-		:	decltype( _hasBracket<Q const, ARGS...>(0) )::value ? 1
-		:	-1;
-	};
-
-	template<int>	struct _opBracketHelper;
-
-	template<>
-	struct _opBracketHelper<0>
-	{
-		template<class Q, class...ARGS>
-		static auto calc(Q *p, ARGS&&...args)
-		->	SGM_DECLTYPE_AUTO(  p->operator()( Forward<ARGS>(args)... )  )
-	};
-
-	template<>
-	struct _opBracketHelper<1>
-	{
-		template<class Q, class...ARGS>
-		static auto calc(Q const *p, ARGS&&...args)
-		->	SGM_DECLTYPE_AUTO(  p->operator()( Forward<ARGS>(args)... )  )
-	};
-
-	template<>
-	struct _opBracketHelper<-1>
-	{
-		template<class...>
-		static auto calc(...)-> None = delete;
-	};
-
-public:
-	template
-	<	class...ARGS, class Q = _opBracketHelper< _opBracketCase<true, T, ARGS&&...>::value >
-	>
-	auto operator()(ARGS&&...args)
-	->	SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
-
-	template
-	<	class...ARGS, class Q = _opBracketHelper< _opBracketCase<false, T, ARGS&&...>::value > 
-	>
-	auto operator()(ARGS&&...args) const
-	->	SGM_DECLTYPE_AUTO(  Q::calc( _p, Forward<ARGS>(args)... )  )
+	#error The macro was already defined somewhere else
+#endif
+/**	end of
+	#if	!defined(_SGM_OPERATOR_HELPER) && !defined(_SGM_GENERIC_OPERATOR) &&	\
+		!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_PARAMETRIC_OPERATOR)
+*/
 
 };
 

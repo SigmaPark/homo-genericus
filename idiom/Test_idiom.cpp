@@ -170,8 +170,7 @@ static void Test03()
 	pxKK const cpx(&kk);
 
 	is_True(!px == false);
-	is_True(px++ == 3);
-	is_True(*px == 4);
+	px++;  is_True(*px == 4);
 
 	px->j = 21;
 
@@ -254,8 +253,10 @@ struct OpFoo
 	auto operator^=(int x)-> OpFoo&{  return *p += 1000*x,  *this;  }
 	auto operator<<=(int x)-> OpFoo&{  return *p += 10000*x,  *this;  }
 	auto operator>>=(int x)-> OpFoo&{  return *p += 100000*x,  *this;  }
-
 	auto operator,(int x) const-> int{  return *p*x;  }
+
+	auto operator()() const-> int{  return 30000;  }
+	auto operator()(int, double, int)-> int&{  return *p = -30000;  }
 };
 
 
@@ -289,12 +290,15 @@ static void Test04()
 	is_True(+cL == +3);  is_True(-cL == -3);
 
 	is_True( *(++L) == 3 + 1 );  Reset_f();  is_True( *(--L) == 3 - 1 );  Reset_f();
-	is_True( *(L++) == 3 + 1 );  Reset_f();  is_True( *(L--) == 3 - 1 );  Reset_f();
+	L++;  is_True(*L == 3 + 1);  Reset_f();  L--;  is_True(*L == 3 - 1);  Reset_f();
 
 	is_True(&cL == &a);
 	&L = nullptr;  is_True(&L == nullptr);  Reset_f();
 
 	is_True(!L == false);  is_True(~L == false);
+
+	is_True(cL->get() == bar.get());
+	L->get() = -2;  is_True(bar.get() == -2);  Reset_f();
 
 	is_True(cL[2] == 3);
 	L[1] = 44;  is_True(*L == 44);  Reset_f();
@@ -325,6 +329,9 @@ static void Test04()
 	L >>= 2;  is_True(*L == 200003);  Reset_f();
 
 	is_True( (cL, 5) == 15 );
+
+	is_True( cL() == 30000 );
+	L(2, 22.0, 4);  is_True(*L == -30000);  Reset_f();
 
 	delete pfoo,  pfoo = nullptr;
 }
