@@ -18,15 +18,15 @@ namespace sgm
 		{	\
 		private:	\
 			template<class _QCLASS>	 /* Declaration Only */		\
-			static auto _calc(int)-> SFINAE_t< decltype(__VA_ARGS__) >;\
+			static auto _calc(int)-> sgm::SFINAE_t< decltype(__VA_ARGS__) >;\
 			\
-			template<class> /* Declaration Only */ static auto _calc(...)-> False_t;	\
+			template<class> /* Declaration Only */ static auto _calc(...)-> sgm::False_t;	\
 		\
 		public:	\
 			NAME() = delete;	\
 		\
-			static bool constexpr value = decltype( _calc< Decay_t<_CLASS> >(0) )::value;	\
-			using type = Boolean_type<value>;	\
+			static bool constexpr value = decltype( _calc< sgm::Decay_t<_CLASS> >(0) )::value;	\
+			using type = sgm::Boolean_type<value>;	\
 		}
 
 #else
