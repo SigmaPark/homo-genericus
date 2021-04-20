@@ -343,9 +343,16 @@ namespace sgm
 
 
 #ifndef SGM_USER_DEFINED_TYPE_CHECK
-	#define SGM_USER_DEFINED_TYPE_CHECK(PRE, NAME, TEM_SIGNATURES, TEM_PARAMS)		\
-		template<class> struct is##PRE##NAME : sgm::False_t{};		\
-		template<TEM_SIGNATURES> struct is##PRE##NAME< NAME<TEM_PARAMS> > : sgm::True_t{}
+	#define SGM_USER_DEFINED_TYPE_CHECK(PRE, NAME, TEM_SIGNATURES, TEM_PARAMS)	\
+		template<  class T, bool = sgm::is_Same< T, sgm::Decay_t<T> >::value  >	\
+		struct is##PRE##NAME;	\
+		\
+		template<class T>  struct is##PRE##NAME<T, false> \
+		:	is##PRE##NAME< sgm::Decay_t<T> >{};	\
+		\
+		template<class T>  struct is##PRE##NAME<T, true> : sgm::False_t{};	\
+		\
+		template<TEM_SIGNATURES>  struct is##PRE##NAME< NAME<TEM_PARAMS>, true > : sgm::True_t{}
 
 #else
 	#error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.
@@ -363,7 +370,7 @@ namespace sgm
 			SGM_USER_DEFINED_TYPE_CHECK(PRE, TITLE, TEM_SIGNATURES, TEM_PARAMS);	\
 			\
 			template<class...ARGS>	\
-			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
+			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE<ARGS...>::value
 	
 	#else
 		#error SGM_USER_DEFINED_TYPE_CHECK14 was already defined somewhere else.
