@@ -77,112 +77,6 @@ static void Test02()
 
 	is_True(BB::nof_instance() == 1); 
 }
-
-
-class KK;
-
-static auto operator^(int x, KK const &k)-> KK;
-static auto operator^(int x, KK &k)-> KK;
-
-//static auto operator+=(KK &kk, int x)-> KK&;
-
-struct JJ{  int j;  };
-
-
-class KK
-{
-public: 
-	KK(int x) : _x(x){}
-
-	bool operator!() const{  return _x == 0;  }
-	auto operator++(int)-> int{  return _x++;  }
-
-	//auto operator^(unsigned power) const-> KK
-	//{
-	//	int res = 1;
-
-	//	while(power-->0)
-	//		res *= _x;
-
-	//	return {res};
-	//}
-
-	auto operator->()-> JJ*{  return &_j;  }
-
-	auto operator*() const-> int const&{  return _x;  }
-	//auto operator*()-> int&{  return _x;  }
-
-	auto operator+=(int &d)-> KK&{  return _x + d,  *this;  }
-
-	auto operator()(double, int const*)-> KK&{  return *this;  }
-
-private:
-	int _x;
-	JJ _j = {33};
-
-	friend auto ::operator^(int, KK const&)-> KK;
-	friend auto ::operator^(int, KK&)-> KK;
-
-	//friend auto ::operator+=(KK &kk, int x)-> KK&;
-};
-
-auto operator^(int x, KK const &k_)-> KK
-{
-	int res = 1;
-	auto k = k_;
-
-	while(k._x-->0)
-		res *= x;
-
-	return res;
-}
-
-auto operator^(int x, KK &k_)-> KK
-{
-	int res = 1;
-	auto k = k_;
-
-	while(k._x-->0)
-		res *= x;
-
-	return res;
-}
-
-//auto operator+=(KK &kk, int x)-> KK&{  return kk._x += x,  kk;  }
-
-
-class pxKK : public sgm::Operator_interface<KK>
-{
-private:
-	using pxk_t = sgm::Operator_interface<KK>;
-
-public:
-	pxKK(KK *pkk) : pxk_t(pkk){}
-
-};
-
-
-static void Test03()
-{
-	KK kk(3);
-
-	pxKK px(&kk);
-	pxKK const cpx(&kk);
-
-	is_True(!px == false);
-	px++;  is_True(*px == 4);
-
-	px->j = 21;
-
-	is_True(px->j == 21);
-	is_True( *(2^px) == 16 );
-
-	//is_True(cpx->j == 21);	// Compile Error.
-	int s = 2;
-	px += s;
-
-	px(2.3, nullptr);
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -267,7 +161,7 @@ public:
 };
 
 
-static void Test04()
+static void Test03()
 {
 	int a;
 	Bar bar;
@@ -335,6 +229,7 @@ static void Test04()
 
 	delete pfoo,  pfoo = nullptr;
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 class CLon : public sgm::Operator_interface<OpFoo const>
@@ -344,7 +239,7 @@ public:
 };
 
 
-static void Test05()
+static void Test04()
 {
 	int a;
 	Bar bar;
@@ -370,7 +265,6 @@ void Test_sgm_idiom::test()
 		::Test02();
 		::Test03();
 		::Test04();
-		::Test05();
 
 		std::wcout << L"idiom Test Complete.\n";
 	}

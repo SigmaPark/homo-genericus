@@ -347,11 +347,10 @@ namespace sgm
 		template<  class T, bool = sgm::is_Same< T, sgm::Decay_t<T> >::value  >	\
 		struct is##PRE##NAME;	\
 		\
-		template<class T>  struct is##PRE##NAME<T, false> \
-		:	is##PRE##NAME< sgm::Decay_t<T> >{};	\
+		template<class T>  \
+		struct is##PRE##NAME<T, false> : is##PRE##NAME< sgm::Decay_t<T> >{};	\
 		\
 		template<class T>  struct is##PRE##NAME<T, true> : sgm::False_t{};	\
-		\
 		template<TEM_SIGNATURES>  struct is##PRE##NAME< NAME<TEM_PARAMS>, true > : sgm::True_t{}
 
 #else
