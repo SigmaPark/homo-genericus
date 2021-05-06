@@ -256,6 +256,7 @@ static void Test04()
 #include "Test_idiom.hpp"
 #include <iostream>
 
+#include <climits>
 
 void Test_sgm_idiom::test()
 {
