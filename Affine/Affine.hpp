@@ -331,10 +331,10 @@ public:
 	{}
 
 
-	auto partM() const-> Matrix<T, D, D> const&{  return _mat;  }
-	auto partM()-> Matrix<T, D, D>&{  return _mat;  }
-	auto partV() const-> Vector<T, D> const&{  return _vec;  }
-	auto partV()-> Vector<T, D>&{  return _vec;  }
+	auto mat() const-> Matrix<T, D, D> const&{  return _mat;  }
+	auto mat()-> Matrix<T, D, D>&{  return _mat;  }
+	auto vec() const-> Vector<T, D> const&{  return _vec;  }
+	auto vec()-> Vector<T, D>&{  return _vec;  }
 
 
 	template<class Q>
@@ -355,7 +355,7 @@ public:
 			);
 		}
 		else if constexpr(is_AffineTransform_v<Q>)
-			return AffineTransform(q.partM()*partM(), q.partM()*partV() + q.partV());
+			return AffineTransform(q.mat()*mat(), q.mat()*vec() + q.vec());
 		else if constexpr(is_Convertible_v<Q, AffineTransform>)
 			return affine( static_cast<AffineTransform>(q) );
 	}
@@ -372,13 +372,13 @@ public:
 
 	auto inversed() const-> AffineTransform
 	{
-		Matrix<T, D, D> const im = partM().inversed();
+		Matrix<T, D, D> const im = mat().inversed();
 
-		return{im, -im*partV()};
+		return{im, -im*vec()};
 	}
 
 
-	auto transfer(Vector<T, D> const& q) const{  return Vector<T, D>(partM()*q + partV());  }
+	auto transfer(Vector<T, D> const& q) const{  return Vector<T, D>(mat()*q + vec());  }
 
 
 	static auto identity()-> AffineTransform const&
@@ -416,8 +416,8 @@ public:
 
 	auto partR() const-> Rotation<T, D> const&{  return _rot;  }
 	auto partR()-> Rotation<T, D>&{  return _rot;  }
-	auto partV() const-> Vector<T, D> const&{  return _vec;  }
-	auto partV()-> Vector<T, D>&{  return _vec;  }
+	auto vec() const-> Vector<T, D> const&{  return _vec;  }
+	auto vec()-> Vector<T, D>&{  return _vec;  }
 
 
 	

@@ -50,7 +50,7 @@ void Test<1>()
 	&&	is_same_pos( aft2.transfer(Vector<float>{1, 1, -1}), Vector<float>{1, 1, -1} )
 	&&	is_same_pos( aft2.affine(aft).transfer(Vector<float>{1, 0, 0}), Vector<float>{0, 2, 0} )
 	&&	is_same_pos
-		(	aft2.affine(aft.partM(), aft.partV()).transfer(Vector<float>{1, 0, 0})
+		(	aft2.affine(aft.mat(), aft.vec()).transfer(Vector<float>{1, 0, 0})
 		,	Vector<float>{0, 2, 0}
 		)
 	);
