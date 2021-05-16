@@ -18,9 +18,16 @@ namespace sgm
 	>
 	struct Trader;
 
+	template<class T, class TRD, bool B>
+	struct _Trader_base;
+
+
 	template<class _T, class _TRD>
 	static auto make_Trader(_T &&t, _TRD &&trader)
 	->	Trader< std::remove_reference_t<_T>, std::remove_reference_t<_TRD> >;
+
+	template<class _T, class _TRD>
+	static auto eval(Trader<_T, _TRD> const &trd)-> _T;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -34,7 +41,7 @@ public:
 	using type = Trader;
 
 	Trader(Trader const&) = delete;
-	~Trader(){  _trader(_t);  }
+	~Trader(){  _trader(ref());  }
 
 	template
 	<	class Q
@@ -43,11 +50,12 @@ public:
 			<	std::is_convertible_v<Q&&, T> && !std::is_same_v< std::decay_t<Q>, Trader >  
 			>
 	>
-	auto operator=(Q &&q)-> Trader&{  return _t = std::forward<Q>(q),  *this;  }
+	auto operator=(Q &&q)-> Trader&{  return ref() = std::forward<Q>(q),  *this;  }
 
-	auto operator=(Trader const &trd)-> Trader&{  return _t = trd._t,  *this;  }
+	auto operator=(Trader const &trd)-> Trader&{  return ref() = trd.eval(),  *this;  }
 
 	auto ref()-> T&{  return _t;  }
+	auto eval() const-> T{  return _t;  }
 
 private:
 	T _t;
@@ -80,7 +88,7 @@ public:
 	using type = Trader;
 
 	Trader(Trader const&) = delete;
-	~Trader(){  _trader(*this);  }
+	~Trader(){  _trader(ref());  }
 
 	template
 	<	class Q
@@ -89,11 +97,12 @@ public:
 			<	std::is_convertible_v<Q&&, T> && !std::is_same_v< std::decay_t<Q>, Trader >  
 			>
 	>
-	auto operator=(Q &&q)-> Trader&{  return *this = std::forward<Q>(q);  }
+	auto operator=(Q &&q)-> Trader&{  return ref() = std::forward<Q>(q),  *this;  }
 
-	auto operator=(Trader const &trd)-> Trader&{  return *this = static_cast<T const&>(trd);  }
+	auto operator=(Trader const &trd)-> Trader&{  return ref() = trd.eval(),  *this;  }
 
 	auto ref()-> T&{  return *this;  }
+	auto eval() const-> T{  return *this;  }
 
 private:
 	TRD _trader;
@@ -120,6 +129,10 @@ auto sgm::make_Trader(_T &&t, _TRD &&trader)
 {
 	return{std::forward<_T>(t), std::forward<_TRD>(trader)};
 }
+
+
+template<class _T, class _TRD>
+auto sgm::eval(sgm::Trader<_T, _TRD> const &trd)-> _T{  return trd.eval();  }
 
 
 #include <utility>
