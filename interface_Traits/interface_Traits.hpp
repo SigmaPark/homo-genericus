@@ -438,10 +438,29 @@ namespace sgm
 		return _Travel<ITR>::prev(itr, steps);  
 	}
 	//========//========//========//========//=======#//========//========//========//========//===
+	
+	
+	template<bool TEMP_HOST> struct Move_if;
 
 
 } // end of namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<>
+struct sgm::Move_if<false> : No_Making
+{
+	template<class T>
+	static auto cast(T&& t)-> decltype( Forward<T>(t) ){  return Forward<T>(t);  }
+};
+
+template<>
+struct sgm::Move_if<true> : No_Making
+{
+	template<class T>
+	static auto cast(T&& t)-> decltype( Move(t) ){  return Move(t);  }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T>
