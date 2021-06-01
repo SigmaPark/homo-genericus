@@ -12,12 +12,12 @@ using spec::Judge;
 using spec::is_True;
 
 
-struct SHARE : Flag<SHARE>, Type_Decorator
+struct SHARE : Type_Decorator
 {
 	template<class T> using type = Pinweight<T>;
 };
 
-struct CREFER : Flag<CREFER>, Type_Decorator
+struct CREFER : Type_Decorator
 {
 	template<class T> using type = constAvatar<T>;
 };
@@ -39,7 +39,7 @@ static void MorphTest()
 	auto answer = std::vector<int>{ -1, -2, -3, -4, -5 };
 
 	bool res = false;
-#ifndef __INTELLISENSE__
+#if 1// #ifndef __INTELLISENSE__
 	res
 	=	(	Judge::have_the_same(  ht::Morph( Countable<int>(5, 1), negate ), answer  )
 		&&	Judge::have_the_same(  ht::Morph<SHARE>( Countable<int>(5, 1), negate ), answer  )
@@ -61,7 +61,7 @@ static void FilterTest()
 	Serial<int> const sr1 = Countable<int>(10, 1);
 
 	bool res = false;
-#ifndef __INTELLISENSE__
+#if 1 //#ifndef __INTELLISENSE__
 	res 
 	=	(	Judge::have_the_same(  ht::Filter( Countable<int>(10, 1), is_even ), answer  )
 		&&	Judge::have_the_same
@@ -84,7 +84,7 @@ static void FoldTest()
 	auto plus = [](int const res, int const x)-> int{  return res + x;  };
 
 	bool res = false;
-#ifndef __INTELLISENSE__
+#if 1 //#ifndef __INTELLISENSE__
 	res 
 	=	(	ht::Fold( Countable<int>(3, 1), minus, 10 ) == 4
 		&&	ht::Fold( Countable<int>(3, 1), minus ) == -4
@@ -154,6 +154,7 @@ static void Plait_Test()
 		,	fam2_t(7, -3.0, 'c'), fam2_t(10, -4.0, 'd')
 		};
 
+#if 1
 	bool res = false;
 #ifndef __INTELLISENSE__
 	res
@@ -163,6 +164,7 @@ static void Plait_Test()
 		);
 #endif
 	is_True(res);
+#endif
 }
 
 

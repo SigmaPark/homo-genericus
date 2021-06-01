@@ -4,13 +4,15 @@
 #ifndef _SGM_TYPE_ANALYSIS_
 #define _SGM_TYPE_ANALYSIS_
 
-//	minimum versions for C++11 main syntex support.
-#if	( defined(_MSC_VER) && _MSC_VER < 1900 )	||	\
-	( defined(__clang__) && __clang_major__ * 1000 + __clang_minor__ * 100 < 3300 )	||	\
-	( defined(__GNUC__) && __GNUC__*1000 + __GNUC_MINOR__*100 < 4700 )
 
+#include "..\Version\Version.hpp"
+
+
+//	minimum versions for C++11 main syntex support.
+#ifndef SGM_SYNTEX_VERSION_CPP11
 	#error C++11 or higher version of language support is required.
 #endif
+//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #ifndef SGM_COMPILE_FAILED
@@ -195,7 +197,7 @@ namespace sgm
 	{
 	private:
 		template<class B> /* Declaration Only */ static auto _calc(B const volatile*)-> True_t;
-		template<class> /* Declaration Only */ static auto _calc(void const volatile*)-> False_t;
+		template<class...> /* Declaration Only */ static auto _calc(void const volatile*)-> False_t;
 
 
 		template<class D, class B> /* Declaration Only */ 
@@ -284,11 +286,32 @@ namespace sgm
 	};
 
 
+	template< template<class...> class FUNCTOR >
+	struct Satisfying : No_Making
+	{
+		template<class...TYPES>
+		struct among;
+
+		template<class T, class...TYPES>
+		struct among<T, TYPES...>
+		{
+			using type 
+			=	Selective_t
+				<	FUNCTOR<T>::value, T, typename Satisfying::among<TYPES...>::type
+				>;
+		};
+
+		template<>
+		struct among<>{  using type = None;  };
+	};
+
+
 	template<class T>
 	struct Has_Type : No_Making
 	{
 	private:
-		template<class Q> struct _Same_to_T : is_inherited_from<Q, T>{};
+		template<class Q> struct _Same_to_T 
+		:	Boolean_type< is_Same<Q, T>::value || is_inherited_from<Q, T>::value >{};
 
 	public:
 		template<class...TYPES>
@@ -311,6 +334,39 @@ namespace sgm
 	template<class T> static auto immut(T &t)-> T const&{  return t;  }
 	template<class T> static auto immut(T *p)-> T const*{  return p;  }
 	template<class T> static auto immut(T&&) = delete;
+
+
+	template<bool TEMP_HOST>  struct Move_if;
+
+	template<>
+	struct sgm::Move_if<false> : No_Making
+	{
+		template<class T>
+		static auto cast(T&& t)-> decltype( Forward<T>(t) ){  return Forward<T>(t);  }
+	};
+	
+	template<>
+	struct sgm::Move_if<true> : No_Making
+	{
+		template<class T>
+		static auto cast(T&& t)-> decltype( Move(t) ){  return Move(t);  }
+	};
+
+
+	template
+	<	class SRC, class TGT
+	,	class RS = Referenceless_t<SRC>, class DS = Decay_t<SRC>
+	,	class T1 = Selective_t< is_Same<DS, RS>::value, TGT, TGT const >
+	,	class T2 
+		=	Selective_t
+			<	is_Same<SRC, RS>::value, T1
+			,	Selective_t
+				<	is_RvalueReference<SRC>::value, T1&& 
+				,	T1&
+				>
+			>
+	>	
+	using CopiedRef_t = T2;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -402,7 +458,6 @@ namespace sgm
 			_SGM_DECAY_TEMPLATE_ALIAS(_, Void);
 			_SGM_DECAY_TEMPLATE_ALIAS(_, None);
 			_SGM_DECAY_TEMPLATE_ALIAS(_, Mutability);
-			_SGM_DECAY_TEMPLATE_ALIAS(_, immutable);
 		}
 			
 	

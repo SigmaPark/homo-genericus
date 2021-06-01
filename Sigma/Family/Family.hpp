@@ -1,11 +1,9 @@
 #pragma once
 
-#if defined (_MSC_VER) && _MSC_VER < 1800
-	#error C++11 or higher version of language support is required.
-#endif
 
 #ifndef _SGM_FAMILY_
 #define _SGM_FAMILY_
+
 
 #include "..\Type_Analysis\Type_Analysis.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -30,7 +28,12 @@ namespace sgm
 	static auto Make_Family(TYPES...types)-> Family<TYPES...>;
 
 	template<class...TYPES>
-	static auto Forward_as_Family(TYPES&&...types)-> Family<TYPES&&...>;
+	static auto Forward_as_Family(TYPES&&...types)
+	noexcept(Check_All<is_RvalueReference>::template for_any<TYPES&&...>::value)
+	-> Family<TYPES&&...>;
+
+	template<class...TYPES>
+	static auto Tie(TYPES&...types)-> Family<TYPES&...>;
 
 
 	template<class FAM1, class FAM2>
@@ -59,6 +62,9 @@ namespace sgm
 	static auto Harden(TL<TYPES...>&& tuple_like)
 	->	typename _Harden_Helper<true, TL, TYPES...>::res_t;
 
+
+	template<size_t N, class Q, class...TYPES>  struct _IDX_Helper;
+	template<size_t N>  struct _getFam_Helper;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -100,6 +106,24 @@ namespace std
 	}
 
 
+	template<class Q, class...TYPES>
+	static auto get(sgm::Family<TYPES...>& fam)-> SGM_DECLTYPE_AUTO
+	(	sgm::_getFam_Helper< sgm::_IDX_Helper<sizeof...(TYPES), Q, TYPES...>::value >::calc(fam)
+	)
+
+	template<class Q, class...TYPES>
+	static auto get(sgm::Family<TYPES...> const& fam)-> SGM_DECLTYPE_AUTO
+	(	sgm::_getFam_Helper< sgm::_IDX_Helper<sizeof...(TYPES), Q, TYPES...>::value >::calc(fam)
+	)
+
+	template<class Q, class...TYPES>
+	static auto get(sgm::Family<TYPES...>&& fam) noexcept-> SGM_DECLTYPE_AUTO
+	(	sgm::_getFam_Helper< sgm::_IDX_Helper<sizeof...(TYPES), Q, TYPES...>::value >::calc
+		(	Move(fam) 
+		)
+	)
+
+
 #ifndef _UTILITY_
 	template<class>
 	struct tuple_size;
@@ -134,6 +158,42 @@ namespace std
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+template<class Q, class...TYPES>
+struct sgm::_IDX_Helper<0, Q, TYPES...>{  enum : size_t{value = 0xffffffffffffffffui64};  };
+
+
+template<size_t N, class Q, class...TYPES>
+struct sgm::_IDX_Helper
+{
+private:
+	enum : size_t{_IDX = sizeof...(TYPES) - N};
+
+public:
+	enum : size_t
+	{	value
+		=	is_Same< Q, Nth_t<_IDX, TYPES...> >::value
+			?	_IDX
+			:	_IDX_Helper<N-1, Q, TYPES...>::value
+	};
+};
+
+
+template<size_t N>
+struct sgm::_getFam_Helper
+{
+	template<class FAM>
+	static auto calc(FAM&& fam) noexcept(is_RvalueReference<FAM&&>::value)
+	->	SGM_DECLTYPE_AUTO(  std::get<N>( Forward<FAM>(fam) )  )
+};
+
+template<>
+struct sgm::_getFam_Helper<0xffffffffffffffffui64>
+{
+	template<class FAM> static auto calc(FAM) noexcept-> None{  return{};  }
+};
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 template<>
 class sgm::Family<>
 {
@@ -150,10 +210,8 @@ public:
 template<class T, class...TYPES>
 class sgm::Family<T, TYPES...> : public Family<TYPES...>
 {
-	using _upper_t = Family<TYPES...>;
-
-
 public:
+	using _upper_t = Family<TYPES...>;
 	enum{SIZE = sizeof...(TYPES) + 1};
 
 	T _val;
@@ -162,19 +220,34 @@ public:
 	Family() = default;
 
 	Family(T t, TYPES...types)
-	:	_upper_t( static_cast<TYPES>(types)... ), _val( static_cast<T>(t) )
-	{}
+	:	_upper_t( static_cast<TYPES>(types)... ), _val( static_cast<T>(t) ){}
 
 
 	Family(Family const& fam)
-	:	_upper_t( static_cast<_upper_t const&>(fam) ), _val( static_cast<T>(fam._val) )
-	{}
+	:	_upper_t( static_cast<_upper_t const&>(fam) ), _val( static_cast<T>(fam._val) ){}
 
 	Family(Family&& fam) noexcept
-	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( Forward<T>(fam._val) )
-	{}
+	:	_upper_t( static_cast<_upper_t&&>(fam) ), _val( Forward<T>(fam._val) ){}
 
 
+	template
+	<	class FAM, class FAM_UPPER = typename Decay_t<FAM>::_upper_t
+	,	class 
+		=	Enable_if_t
+			<	is_Family<FAM>::value && !is_Same< Decay_t<FAM>, Family >::value 
+			>
+	>
+	Family(FAM&& fam) noexcept(is_RvalueReference<FAM&&>::value)
+	:	_upper_t( CopiedRef_t<FAM&&, FAM_UPPER>(fam) )
+	,	_val( Move_if< is_RvalueReference<FAM&&>::value >::cast(fam._val) )
+	{
+		static_assert
+		(	is_Convertible<decltype(fam._val), T>::value
+		,	"no method to convert family member."
+		);
+	}
+
+	
 	auto operator=(Family const& fam)-> Family&
 	{
 		_val = static_cast<T>(fam._val),
@@ -192,15 +265,31 @@ public:
 	}
 
 
-	bool operator==(Family const& fam) const
+	template
+	<	class FAM, class FAM_UPPER = typename Decay_t<FAM>::_upper_t
+	,	class 
+		=	Enable_if_t
+			<	is_Family<FAM>::value && !is_Same< Decay_t<FAM>, Family >::value 
+			>
+	>
+	auto operator=(FAM&& fam) noexcept(is_RvalueReference<FAM&&>::value)-> Family&
+	{
+		_val = Move_if< is_RvalueReference<FAM&&>::value >::cast(fam._val);
+		static_cast<_upper_t&>(*this) = CopiedRef_t<FAM&&, FAM_UPPER>(fam);
+
+		return *this;
+	}
+
+
+	bool operator==(Family const& fam) const noexcept
 	{
 		return 
 		(	_val == fam._val 
-		&&	static_cast<_upper_t>(*this) == static_cast<_upper_t const&>(fam)
+		&&	static_cast<_upper_t const&>(*this) == static_cast<_upper_t const&>(fam)
 		);
 	}
 
-	bool operator!=(Family const& fam) const{  return !(*this == fam);  }
+	bool operator!=(Family const& fam) const noexcept{  return !(*this == fam);  }
 };
 #pragma warning(pop)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -221,8 +310,7 @@ struct sgm::Family_member< 0, sgm::Family<T, TYPES...> >
 
 template<size_t N, class T, class...TYPES>
 struct sgm::Family_member< N, sgm::Family<T, TYPES...> > 
-:	Family_member< N - 1, Family<TYPES...> >
-{};
+:	Family_member< N - 1, Family<TYPES...> >{};
 
 
 template<> struct sgm::Family_member<0, sgm::Family<> const>
@@ -251,17 +339,17 @@ struct sgm::is_Family : is_inherited_from< Decay_t<T>, Family<> >, No_Making{};
 
 
 template<class...TYPES>
-auto sgm::Make_Family(TYPES...types)-> Family<TYPES...>
-{
-	return Family<TYPES...>(types...);
-}
+auto sgm::Make_Family(TYPES...types)-> Family<TYPES...>{  return {types...};  }
 
 
 template<class...TYPES>
-auto sgm::Forward_as_Family(TYPES&&...types)-> Family<TYPES&&...>
-{
-	return Family<TYPES&&...>( Forward<TYPES>(types)... );
-}
+auto sgm::Forward_as_Family(TYPES&&...types) 
+noexcept(Check_All<is_RvalueReference>::template for_any<TYPES&&...>::value)
+-> Family<TYPES&&...>{  return { Forward<TYPES>(types)... };  }
+
+
+template<class...TYPES>
+auto sgm::Tie(TYPES&...types)-> Family<TYPES&...>{  return {types...};  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

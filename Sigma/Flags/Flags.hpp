@@ -3,122 +3,135 @@
 #ifndef _SGM_FLAGS_
 #define _SGM_FLAGS_
 
-#if defined(_MSC_VER) && _MSC_VER < 1800
-	#error C++11 or higher version language support is required.
-#endif
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
-//========//========//========//========//=======#//========//========//========//========//=======#
+#include "..\Family\Family.hpp"
 
 
 namespace sgm
 {
-
-
-	template<class> struct is_Flag;
-	template<class> struct is_FlagSet;
-
-
-	template<class...FLAGS> 
-	struct Flag
-	{
-		template<class F>
-		auto operator&(F) const-> Flag<FLAGS..., F>
-		{
-			static_assert(is_Flag<F>::value, "expected type is sgm::Flag");
-
-			return Flag<FLAGS..., F>();
-		}
-
-
-		template<class F>
-		struct has : Has_Type<F>::template among<FLAGS...>{};
-
-
-		template<class> struct is_superset_of;
-		template<class> struct is_subset_of;
-
-		template<class FS> struct has_same_flags_to : False_t
-		{
-			static_assert(is_FlagSet<FS>::value, "not a set of sgm::Flag");
-		};
-
-		template<class..._FS>
-		struct has_same_flags_to< Flag<_FS...> >
-		:	Boolean_type
-			<	is_superset_of< Flag<_FS...> >::value && is_subset_of< Flag<_FS...> >::value
-			>
-		{};
-
-
-	private:
-		template<> struct is_superset_of<Flag<>> : True_t{};
-		
-		template<class F, class..._FS>
-		struct is_superset_of< Flag<F, _FS...> >
-		:	Selective_t
-			<	Has_Type<F>::template among<FLAGS...>::value
-			,	is_superset_of< Flag<_FS...> >
-			,	False_t
-			>
-		{};
-
-
-		template<class..._FS>
-		struct is_subset_of< Flag<_FS...> >
-		:	Flag<_FS...>::template is_superset_of< Flag<FLAGS...> >
-		{};
-	};
-
-
-	static Flag<> const NoFlag;
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 	
+	template<class...FLAGS>  class FlagSet;
 
-	template<class FLAG> struct is_Flag : is_Convertible< FLAG, Flag<FLAG> >{};
+#ifdef SGM_SYNTEX_VERSION_CPP14
+	SGM_USER_DEFINED_TYPE_CHECK14(_, FlagSet, class...FLAGS, FLAGS...);
+#else
+	SGM_USER_DEFINED_TYPE_CHECK(_, FlagSet, class...FLAGS, FLAGS...);
+#endif
 
-	template<class> struct is_FlagSet : False_t{};
-	template<class...FLAGS> struct is_FlagSet< Flag<FLAGS...> > : True_t{};
-	//========//========//========//========//=======#//========//========//========//========//===
-
-
-	template< template<class...> class, class >
-	struct _Satisfying{  using flag = void;  };
-
-	template< template<class...> class CONDITION, class F, class...FLAGS >
-	struct _Satisfying< CONDITION, Flag<F, FLAGS...> >
-	{
-		using flag 
-		=	Selective_t
-			<	CONDITION<F>::value
-			,	F
-			,	typename _Satisfying< CONDITION, Flag<FLAGS...> >::flag
-			>;
-	};
-
-	template< template<class...> class CONDITION, class FLAGSET >
-	using Satisfying_flag = typename _Satisfying<CONDITION, FLAGSET>::flag;
-	//========//========//========//========//=======#//========//========//========//========//===
+	template<class...FLAGS>
+	static auto Flags(FLAGS...args)-> FlagSet<FLAGS...>;
 
 
-	template<class, class...> struct FlagMatching;
+	template<class FLAG, class FS>  struct _Flag_select_Helper;
 
-	template<class Q> struct FlagMatching<Q> : No_Making{  enum{number = 0};  };
-	
-	template<class Q, class F , class...FLAGS>
-	struct FlagMatching<Q, F, FLAGS...> : No_Making
-	{
-		enum
-		{	number 
-			=	Q::template has_same_flags_to<F>::value 
-				?	sizeof...(FLAGS) + 1 
-				:	FlagMatching<Q, FLAGS...>::number
-		};
-	};
-	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+	template<  class FLAG, class FS, class = Enable_if_t< is_FlagSet<FS>::value >  >
+	using Selected_Flag_t = typename _Flag_select_Helper<FLAG, FS>::type;
+
+	template<  class FLAG, class FS, class = Enable_if_t< is_FlagSet<FS>::value >  >
+	static auto Select_Flag(FS&&) noexcept(is_RvalueReference<FS&&>::value)
+	->	Selected_Flag_t<FLAG, FS>;
 
 
+	template
+	<	template<class> class CONDITION, class FS, class = Enable_if_t< is_FlagSet<FS>::value >
+	>
+	using Satisfying_Flag_t = typename Decay_t<FS>::template Satisfying_t<CONDITION>;
+
+	template
+	<	template<class> class CONDITION, class FS, class = Enable_if_t< is_FlagSet<FS>::value >
+	>
+	static auto Satisfying_Flag(FS&&) noexcept(is_RvalueReference<FS&&>::value)
+	->	Satisfying_Flag_t<CONDITION, FS>;
+
+
+	template<class FLAG, class FS>	struct is_Selected_Flag;
+	template< template<class> class CONDITION, class FS >  struct has_Satisfying_Flag;
+
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<class...FLAGS>
+class sgm::FlagSet
+{
+public:
+	FlagSet() = default;
+	FlagSet(FLAGS...args) : _fs(args...){}
+
+	template<class F>  struct has : Has_Type<F>::template among<FLAGS...>{};
+
+	template< template<class> class CONDITION >
+	using Satisfying_t = typename Satisfying<CONDITION>::template among<FLAGS...>::type;
+
+private:
+	template<class FLAG, class FS>  friend struct _Flag_select_Helper;
+
+	template<class FLAG, class FS, class>
+	friend auto sgm::Select_Flag(FS &&) noexcept(is_RvalueReference<FS&&>::value)
+	->	Selected_Flag_t<FLAG, FS>;
+
+	Family<FLAGS...> _fs;
+};
+
+
+template<>
+class sgm::FlagSet<>
+{
+public:
+	template<class>  struct has : False_t{};
+	template< template<class> class  > using Satisfying_t = None;
+
+private:
+	template<class FLAG, class FS>  friend struct _Flag_select_Helper;
+
+	template<class FLAG, class FS, class>
+	friend auto sgm::Select_Flag(FS &&) noexcept(is_RvalueReference<FS&&>::value)
+	->	Selected_Flag_t<FLAG, FS>;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class FLAG, class FS>	struct sgm::is_Selected_Flag : Decay_t<FS>::template has<FLAG>{};
+
+
+template< template<class> class CONDITION, class FS >  
+struct sgm::has_Satisfying_Flag
+:	Boolean_type<  !is_None< typename Decay_t<FS>::template Satisfying_t<CONDITION> >::value  >{};
+
+
+template<class...FLAGS>
+static auto sgm::Flags(FLAGS...args)-> FlagSet<FLAGS...>{  return{args...};  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class FLAG, class FS>
+struct sgm::_Flag_select_Helper
+{
+	using type = Referenceless_t< decltype( std::get<FLAG>(Declval<FS>()._fs) ) >;
+};
+
+
+template<class FLAG, class FS, class>
+auto sgm::Select_Flag(FS &&flagset) noexcept(is_RvalueReference<FS&&>::value)
+->	Selected_Flag_t<FLAG, FS>
+{
+	using fam_t
+	=	Selective_t
+		<	is_RvalueReference<FS&&>::value
+		,	decltype( Move(flagset._fs) ), decltype(flagset._fs)
+		>;
+
+	return std::get< Selected_Flag_t<FLAG, FS> >( static_cast<fam_t>(flagset._fs) );
 }
 
 
-#endif
+template< template<class> class CONDITION, class FS, class >
+auto sgm::Satisfying_Flag(FS &&flagset) noexcept(is_RvalueReference<FS&&>::value)
+->	Satisfying_Flag_t<CONDITION, FS>
+{
+	return Select_Flag< Satisfying_Flag_t<CONDITION, FS> >( Forward<FS>(flagset) );
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+#endif // end of #ifndef _SGM_FLAGS_

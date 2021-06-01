@@ -94,9 +94,6 @@ static void Test04()
 }
 
 
-
-
-
 static void Test05()
 {
 	Specimen s1 = 3, s2 = 5;

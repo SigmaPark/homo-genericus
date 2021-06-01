@@ -5,6 +5,7 @@
 
 
 #include "..\Concurrency\Concurrency.hpp"
+#include "..\Flags\Flags.hpp"
 
 
 namespace sgm
@@ -42,7 +43,7 @@ namespace sgm
 		template
 		<	class FLAG_SET
 		,	_impl_Mode
-			=	FLAG_SET::template has<par::_Parallel_Helper>::value
+			=	is_Selected_Flag<par::_Parallel_Helper, FLAG_SET>::value
 				?	_impl_Mode::MULTI_THREAD
 				:	_impl_Mode::SEQUANCIAL
 		>
@@ -52,7 +53,7 @@ namespace sgm
 		template
 		<	bool HAS_INIT, bool FORWARD, class FLAG_SET
 		,	_impl_Mode
-			=	FLAG_SET::template has<par::_Parallel_Helper>::value
+			=	is_Selected_Flag<par::_Parallel_Helper, FLAG_SET>::value
 				?	_impl_Mode::MULTI_THREAD
 				:	_impl_Mode::SEQUANCIAL
 		> 
@@ -65,7 +66,7 @@ namespace sgm
 		template
 		<	class FLAG_SET
 		,	_impl_Mode
-			=	FLAG_SET::template has<par::_Parallel_Helper>::value
+			=	is_Selected_Flag<par::_Parallel_Helper, FLAG_SET>::value
 				?	_impl_Mode::MULTI_THREAD
 				:	_impl_Mode::SEQUANCIAL
 		>
@@ -80,9 +81,6 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#include "..\Flags\Flags.hpp"
-
-
 template<class maybe_Par>
 struct sgm::ht::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
 
@@ -94,11 +92,11 @@ struct sgm::ht::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
 *	AUTO_OR, 0 : Auto detection or throw exception if failed.
 */
 template<unsigned NOF_TASK1, unsigned NOF_TASK2>
-struct sgm::ht::Par : Flag< Par<NOF_TASK1, NOF_TASK2> >, par::Parallel<NOF_TASK1>{};
+struct sgm::ht::Par : par::Parallel<NOF_TASK1>{};
 
 
 template<unsigned N>
-struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : Flag< Par<AUTO_OR, N> >, par::Parallel<>
+struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : par::Parallel<>
 {
 	template<class F>
 	void operator()(size_t const nof_iteration, F&& func) const
@@ -112,7 +110,7 @@ struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : Flag< Par<AUTO_OR, N> >, par::Paralle
 
 
 template<>
-struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> : Flag< Par<AUTO_OR, 0> >, par::Parallel<>
+struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> : par::Parallel<>
 {
 	Par() : par::Parallel<>(par::Nof_HW_Core::When_Fails::THROW){}
 };
@@ -125,7 +123,7 @@ struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> : Flag< Par<AUTO_OR, 0> >, par::Paralle
 template<class T, class> struct sgm::ht::_Decorated{  using type = T;  };
 
 template<class T, class...FLAGS>
-struct sgm::ht::_Decorated< T, sgm::Flag<FLAGS...> >
+struct sgm::ht::_Decorated< T, sgm::FlagSet<FLAGS...> >
 {
 	using type = typename Decorated<T>::template by<FLAGS...>::type;
 };
@@ -171,7 +169,7 @@ struct sgm::ht::_Morph_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 		{
 			Serial<elem_t> res( con.size(), func(*con.begin()) );
 
-			Satisfying_flag<is_Par, FS>()
+			Satisfying_Flag_t<is_Par, FS>()
 			(	res.size()
 			,	[&con, &res, &func](size_t idx_begin, size_t const idx_end, unsigned const)
 				{
@@ -222,9 +220,9 @@ struct sgm::ht::_Filter_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 	static auto calc(CON&& con, FUNC&& func)-> Serial<elem_t>
 	{
 		auto const truth_table
-		=	_Morph_impl<  Flag< Satisfying_flag<is_Par, FS> >  >::calc
-			(	con, Forward<FUNC>(func) 
-			);
+		=	_Morph_impl
+			<	FlagSet< Satisfying_Flag_t<is_Par, FS> >
+			>::	calc( con, Forward<FUNC>(func) );
 
 		auto const nof_true
 		=	[&truth_table](size_t res)-> size_t
@@ -333,7 +331,7 @@ public:
 	>
 	static auto calc(CON&& con, FUNC&& func, None)-> res_t
 	{
-		auto const tasker = Satisfying_flag<is_Par, FS>();
+		auto const tasker = Satisfying_Flag_t<is_Par, FS>();
 
 		if(con.size() <= tasker.number_of_task())
 			return _Seq_Fold( Forward<CON>(con), Forward<FUNC>(func) );
@@ -404,9 +402,6 @@ public:
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-#include "..\Family\Family.hpp"
 
 
 template<class FS, class...CONS>
@@ -495,7 +490,7 @@ struct sgm::ht::_Plait_impl<FS, sgm::ht::_impl_Mode::MULTI_THREAD>
 			using Helper_t = _Plait_Helper<sizeof...(CONS) + 1, FS, CON, CONS...>;
 			Serial<elem_t> res( size, Helper_t::calc(0, con, cons...) );
 
-			Satisfying_flag<is_Par, FS>()
+			Satisfying_Flag_t<is_Par, FS>()
 			(	size
 			,	[&con, &cons..., &res](size_t idx_begin, size_t const idx_end, unsigned const)
 				{
@@ -522,7 +517,7 @@ namespace sgm
 		>
 		static auto Morph(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
-			_Morph_impl< Flag<FLAGS...> >::calc
+			_Morph_impl< FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func)
 			)
 		)
@@ -534,7 +529,7 @@ namespace sgm
 		>
 		static auto Filter(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
-			_Filter_impl< Flag<FLAGS...> >::calc
+			_Filter_impl< FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func)
 			)
 		)
@@ -546,7 +541,7 @@ namespace sgm
 		>
 		static auto Fold(CON&& con, FUNC&& func, init_t&& init)-> SGM_DECLTYPE_AUTO
 		(
-			_Fold_impl< true, true, Flag<FLAGS...> >::calc
+			_Fold_impl< true, true, FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
@@ -557,7 +552,7 @@ namespace sgm
 		>
 		static auto Fold(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
-			_Fold_impl< false, true, Flag<FLAGS...> >::calc
+			_Fold_impl< false, true, FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), none
 			)
 		)
@@ -569,7 +564,7 @@ namespace sgm
 		>
 		static auto rFold(CON&& con, FUNC&& func, init_t&& init)-> SGM_DECLTYPE_AUTO
 		(
-			_Fold_impl< true, false, Flag<FLAGS...> >::calc
+			_Fold_impl< true, false, FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
@@ -580,7 +575,7 @@ namespace sgm
 		>
 		static auto rFold(CON&& con, FUNC&& func)-> SGM_DECLTYPE_AUTO
 		(
-			_Fold_impl< false, false, Flag<FLAGS...> >::calc
+			_Fold_impl< false, false, FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), none
 			)
 		)
@@ -589,7 +584,7 @@ namespace sgm
 		template<class...FLAGS, class...CONS>
 		static auto Plait(CONS&&...cons)-> SGM_DECLTYPE_AUTO
 		(
-			_Plait_impl< Flag<FLAGS...> >::calc( Forward<CONS>(cons)... )
+			_Plait_impl< FlagSet<FLAGS...> >::calc( Forward<CONS>(cons)... )
 		)
 
 	}
