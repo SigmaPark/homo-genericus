@@ -328,8 +328,7 @@ struct sgm::Family_member< 0, sgm::Family<T, TYPES...> const >
 
 template<size_t N, class T, class...TYPES>
 struct sgm::Family_member< N, sgm::Family<T, TYPES...> const > 
-:	Family_member< N - 1, Family<TYPES...> const >
-{};
+:	Family_member< N - 1, Family<TYPES...> const >{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
