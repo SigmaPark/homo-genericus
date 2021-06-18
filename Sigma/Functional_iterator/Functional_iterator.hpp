@@ -39,28 +39,12 @@ private:
 	friend class sgm::Functional_iterator;
 
 
-	template<class FTR, bool M1, bool M2, bool F>
-	static auto _substitution
-	(	Functional_iterator<M1, F, FTR> &itr1, Functional_iterator<M2, F, FTR> const itr2
-	)->	decltype(itr1)
+	template<class FTR, bool M, bool F>
+	static auto _cast(Functional_iterator<M, F, FTR> const itr)-> Functional_iterator<!M, F, FTR>
 	{
-		static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
+		static_assert(M, "cannot convert immutable iterator to mutable one.");		
 
-		return itr1._idx = itr2._idx,  itr1;
-	}
-
-
-	template<bool IS_FORWARD, bool IS_PLUS>
-	static auto _shifted(size_t const idx, ptrdiff_t const diff)-> size_t
-	{
-		return 
-		[idx, d = diff < 0 ? -diff : diff]
-		{
-			if constexpr(IS_FORWARD == IS_PLUS)
-				return idx + d;
-			else
-				return idx - d;
-		}();
+		return{itr._ftr, itr._idx};  
 	}
 
 
@@ -101,10 +85,11 @@ public:
 
 
 	Functional_iterator(FTR const ftr, size_t const idx) : _ftr(ftr), _idx(idx){}
+	Functional_iterator(_fnitr_t<!IS_MUTABLE> const itr) : iter_t( _FH::_cast(itr) ){}
 
-	template< bool M, class = std::enable_if_t<M != IS_MUTABLE> >
-	decltype(auto) operator=(_fnitr_t<M> const itr){  return _FH::_substitution(*this, itr);  }
-
+	decltype(auto) operator=(_fnitr_t<!IS_MUTABLE> const itr){  return *this = iter_t(itr);  }
+	
+	operator _fnitr_t<!IS_MUTABLE>() const{  return *this;  }
 
 	decltype(auto) operator[](ptrdiff_t const d) const{  return _indexing(this, d);  }
 	decltype(auto) operator[](ptrdiff_t const d){  return _indexing(this, d);  }
@@ -137,8 +122,17 @@ private:
 
 
 	template<bool IS_PLUS>
-	auto _shifted(ptrdiff_t const d = 1) const
-	->	size_t{  return _FH::template _shifted<IS_FORWARD, IS_PLUS>(_idx, d);  }
+	auto _shifted(ptrdiff_t const diff = 1) const-> size_t
+	{
+		return 
+		[i = _idx, d = diff < 0 ? -diff : diff]
+		{
+			if constexpr(IS_FORWARD == IS_PLUS)
+				return i + d;
+			else
+				return i - d;
+		}();	
+	}
 
 
 	template<class ME>

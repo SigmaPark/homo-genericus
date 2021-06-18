@@ -68,6 +68,18 @@ void Test<2>()
 	&&	aa.val[3] == 2
 	&&	aa.val[4] == 0
 	);
+
+
+	auto ci = con.cbegin();
+	auto i = con.begin();
+
+	//i = ci;
+	ci = i;
+	i = i;
+	ci = ci;
+
+	//static_cast<decltype(i)>(ci);
+	static_cast<decltype(ci)>(i);
 }
 
 
