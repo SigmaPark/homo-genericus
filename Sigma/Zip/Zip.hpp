@@ -13,7 +13,7 @@
 namespace sgm
 {
 	
-	template<class...CS>  class constZipper;
+	template<class...CS>  class cZipper;
 	template<class...CS>  class Zipper;
 
 	template<class FAM, bool IS_MUTABLE>  class Zip_iterator;
@@ -87,7 +87,7 @@ private:
 
 
 template<class...CS>  
-class sgm::constZipper
+class sgm::cZipper
 {
 	static_assert( (is_iterable<CS>::value &&...) );
 
@@ -96,7 +96,7 @@ class sgm::constZipper
 
 public:
 	template<class..._CS>
-	constZipper(_CS&&...args) : _fam( std::forward<_CS>(args)... ), _size(_get_size()){}
+	cZipper(_CS&&...args) : _fam( std::forward<_CS>(args)... ), _size(_get_size()){}
 
 	auto cbegin() const-> _iter_t{  return _get_iter<true>(*this);  }
 	auto begin() const{  return cbegin();  }
@@ -144,9 +144,9 @@ private:
 
 
 template<class...CS>
-class sgm::Zipper : public constZipper<CS...>
+class sgm::Zipper : public cZipper<CS...>
 {
-	using _cz = constZipper<CS...>;
+	using _cz = cZipper<CS...>;
 	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS>().begin()) >...  >;
 	using _iter_t = Zip_iterator<_itr_fam_t, true>;
 
@@ -160,7 +160,7 @@ public:
 
 namespace sgm
 {
-	template<class..._CS>  constZipper(_CS&&...)-> constZipper< remove_aleph_t<_CS&&>... >;
+	template<class..._CS>  cZipper(_CS&&...)-> cZipper< remove_aleph_t<_CS&&>... >;
 	template<class..._CS>  Zipper(_CS&&...)-> Zipper< remove_aleph_t<_CS&&>... >;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
