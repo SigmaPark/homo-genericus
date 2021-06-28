@@ -149,7 +149,7 @@ static void Test07()
 
 
 	bool test_result = false;
-#ifndef __INTELLISENSE__
+
 	static_assert
 	(	std::is_same_v
 		<	decltype(mtp1)
@@ -162,12 +162,11 @@ static void Test07()
 	);
 
 	test_result
-	=	(	mtp1.get<0>() == Specimen::State::DESTRUCTED
-		&&	mtp1.get<1>() == 9
+	=	(	mtp1.get<1>() == 9
 		&&	mtp2.get<0>() == 8
 		&&	mtp2.get<1>() == 90
 		);
-#endif
+
 	is_True(test_result);
 }
 
