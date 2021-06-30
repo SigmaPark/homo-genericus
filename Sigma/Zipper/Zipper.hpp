@@ -1,13 +1,11 @@
 #pragma once
 
-#ifndef _SGM_ZIP_
-#define _SGM_ZIP_
+#ifndef _SGM_ZIPPER_
+#define _SGM_ZIPPER_
 
 
 #include "..\Family\Family.hpp"
 #include "..\interface_Traits\interface_Traits.hpp"
-#include <type_traits>
-#include <initializer_list>
 
 
 namespace sgm
@@ -57,13 +55,15 @@ private:
 		size_t constexpr IDX = sizeof...(ARGS);
 
 		if constexpr(IDX == std::tuple_size<FAM>::value)
-			return Forward_as_Family(args...);
+			return Family< remove_aleph_t<ARGS>... >( Forward<ARGS>(args)... );
 		else
-		{
-			using fam_t = Selective_t<IS_MUTABLE, FAM, FAM const>;
-
-			return _deref(  me, args..., *std::get<IDX>( static_cast<fam_t>(me._itr_fam) )  );
-		}
+			return
+			_deref
+			(	me,	Forward<ARGS>(args)...
+			,	*std::get<IDX>
+				(	static_cast< Selective_t<IS_MUTABLE, FAM, FAM const> >(me._itr_fam)
+				)
+			);
 	}
 
 
@@ -96,7 +96,7 @@ class sgm::cZipper
 
 public:
 	template<class..._CS>
-	cZipper(_CS&&...args) : _fam( std::forward<_CS>(args)... ), _size(_get_size()){}
+	cZipper(_CS&&...args) : _fam( Forward<_CS>(args)... ), _size(_get_size()){}
 
 	auto cbegin() const-> _iter_t{  return _get_iter<true>(*this);  }
 	auto begin() const{  return cbegin();  }
@@ -110,16 +110,16 @@ protected:
 	Family<CS...> _fam;
 
 	template<bool WANT_BEGIN, class ME, class...ARGS>
-	static auto _get_iter([[maybe_unused]] ME &me, ARGS...args)
+	static auto _get_iter([[maybe_unused]] ME &me, ARGS&&...args)
 	{
 		size_t constexpr IDX = sizeof...(ARGS);
 
 		if constexpr( IDX == sizeof...(CS) )
-			return Make_Family(args...);
+			return Make_Family( Forward<ARGS>(args)... );
 		else if constexpr(WANT_BEGIN)
-			return _get_iter<true>( me, args..., std::get<IDX>(me._fam).begin() );
+			return _get_iter<true>( me, Forward<ARGS>(args)..., std::get<IDX>(me._fam).begin() );
 		else
-			return _get_iter<false>( me, args..., std::get<IDX>(me._fam).end() );
+			return _get_iter<false>( me, Forward<ARGS>(args)..., std::get<IDX>(me._fam).end() );
 	}
 
 
@@ -151,7 +151,7 @@ class sgm::Zipper : public cZipper<CS...>
 	using _iter_t = Zip_iterator<_itr_fam_t, true>;
 
 public:
-	template<class..._CS>  Zipper(_CS&&...args) : _cz( std::forward<_CS>(args)... ){}
+	template<class..._CS>  Zipper(_CS&&...args) : _cz( Forward<_CS>(args)... ){}
 	
 	auto begin()-> _iter_t{  return _cz::_get_iter<true>(*this);  }
 	auto end()-> _iter_t{  return _cz::_get_iter<false>(*this);  }

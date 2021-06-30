@@ -1,4 +1,4 @@
-#include "Zip.hpp"
+#include "Zipper.hpp"
 #include "..\Specification\Specification.hpp"
 
 
@@ -56,28 +56,27 @@ void Test<2>()
 
 	duration<double> dt2 = system_clock::now() - tpoint;
 
-	std::wcout << L"dt1 = " << dt1.count() << L",    dt2 = " << dt2.count() << std::endl;
-
+	//std::wcout << L"dt1 = " << dt1.count() << L",    dt2 = " << dt2.count() << std::endl;
 	//sgm::spec::is_True( dt2.count()/dt1.count() < 1.1 );
 }
 
 
-#include "Test_Zip.hpp"
+#include "Test_Zipper.hpp"
 
 
 
-void Test_sgm_Zip::test()
+void Test_sgm_Zipper::test()
 {
 	try
 	{
 		::Test<1>();
 		::Test<2>();
 
-		std::wcout << L"Zip Test Complete.\n";
+		std::wcout << L"Zipper Test Complete.\n";
 	}
 	catch(...)
 	{
-		std::wcerr << L"Zip Test Failed.\n";
+		std::wcerr << L"Zipper Test Failed.\n";
 
 		throw;
 	}
