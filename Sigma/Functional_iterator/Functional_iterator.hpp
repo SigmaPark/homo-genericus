@@ -196,7 +196,7 @@ template<class FTR, bool M, bool F>
 struct std::iterator_traits< sgm::Functional_iterator<M, F, FTR> >
 {
 	using iterator_category = random_access_iterator_tag;
-	using value_type = decay_t< std::invoke_result_t<FTR, size_t> >;
+	using value_type = decay_t< invoke_result_t<FTR, size_t> >;
 	using difference_type = ptrdiff_t;
 	using pointer = conditional_t<M, value_type, value_type const>*;
 	using reference = remove_pointer_t<pointer>&;
