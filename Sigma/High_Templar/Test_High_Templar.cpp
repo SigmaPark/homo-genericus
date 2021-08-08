@@ -172,48 +172,60 @@ static void Plait_Test()
 namespace test_ht12
 {
 
-
-//#define HT12_RECURSIVE_VERSION
-
-#ifdef HT12_RECURSIVE_VERSION
-	template<class ITR1, class ITR2>
-	static auto are_same_ranges(ITR1 itr1, ITR2 itr2, ITR1 const &e1, ITR2 const &e2)->	bool
-	{
-		bool const on1 = itr1 != e1,  on2 = itr2 != e2;
-
-		if(on1 && on2 && *itr1++ == *itr2++)
-			return are_same_ranges(itr1, itr2, e1, e2);
-		else
-			return !(on1 || on2);
-	}
-#endif
-
 	template<class RG1, class RG2>
-	static auto are_same_ranges(RG1 &&rg1, RG2 &&rg2)-> bool
+	static bool are_same_ranges(RG1 &&rg1, RG2 &&rg2)
 	{	
-	#ifdef HT12_RECURSIVE_VERSION
-		return are_same_ranges(rg1.begin(), rg2.begin(), rg1.end(), rg2.end());
-	#else
 		auto itr1 = rg1.begin();
 		auto itr2 = rg2.begin();
 
-		while(itr1 != rg1.end() && itr2 != rg2.end() && *itr1 == *itr2)
+		while
+		(	itr1 != rg1.end() && itr2 != rg2.end() 
+		&&	*itr1 == *itr2
+		)
 			itr1++,  itr2++;
 
 		return !(itr1 != rg1.end() || itr2 != rg2.end());
-	#endif
 	}
-#undef HT12_RECURSIVE_VERSION
 
 
-	static void recur_test(size_t const N)
+	static void MorphTest()
 	{
-		sgm::Serial<size_t> sr(N);
+		auto answer = std::vector<double>{ -1, -2, -3, -4, -5 };
 
-		for(size_t n = 0;  n < sr.capacity();  ++n)
-			sr >> n;
+		is_True
+		(	are_same_ranges
+			(	sgm::ht12::Morph<SHARE>
+				(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
+				)
+			,	answer  
+			)
+		);
 
-		sgm::spec::is_True( are_same_ranges(sr, sr) );
+		sgm::Serial<double> const msr
+		=	sgm::ht12::Morph
+			(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
+			);
+
+		is_True
+		(	are_same_ranges(msr, answer)
+		);
+	}
+
+
+	static void FilterTest()
+	{
+		auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
+		auto answer = std::vector<int>{2, 4, 6, 8, 10};
+	
+		Serial<int> const sr1 = Countable<int>(10, 1);
+
+		is_True
+		(	are_same_ranges( sgm::ht12::Filter(sr1, is_even), answer )
+		);
+
+		sgm::Serial<int> const fsr = sgm::ht12::Filter(sr1, is_even);
+
+		is_True( are_same_ranges(fsr, answer) );
 	}
 
 }
@@ -237,13 +249,8 @@ void Test_sgm_High_Templar::test()
 
 		Plait_Test();
 
-		is_True
-		(	test_ht12::are_same_ranges
-			(	std::initializer_list<int>{2, 5, 8, 11}, sgm::Serial<int>{2, 5, 8, 11}
-			)
-		);
-
-		test_ht12::recur_test(100000);
+		test_ht12::MorphTest();
+		test_ht12::FilterTest();
 
 		std::wcout << L"High Templar Test Complete.\n";
 	}
@@ -254,3 +261,6 @@ void Test_sgm_High_Templar::test()
 		throw e;
 	}
 }
+
+
+

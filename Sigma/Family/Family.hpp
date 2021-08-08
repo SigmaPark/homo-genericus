@@ -44,13 +44,6 @@ namespace sgm
 	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t;
 
 
-	template<class T>
-	struct remove_aleph;
-
-	template<class T>
-	using remove_aleph_t = typename remove_aleph<T>::type;
-	
-
 	template<bool, template<class...> class TL,  class...TYPES>
 	struct _Harden_Helper;
 
@@ -73,7 +66,7 @@ namespace std
 {
 	
 	template<size_t N, class...TYPES>
-	static auto get(sgm::Family<TYPES...>& fam)
+	static auto get(sgm::Family<TYPES...>& fam) noexcept
 	->	typename sgm::Family_member< N, sgm::Family<TYPES...> >::type&
 	{
 		return
@@ -84,7 +77,7 @@ namespace std
 	}
 
 	template<size_t N, class...TYPES>
-	static auto get(sgm::Family<TYPES...> const& fam)
+	static auto get(sgm::Family<TYPES...> const& fam) noexcept
 	->	typename sgm::Family_member< N, sgm::Family<TYPES...> const >::type const&
 	{
 		return
@@ -107,12 +100,12 @@ namespace std
 
 
 	template<class Q, class...TYPES>
-	static auto get(sgm::Family<TYPES...>& fam)-> SGM_DECLTYPE_AUTO
+	static auto get(sgm::Family<TYPES...>& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	sgm::_getFam_Helper< sgm::_IDX_Helper<sizeof...(TYPES), Q, TYPES...>::value >::calc(fam)
 	)
 
 	template<class Q, class...TYPES>
-	static auto get(sgm::Family<TYPES...> const& fam)-> SGM_DECLTYPE_AUTO
+	static auto get(sgm::Family<TYPES...> const& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	sgm::_getFam_Helper< sgm::_IDX_Helper<sizeof...(TYPES), Q, TYPES...>::value >::calc(fam)
 	)
 
@@ -290,6 +283,12 @@ public:
 	}
 
 	bool operator!=(Family const& fam) const noexcept{  return !(*this == fam);  }
+
+
+	template<size_t IDX>  auto get() const noexcept-> SGM_DECLTYPE_AUTO(  std::get<IDX>(*this)  )
+	template<size_t IDX>  auto get() noexcept-> SGM_DECLTYPE_AUTO(  std::get<IDX>(*this)  )
+	template<class Q>  auto get() const noexcept-> SGM_DECLTYPE_AUTO(  std::get<Q>(*this)  )
+	template<class Q>  auto get() noexcept-> SGM_DECLTYPE_AUTO(  std::get<Q>(*this)  )
 };
 #pragma warning(pop)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -424,14 +423,6 @@ auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2)
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class T>
-struct sgm::remove_aleph
-{
-	using type = Selective_t< is_RvalueReference<T>::value, Referenceless_t<T>, T >;
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 template< template<class...> class TL, class...TYPES >
 auto sgm::Harden(TL<TYPES...>& tL)
 ->	typename sgm::_Harden_Helper<true, TL, TYPES...>::res_t
@@ -450,7 +441,7 @@ auto sgm::Harden(TL<TYPES...>&& tL)
 template< template<class...> class TL, class...TYPES >
 struct sgm::_Harden_Helper<true, TL, TYPES...> : No_Making
 {
-	using res_t = TL< remove_aleph_t<TYPES>... >;
+	using res_t = TL< Alephless_t<TYPES>... >;
 	
 	template<class Q, class...ARGS>
 	static auto calc(Q&&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
@@ -469,7 +460,7 @@ struct sgm::_Harden_Helper<false, TL, TYPES...> : No_Making
 		return
 		sgm::_Harden_Helper<IDX + 1 == sizeof...(TYPES), TL, TYPES...>::calc
 		(	Forward<Q>(q), Forward<ARGS>(args)...
-		,	static_cast< remove_aleph_t<elem_t>&& >( std::get<IDX>(q) )
+		,	static_cast< Alephless_t<elem_t>&& >( std::get<IDX>(q) )
 		);
 	}
 };

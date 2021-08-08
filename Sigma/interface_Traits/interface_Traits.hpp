@@ -97,8 +97,7 @@ namespace sgm
 	struct Has_Operator_Comma
 	<	T1, T2, Void_t< decltype( Declval<T1>().operator,(Declval<T2>()) ) >  
 	>
-	:	True_t
-	{};
+	:	True_t{};
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -171,8 +170,7 @@ namespace sgm
 
 	template<class T> 
 	struct is_Comparable 
-	:	Boolean_type< Has_Operator_Same<T>::value && Has_Operator_NotSame<T>::value >
-	{};
+	:	Boolean_type< Has_Operator_Same<T>::value && Has_Operator_NotSame<T>::value >{};
 
 
 	template<class T> 
@@ -327,8 +325,7 @@ namespace sgm
 
 	template<class T>
 	struct is_random_access_iterator 
-	:	Selective_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >
-	{};
+	:	Selective_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >{};
 
 
 	template<class CON, class T = void>
@@ -424,19 +421,16 @@ namespace sgm
 
 
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
-	static auto Next(ITR const itr, long long steps = 1)-> ITR
-	{
-		return _Travel<ITR>::next(itr, steps);  
-	}
+	static auto Next(ITR const itr, long long steps = 1)
+	->	ITR{  return _Travel<ITR>::next(itr, steps);  }
+
 
 	template
 	<	class ITR
 	,	class = Guaranteed_t< is_iterator<ITR>::value && Has_Operator_Post_Decrease<ITR>::value >
 	>
-	static auto Prev(ITR const itr, long long steps = 1)-> ITR
-	{
-		return _Travel<ITR>::prev(itr, steps);  
-	}
+	static auto Prev(ITR const itr, long long steps = 1)
+	->	ITR{  return _Travel<ITR>::prev(itr, steps);  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

@@ -40,9 +40,7 @@ namespace sgm
 
 	struct No_Making{  No_Making() = delete;  };
 
-
 	template<class...> using Void_t = void;
-
 
 	enum class None{} static constexpr none{};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
@@ -95,12 +93,9 @@ namespace sgm
 	template<class T> struct is_Same<T, T> : True_t{};
 
 
-	template<class T>
-	struct is_Void : is_Same<T, void>{};
+	template<class T> struct is_Void : is_Same<T, void>{};
 
-
-	template<class T>
-	struct is_None : is_Same<T, None>{};
+	template<class T> struct is_None : is_Same<T, None>{};
 
 
 	template<class T>
@@ -115,8 +110,7 @@ namespace sgm
 
 	template<class T> 
 	struct is_Reference 
-	:	Boolean_type< is_LvalueReference<T>::value || is_RvalueReference<T>::value >
-	{};
+	:	Boolean_type< is_LvalueReference<T>::value || is_RvalueReference<T>::value >{};
 
 
 	template<class T>
@@ -182,19 +176,15 @@ namespace sgm
 	struct is_Convertible
 	<	FROM, TO, Void_t< decltype( Declval<void(*)(TO)>()(Declval<FROM>()) ) >  
 	>
-	:	True_t
-	{};
+	:	True_t{};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template<class, class = void> struct is_Class : False_t{};
 
 	template<class T>
-	struct is_Class
-	<	T, Void_t<  decltype( static_cast< int Decay_t<T>::* >(0) )  >   
-	>
-	:	True_t
-	{};
+	struct is_Class<   T, Void_t<  decltype( static_cast< int Decay_t<T>::* >(0) )  >   >
+	:	True_t{};
 
 
 	template<class DERV, class BASE>
@@ -273,8 +263,7 @@ namespace sgm
 
 		template<class Q, class...TYPES>
 		struct for_all<Q, TYPES...>
-		:	Boolean_type< FUNCTOR<Q>::value && for_all<TYPES...>::value >
-		{};
+		:	Boolean_type< FUNCTOR<Q>::value && for_all<TYPES...>::value >{};
 
 		template<> struct for_all<> : True_t{};
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------
@@ -284,8 +273,7 @@ namespace sgm
 
 		template<class Q, class...TYPES>
 		struct for_any<Q, TYPES...> 
-		:	Boolean_type< FUNCTOR<Q>::value || for_any<TYPES...>::value >
-		{};
+		:	Boolean_type< FUNCTOR<Q>::value || for_any<TYPES...>::value >{};
 
 		template<> struct for_any<> : False_t{};
 	};
@@ -356,6 +344,7 @@ namespace sgm
 		template<class T>
 		static auto cast(T&& t)-> decltype( Move(t) ){  return Move(t);  }
 	};
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template
@@ -372,6 +361,15 @@ namespace sgm
 			>
 	>	
 	using CopiedRef_t = T2;
+
+
+	template<class T>
+	struct Alephless : No_Making
+	{
+		using type = Selective_t< is_RvalueReference<T>::value, Referenceless_t<T>, T >;
+	};
+
+	template<class T>  using Alephless_t = typename Alephless<T>::type;
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

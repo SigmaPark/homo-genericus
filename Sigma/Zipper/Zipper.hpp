@@ -55,7 +55,7 @@ private:
 		size_t constexpr IDX = sizeof...(ARGS);
 
 		if constexpr(IDX == std::tuple_size<FAM>::value)
-			return Family< remove_aleph_t<ARGS>... >( Forward<ARGS>(args)... );
+			return Family< Alephless_t<ARGS>... >( Forward<ARGS>(args)... );
 		else
 			return
 			_deref
@@ -160,8 +160,8 @@ public:
 
 namespace sgm
 {
-	template<class..._CS>  cZipper(_CS&&...)-> cZipper< remove_aleph_t<_CS&&>... >;
-	template<class..._CS>  Zipper(_CS&&...)-> Zipper< remove_aleph_t<_CS&&>... >;
+	template<class..._CS>  cZipper(_CS&&...)-> cZipper< Alephless_t<_CS&&>... >;
+	template<class..._CS>  Zipper(_CS&&...)-> Zipper< Alephless_t<_CS&&>... >;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
