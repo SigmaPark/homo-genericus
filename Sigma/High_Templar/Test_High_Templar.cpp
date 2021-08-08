@@ -172,17 +172,38 @@ static void Plait_Test()
 namespace test_ht12
 {
 
+
+//#define HT12_RECURSIVE_VERSION
+
+#ifdef HT12_RECURSIVE_VERSION
+	template<class ITR1, class ITR2>
+	static auto are_same_ranges(ITR1 itr1, ITR2 itr2, ITR1 const &e1, ITR2 const &e2)->	bool
+	{
+		bool const on1 = itr1 != e1,  on2 = itr2 != e2;
+
+		if(on1 && on2 && *itr1++ == *itr2++)
+			return are_same_ranges(itr1, itr2, e1, e2);
+		else
+			return !(on1 || on2);
+	}
+#endif
+
 	template<class RG1, class RG2>
 	static auto are_same_ranges(RG1 &&rg1, RG2 &&rg2)-> bool
 	{	
-		auto b1 = rg1.begin();  auto const e1 = rg1.end();
-		auto b2 = rg2.begin();  auto const e2 = rg2.end();
-		
-		while(b1 != e1 && b2 != e2 && *b1 == *b2) 
-			b1++,  b2++;
-			
-		return !(b1 != e1 || b2 != e2);
+	#ifdef HT12_RECURSIVE_VERSION
+		return are_same_ranges(rg1.begin(), rg2.begin(), rg1.end(), rg2.end());
+	#else
+		auto itr1 = rg1.begin();
+		auto itr2 = rg2.begin();
+
+		while(itr1 != rg1.end() && itr2 != rg2.end() && *itr1 == *itr2)
+			itr1++,  itr2++;
+
+		return !(itr1 != rg1.end() || itr2 != rg2.end());
+	#endif
 	}
+#undef HT12_RECURSIVE_VERSION
 
 
 	static void recur_test(size_t const N)
@@ -194,6 +215,7 @@ namespace test_ht12
 
 		sgm::spec::is_True( are_same_ranges(sr, sr) );
 	}
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -221,7 +243,7 @@ void Test_sgm_High_Templar::test()
 			)
 		);
 
-		test_ht12::recur_test(10000);
+		test_ht12::recur_test(100000);
 
 		std::wcout << L"High Templar Test Complete.\n";
 	}
