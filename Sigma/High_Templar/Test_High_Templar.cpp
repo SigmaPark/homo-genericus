@@ -174,23 +174,25 @@ namespace test_ht12
 
 	template<class RG1, class RG2>
 	static auto are_same_ranges(RG1 &&rg1, RG2 &&rg2)-> bool
+	{	
+		auto b1 = rg1.begin();  auto const e1 = rg1.end();
+		auto b2 = rg2.begin();  auto const e2 = rg2.end();
+		
+		while(b1 != e1 && b2 != e2 && *b1 == *b2) 
+			b1++,  b2++;
+			
+		return !(b1 != e1 || b2 != e2);
+	}
+
+
+	static void recur_test(size_t const N)
 	{
-		struct _res_t
-		{
-			decltype(rg1.begin()) const b1, e1;
-			decltype(rg2.begin()) const b2, e2;
-			bool const is_ongoing[2] = {b1 != e1, b2 != e2};
+		sgm::Serial<size_t> sr(N);
 
-			operator bool() const
-			{
-				return 
-				is_ongoing[0] && is_ongoing[1] && *b1 == *b2
-				?	_res_t{sgm::Next(b1), e1, sgm::Next(b2), e2}
-				:	!(is_ongoing[0] || is_ongoing[1]);
-			}
-		};
+		for(size_t n = 0;  n < sr.capacity();  ++n)
+			sr >> n;
 
-		return _res_t{rg1.begin(), rg1.end(), rg2.begin(), rg2.end()};
+		sgm::spec::is_True( are_same_ranges(sr, sr) );
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -218,6 +220,8 @@ void Test_sgm_High_Templar::test()
 			(	std::initializer_list<int>{2, 5, 8, 11}, sgm::Serial<int>{2, 5, 8, 11}
 			)
 		);
+
+		test_ht12::recur_test(10000);
 
 		std::wcout << L"High Templar Test Complete.\n";
 	}
