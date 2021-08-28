@@ -274,15 +274,24 @@ public:
 	}
 
 
-	bool operator==(Family const& fam) const noexcept
+	template
+	<	class Q, class...ARGS
+	,	class 
+		=	Enable_if_t
+			<	( is_Convertible<Q, T>::value || is_Same< Decay_t<Q>, Decay_t<T> >::value ) 
+			&&	sizeof...(ARGS) == sizeof...(TYPES)  
+			>
+	>
+	auto operator==(Family<Q, ARGS...> const& fam) const noexcept-> bool
 	{
-		return 
-		(	_val == fam._val 
-		&&	static_cast<_upper_t const&>(*this) == static_cast<_upper_t const&>(fam)
+		return
+		(	_val == fam._val
+		&&	static_cast<_upper_t const&>(*this) == static_cast< Family<ARGS...> const& >(fam)
 		);
 	}
 
-	bool operator!=(Family const& fam) const noexcept{  return !(*this == fam);  }
+	template<class FAM>
+	auto operator!=(FAM const& fam) const noexcept-> bool{  return !(*this == fam);  }
 
 
 	template<size_t IDX>  auto get() const noexcept-> SGM_DECLTYPE_AUTO(  std::get<IDX>(*this)  )

@@ -17,6 +17,7 @@ namespace test_ht12
 	static void MorphTest();
 	static void FilterTest();
 	static void FoldTest();
+	static void Plait_Test();
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -51,7 +52,7 @@ void test_ht12::MorphTest()
 		(	sgm::ht12::Morph<SHARE>
 			(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
 			)
-		,	answer  
+		,	answer
 		)
 	);
 
@@ -66,7 +67,6 @@ void test_ht12::MorphTest()
 }
 
 
-
 void test_ht12::FilterTest()
 {
 	auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
@@ -76,6 +76,7 @@ void test_ht12::FilterTest()
 
 	sgm::spec::is_True
 	(	are_same_ranges( sgm::ht12::Filter(sr1, is_even), answer )
+	&&	are_same_ranges( sgm::ht12::Filter<CREFER>(sr1, is_even), answer )
 	);
 
 	sgm::Serial<int> const fsr = sgm::ht12::Filter(sr1, is_even);
@@ -91,18 +92,42 @@ void test_ht12::FoldTest()
 
 	bool res = false;
 
+	using sgm::Countable;
+
 	res 
-	=	(	sgm::ht12::Fold( sgm::Countable<int>(3, 1), minus, 10 ) == 4
-		&&	sgm::ht12::Fold( sgm::Countable<int>(3, 1), minus ) == -4
-		&&	sgm::ht12::Fold<SHARE>( sgm::Countable<int>(3, 1), minus ) == -4
-		&&	sgm::ht12::rFold( sgm::Countable<int>(3, 1), minus, 10 ) == 4
-		&&	sgm::ht12::rFold( sgm::Countable<int>(3, 1), minus ) == 0
-		&&	(	sgm::ht12::Fold<sgm::ht12::Par<>>( sgm::Countable<int>(20, 1), plus, int(0) )
-			==	sgm::ht12::Fold( sgm::Countable<int>(20, 1), plus )
+	=	(	sgm::ht12::Fold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht12::Fold( Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht12::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht12::rFold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht12::rFold( Countable<int>(3, 1), minus ) == 0
+		&&	(	sgm::ht12::Fold<sgm::ht12::Par<>>( Countable<int>(20, 1), plus, int(0) )
+			==	sgm::ht12::Fold( Countable<int>(20, 1), plus )
 			)
 		);
 
 	sgm::spec::is_True(res);	
+}
+
+
+void test_ht12::Plait_Test()
+{
+	using sgm::Serial;
+	using sgm::Family;
+	using sgm::Pinweight;
+	
+	Serial<int> sr1{1, 4, 7, 10};
+	Serial<double> sr2{-1, -2, -3, -4};	
+	Serial<char> sr3{'a', 'b', 'c', 'd'};
+
+	using fam_t = Family<int, double, char>;
+
+	auto ans1
+	=	Serial<fam_t>
+		{	fam_t(1, -1.0, 'a'), fam_t(4, -2.0, 'b')
+		,	fam_t(7, -3.0, 'c'), fam_t(10, -4.0, 'd')
+		};
+
+	sgm::spec::is_True(  are_same_ranges( sgm::ht12::Plait(sr1, sr2, sr3), ans1 )  );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -115,9 +140,12 @@ void Test_sgm_High_Templar12::test()
 {
 	try
 	{
-		test_ht12::MorphTest();
-		test_ht12::FilterTest();
-		test_ht12::FoldTest();
+		using namespace test_ht12;
+
+		MorphTest();
+		FilterTest();
+		FoldTest();
+		Plait_Test();
 
 		std::wcout << L"High Templar 12 Test Complete.\n";
 	}

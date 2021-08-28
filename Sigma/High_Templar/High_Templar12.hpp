@@ -7,6 +7,7 @@
 #include "..\Flags\Flags.hpp"
 #include "..\Type_Decorator\Type_Decorator.hpp"
 #include "..\Serial\Serial.hpp"
+#include "..\Family\Family.hpp"
 
 
 namespace sgm
@@ -49,6 +50,12 @@ namespace sgm
 		struct _Fold_impl;
 
 		struct _Fold_Helper;
+
+
+		template<class...CS>  class _cPlait;
+		template<class...CS>  class _Plait;
+
+		template<class FAM, bool IS_MUTABLE>  class Plait_iterator;
 
 	}
 }
@@ -499,6 +506,209 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class FAM, bool IS_MUTABLE>  
+class sgm::ht12::Plait_iterator
+{
+private:
+	mutable FAM _itr_fam;
+
+
+	template< size_t _S = std::tuple_size<FAM>::value >
+	struct _Deref
+	{
+		using _fam_t = Selective_t<IS_MUTABLE, FAM, FAM const>;
+
+		template<class ME, class...ARGS>
+		static auto calc(ME &me, ARGS&&...args)-> SGM_DECLTYPE_AUTO
+		(
+			_Deref<_S-1>::calc
+			(	me
+			,	*std::get<_S-1>( static_cast<_fam_t>(me._itr_fam) )
+			,	Forward<ARGS>(args)...
+			)
+		)
+	};
+
+	template<>
+	struct _Deref<0>
+	{
+		template<class ME, class...ARGS>
+		static auto calc(ME&, ARGS&&...args)-> Family< Alephless_t<ARGS>... >
+		{  
+			return Family< Alephless_t<ARGS>... >( Forward<ARGS>(args)... );  
+		}
+	};
+
+
+	template< bool PLUS, size_t _S = std::tuple_size<FAM>::value, bool = _S != 0  >  
+	struct _Step;
+
+	template<bool PLUS>
+	struct _Step<PLUS, 0, false>
+	{
+		static auto calc(Plait_iterator &me)-> SGM_DECLTYPE_AUTO(  me  )
+	};
+
+	template<size_t _S>
+	struct _Step<true, _S, true>
+	{
+		static auto calc(Plait_iterator &me)-> Plait_iterator&
+		{  
+			return std::get<_S-1>(me._itr_fam)++,  _Step<true, _S-1>::calc(me);  
+		}
+	};
+
+	template<size_t _S>
+	struct _Step<false, _S, true>
+	{
+		static auto calc(Plait_iterator &me)-> Plait_iterator&
+		{  
+			return std::get<_S-1>(me._itr_fam)--,  _Step<false, _S-1>::calc(me);
+		}
+	};
+
+
+public:
+	static_assert(is_Family<FAM>::value, "FAM should be sgm::Family type.");
+
+	Plait_iterator(FAM fam) : _itr_fam(fam){}
+
+	auto operator*() const-> SGM_DECLTYPE_AUTO( _Deref<>::calc(*this)  )
+	auto operator*()-> SGM_DECLTYPE_AUTO(  _Deref<>::calc(*this)  )
+
+	auto operator++()-> Plait_iterator&{  return _Step<true>::calc(*this);  }
+	auto operator--()-> Plait_iterator&{  return _Step<false>::calc(*this);  }
+	auto operator++(int)-> Plait_iterator{  auto const clone = *this;  return ++*this,  clone;  }
+	auto operator--(int)-> Plait_iterator{  auto const clone = *this;  return --*this,  clone;  }
+
+	auto operator!=(Plait_iterator const zi) const
+	->	bool{  return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  }
+
+	auto operator==(Plait_iterator const zi) const-> bool{  return !(*this != zi);  }
+};
+
+
+template<class...CS>  
+class sgm::ht12::_cPlait
+{
+protected:
+	Family<CS...> _fam;
+
+	template<bool WANT_BEGIN, size_t _S = sizeof...(CS), bool = _S != 0>  struct _Get_iter;
+
+private:
+	size_t _size;
+
+
+	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS const>().begin()) >...  >;
+	using _iter_t = Plait_iterator<_itr_fam_t, false>;
+
+
+
+	template<bool WB>
+	struct _Get_iter<WB, 0, false>
+	{
+		template<class ME, class...ARGS>
+		static auto of(ME&, ARGS&&...args)
+		->	SGM_DECLTYPE_AUTO(  Make_Family( Forward<ARGS>(args)... )  )
+	};
+
+	template<size_t _S>
+	struct _Get_iter<true, _S, true>
+	{
+		template<class ME, class...ARGS>
+		static auto of(ME &me, ARGS&&...args)-> SGM_DECLTYPE_AUTO
+		(
+			_Get_iter<true, _S-1>::of
+			(	me, std::get<_S-1>(me._fam).begin(), Forward<ARGS>(args)...
+			)
+		)
+	};
+
+	template<size_t _S>
+	struct _Get_iter<false, _S, true>
+	{
+		template<class ME, class...ARGS>
+		static auto of(ME &me, ARGS&&...args)-> SGM_DECLTYPE_AUTO
+		(
+			_Get_iter<false, _S-1>::of
+			(	me, std::get<_S-1>(me._fam).end(), Forward<ARGS>(args)...
+			)
+		)
+	};
+
+
+	template
+	<	int _S = sizeof...(CS) == 0 ? -1 : int( sizeof...(CS) )
+	,	bool
+		=	is_random_access_iterator
+			<	decltype(Declval< Nth_t<_S-1, CS...> >().begin())
+			>::	value
+	,	bool = (_S > 0)
+	>
+	struct _Get_Size;
+
+	template<bool IS_RAI>
+	struct _Get_Size<-1, IS_RAI, false>
+	{
+		template<class ME>  static auto of(ME&)-> size_t{  return 0;  }
+	};
+
+	template<bool IS_RAI>
+	struct _Get_Size<0, IS_RAI, false>
+	{
+		template<class ME>  
+		static auto of(ME &me)-> size_t{  return std::get<0>(me._fam).size();  }
+	};
+
+	template<int _S>
+	struct _Get_Size<_S, true, true>
+	{
+		template<class ME>
+		static auto of(ME &me)-> size_t{  return std::get<_S-1>(me._fam).size();  }
+	};
+
+	template<int _S>
+	struct _Get_Size<_S, false, true>
+	{
+		template<class ME>
+		static auto of(ME &me)-> size_t{  return _Get_Size<_S-1>::of(me);  }
+	};
+
+
+public:
+	static_assert
+	(	Check_All<is_iterable>::template for_all<CS...>::value, "iterable types are expected."
+	);
+
+	_cPlait(CS...args) : _fam(args...), _size( _Get_Size<>::of(*this) ){}
+
+	auto cbegin() const-> _iter_t{  return _Get_iter<true>::of(*this);  }
+	auto begin() const{  return cbegin();  }
+
+	auto cend() const-> _iter_t{  return _Get_iter<false>::of(*this);  }
+	auto end() const{  return cend();  }
+
+	auto size() const{  return _size;  }
+};
+
+
+template<class...CS>
+class sgm::ht12::_Plait : public _cPlait<CS...>
+{
+	using _cz = _cPlait<CS...>;
+	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS>().begin()) >...  >;
+	using _iter_t = Plait_iterator<_itr_fam_t, true>;
+
+public:
+	_Plait(CS...args) : _cz(args...){}
+	
+	auto begin()-> _iter_t{  return _cz::template _Get_iter<true>::of(*this);  }
+	auto end()-> _iter_t{  return _cz::template _Get_iter<false>::of(*this);  }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 namespace sgm
 {
 	namespace ht12
@@ -563,6 +773,19 @@ namespace sgm
 			_Fold_impl< false, false, FlagSet<FLAGS...> >::calc
 			(	Forward<CON>(con), Forward<FUNC>(func), none
 			)
+		)
+
+
+		template<class...ARGS>
+		static auto Plait(ARGS&&...args)-> SGM_DECLTYPE_AUTO
+		(
+			_Plait< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )  
+		)
+
+		template<class...ARGS>
+		static auto cPlait(ARGS&&...args)-> SGM_DECLTYPE_AUTO
+		(
+			_cPlait< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )
 		)
 
 	}
