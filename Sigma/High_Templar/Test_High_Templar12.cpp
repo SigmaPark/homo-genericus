@@ -16,6 +16,7 @@ namespace test_ht12
 
 	static void MorphTest();
 	static void FilterTest();
+	static void FoldTest();
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -81,6 +82,28 @@ void test_ht12::FilterTest()
 
 	sgm::spec::is_True( are_same_ranges(fsr, answer) );
 }
+
+
+void test_ht12::FoldTest()
+{
+	auto minus = [](int res, int const& x)-> int{  return res - x;  };
+	auto plus = [](int const res, int const x)-> int{  return res + x;  };
+
+	bool res = false;
+
+	res 
+	=	(	sgm::ht12::Fold( sgm::Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht12::Fold( sgm::Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht12::Fold<SHARE>( sgm::Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht12::rFold( sgm::Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht12::rFold( sgm::Countable<int>(3, 1), minus ) == 0
+		&&	(	sgm::ht12::Fold<sgm::ht12::Par<>>( sgm::Countable<int>(20, 1), plus, int(0) )
+			==	sgm::ht12::Fold( sgm::Countable<int>(20, 1), plus )
+			)
+		);
+
+	sgm::spec::is_True(res);	
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -94,6 +117,7 @@ void Test_sgm_High_Templar12::test()
 	{
 		test_ht12::MorphTest();
 		test_ht12::FilterTest();
+		test_ht12::FoldTest();
 
 		std::wcout << L"High Templar 12 Test Complete.\n";
 	}

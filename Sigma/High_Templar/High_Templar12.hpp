@@ -1,13 +1,12 @@
 #pragma once
-
 #ifndef _SGM_HIGH_TEMPLAR12_
 #define _SGM_HIGH_TEMPLAR12_
 
 
+#include "..\Concurrency\Concurrency.hpp"
 #include "..\Flags\Flags.hpp"
 #include "..\Type_Decorator\Type_Decorator.hpp"
 #include "..\Serial\Serial.hpp"
-#include <cstdlib>
 
 
 namespace sgm
@@ -30,6 +29,27 @@ namespace sgm
 		template<class T, class FLAGSET>
 		using _Decorated_t = typename _Decorated<T, FLAGSET>::type;
 
+
+		enum : unsigned{ AUTO_OR = par::Nof_HW_Core::DYNAMIC };		
+		enum class _impl_Mode{ SEQUANCIAL, MULTI_THREAD };
+
+		template<class maybe_Par> struct is_Par;
+
+		template<unsigned NOF_TASK1 = AUTO_OR, unsigned NOF_TASK2 = NOF_TASK1>
+		struct Par;
+
+
+		template
+		<	bool HAS_INIT, bool FORWARD, class FLAG_SET
+		,	_impl_Mode
+			=	is_Selected_Flag<par::_Parallel_Helper, FLAG_SET>::value
+				?	_impl_Mode::MULTI_THREAD
+				:	_impl_Mode::SEQUANCIAL
+		> 
+		struct _Fold_impl;
+
+		struct _Fold_Helper;
+
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -42,6 +62,40 @@ struct sgm::ht12::_Decorated< T, sgm::FlagSet<FLAGS...> >
 {
 	using type = typename Decorated<T>::template by<FLAGS...>::type;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class maybe_Par>
+struct sgm::ht12::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
+
+
+/**	
+*	<N, whatever> : N tasks
+*	AUTO_OR, AUTO_OR : Auto detection or sequancial if failed. Default setting
+*	AUTO_OR, N : Auto detection or N tasks if failed.
+*	AUTO_OR, 0 : Auto detection or throw exception if failed.
+*/
+template<unsigned NOF_TASK1, unsigned NOF_TASK2>
+struct sgm::ht12::Par : par::Parallel<NOF_TASK1>{};
+
+
+template<unsigned N>
+struct sgm::ht12::Par<sgm::ht12::AUTO_OR, N> : par::Parallel<>
+{
+	template<class F>
+	void operator()(size_t const nof_iteration, F&& func) const
+	{
+		if(par::Parallel<>::number_of_task() != 1)
+			par::Parallel<>::operator()( nof_iteration, Forward<F>(func) );
+		else
+			par::Parallel<N>()( nof_iteration, Forward<F>(func) );
+	}
+};
+
+
+template<>
+struct sgm::ht12::Par<sgm::ht12::AUTO_OR, 0> 
+:	par::Parallel<>{  Par() : par::Parallel<>(par::Nof_HW_Core::When_Fails::THROW){}  };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -291,6 +345,160 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+struct sgm::ht12::_Fold_Helper : No_Making
+{
+protected:
+	template<class ITR, class FUNC, class res_t>
+	static auto Accumulate(ITR itr, ITR const ei, FUNC &&func, res_t res)-> res_t
+	{
+		while(itr != ei)
+			res = func(res, *itr++);
+
+		return res;
+	}
+
+
+	template<bool FORWARD> struct itrMethod;
+
+	template<>
+	struct itrMethod<true>
+	{
+		template<class CON> static auto begin(CON &&con)-> SGM_DECLTYPE_AUTO(  con.begin()  )
+		template<class CON> static auto end(CON &&con)-> SGM_DECLTYPE_AUTO(  con.end()  )
+	};
+
+	template<>
+	struct itrMethod<false>
+	{
+		template<class CON> static auto begin(CON &&con)-> SGM_DECLTYPE_AUTO(  con.rbegin()  )
+		template<class CON> static auto end(CON &&con)-> SGM_DECLTYPE_AUTO(  con.rend()  )
+	};
+};
+
+
+template<bool FWD, class FS>
+struct sgm::ht12::_Fold_impl<true, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> : _Fold_Helper
+{
+	template<class CON, class FUNC, class res_t>
+	static auto calc(CON &&con, FUNC &&func, res_t &&res)-> res_t
+	{
+		return
+		Accumulate
+		(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
+		,	Forward<FUNC>(func), Forward<res_t>(res)
+		);
+	}
+};
+
+
+template<bool FWD, class FS>
+struct sgm::ht12::_Fold_impl<false, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> : _Fold_Helper
+{
+	template<class CON, class FUNC>
+	static auto calc(CON &&con, FUNC &&func, None)
+	->	Decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
+	{
+		auto const bi = itrMethod<FWD>::begin(con), ei = itrMethod<FWD>::end(con);
+
+		assert(bi != ei && L"the container has nothing to fold.\n");
+
+		return Accumulate( Next(bi), ei, Forward<FUNC>(func), *bi );
+	}
+};
+
+
+template<bool FWD, class FS>
+struct sgm::ht12::_Fold_impl<false, FWD, FS, sgm::ht12::_impl_Mode::MULTI_THREAD> : _Fold_Helper
+{
+private:
+	template<class CON, class FUNC>
+	static auto _Seq_Fold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+	(
+		_Fold_impl<false, FWD, FS, _impl_Mode::SEQUANCIAL>::calc
+		(	Forward<CON>(con), Forward<FUNC>(func), none
+		)		
+	)
+
+public:
+	template
+	<	class CON, class FUNC
+	,	class res_t = Decay_t<  decltype(*Declval< Decay_t<CON> >().begin())  >
+	>
+	static auto calc(CON &&con, FUNC &&func, None)-> res_t
+	{
+		auto const tasker = Satisfying_Flag_t<is_Par, FS>();
+
+		if(con.size() <= tasker.number_of_task())
+			return _Seq_Fold( Forward<CON>(con), Forward<FUNC>(func) );
+		else
+		{
+			Serial<res_t> sum( static_cast<size_t>(tasker.number_of_task()), *con.begin() );
+
+			tasker
+			(	con.size()
+			,	[&con, &func, &sum]
+				(	size_t const idx_begin, size_t const idx_end, unsigned const task_id
+				)
+				{	
+					auto const 
+						bi = Next(con.begin(), idx_begin),
+						bi_1 = Next(bi), 
+						ei = Next(bi, idx_end - idx_begin);
+					 
+					sum[task_id] = Accumulate(bi_1, ei, func, *bi);
+				}
+			);
+
+			return _Seq_Fold( sum, Forward<FUNC>(func) );
+		}
+	}
+};
+
+
+template<bool FWD, class FS>
+struct sgm::ht12::_Fold_impl<true, FWD, FS, sgm::ht12::_impl_Mode::MULTI_THREAD> : _Fold_Helper
+{
+private:
+	template<bool> struct _Last_fold;
+
+	template<>
+	struct _Last_fold<true> : No_Making
+	{
+		template<class FUNC, class T1, class T2>
+		static auto calc(FUNC &&func, T1 &&t1, T2 &&t2)
+		->	SGM_DECLTYPE_AUTO(  func( Forward<T1>(t1), Forward<T2>(t2) )  )
+	};
+
+	template<>
+	struct _Last_fold<false> : No_Making
+	{
+		template<class FUNC, class T1, class T2>
+		static auto calc(FUNC &&func, T1 &&t1, T2 &&t2)
+		->	SGM_DECLTYPE_AUTO(  func( Forward<T2>(t2), Forward<T1>(t1) )  )
+	};
+
+
+public:
+	template<class CON, class FUNC, class res_t>
+	static auto calc(CON &&con, FUNC &&func, res_t &&res)-> res_t
+	{
+		static_assert
+		(	is_Convertible< res_t, Decay_t<decltype(*con.begin())> >::value
+		,	"for parallelization, folding function should be asocciative."
+		);
+
+		return 
+		_Last_fold<FWD>::calc
+		(	func, Forward<res_t>(res)
+		,	_Fold_impl<false, FWD, FS, _impl_Mode::MULTI_THREAD>::calc
+			(	Forward<CON>(con), func, none
+			)
+		);
+	}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 namespace sgm
 {
 	namespace ht12
@@ -309,7 +517,53 @@ namespace sgm
 		->	Filter_range< FlagSet<FLAGS...>, RG&&, FN&&, !is_immutable<RG>::value >
 		{
 			return {Forward<RG>(rg), Forward<FN>(fn)};
-		}		
+		}	
+		
+
+		template
+		<	class...FLAGS, class CON, class FUNC, class init_t
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto Fold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
+		(
+			_Fold_impl< true, true, FlagSet<FLAGS...> >::calc
+			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
+			)
+		)
+		
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto Fold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+		(
+			_Fold_impl< false, true, FlagSet<FLAGS...> >::calc
+			(	Forward<CON>(con), Forward<FUNC>(func), none
+			)
+		)
+		
+		
+		template
+		<	class...FLAGS, class CON, class FUNC, class init_t
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto rFold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
+		(
+			_Fold_impl< true, false, FlagSet<FLAGS...> >::calc
+			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
+			)
+		)
+		
+		template
+		<	class...FLAGS, class CON, class FUNC
+		,	class = Guaranteed_t< is_iterable<CON>::value >
+		>
+		static auto rFold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+		(
+			_Fold_impl< false, false, FlagSet<FLAGS...> >::calc
+			(	Forward<CON>(con), Forward<FUNC>(func), none
+			)
+		)
 
 	}
 }
