@@ -128,6 +128,8 @@ void test_ht12::Plait_Test()
 		};
 
 	sgm::spec::is_True(  are_same_ranges( sgm::ht12::Plait(sr1, sr2, sr3), ans1 )  );
+
+	//auto const sr = sgm::ht12::cPlait(sr1, sr2, sr3).eval();
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

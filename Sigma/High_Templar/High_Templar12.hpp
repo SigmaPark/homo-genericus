@@ -533,10 +533,8 @@ private:
 	struct _Deref<0>
 	{
 		template<class ME, class...ARGS>
-		static auto calc(ME&, ARGS&&...args)-> Family< Alephless_t<ARGS>... >
-		{  
-			return Family< Alephless_t<ARGS>... >( Forward<ARGS>(args)... );  
-		}
+		static auto calc(ME&, ARGS&&...args)
+		->	Family< Alephless_t<ARGS>... >{  return { Forward<ARGS>(args)... };  }
 	};
 
 
@@ -681,6 +679,7 @@ public:
 	(	Check_All<is_iterable>::template for_all<CS...>::value, "iterable types are expected."
 	);
 
+
 	_cPlait(CS...args) : _fam(args...), _size( _Get_Size<>::of(*this) ){}
 
 	auto cbegin() const-> _iter_t{  return _Get_iter<true>::of(*this);  }
@@ -690,6 +689,12 @@ public:
 	auto end() const{  return cend();  }
 
 	auto size() const{  return _size;  }
+
+
+	using value_type = Decay_t<decltype(*Declval<_iter_t>())>;
+
+	auto eval() const-> Serial<value_type>{  return {begin(), end()};  }
+	operator Serial<value_type>() const{  return eval();  }
 };
 
 
@@ -705,6 +710,12 @@ public:
 	
 	auto begin()-> _iter_t{  return _cz::template _Get_iter<true>::of(*this);  }
 	auto end()-> _iter_t{  return _cz::template _Get_iter<false>::of(*this);  }
+
+
+	using value_type = Decay_t<decltype(*Declval<_iter_t>())>;
+
+	auto eval() const-> Serial<value_type>{  return {begin(), end()};  }
+	operator Serial<value_type>() const{  return eval();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -841,6 +852,53 @@ public:
 	=	sgm::Selective_t< sgm::is_immutable<_deref_t>::value, value_type const, value_type >*;
 
 	using reference = sgm::Pointerless_t<pointer>&;
+};
+
+
+template<bool M, class FAM>
+struct std::iterator_traits< sgm::ht12::Plait_iterator<FAM, M> >
+{
+private:
+	struct _FAM_trait;
+
+public:
+	using iterator_category = typename _FAM_trait::template tag_t<FAM>;
+	using value_type 
+	=	sgm::Decay_t<  decltype(*sgm::Declval< sgm::ht12::Plait_iterator<FAM, M> >())  >;
+	
+	using difference_type = ptrdiff_t;
+	using pointer = sgm::Selective_t<M, value_type, value_type const>*;
+	using reference = sgm::Pointerless_t<pointer>&;	
+};
+
+
+template<bool M, class FAM>
+struct std::iterator_traits< sgm::ht12::Plait_iterator<FAM, M> >::_FAM_trait : sgm::No_Making
+{
+private:
+	template<class...ITRS>
+	using _tag_t
+	=	sgm::Selective_t
+		<	sgm::Check_All<sgm::is_random_access_iterator>::template for_all<ITRS...>::value 
+		,	std::random_access_iterator_tag
+		,	sgm::Selective_t
+			<	sgm::Check_All<sgm::Has_Operator_Post_Decrease>::template for_all<ITRS...>::value
+			,	std::bidirectional_iterator_tag
+			,	std::forward_iterator_tag
+			>
+		>;	
+
+	template
+	<	class...ITRS
+	,	class
+		=	sgm::Guaranteed_t
+			<	sgm::Check_All<sgm::is_iterator>::template for_all<ITRS...>::value 
+			>
+	>
+	/* Declaration Only */ static auto _tag(sgm::Family<ITRS...>) noexcept-> _tag_t<ITRS...>;
+
+public:
+	template<class FAM>  using tag_t = decltype( _tag(sgm::Declval<FAM>()) );	
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
