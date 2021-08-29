@@ -183,6 +183,16 @@ static void Test08()
 }
 
 
+static void Test09()
+{
+	Specimen s1 = -2, s2 = 30;
+
+	Tie(s1, s2) = Forward_as_Family(25, as_it_is);
+
+	is_True( s1 == Specimen(25) && s2 == 30 );
+}
+
+
 #include "Test_Family.hpp"
 #include <iostream>
 
@@ -199,6 +209,7 @@ void Test_sgm_Family::test()
 		::Test06();
 		::Test07();
 		::Test08();
+		::Test09();
 
 		std::wcout << L"Family Test Complete.\n";
 	}

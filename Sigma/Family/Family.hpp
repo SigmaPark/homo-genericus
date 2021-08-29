@@ -24,6 +24,9 @@ namespace sgm
 	struct is_Family;
 
 
+	enum class _As_it_is_t{} constexpr as_it_is{};
+
+
 	template<class...TYPES>
 	static auto Make_Family(TYPES...types)-> Family<TYPES...>;
 
@@ -269,6 +272,18 @@ public:
 	{
 		_val = Move_if< is_RvalueReference<FAM&&>::value >::cast(fam._val);
 		static_cast<_upper_t&>(*this) = CopiedRef_t<FAM&&, FAM_UPPER>(fam);
+
+		return *this;
+	}
+
+
+	template
+	<	class Aii, class...ARGS
+	,	class = Enable_if_t<  is_Same< Decay_t<Aii>, _As_it_is_t >::value  >
+	>
+	auto operator=(Family<Aii, ARGS...> &&fam)-> Family&
+	{
+		static_cast<_upper_t&>(*this) = static_cast< Family<ARGS...>&& >( Move(fam) );
 
 		return *this;
 	}
