@@ -34,38 +34,55 @@ private:
 	using type = Decay_t<  decltype( *Declval<CON>().begin() )  >;
 
 public:
-	bool operator()(type const& t1, type const& t2) const{  return t1 < t2;  }
+	bool operator()(type const &t1, type const &t2) const{  return t1 < t2;  }
 };
 
 
-#include <list>
-#include <algorithm>
+#include <queue>
 
 
 template<class CON, class FUNC, class>
-static auto sgm::ht::Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp)
+static auto sgm::ht::Rankers(CON &&con, size_t const nof_ranker, FUNC &&comp)
 ->	Serial< Decay_t<decltype(*con.begin())> >
 {
 	using elem_t = Decay_t<decltype( *con.begin() )>;
 
-	size_t const k = std::min(nof_ranker, con.size());
-	std::list<elem_t> kset;
-	auto itr = con.begin();
+	size_t const nof_elem = con.size();
 
-	for(size_t d = k;  d-->0;  ++itr)
-		kset.emplace_back(*itr);
+	if(nof_elem == 0)
+		return {};
+	else 
+	{
+		auto pcomp_f
+		=	[&comp](elem_t const *p1, elem_t const *p2)-> bool{  return comp(*p1, *p2);  };
 
-	kset.sort(comp);
+		std::priority_queue< elem_t const*, std::vector<elem_t const*>, decltype(pcomp_f) > 
+			prq(pcomp_f);
 
-	if(k == nof_ranker)
-		for(;  itr != con.end();  ++itr)
-			if( comp(*itr, kset.back()) )
-				kset.emplace( std::lower_bound(kset.begin(), kset.end(), *itr, comp), *itr ),
-				kset.pop_back();
+		size_t const k = std::min(nof_ranker, nof_elem);
+		auto itr = con.begin();
 
-	return Serial<elem_t>(kset);
+		for(size_t d = k;  d-->0;  itr++)
+			prq.emplace(&*itr);
+
+		if(k == nof_ranker)
+			for(;  itr != con.end();  itr++)
+				if( pcomp_f(&*itr, prq.top()) )
+					prq.pop(),  prq.emplace(&*itr);
+
+		Serial<elem_t const*> ptr_buff(k);
+
+		while(!prq.empty())
+			ptr_buff >> prq.top(),  prq.pop();
+
+		Serial<elem_t> res(k);
+
+		for(auto ritr = ptr_buff.rbegin();  ritr != ptr_buff.rend();)
+			res >> **ritr++;
+
+		return res;
+	}
 }
-
 
 
 #endif
