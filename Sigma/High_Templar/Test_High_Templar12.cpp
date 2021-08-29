@@ -1,6 +1,5 @@
-#include "High_Templar12.hpp"
+#include "High_Templar.hpp"
 #include "..\Specification\Specification.hpp"
-#include "Countable.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Avatar\Avatar.hpp"
 
@@ -18,6 +17,7 @@ namespace test_ht12
 	static void FilterTest();
 	static void FoldTest();
 	static void Plait_Test();
+	static void Plait_loop_Test();
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -128,8 +128,21 @@ void test_ht12::Plait_Test()
 		};
 
 	sgm::spec::is_True(  are_same_ranges( sgm::ht12::Plait(sr1, sr2, sr3), ans1 )  );
+}
 
-	//auto const sr = sgm::ht12::cPlait(sr1, sr2, sr3).eval();
+
+void test_ht12::Plait_loop_Test()
+{
+	std::initializer_list<int> const iL{1, 3, 5, 7};
+	sgm::Serial<int, 4> const sr1{2, 4, 6, 8};
+	sgm::Serial<int> sr2{-3, -2, -1, 0};
+
+	for( auto &&fam : sgm::ht12::Plait(iL, sr1, sr2) )
+		fam.get<2>() += fam.get<0>() + fam.get<1>();
+
+	sgm::spec::is_True
+	(	are_same_ranges(sr2, std::initializer_list<int>{0, 5, 10, 15})
+	);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -148,6 +161,7 @@ void Test_sgm_High_Templar12::test()
 		FilterTest();
 		FoldTest();
 		Plait_Test();
+		Plait_loop_Test();
 
 		std::wcout << L"High Templar 12 Test Complete.\n";
 	}

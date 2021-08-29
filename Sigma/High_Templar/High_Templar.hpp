@@ -4,5 +4,5 @@
 
 #include "Countable.hpp"
 
-#include "High_Templar11.hpp"
+//#include "High_Templar11.hpp"		// deprecated
 #include "High_Templar12.hpp"
