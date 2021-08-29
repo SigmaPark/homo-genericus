@@ -137,6 +137,17 @@ void test_ht12::Plait_loop_Test()
 	sgm::Serial<int, 4> const sr1{2, 4, 6, 8};
 	sgm::Serial<int> sr2{-3, -2, -1, 0};
 
+	static_assert
+	(	sgm::is_Same
+		<	typename 
+			std::iterator_traits
+			<	sgm::Decay_t<decltype( sgm::ht12::Plait(iL, sr1, sr2).begin() )>
+			>::	iterator_category
+		,	std::random_access_iterator_tag
+		>::	value
+	,	"iterator_traits tracking failed."
+	);
+
 	for( auto &&fam : sgm::ht12::Plait(iL, sr1, sr2) )
 		fam.get<2>() += fam.get<0>() + fam.get<1>();
 

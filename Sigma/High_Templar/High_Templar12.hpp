@@ -21,9 +21,6 @@ namespace sgm
 		template<class ITR, class FILT, class DECO>  class Filter_iterator;
 		template<class FS, class RG, class FN, bool ASK_MUTABLE>  class Filter_range;
 
-		template<class FS, class...RGS>
-		class Plait_range;
-
 
 		template<class T, class maybe_FLAG_SET> struct _Decorated;
 
@@ -34,10 +31,8 @@ namespace sgm
 		enum : unsigned{ AUTO_OR = par::Nof_HW_Core::DYNAMIC };		
 		enum class _impl_Mode{ SEQUANCIAL, MULTI_THREAD };
 
+		template<unsigned NOF_TASK1 = AUTO_OR, unsigned NOF_TASK2 = NOF_TASK1>  struct Par;
 		template<class maybe_Par> struct is_Par;
-
-		template<unsigned NOF_TASK1 = AUTO_OR, unsigned NOF_TASK2 = NOF_TASK1>
-		struct Par;
 
 
 		template
@@ -52,10 +47,24 @@ namespace sgm
 		struct _Fold_Helper;
 
 
-		template<class...CS>  class _cPlait;
-		template<class...CS>  class _Plait;
+		template<class...CS>  class cPlait_range;
+		template<class...CS>  class Plait_range;
 
 		template<class FAM, bool IS_MUTABLE>  class Plait_iterator;
+
+
+		template<class RG> 
+		static auto constexpr size(RG const &range)-> size_t;
+
+
+		template
+		<	class FLAG_SET
+		,	_impl_Mode
+			=	is_Selected_Flag<par::_Parallel_Helper, FLAG_SET>::value
+				?	_impl_Mode::MULTI_THREAD
+				:	_impl_Mode::SEQUANCIAL
+		>
+		struct _Serial_Evaluator;
 
 	}
 }
@@ -103,6 +112,10 @@ struct sgm::ht12::Par<sgm::ht12::AUTO_OR, N> : par::Parallel<>
 template<>
 struct sgm::ht12::Par<sgm::ht12::AUTO_OR, 0> 
 :	par::Parallel<>{  Par() : par::Parallel<>(par::Nof_HW_Core::When_Fails::THROW){}  };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -426,6 +439,7 @@ private:
 		)		
 	)
 
+
 public:
 	template
 	<	class CON, class FUNC
@@ -434,15 +448,16 @@ public:
 	static auto calc(CON &&con, FUNC &&func, None)-> res_t
 	{
 		auto const tasker = Satisfying_Flag_t<is_Par, FS>();
+		auto const nof_elem = size(con);
 
-		if(con.size() <= tasker.number_of_task())
+		if(nof_elem <= tasker.number_of_task())
 			return _Seq_Fold( Forward<CON>(con), Forward<FUNC>(func) );
 		else
 		{
 			Serial<res_t> sum( static_cast<size_t>(tasker.number_of_task()), *con.begin() );
 
 			tasker
-			(	con.size()
+			(	nof_elem
 			,	[&con, &func, &sum]
 				(	size_t const idx_begin, size_t const idx_end, unsigned const task_id
 				)
@@ -587,7 +602,7 @@ public:
 
 
 template<class...CS>  
-class sgm::ht12::_cPlait
+class sgm::ht12::cPlait_range
 {
 protected:
 	Family<CS...> _fam;
@@ -656,14 +671,14 @@ private:
 	struct _Get_Size<0, IS_RAI, false>
 	{
 		template<class ME>  
-		static auto of(ME &me)-> size_t{  return std::get<0>(me._fam).size();  }
+		static auto of(ME &me)-> size_t{  return ht12::size( std::get<0>(me._fam) );  }
 	};
 
 	template<int _S>
 	struct _Get_Size<_S, true, true>
 	{
 		template<class ME>
-		static auto of(ME &me)-> size_t{  return std::get<_S-1>(me._fam).size();  }
+		static auto of(ME &me)-> size_t{  return ht12::size( std::get<_S-1>(me._fam) );  }
 	};
 
 	template<int _S>
@@ -680,7 +695,7 @@ public:
 	);
 
 
-	_cPlait(CS...args) : _fam(args...), _size( _Get_Size<>::of(*this) ){}
+	cPlait_range(CS...args) : _fam(args...), _size( _Get_Size<>::of(*this) ){}
 
 	auto cbegin() const-> _iter_t{  return _Get_iter<true>::of(*this);  }
 	auto begin() const{  return cbegin();  }
@@ -699,14 +714,14 @@ public:
 
 
 template<class...CS>
-class sgm::ht12::_Plait : public _cPlait<CS...>
+class sgm::ht12::Plait_range : public cPlait_range<CS...>
 {
-	using _cz = _cPlait<CS...>;
+	using _cz = cPlait_range<CS...>;
 	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS>().begin()) >...  >;
 	using _iter_t = Plait_iterator<_itr_fam_t, true>;
 
 public:
-	_Plait(CS...args) : _cz(args...){}
+	Plait_range(CS...args) : _cz(args...){}
 	
 	auto begin()-> _iter_t{  return _cz::template _Get_iter<true>::of(*this);  }
 	auto end()-> _iter_t{  return _cz::template _Get_iter<false>::of(*this);  }
@@ -741,10 +756,7 @@ namespace sgm
 		}	
 		
 
-		template
-		<	class...FLAGS, class CON, class FUNC, class init_t
-		,	class = Guaranteed_t< is_iterable<CON>::value >
-		>
+		template<class...FLAGS, class CON, class FUNC, class init_t>
 		static auto Fold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, true, FlagSet<FLAGS...> >::calc
@@ -752,10 +764,7 @@ namespace sgm
 			)
 		)
 		
-		template
-		<	class...FLAGS, class CON, class FUNC
-		,	class = Guaranteed_t< is_iterable<CON>::value >
-		>
+		template<class...FLAGS, class CON, class FUNC>
 		static auto Fold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, true, FlagSet<FLAGS...> >::calc
@@ -764,10 +773,7 @@ namespace sgm
 		)
 		
 		
-		template
-		<	class...FLAGS, class CON, class FUNC, class init_t
-		,	class = Guaranteed_t< is_iterable<CON>::value >
-		>
+		template<class...FLAGS, class CON, class FUNC, class init_t>
 		static auto rFold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, false, FlagSet<FLAGS...> >::calc
@@ -775,10 +781,7 @@ namespace sgm
 			)
 		)
 		
-		template
-		<	class...FLAGS, class CON, class FUNC
-		,	class = Guaranteed_t< is_iterable<CON>::value >
-		>
+		template<class...FLAGS, class CON, class FUNC>
 		static auto rFold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, false, FlagSet<FLAGS...> >::calc
@@ -790,13 +793,13 @@ namespace sgm
 		template<class...ARGS>
 		static auto Plait(ARGS&&...args)-> SGM_DECLTYPE_AUTO
 		(
-			_Plait< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )  
+			Plait_range< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )  
 		)
 
 		template<class...ARGS>
 		static auto cPlait(ARGS&&...args)-> SGM_DECLTYPE_AUTO
 		(
-			_cPlait< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )
+			cPlait_range< Alephless_t<ARGS>... >( Forward<ARGS>(args)... )
 		)
 
 	}
@@ -900,6 +903,12 @@ private:
 public:
 	template<class FAM>  using tag_t = decltype( _tag(sgm::Declval<FAM>()) );	
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class RG>
+auto constexpr sgm::ht12::size(RG const &range)
+->	size_t{  return std::distance(range.begin(), range.end());  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
