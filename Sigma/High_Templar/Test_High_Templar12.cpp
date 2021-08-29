@@ -56,10 +56,10 @@ void test_ht12::MorphTest()
 		)
 	);
 
-	sgm::Serial<double> const msr
+	auto const msr
 	=	sgm::ht12::Morph
 		(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
-		);
+		) . eval< sgm::ht12::Par<2> >();
 
 	sgm::spec::is_True
 	(	are_same_ranges(msr, answer)

@@ -115,7 +115,44 @@ struct sgm::ht12::Par<sgm::ht12::AUTO_OR, 0>
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class FLAG_SET>
+struct sgm::ht12::_Serial_Evaluator<FLAG_SET, sgm::ht12::_impl_Mode::SEQUANCIAL> : No_Making
+{
+	template<  class RG, class elem_t = Decay_t< decltype(*Declval<RG>().begin()) >  >
+	static auto calc(RG &&rg)-> Serial<elem_t>{  return {rg.begin(), rg.end()};  }
+};
 
+
+template<class FLAG_SET>
+struct sgm::ht12::_Serial_Evaluator<FLAG_SET, sgm::ht12::_impl_Mode::MULTI_THREAD> : No_Making
+{
+	template<  class RG, class elem_t = Decay_t< decltype(*Declval<RG>().begin()) >  >
+	static auto calc(RG &&rg)-> Serial<elem_t>
+	{
+		size_t const nof_elem = ht12::size(rg);
+
+		if(nof_elem == 0)
+			return {};
+		else
+		{
+			Serial<elem_t> res(nof_elem, *rg.begin());
+
+			Satisfying_Flag_t<is_Par, FLAG_SET>()
+			(	nof_elem
+			,	[&rg, &res](size_t idx_begin, size_t const idx_end, unsigned const)
+				{
+					for
+					(	auto itr = Next(rg.begin(), idx_begin)
+					;	idx_begin < idx_end
+					;	res[idx_begin++] = *itr++
+					);
+				}
+			);
+
+			return res;
+		}
+	}
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -166,8 +203,8 @@ public:
 	auto operator[](ptrdiff_t const d) const-> Y{  return (*_pfn)( *(_xitr + d) );  }
 	auto operator[](ptrdiff_t const d)-> Y{  return (*_pfn)( *(_xitr + d) );  }
 
-	auto operator+(ptrdiff_t const d) const-> _Self{  return{_xitr + d, _pfn};  }
-	auto operator-(ptrdiff_t const d) const-> _Self{  return{_xitr - d, _pfn};  }
+	auto operator+(ptrdiff_t const d) const-> _Self{  return{_xitr + d, *_pfn};  }
+	auto operator-(ptrdiff_t const d) const-> _Self{  return{_xitr - d, *_pfn};  }
 	auto operator+=(ptrdiff_t const d)-> _Self&{  return _xitr += d,  *this;  }
 	auto operator-=(ptrdiff_t const d)-> _Self&{  return _xitr -= d,  *this;  }
 
@@ -228,7 +265,11 @@ public:
 	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
 	auto rend()-> _rmitr_t{  return {_rg.rend(), _fn};  }
 
-	auto eval() const-> Serial<value_type>{  return {begin(), end()};  }
+
+	template<class...FLAGS>
+	auto eval() const
+	->	Serial<value_type>{  return _Serial_Evaluator< FlagSet<FLAGS...> >::calc(*this);  }
+
 	operator Serial<value_type>() const{  return eval();  }
 
 private:
@@ -708,7 +749,10 @@ public:
 
 	using value_type = Decay_t<decltype(*Declval<_iter_t>())>;
 
-	auto eval() const-> Serial<value_type>{  return {begin(), end()};  }
+	template<class...FLAGS>
+	auto eval() const
+	->	Serial<value_type>{  return _Serial_Evaluator< FlagSet<FLAGS...> >::calc(*this);  }
+
 	operator Serial<value_type>() const{  return eval();  }
 };
 
@@ -729,7 +773,10 @@ public:
 
 	using value_type = Decay_t<decltype(*Declval<_iter_t>())>;
 
-	auto eval() const-> Serial<value_type>{  return {begin(), end()};  }
+	template<class...FLAGS>
+	auto eval() const
+	->	Serial<value_type>{  return _Serial_Evaluator< FlagSet<FLAGS...> >::calc(*this);  }
+
 	operator Serial<value_type>() const{  return eval();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -815,7 +862,7 @@ struct std::iterator_traits< sgm::ht12::Morph_iterator<ITR, FN, DECO> >
 {
 private:
 	using _mitr_t = sgm::ht12::Morph_iterator<ITR, FN, DECO>;
-	using _deref_t = decltype(*sgm::Declval<_mitr_t>().begin());
+	using _deref_t = decltype(*sgm::Declval<_mitr_t>());
 
 public:
 	using iterator_category
@@ -844,7 +891,7 @@ struct std::iterator_traits< sgm::ht12::Filter_iterator<ITR, FN, DECO> >
 {
 private:
 	using _fitr_t = sgm::ht12::Filter_iterator<ITR, FN, DECO>;
-	using _deref_t = decltype(*sgm::Declval<_fitr_t>().begin());
+	using _deref_t = decltype(*sgm::Declval<_fitr_t>());
 
 public:
 	using iterator_category = forward_iterator_tag;
