@@ -328,6 +328,15 @@ namespace sgm
 	:	Selective_t< Has_Operator_index<T>::value, is_iterator<T>, Has_Operator_index<T> >{};
 
 
+	template<class T>
+	struct is_bidirectional_iterator
+	:	Boolean_type
+		<	is_random_access_iterator<T>::value
+		||	(is_iterator<T>::value && Has_Operator_Post_Decrease<T>::value)
+		>
+	{};
+
+
 	template<class CON, class T = void>
 	struct is_iterable
 	{

@@ -2,6 +2,7 @@
 #include "..\Specification\Specification.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 #include "..\Avatar\Avatar.hpp"
+#include <set>
 
 
 namespace test_ht12
@@ -64,6 +65,11 @@ void test_ht12::MorphTest()
 	sgm::spec::is_True
 	(	are_same_ranges(msr, answer)
 	);
+
+	auto const msr2
+	=	sgm::ht12::Morph
+		(	std::set<int>{1,2,3,4,5}, [](int x)-> double{  return -x;  } 
+		) .	eval();
 }
 
 

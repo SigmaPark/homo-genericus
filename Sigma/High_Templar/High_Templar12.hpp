@@ -219,6 +219,16 @@ public:
 	ITR _xitr;
 	FN *_pfn;
 };
+
+
+template<class ITR, class...ARGS>
+struct sgm::is_random_access_iterator< sgm::ht12::Morph_iterator<ITR, ARGS...> >
+:	is_random_access_iterator<ITR>{};
+
+
+template<class ITR, class...ARGS>
+struct sgm::is_bidirectional_iterator< sgm::ht12::Morph_iterator<ITR, ARGS...> >
+:	is_bidirectional_iterator<ITR>{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -875,7 +885,7 @@ public:
 		<	sgm::is_random_access_iterator<ITR>::value
 		,	random_access_iterator_tag
 		,	sgm::Selective_t
-			<	sgm::Has_Operator_Post_Decrease<ITR>::value
+			<	sgm::is_bidirectional_iterator<ITR>::value
 			,	bidirectional_iterator_tag
 			,	forward_iterator_tag
 			>

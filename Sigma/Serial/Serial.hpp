@@ -109,7 +109,7 @@ struct sgm::_iterator_Distance<ITR, false> : No_Making
 	{
 		size_t dist = 0;
 
-		for(;  bi != ei;  ++bi,  ++dist);
+		for(;  bi != ei;  bi++,  ++dist);
 
 		return dist;
 	}
