@@ -239,8 +239,8 @@ private:
 
 	using _norefFN_t = Referenceless_t<FN>;
 
-	using _cmitr_t = Morph_iterator<_cxitr_t, _norefFN_t, _Deco>;
-	using _crmitr_t = Morph_iterator<_crxitr_t, _norefFN_t, _Deco>;
+	using _cmitr_t = Morph_iterator<_cxitr_t, _norefFN_t const, _Deco>;
+	using _crmitr_t = Morph_iterator<_crxitr_t, _norefFN_t const, _Deco>;
 	using _mitr_t = Morph_iterator<_xitr_t, _norefFN_t, _Deco>;
 	using _rmitr_t = Morph_iterator<_rxitr_t, _norefFN_t, _Deco>;
 
@@ -692,41 +692,42 @@ private:
 	};
 
 
+	template<class RG>
+	struct _is_random_access_range
+	:	is_random_access_iterator< decltype(Declval<RG>().begin()) >{};
+
+
 	template
-	<	int _S = sizeof...(CS) == 0 ? -1 : int( sizeof...(CS) )
-	,	bool
-		=	is_random_access_iterator
-			<	decltype(Declval< Nth_t<_S-1, CS...> >().begin())
-			>::	value
-	,	bool = (_S > 0)
+	<	bool = sizeof...(CS) != 0
+	,	bool = Check_All<_is_random_access_range>::template for_any<CS...>::value
 	>
 	struct _Get_Size;
 
-	template<bool IS_RAI>
-	struct _Get_Size<-1, IS_RAI, false>
+
+	template<>
+	struct _Get_Size<false, false>
 	{
 		template<class ME>  static auto of(ME&)-> size_t{  return 0;  }
 	};
 
-	template<bool IS_RAI>
-	struct _Get_Size<0, IS_RAI, false>
+	template<>
+	struct _Get_Size<true, false>
 	{
-		template<class ME>  
+		template<class ME>
 		static auto of(ME &me)-> size_t{  return ht12::size( std::get<0>(me._fam) );  }
 	};
 
-	template<int _S>
-	struct _Get_Size<_S, true, true>
+	template<>
+	struct _Get_Size<true, true>
 	{
-		template<class ME>
-		static auto of(ME &me)-> size_t{  return ht12::size( std::get<_S-1>(me._fam) );  }
-	};
+	private:
+		using _random_access_range_t
+		=	typename Satisfying<_is_random_access_range>::template among<CS...>::type;
 
-	template<int _S>
-	struct _Get_Size<_S, false, true>
-	{
+	public:
 		template<class ME>
-		static auto of(ME &me)-> size_t{  return _Get_Size<_S-1>::of(me);  }
+		static auto of(ME &me)
+		->	size_t{  return ht12::size( std::get<_random_access_range_t>(me._fam) );  }
 	};
 
 
@@ -789,7 +790,9 @@ namespace sgm
 
 		template<class...FLAGS, class RG, class FN>
 		static auto Morph(RG &&rg, FN &&fn)
-		->	Morph_range< FlagSet<FLAGS...>, RG&&, FN&&, !is_immutable<RG>::value >
+		->	Morph_range
+			<	FlagSet<FLAGS...>, Alephless_t<RG>, Alephless_t<FN>, !is_immutable<RG>::value
+			>
 		{
 			return {Forward<RG>(rg), Forward<FN>(fn)};
 		}
@@ -797,7 +800,9 @@ namespace sgm
 
 		template<class...FLAGS, class RG, class FN>
 		static auto Filter(RG &&rg, FN &&fn)
-		->	Filter_range< FlagSet<FLAGS...>, RG&&, FN&&, !is_immutable<RG>::value >
+		->	Filter_range
+			<	FlagSet<FLAGS...>, Alephless_t<RG>, Alephless_t<FN>, !is_immutable<RG>::value
+			>
 		{
 			return {Forward<RG>(rg), Forward<FN>(fn)};
 		}	
