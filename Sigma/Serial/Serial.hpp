@@ -119,8 +119,8 @@ public:
 		return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 	}
 
-	auto operator*() const-> value_t const&	{  return (*this)[0];  }
-	auto operator*()-> value_t&			{  return (*this)[0];  }
+	auto operator*() const-> value_t const&{  return (*this)[0];  }
+	auto operator*()-> value_t&{  return (*this)[0];  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -228,15 +228,15 @@ class sgm::Serial
 
 protected:
 	template
-	<	bool TEMP_HOST = false, class ITR, class CON
-	,	class RES_ITR = decltype( Begin(Declval<CON>()) )
-	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
+	<	bool TEMP_HOST = false, class ITR, class RG
+	,	class RES_ITR = decltype( Begin(Declval<RG>()) )
+	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<RG>::value >  
 	>
-	static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> Dual_iterator<ITR, RES_ITR>
+	static auto _copy_AMAP(ITR bi, ITR const ei, RG &rg)-> Dual_iterator<ITR, RES_ITR>
 	{
-		RES_ITR itr = Begin(con);
+		RES_ITR itr = Begin(rg);
 
-		for( ;  bi != ei && itr != End(con);  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
+		for( ;  bi != ei && itr != End(rg);  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
 
 		return Dual_iteration(bi, itr);
 	}
@@ -259,7 +259,7 @@ public:
 
 	auto operator=(Serial const&)-> Serial& = default;
 
-	auto operator=(Serial&& sr) noexcept-> Serial&
+	auto operator=(Serial &&sr) noexcept-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -270,16 +270,16 @@ public:
 		return *this;
 	}
 
-	auto cdata() const-> T const*	{  return _core;  }
-	auto data() const-> T const*	{  return cdata();  }
-	auto data()-> T*				{  return _core;  }
+	auto cdata() const-> T const*{  return _core;  }
+	auto data() const-> T const*{  return cdata();  }
+	auto data()-> T*{  return _core;  }
 
-	auto operator[](size_t const idx) const-> T const&		{  return _core[idx];  }
-	auto operator[](size_t const idx)-> T&				{  return _core[idx];  }
+	auto operator[](size_t const idx) const-> T const&	{  return _core[idx];  }
+	auto operator[](size_t const idx)-> T&{  return _core[idx];  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	auto size() const-> size_t { return SIZE; }
+	auto size() const-> size_t{  return SIZE;  }
 
 
 	using iter_t = Serial_iterator<T, true, true>;
@@ -287,55 +287,53 @@ public:
 	using riter_t = Serial_iterator<T, true, false>;
 	using criter_t = Serial_iterator<T, false, false>;
 
-	auto cbegin() const-> citer_t	{  return citer_t(_core, 0);  }
-	auto begin() const-> citer_t	{  return cbegin();  }
-	auto begin()-> iter_t			{  return iter_t(_core, 0);  }
+	auto cbegin() const-> citer_t{  return citer_t(_core, 0);  }
+	auto begin() const-> citer_t{  return cbegin();  }
+	auto begin()-> iter_t{  return iter_t(_core, 0);  }
 
-	auto crend() const-> criter_t	{  return criter_t(_core, 0);  }
-	auto rend() const-> criter_t	{  return crend();  }
-	auto rend()-> riter_t			{  return riter_t(_core, 0);  }
+	auto crend() const-> criter_t{  return criter_t(_core, 0);  }
+	auto rend() const-> criter_t{  return crend();  }
+	auto rend()-> riter_t{  return riter_t(_core, 0);  }
 
-	auto cend() const-> citer_t		{  return citer_t(_core, SIZE);  }
-	auto end() const-> citer_t			{  return cend();  }
-	auto end()-> iter_t				{  return iter_t(_core, SIZE);  }
+	auto cend() const-> citer_t{  return citer_t(_core, SIZE);  }
+	auto end() const-> citer_t{  return cend();  }
+	auto end()-> iter_t{  return iter_t(_core, SIZE);  }
 
-	auto crbegin() const-> criter_t		{  return criter_t(_core, SIZE);  }
-	auto rbegin() const-> criter_t		{  return crbegin();  }
-	auto rbegin()-> riter_t			{  return riter_t(_core, SIZE);  }
+	auto crbegin() const-> criter_t{  return criter_t(_core, SIZE);  }
+	auto rbegin() const-> criter_t{  return crbegin();  }
+	auto rbegin()-> riter_t{  return riter_t(_core, SIZE);  }
 
 
-	auto front() const-> T const&	{  return *cbegin();  }
-	auto front()-> T&				{  return *begin();  }
+	auto front() const-> T const&{  return *cbegin();  }
+	auto front()-> T&{  return *begin();  }
 
-	auto back() const-> T const&	{  return *crbegin();  }
-	auto back()-> T&				{  return *rbegin();  }
+	auto back() const-> T const&{  return *crbegin();  }
+	auto back()-> T&{  return *rbegin();  }
 
 
 	template
-	<	class CON
+	<	class RG
 	,	class 
 		=	Enable_if_t
-			<	is_iterable<CON>::value
+			<	is_iterable<RG>::value
 			&&	S != srSize::INTERFACE
-			&&	!is_Same< Decay_t<CON>, Serial >::value  
+			&&	!is_Same< Decay_t<RG>, Serial >::value  
 			>
 	> 
-	operator CON() const{  return Decay_t<CON>(begin(), end());  }
+	operator RG() const{  return Decay_t<RG>(begin(), end());  }
 
 
 	template
-	<	class CON
+	<	class RG
 	,	class 
 		=	Enable_if_t
-			<	is_iterable<CON>::value && S != srSize::INTERFACE
-			&&	!is_Same< Decay_t<CON>, Serial >::value  
+			<	is_iterable<RG>::value && S != srSize::INTERFACE
+			&&	!is_Same< Decay_t<RG>, Serial >::value  
 			>
 	> 
-	auto operator=(CON&& con)-> Serial&
+	auto operator=(RG &&rg)-> Serial&
 	{
-		_copy_AMAP< is_RvalueReference<decltype(con)>::value >
-		(	Begin(con), End(con), *this
-		);
+		_copy_AMAP< is_RvalueReference<RG&&>::value >( Begin(rg), End(rg), *this );
 
 		return *this;
 	}
@@ -345,7 +343,7 @@ public:
 	<	class Q
 	,	class = Enable_if_t< S != srSize::INTERFACE && is_Convertible<Q, T>::value >
 	>
-	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
+	auto operator=(std::initializer_list<Q> &&iL)-> Serial&
 	{
 		_copy_AMAP<true>(iL.begin(), iL.end(), *this);
 
@@ -353,7 +351,7 @@ public:
 	}
 
 
-	auto swap(Serial& sr) noexcept-> Serial&
+	auto swap(Serial &sr) noexcept-> Serial&
 	{
 		for
 		(	auto itr = begin(), sitr = sr.begin()
@@ -421,30 +419,28 @@ public:
 
 
 	template
-	<	class CON
+	<	class RG
 	,	class 
-		=	Enable_if_t<  is_iterable<CON>::value && !is_Same< Serial, Decay_t<CON> >::value  >
+		=	Enable_if_t<  is_iterable<RG>::value && !is_Same< Serial, Decay_t<RG> >::value  >
 	>
-	Serial(CON&& con)
+	Serial(RG &&rg)
 	{
-		_alloc( Size(con) ), 
-		_cloning< is_RvalueReference<decltype(con)>::value >
-		(	Begin(con), End(con), capacity()
-		);
+		_alloc( Size(rg) ), 
+		_cloning< is_RvalueReference<RG&&>::value >( Begin(rg), End(rg), capacity() );
 	}
 
 
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
-	Serial(std::initializer_list<Q>&& iL)
+	Serial(std::initializer_list<Q> &&iL)
 	{
 		_alloc(iL.size()),  _cloning<true>(iL.begin(), iL.end(), capacity());
 	}
 
 
-	Serial(Serial const& sr) : Serial(sr.cbegin(), sr.cend()){}
+	Serial(Serial const &sr) : Serial(sr.cbegin(), sr.cend()){}
 
 
-	Serial(Serial&& sr) noexcept : _capacity(sr.capacity()), _size(sr.size())
+	Serial(Serial &&sr) noexcept : _capacity(sr.capacity()), _size(sr.size())
 	{
 		_core = sr._core,  sr._capacity = sr._size = 0,  sr._core = nullptr;
 	}
@@ -466,13 +462,13 @@ public:
 	}
 
 
-	auto operator=(Serial const& sr)-> Serial&
+	auto operator=(Serial const &sr)-> Serial&
 	{
 		return _cloning(sr.cbegin(), sr.cend(), sr.capacity());
 	}
 
 
-	auto operator=(Serial&& sr) noexcept-> Serial&
+	auto operator=(Serial &&sr) noexcept-> Serial&
 	{
 		_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
 		sr._capacity = sr._size = 0,  sr._core = nullptr;
@@ -482,19 +478,19 @@ public:
 
 
 	template
-	<	class CON
+	<	class RG
 	,	class 
-		=	Enable_if_t<  is_iterable<CON>::value && !is_Same< Decay_t<CON>, Serial >::value  >
+		=	Enable_if_t<  is_iterable<RG>::value && !is_Same< Decay_t<RG>, Serial >::value  >
 	>
-	auto operator=(CON&& con)-> Serial&
+	auto operator=(RG &&rg)-> Serial&
 	{
 		return 
-		_cloning< is_RvalueReference<decltype(con)>::value >( Begin(con), End(con), Size(con) );
+		_cloning< is_RvalueReference<RG&&>::value >( Begin(rg), End(rg), Size(rg) );
 	}
 
 
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
-	auto operator=(std::initializer_list<Q>&& iL)-> Serial&
+	auto operator=(std::initializer_list<Q> &&iL)-> Serial&
 	{
 		return _cloning<true>(iL.begin(), iL.end(), iL.size());
 	}
@@ -519,7 +515,7 @@ public:
 
 
 	template<class Q>
-	auto operator>>(Q&& q)-> Serial&{  return emplace_back( Forward<Q>(q) );  }
+	auto operator>>(Q &&q)-> Serial&{  return emplace_back( Forward<Q>(q) );  }
 
 
 	template
@@ -561,7 +557,7 @@ public:
 	auto clear()-> Serial&{  return pop_back_from(Helper::begin());  }
 
 
-	auto swap(Serial& sr) noexcept-> Serial&
+	auto swap(Serial &sr) noexcept-> Serial&
 	{
 		using std::swap;
 
@@ -576,26 +572,26 @@ public:
 	using criter_t = typename Helper::criter_t;
 	using riter_t = typename Helper::riter_t;
 
-	auto cend() const-> citer_t		{  return citer_t(_core, size());  }
-	auto end() const-> citer_t			{  return cend();  }
-	auto end()-> iter_t				{  return iter_t(_core, size());  }
+	auto cend() const-> citer_t{  return citer_t(_core, size());  }
+	auto end() const-> citer_t{  return cend();  }
+	auto end()-> iter_t{  return iter_t(_core, size());  }
 
-	auto crbegin() const-> criter_t		{  return criter_t(_core, size());  }
-	auto rbegin() const-> criter_t		{  return crbegin();  }
-	auto rbegin()-> riter_t			{  return riter_t(_core, size());  }
+	auto crbegin() const-> criter_t{  return criter_t(_core, size());  }
+	auto rbegin() const-> criter_t{  return crbegin();  }
+	auto rbegin()-> riter_t{  return riter_t(_core, size());  }
 
-	auto back() const-> T const&	{  return *crbegin();  }
-	auto back()-> T&				{  return *rbegin();  }
+	auto back() const-> T const&{  return *crbegin();  }
+	auto back()-> T&{  return *rbegin();  }
 
 
 	template
-	<	class CON
+	<	class RG
 	,	class 
 		=	Enable_if_t
-			<	is_iterable<CON>::value && !is_Same< Decay_t<CON>, Serial >::value
+			<	is_iterable<RG>::value && !is_Same< Decay_t<RG>, Serial >::value
 			>
 	> 
-	operator CON() const{  return Decay_t<CON>(Helper::begin(), end());  }
+	operator RG() const{  return Decay_t<RG>(Helper::begin(), end());  }
 };// end of class Serial
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

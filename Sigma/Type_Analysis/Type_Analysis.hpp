@@ -214,8 +214,8 @@ namespace sgm
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	template<class CON>
-	using Deref_t = decltype(*Declval<CON>().begin());
+	template<class RG>
+	using Deref_t = decltype(*Declval<RG>().begin());
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
