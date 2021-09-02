@@ -335,55 +335,108 @@ namespace sgm
 		||	(is_iterator<T>::value && Has_Operator_Post_Decrease<T>::value)
 		>
 	{};
+	//========//========//========//========//=======#//========//========//========//========//===
 
 
-	template<class CON, class T = void>
-	struct is_iterable
+	template<class RG, class T = void>
+	struct Has_begin : No_Making
 	{
 	private:
 		template<class Q> /* Declaration Only */ 
 		static auto _has_begin(int)
 		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().begin()) ) >;
 
-		template<class> /* Declaration Only */ static auto _has_begin(...)-> False_t;
+		template<class...>  static auto _has_begin(...)-> False_t;
+
+	public:
+		static bool constexpr value = decltype( _has_begin< Decay_t<RG> >(0) )::value;
+	};
 
 
+	template<class RG, class T = void>
+	struct Has_end : No_Making
+	{
+	private:
 		template<class Q> /* Declaration Only */ 
 		static auto _has_end(int)
 		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().end()) ) >;
 
-		 template<class> /* Declaration Only */ static auto _has_end(...)-> False_t;
-
-
-		template<class Q> /* Declaration Only */
-		static auto _has_size(int)
-		->	SFINAE_t< decltype( static_cast<size_t>(Declval<Q>().size()) ) >;
-
-		template<class> /* Declaration Only */ static auto _has_size(...)-> False_t;
-
+		template<class...>  static auto _has_end(...)-> False_t;
 
 	public:
-		static bool constexpr value
-		=	(	decltype( _has_begin< Decay_t<CON> >(0) )::value
-			&&	decltype( _has_end< Decay_t<CON> >(0) )::value
-			&&	decltype( _has_size< Decay_t<CON> >(0) )::value
-			);
-	};	
+		static bool constexpr value = decltype( _has_end< Decay_t<RG> >(0) )::value;
+	};
 
 
-	template<class T, size_t N> struct is_iterable<T[N], void> : True_t{};
-	template<class T, size_t N> struct is_iterable<T[N], T> : True_t{};
+	template
+	<	class RG
+	,	int 
+		=	Has_begin< Referenceless_t<RG> >::value ? 1
+		:	is_Array< Referenceless_t<RG> >::value ? 2
+		:	/* otherwise */ 0
+	>
+	struct _Begin_Helper;
+
+	template<class RG>
+	struct _Begin_Helper<RG, 1> : No_Making
+	{
+		template<class _RG>  static auto get(_RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.begin()  )
+	};
+
+	template<class RG>
+	struct _Begin_Helper<RG, 2> : No_Making
+	{
+		template<class A>  static auto get(A &&arr)-> SGM_DECLTYPE_AUTO(  &arr[0]  )
+	};
+
+	template<class RG>
+	static auto Begin(RG &&rg)-> SGM_DECLTYPE_AUTO(  _Begin_Helper<RG>::get( Forward<RG>(rg) )  )
+
+
+	template
+	<	class RG
+	,	int 
+		=	Has_end< Referenceless_t<RG> >::value ? 1
+		:	is_BoundedArray< Referenceless_t<RG> >::value ? 2
+		:	/* otherwise */ 0
+	>
+	struct _End_Helper;
+
+	template<class RG>
+	struct _End_Helper<RG, 1> : No_Making
+	{
+		template<class _RG>  static auto get(_RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.end()  )
+	};
+
+	template<class RG>
+	struct _End_Helper<RG, 2> : No_Making
+	{
+	private:
+		template<class ARR>  struct _Size;
+		template<class T, size_t S>  struct _Size<T[S]>{  static size_t constexpr value = S;  };
+
+	public:
+		template<class A>
+		static auto get(A &&arr)-> SGM_DECLTYPE_AUTO(  &arr[_Size< Decay_t<A> >::value]  )
+	};
+
+	template<class RG>
+	static auto End(RG &&rg)-> SGM_DECLTYPE_AUTO(  _End_Helper<RG>::get( Forward<RG>(rg) )  )
+
+
+	template<class RG, class T = void>
+	struct is_iterable : Boolean_type< Has_begin<RG, T>::value && Has_end<RG, T>::value >{};
 	
 
 	template
-	<	class CON1, class CON2
+	<	class RG1, class RG2
 	,	class 
 		=	Guaranteed_t
-			<	is_iterable<CON1>::value && is_iterable<CON2>::value
-			&&	is_Same<  Decay_t< Deref_t<CON1> >, Decay_t< Deref_t<CON2> >  >::value
+			<	is_iterable<RG1>::value && is_iterable<RG2>::value
+			&&	is_Same<  Decay_t< Deref_t<RG1> >, Decay_t< Deref_t<RG2> >  >::value
 			>
 	>
-	static auto iterable_cast(CON2&& con)-> CON1{  return CON1(con.begin(), con.end());  }
+	static auto iterable_cast(RG2&& rg)-> RG1{  return RG1( Begin(rg), End(rg) );  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 
@@ -440,6 +493,69 @@ namespace sgm
 	>
 	static auto Prev(ITR const itr, long long steps = 1)
 	->	ITR{  return _Travel<ITR>::prev(itr, steps);  }
+
+
+	template< class ITR, bool = is_random_access_iterator<ITR>::value >
+	struct _Difference;
+
+	template<class ITR>
+	struct _Difference<ITR, true> : No_Making
+	{
+		static auto calc(ITR bi, ITR const ei)
+		->	long long{  return static_cast<long long>(ei - bi);  }
+	};
+
+	template<class ITR>
+	struct _Difference<ITR, false> : No_Making
+	{
+		static auto calc(ITR bi, ITR const ei)-> long long
+		{
+			long long diff = 0;
+
+			for(;  bi != ei;  bi++,  ++diff);
+
+			return diff;
+		}
+	};
+
+	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
+	static auto Difference(ITR const bi, ITR const ei)
+	->	long long{  return _Difference<ITR>::calc(bi, ei);  }
+
+
+	template<class RG>
+	struct Has_size : No_Making
+	{
+	private:
+		template<class Q>	/* Declaration Only */
+		static auto _has_size(int)-> SFINAE_t< decltype(Declval<Q>().size()) >;
+
+		template<class...> /* Declaration Only */ static auto _has_size(...)-> False_t;
+
+	public:
+		static bool constexpr value = decltype( _has_size< Decay_t<RG> >(0) )::value;
+	};
+
+
+	template< class RG, bool = Has_size<RG>::value >  struct _Size_Helper;
+
+	template<class RG>
+	struct _Size_Helper<RG, true> : No_Making
+	{
+		template<class _RG>  static auto get(_RG &&rg)-> size_t{  return rg.size();  }
+	};
+
+	template<class RG>
+	struct _Size_Helper<RG, false> : No_Making
+	{
+		static_assert(is_iterable<RG>::value, "RG should be an iterable type.");
+
+		template<class _RG>
+		static auto get(_RG &&rg)-> size_t{  return Difference( Begin(rg), End(rg) );  }
+	};
+
+	template<class RG>
+	static auto Size(RG &&rg)-> SGM_DECLTYPE_AUTO(  _Size_Helper<RG>::get(rg)  )
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

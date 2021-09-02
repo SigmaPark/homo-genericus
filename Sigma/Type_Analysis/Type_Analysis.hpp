@@ -121,9 +121,14 @@ namespace sgm
 	struct is_Pointer : Boolean_type<  !is_Same< T, Pointerless_t<T> >::value  >{};
 
 
-	template<class T> struct is_Array : False_t{};
-	template<class T> struct is_Array<T[]> : True_t{};
-	template<class T, size_t N> struct is_Array<T[N]> : True_t{};
+	template<class T> struct is_BoundedArray : False_t {};
+	template<class T, size_t N> struct is_BoundedArray<T[N]> : True_t{};
+
+	template<class T> struct is_UnboundedArray : False_t{};
+	template<class T> struct is_UnboundedArray<T[]> : True_t{};
+
+	template<class T> 
+	struct is_Array : Boolean_type< is_BoundedArray<T>::value || is_UnboundedArray<T>::value >{};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 

@@ -11,27 +11,27 @@ namespace sgm
 	namespace ht
 	{
 
-		template<class CON>
+		template<class RG>
 		struct _increasing_order;
 
 
 		template
-		<	class CON, class FUNC = _increasing_order<CON>
-		,	class = Guaranteed_t< is_iterable<CON>::value >  
+		<	class RG, class FUNC = _increasing_order<RG>
+		,	class = Guaranteed_t< is_iterable<RG>::value >  
 		>
-		static auto Rankers(CON&& con, size_t const nof_ranker, FUNC&& comp = {})
-		->	Serial< Decay_t<decltype(*con.begin())> >;
+		static auto Rankers(RG &&rg, size_t const nof_ranker, FUNC &&comp = {})
+		->	Serial< Decay_t<decltype( *Begin(rg) )> >;
 
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class CON>
+template<class RG>
 struct sgm::ht::_increasing_order
 {
 private:
-	using type = Decay_t<  decltype( *Declval<CON>().begin() )  >;
+	using type = Decay_t<  decltype( *Begin(Declval<RG>()) )  >;
 
 public:
 	bool operator()(type const &t1, type const &t2) const{  return t1 < t2;  }
@@ -41,13 +41,13 @@ public:
 #include <queue>
 
 
-template<class CON, class FUNC, class>
-static auto sgm::ht::Rankers(CON &&con, size_t const nof_ranker, FUNC &&comp)
-->	Serial< Decay_t<decltype(*con.begin())> >
+template<class RG, class FUNC, class>
+static auto sgm::ht::Rankers(RG &&rg, size_t const nof_ranker, FUNC &&comp)
+->	Serial< Decay_t<decltype( *Begin(rg) )> >
 {
-	using elem_t = Decay_t<decltype( *con.begin() )>;
+	using elem_t = Decay_t<decltype( *Begin(rg) )>;
 
-	size_t const nof_elem = con.size();
+	size_t const nof_elem = Size(rg);
 
 	if(nof_elem == 0)
 		return {};
@@ -60,13 +60,13 @@ static auto sgm::ht::Rankers(CON &&con, size_t const nof_ranker, FUNC &&comp)
 			prq(pcomp_f);
 
 		size_t const k = std::min(nof_ranker, nof_elem);
-		auto itr = con.begin();
+		auto itr = Begin(rg);
 
 		for(size_t d = k;  d-->0;  itr++)
 			prq.emplace(&*itr);
 
 		if(k == nof_ranker)
-			for(;  itr != con.end();  itr++)
+			for(;  itr != End(rg);  itr++)
 				if( pcomp_f(&*itr, prq.top()) )
 					prq.pop(),  prq.emplace(&*itr);
 

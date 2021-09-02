@@ -36,15 +36,13 @@ protected:
 public:
 	constChain(ITR h, ITR t) : _head(h), _tail(t){}
 
-	template<  class CON, class = Enable_if_t< is_iterable<CON>::value >  >
-	constChain(CON& con) : constChain(con.begin(), con.end()){}
+	template<  class RG, class = Enable_if_t< is_iterable<RG>::value >  >
+	constChain(RG &rg) : constChain( Begin(rg), End(rg) ){}
 
 
-	template<  class CON, class = Enable_if_t< is_iterable<CON>::value >  >
-	auto operator=(CON&& con)-> constChain&
-	{
-		return *this = constChain(con.begin(), con.end());  
-	}
+	template<  class RG, class = Enable_if_t< is_iterable<RG>::value >  >
+	auto operator=(RG &&rg)
+	->	constChain&{  return *this = constChain( Begin(rg), End(rg) );  }
 
 
 	auto operator()(ITR h, ITR t)-> constChain&{  return *this = constChain(h, t);  }
@@ -84,8 +82,8 @@ class sgm::Chain : public constChain<ITR>
 public:
 	Chain(ITR h, ITR t) : cc_t(h, t){}
 
-	template<class CON>
-	Chain(CON& con) : cc_t(con){}
+	template<class RG>
+	Chain(RG &rg) : cc_t(rg){}
 
 	auto operator*()-> typename cc_t::deref_t&{  return *cc_t::_head;  }
 };
@@ -107,18 +105,18 @@ namespace sgm
 	}
 
 
-	template<class CON>
-	static auto Chaining(CON& con)
+	template<class RG>
+	static auto Chaining(RG &rg)
 	->	Enable_if_t
-		<	is_iterable<CON>::value
+		<	is_iterable<RG>::value
 		,	Selective_t
-			<	is_immutable<decltype(*con.begin())>::value
-			,	constChain< Decay_t<decltype(con.begin())> >
-			,	Chain< Decay_t<decltype(con.begin())> >
+			<	is_immutable<decltype( *Begin(rg) )>::value
+			,	constChain< Decay_t<decltype( Begin(rg) )> >
+			,	Chain< Decay_t<decltype( Begin(rg) )> >
 			>
 		>
 	{
-		return con;
+		return rg;
 	}
 
 }

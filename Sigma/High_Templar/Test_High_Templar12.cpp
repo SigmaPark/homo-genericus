@@ -5,7 +5,7 @@
 #include <set>
 
 
-namespace test_ht12
+namespace test_ht
 {
 
 	struct SHARE;
@@ -24,15 +24,15 @@ namespace test_ht12
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-struct test_ht12::SHARE 
+struct test_ht::SHARE 
 :	sgm::Type_Decorator{  template<class T> using type = sgm::Pinweight<T>;  };
 
-struct test_ht12::CREFER 
+struct test_ht::CREFER 
 :	sgm::Type_Decorator{  template<class T> using type = sgm::constAvatar<T>;  };
 
 
 template<class RG1, class RG2>
-bool test_ht12::are_same_ranges(RG1 &&rg1, RG2 &&rg2)
+bool test_ht::are_same_ranges(RG1 &&rg1, RG2 &&rg2)
 {	
 	auto itr1 = rg1.begin();
 	auto itr2 = rg2.begin();
@@ -44,13 +44,13 @@ bool test_ht12::are_same_ranges(RG1 &&rg1, RG2 &&rg2)
 }
 
 
-void test_ht12::MorphTest()
+void test_ht::MorphTest()
 {
 	auto answer = std::initializer_list<double>{ -1, -2, -3, -4, -5 };
 
 	sgm::spec::is_True
 	(	are_same_ranges
-		(	sgm::ht12::Morph<SHARE>
+		(	sgm::ht::Morph<SHARE>
 			(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
 			)
 		,	answer
@@ -58,22 +58,22 @@ void test_ht12::MorphTest()
 	);
 
 	auto const msr
-	=	sgm::ht12::Morph
+	=	sgm::ht::Morph
 		(	sgm::Countable<int>(5, 1), [](int x)-> double{  return -x;  } 
-		) . eval< sgm::ht12::Par<2> >();
+		) . eval< sgm::ht::Par<2> >();
 
 	sgm::spec::is_True
 	(	are_same_ranges(msr, answer)
 	);
 
 	auto const msr2
-	=	sgm::ht12::Morph
+	=	sgm::ht::Morph
 		(	std::set<int>{1,2,3,4,5}, [](int x)-> double{  return -x;  } 
 		) .	eval();
 }
 
 
-void test_ht12::FilterTest()
+void test_ht::FilterTest()
 {
 	auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
 	auto answer = std::initializer_list<int>{2, 4, 6, 8, 10};
@@ -81,17 +81,17 @@ void test_ht12::FilterTest()
 	sgm::Serial<int> const sr1 = sgm::Countable<int>(10, 1);
 
 	sgm::spec::is_True
-	(	are_same_ranges( sgm::ht12::Filter(sr1, is_even), answer )
-	&&	are_same_ranges( sgm::ht12::Filter<CREFER>(sr1, is_even), answer )
+	(	are_same_ranges( sgm::ht::Filter(sr1, is_even), answer )
+	&&	are_same_ranges( sgm::ht::Filter<CREFER>(sr1, is_even), answer )
 	);
 
-	sgm::Serial<int> const fsr = sgm::ht12::Filter(sr1, is_even);
+	sgm::Serial<int> const fsr = sgm::ht::Filter(sr1, is_even);
 
 	sgm::spec::is_True( are_same_ranges(fsr, answer) );
 }
 
 
-void test_ht12::FoldTest()
+void test_ht::FoldTest()
 {
 	auto minus = [](int res, int const& x)-> int{  return res - x;  };
 	auto plus = [](int const res, int const x)-> int{  return res + x;  };
@@ -101,13 +101,13 @@ void test_ht12::FoldTest()
 	using sgm::Countable;
 
 	res 
-	=	(	sgm::ht12::Fold( Countable<int>(3, 1), minus, 10 ) == 4
-		&&	sgm::ht12::Fold( Countable<int>(3, 1), minus ) == -4
-		&&	sgm::ht12::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
-		&&	sgm::ht12::rFold( Countable<int>(3, 1), minus, 10 ) == 4
-		&&	sgm::ht12::rFold( Countable<int>(3, 1), minus ) == 0
-		&&	(	sgm::ht12::Fold<sgm::ht12::Par<>>( Countable<int>(20, 1), plus, int(0) )
-			==	sgm::ht12::Fold( Countable<int>(20, 1), plus )
+	=	(	sgm::ht::Fold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht::Fold( Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht::Fold<SHARE>( Countable<int>(3, 1), minus ) == -4
+		&&	sgm::ht::rFold( Countable<int>(3, 1), minus, 10 ) == 4
+		&&	sgm::ht::rFold( Countable<int>(3, 1), minus ) == 0
+		&&	(	sgm::ht::Fold<sgm::ht::Par<>>( Countable<int>(20, 1), plus, int(0) )
+			==	sgm::ht::Fold( Countable<int>(20, 1), plus )
 			)
 		);
 
@@ -115,7 +115,7 @@ void test_ht12::FoldTest()
 }
 
 
-void test_ht12::Plait_Test()
+void test_ht::Plait_Test()
 {
 	using sgm::Serial;
 	using sgm::Family;
@@ -133,11 +133,11 @@ void test_ht12::Plait_Test()
 		,	fam_t(7, -3.0, 'c'), fam_t(10, -4.0, 'd')
 		};
 
-	sgm::spec::is_True(  are_same_ranges( sgm::ht12::Plait(sr1, sr2, sr3), ans1 )  );
+	sgm::spec::is_True(  are_same_ranges( sgm::ht::Plait(sr1, sr2, sr3), ans1 )  );
 }
 
 
-void test_ht12::Plait_loop_Test()
+void test_ht::Plait_loop_Test()
 {
 	std::initializer_list<int> const iL{1, 3, 5, 7};
 	sgm::Serial<int, 4> const sr1{2, 4, 6, 8};
@@ -147,14 +147,14 @@ void test_ht12::Plait_loop_Test()
 	(	sgm::is_Same
 		<	typename 
 			std::iterator_traits
-			<	sgm::Decay_t<decltype( sgm::ht12::Plait(iL, sr1, sr2).begin() )>
+			<	sgm::Decay_t<decltype( sgm::ht::Plait(iL, sr1, sr2).begin() )>
 			>::	iterator_category
 		,	std::random_access_iterator_tag
 		>::	value
 	,	"iterator_traits tracking failed."
 	);
 
-	for( auto &&fam : sgm::ht12::Plait(iL, sr1, sr2) )
+	for( auto &&fam : sgm::ht::Plait(iL, sr1, sr2) )
 		fam.get<2>() += fam.get<0>() + fam.get<1>();
 
 	sgm::spec::is_True
@@ -172,7 +172,7 @@ void Test_sgm_High_Templar12::test()
 {
 	try
 	{
-		using namespace test_ht12;
+		using namespace test_ht;
 
 		MorphTest();
 		FilterTest();

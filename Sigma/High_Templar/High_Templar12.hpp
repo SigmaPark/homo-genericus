@@ -12,7 +12,7 @@
 
 namespace sgm
 {
-	namespace ht12
+	namespace ht
 	{
 		
 		template<class ITR, class FN, class DECO>  class Morph_iterator;
@@ -53,10 +53,6 @@ namespace sgm
 		template<class FAM, bool IS_MUTABLE>  class Plait_iterator;
 
 
-		template<class RG> 
-		static auto constexpr size(RG const &range)-> size_t;
-
-
 		template
 		<	class FLAG_SET
 		,	_impl_Mode
@@ -71,10 +67,10 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class T, class> struct sgm::ht12::_Decorated{  using type = T;  };
+template<class T, class> struct sgm::ht::_Decorated{  using type = T;  };
 
 template<class T, class...FLAGS>
-struct sgm::ht12::_Decorated< T, sgm::FlagSet<FLAGS...> >
+struct sgm::ht::_Decorated< T, sgm::FlagSet<FLAGS...> >
 {
 	using type = typename Decorated<T>::template by<FLAGS...>::type;
 };
@@ -82,7 +78,7 @@ struct sgm::ht12::_Decorated< T, sgm::FlagSet<FLAGS...> >
 
 
 template<class maybe_Par>
-struct sgm::ht12::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
+struct sgm::ht::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{};
 
 
 /**	
@@ -92,11 +88,11 @@ struct sgm::ht12::is_Par : is_inherited_from<maybe_Par, par::_Parallel_Helper>{}
 *	AUTO_OR, 0 : Auto detection or throw exception if failed.
 */
 template<unsigned NOF_TASK1, unsigned NOF_TASK2>
-struct sgm::ht12::Par : par::Parallel<NOF_TASK1>{};
+struct sgm::ht::Par : par::Parallel<NOF_TASK1>{};
 
 
 template<unsigned N>
-struct sgm::ht12::Par<sgm::ht12::AUTO_OR, N> : par::Parallel<>
+struct sgm::ht::Par<sgm::ht::AUTO_OR, N> : par::Parallel<>
 {
 	template<class F>
 	void operator()(size_t const nof_iteration, F&& func) const
@@ -110,39 +106,39 @@ struct sgm::ht12::Par<sgm::ht12::AUTO_OR, N> : par::Parallel<>
 
 
 template<>
-struct sgm::ht12::Par<sgm::ht12::AUTO_OR, 0> 
+struct sgm::ht::Par<sgm::ht::AUTO_OR, 0> 
 :	par::Parallel<>{  Par() : par::Parallel<>(par::Nof_HW_Core::When_Fails::THROW){}  };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class FLAG_SET>
-struct sgm::ht12::_Serial_Evaluator<FLAG_SET, sgm::ht12::_impl_Mode::SEQUANCIAL> : No_Making
+struct sgm::ht::_Serial_Evaluator<FLAG_SET, sgm::ht::_impl_Mode::SEQUANCIAL> : No_Making
 {
-	template<  class RG, class elem_t = Decay_t< decltype(*Declval<RG>().begin()) >  >
-	static auto calc(RG &&rg)-> Serial<elem_t>{  return {rg.begin(), rg.end()};  }
+	template<  class RG, class elem_t = Decay_t< decltype( *Begin(Declval<RG>()) ) >  >
+	static auto calc(RG &&rg)-> Serial<elem_t>{  return {Begin(rg), End(rg)};  }
 };
 
 
 template<class FLAG_SET>
-struct sgm::ht12::_Serial_Evaluator<FLAG_SET, sgm::ht12::_impl_Mode::MULTI_THREAD> : No_Making
+struct sgm::ht::_Serial_Evaluator<FLAG_SET, sgm::ht::_impl_Mode::MULTI_THREAD> : No_Making
 {
-	template<  class RG, class elem_t = Decay_t< decltype(*Declval<RG>().begin()) >  >
+	template<  class RG, class elem_t = Decay_t< decltype( *Begin(Declval<RG>()) ) >  >
 	static auto calc(RG &&rg)-> Serial<elem_t>
 	{
-		size_t const nof_elem = ht12::size(rg);
+		size_t const nof_elem = Size(rg);
 
 		if(nof_elem == 0)
 			return {};
 		else
 		{
-			Serial<elem_t> res(nof_elem, *rg.begin());
+			Serial<elem_t> res( nof_elem, *Begin(rg) );
 
 			Satisfying_Flag_t<is_Par, FLAG_SET>()
 			(	nof_elem
 			,	[&rg, &res](size_t idx_begin, size_t const idx_end, unsigned const)
 				{
 					for
-					(	auto itr = Next(rg.begin(), idx_begin)
+					(	auto itr = Next( Begin(rg), idx_begin )
 					;	idx_begin < idx_end
 					;	res[idx_begin++] = *itr++
 					);
@@ -157,7 +153,7 @@ struct sgm::ht12::_Serial_Evaluator<FLAG_SET, sgm::ht12::_impl_Mode::MULTI_THREA
 
 
 template<class ITR, class FN, class DECO>
-class sgm::ht12::Morph_iterator
+class sgm::ht::Morph_iterator
 {
 private:
 	using _Y = decltype( Declval<FN>()(*Declval<ITR>()) );
@@ -222,27 +218,27 @@ public:
 
 
 template<class ITR, class...ARGS>
-struct sgm::is_random_access_iterator< sgm::ht12::Morph_iterator<ITR, ARGS...> >
+struct sgm::is_random_access_iterator< sgm::ht::Morph_iterator<ITR, ARGS...> >
 :	is_random_access_iterator<ITR>{};
 
 
 template<class ITR, class...ARGS>
-struct sgm::is_bidirectional_iterator< sgm::ht12::Morph_iterator<ITR, ARGS...> >
+struct sgm::is_bidirectional_iterator< sgm::ht::Morph_iterator<ITR, ARGS...> >
 :	is_bidirectional_iterator<ITR>{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class FS, class RG, class FN, bool ASK_MUTABLE>
-class sgm::ht12::Morph_range
+class sgm::ht::Morph_range
 {
 private:
 	struct _Deco : No_Making{  template<class Q>  using type = _Decorated_t<Q, FS>;  };
 
-	using _cxitr_t = Decay_t< decltype(Declval<RG const>().begin()) >;
+	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
 	using _crxitr_t = Decay_t< decltype(Declval<RG const>().rbegin()) >;	
 	
 	using _xitr_t
-	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().begin()) >, _cxitr_t  >;
+	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
 
 	using _rxitr_t
 	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().rbegin()) >, _crxitr_t  >;
@@ -259,13 +255,13 @@ public:
 
 	Morph_range(RG rg, FN fn) : _rg( Forward<RG>(rg) ), _fn( Forward<FN>(fn) ){}
 
-	auto cbegin() const-> _cmitr_t{  return {_rg.begin(), _fn};  }
+	auto cbegin() const-> _cmitr_t{  return {Begin(_rg), _fn};  }
 	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> _mitr_t{  return {_rg.begin(), _fn};  }
+	auto begin()-> _mitr_t{  return {Begin(_rg), _fn};  }
 
-	auto cend() const-> _cmitr_t{  return {_rg.end(), _fn};  }
+	auto cend() const-> _cmitr_t{  return {End(_rg), _fn};  }
 	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end()-> _mitr_t{  return {_rg.end(), _fn};  }
+	auto end()-> _mitr_t{  return {End(_rg), _fn};  }
 
 	auto crbegin() const-> _crmitr_t{  return {_rg.rbegin(), _fn};  }
 	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
@@ -290,7 +286,7 @@ private:
 
 
 template<class ITR, class FILT, class DECO>
-class sgm::ht12::Filter_iterator
+class sgm::ht::Filter_iterator
 {
 private:
 	using X = typename DECO::template type< decltype(*Declval<ITR>()) >;
@@ -338,16 +334,16 @@ private:
 
 
 template<class FS, class RG, class FN, bool ASK_MUTABLE>
-class sgm::ht12::Filter_range
+class sgm::ht::Filter_range
 {
 private:
 	struct _Deco : No_Making{  template<class Q>  using type = _Decorated_t<Q, FS>;  };
 
-	using _cxitr_t = Decay_t< decltype(Declval<RG const>().begin()) >;
+	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
 	using _crxitr_t = Decay_t< decltype(Declval<RG const>().rbegin()) >;	
 
 	using _xitr_t
-	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().begin()) >, _cxitr_t  >;
+	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
 
 	using _rxitr_t
 	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().rbegin()) >, _crxitr_t  >;
@@ -365,13 +361,13 @@ public:
 
 	Filter_range(RG rg, FN fn) : _rg( Forward<RG>(rg) ), _fn( Forward<FN>(fn) ){}
 
-	auto cbegin() const-> _cfitr_t{  return { _rg.begin(), _filt_fn(this) };  }
+	auto cbegin() const-> _cfitr_t{  return { Begin(_rg), _filt_fn(this) };  }
 	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> _fitr_t{  return { _rg.begin(), _filt_fn(this) };  }
+	auto begin()-> _fitr_t{  return { Begin(_rg), _filt_fn(this) };  }
 
-	auto cend() const-> _cfitr_t{  return { _rg.end(), _filt_fn(this) };  }
+	auto cend() const-> _cfitr_t{  return { End(_rg), _filt_fn(this) };  }
 	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end()->	_fitr_t{  return { _rg.end(), _filt_fn(this) };  }
+	auto end()->	_fitr_t{  return { End(_rg), _filt_fn(this) };  }
 
 	auto crbegin() const->	_crfitr_t{  return { _rg.rbegin(), _rfilt_fn(this) };  }
 	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
@@ -389,8 +385,8 @@ private:
 	FN _fn;
 
 
-	template<  class ME, class itr_t = Decay_t< decltype(Declval<ME>()._rg.end()) >  >
-	static auto _filt_fn(ME *p)-> _Filter_FN<itr_t>{  return {&p->_fn, p->_rg.end()};  }
+	template<  class ME, class itr_t = Decay_t< decltype( End(Declval<ME>()._rg) ) >  >
+	static auto _filt_fn(ME *p)-> _Filter_FN<itr_t>{  return {&p->_fn, End(p->_rg)};  }
 
 	template<  class ME, class itr_t = Decay_t< decltype(Declval<ME>()._rg.rend()) >  >
 	static auto _rfilt_fn(ME *p)-> _Filter_FN<itr_t>{  return {&p->_fn, p->_rg.rend()};  }
@@ -398,7 +394,7 @@ private:
 
 
 template<class FS, class RG, class FN, bool ASK_MUTABLE>  template<class itr_t>
-class sgm::ht12::Filter_range<FS, RG, FN, ASK_MUTABLE>::_Filter_FN
+class sgm::ht::Filter_range<FS, RG, FN, ASK_MUTABLE>::_Filter_FN
 {
 private:
 	using _pFN_t = Referenceless_t<FN>*;
@@ -416,7 +412,7 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-struct sgm::ht12::_Fold_Helper : No_Making
+struct sgm::ht::_Fold_Helper : No_Making
 {
 protected:
 	template<class ITR, class FUNC, class res_t>
@@ -434,28 +430,28 @@ protected:
 	template<>
 	struct itrMethod<true>
 	{
-		template<class CON> static auto begin(CON &&con)-> SGM_DECLTYPE_AUTO(  con.begin()  )
-		template<class CON> static auto end(CON &&con)-> SGM_DECLTYPE_AUTO(  con.end()  )
+		template<class RG> static auto begin(RG &&rg)-> SGM_DECLTYPE_AUTO(  Begin(rg)  )
+		template<class RG> static auto end(RG &&rg)-> SGM_DECLTYPE_AUTO(  End(rg)  )
 	};
 
 	template<>
 	struct itrMethod<false>
 	{
-		template<class CON> static auto begin(CON &&con)-> SGM_DECLTYPE_AUTO(  con.rbegin()  )
-		template<class CON> static auto end(CON &&con)-> SGM_DECLTYPE_AUTO(  con.rend()  )
+		template<class RG> static auto begin(RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.rbegin()  )
+		template<class RG> static auto end(RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.rend()  )
 	};
 };
 
 
 template<bool FWD, class FS>
-struct sgm::ht12::_Fold_impl<true, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> : _Fold_Helper
+struct sgm::ht::_Fold_impl<true, FWD, FS, sgm::ht::_impl_Mode::SEQUANCIAL> : _Fold_Helper
 {
-	template<class CON, class FUNC, class res_t>
-	static auto calc(CON &&con, FUNC &&func, res_t &&res)-> res_t
+	template<class RG, class FUNC, class res_t>
+	static auto calc(RG &&rg, FUNC &&func, res_t &&res)-> res_t
 	{
 		return
 		Accumulate
-		(	itrMethod<FWD>::begin(con), itrMethod<FWD>::end(con)
+		(	itrMethod<FWD>::begin(rg), itrMethod<FWD>::end(rg)
 		,	Forward<FUNC>(func), Forward<res_t>(res)
 		);
 	}
@@ -463,13 +459,13 @@ struct sgm::ht12::_Fold_impl<true, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> :
 
 
 template<bool FWD, class FS>
-struct sgm::ht12::_Fold_impl<false, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> : _Fold_Helper
+struct sgm::ht::_Fold_impl<false, FWD, FS, sgm::ht::_impl_Mode::SEQUANCIAL> : _Fold_Helper
 {
-	template<class CON, class FUNC>
-	static auto calc(CON &&con, FUNC &&func, None)
-	->	Decay_t< decltype( *itrMethod<FWD>::begin(con) ) >
+	template<class RG, class FUNC>
+	static auto calc(RG &&rg, FUNC &&func, None)
+	->	Decay_t< decltype( *itrMethod<FWD>::begin(rg) ) >
 	{
-		auto const bi = itrMethod<FWD>::begin(con), ei = itrMethod<FWD>::end(con);
+		auto const bi = itrMethod<FWD>::begin(rg), ei = itrMethod<FWD>::end(rg);
 
 		assert(bi != ei && L"the container has nothing to fold.\n");
 
@@ -479,42 +475,42 @@ struct sgm::ht12::_Fold_impl<false, FWD, FS, sgm::ht12::_impl_Mode::SEQUANCIAL> 
 
 
 template<bool FWD, class FS>
-struct sgm::ht12::_Fold_impl<false, FWD, FS, sgm::ht12::_impl_Mode::MULTI_THREAD> : _Fold_Helper
+struct sgm::ht::_Fold_impl<false, FWD, FS, sgm::ht::_impl_Mode::MULTI_THREAD> : _Fold_Helper
 {
 private:
-	template<class CON, class FUNC>
-	static auto _Seq_Fold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+	template<class RG, class FUNC>
+	static auto _Seq_Fold(RG &&rg, FUNC &&func)-> SGM_DECLTYPE_AUTO
 	(
 		_Fold_impl<false, FWD, FS, _impl_Mode::SEQUANCIAL>::calc
-		(	Forward<CON>(con), Forward<FUNC>(func), none
+		(	Forward<RG>(rg), Forward<FUNC>(func), none
 		)		
 	)
 
 
 public:
 	template
-	<	class CON, class FUNC
-	,	class res_t = Decay_t<  decltype(*Declval< Decay_t<CON> >().begin())  >
+	<	class RG, class FUNC
+	,	class res_t = Decay_t<  decltype( *Begin(Declval< Decay_t<RG> >()) )  >
 	>
-	static auto calc(CON &&con, FUNC &&func, None)-> res_t
+	static auto calc(RG &&rg, FUNC &&func, None)-> res_t
 	{
 		auto const tasker = Satisfying_Flag_t<is_Par, FS>();
-		auto const nof_elem = size(con);
+		auto const nof_elem = Size(rg);
 
 		if(nof_elem <= tasker.number_of_task())
-			return _Seq_Fold( Forward<CON>(con), Forward<FUNC>(func) );
+			return _Seq_Fold( Forward<RG>(rg), Forward<FUNC>(func) );
 		else
 		{
-			Serial<res_t> sum( static_cast<size_t>(tasker.number_of_task()), *con.begin() );
+			Serial<res_t> sum( static_cast<size_t>(tasker.number_of_task()), *Begin(rg) );
 
 			tasker
 			(	nof_elem
-			,	[&con, &func, &sum]
+			,	[&rg, &func, &sum]
 				(	size_t const idx_begin, size_t const idx_end, unsigned const task_id
 				)
 				{	
 					auto const 
-						bi = Next(con.begin(), idx_begin),
+						bi = Next( Begin(rg), idx_begin ),
 						bi_1 = Next(bi), 
 						ei = Next(bi, idx_end - idx_begin);
 					 
@@ -529,7 +525,7 @@ public:
 
 
 template<bool FWD, class FS>
-struct sgm::ht12::_Fold_impl<true, FWD, FS, sgm::ht12::_impl_Mode::MULTI_THREAD> : _Fold_Helper
+struct sgm::ht::_Fold_impl<true, FWD, FS, sgm::ht::_impl_Mode::MULTI_THREAD> : _Fold_Helper
 {
 private:
 	template<bool> struct _Last_fold;
@@ -552,11 +548,11 @@ private:
 
 
 public:
-	template<class CON, class FUNC, class res_t>
-	static auto calc(CON &&con, FUNC &&func, res_t &&res)-> res_t
+	template<class RG, class FUNC, class res_t>
+	static auto calc(RG &&rg, FUNC &&func, res_t &&res)-> res_t
 	{
 		static_assert
-		(	is_Convertible< res_t, Decay_t<decltype(*con.begin())> >::value
+		(	is_Convertible< res_t, Decay_t<decltype( *Begin(rg) )> >::value
 		,	"for parallelization, folding function should be asocciative."
 		);
 
@@ -564,7 +560,7 @@ public:
 		_Last_fold<FWD>::calc
 		(	func, Forward<res_t>(res)
 		,	_Fold_impl<false, FWD, FS, _impl_Mode::MULTI_THREAD>::calc
-			(	Forward<CON>(con), func, none
+			(	Forward<RG>(rg), func, none
 			)
 		);
 	}
@@ -573,7 +569,7 @@ public:
 
 
 template<class FAM, bool IS_MUTABLE>  
-class sgm::ht12::Plait_iterator
+class sgm::ht::Plait_iterator
 {
 private:
 	mutable FAM _itr_fam;
@@ -653,7 +649,7 @@ public:
 
 
 template<class...CS>  
-class sgm::ht12::cPlait_range
+class sgm::ht::cPlait_range
 {
 protected:
 	Family<CS...> _fam;
@@ -664,7 +660,7 @@ private:
 	size_t _size;
 
 
-	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS const>().begin()) >...  >;
+	using _itr_fam_t = Family<  Decay_t< decltype( Begin(Declval<CS const>()) ) >...  >;
 	using _iter_t = Plait_iterator<_itr_fam_t, false>;
 
 
@@ -684,7 +680,7 @@ private:
 		static auto of(ME &me, ARGS&&...args)-> SGM_DECLTYPE_AUTO
 		(
 			_Get_iter<true, _S-1>::of
-			(	me, std::get<_S-1>(me._fam).begin(), Forward<ARGS>(args)...
+			(	me, Begin( std::get<_S-1>(me._fam) ), Forward<ARGS>(args)...
 			)
 		)
 	};
@@ -696,7 +692,7 @@ private:
 		static auto of(ME &me, ARGS&&...args)-> SGM_DECLTYPE_AUTO
 		(
 			_Get_iter<false, _S-1>::of
-			(	me, std::get<_S-1>(me._fam).end(), Forward<ARGS>(args)...
+			(	me, End( std::get<_S-1>(me._fam) ), Forward<ARGS>(args)...
 			)
 		)
 	};
@@ -704,7 +700,7 @@ private:
 
 	template<class RG>
 	struct _is_random_access_range
-	:	is_random_access_iterator< decltype(Declval<RG>().begin()) >{};
+	:	is_random_access_iterator< decltype( Begin(Declval<RG>()) ) >{};
 
 
 	template
@@ -724,7 +720,7 @@ private:
 	struct _Get_Size<true, false>
 	{
 		template<class ME>
-		static auto of(ME &me)-> size_t{  return ht12::size( std::get<0>(me._fam) );  }
+		static auto of(ME &me)-> size_t{  return Size( std::get<0>(me._fam) );  }
 	};
 
 	template<>
@@ -737,7 +733,7 @@ private:
 	public:
 		template<class ME>
 		static auto of(ME &me)
-		->	size_t{  return ht12::size( std::get<_random_access_range_t>(me._fam) );  }
+		->	size_t{  return Size( std::get<_random_access_range_t>(me._fam) );  }
 	};
 
 
@@ -769,10 +765,10 @@ public:
 
 
 template<class...CS>
-class sgm::ht12::Plait_range : public cPlait_range<CS...>
+class sgm::ht::Plait_range : public cPlait_range<CS...>
 {
 	using _cz = cPlait_range<CS...>;
-	using _itr_fam_t = Family<  Decay_t< decltype(Declval<CS>().begin()) >...  >;
+	using _itr_fam_t = Family<  Decay_t< decltype( Begin(Declval<CS>()) ) >...  >;
 	using _iter_t = Plait_iterator<_itr_fam_t, true>;
 
 public:
@@ -795,7 +791,7 @@ public:
 
 namespace sgm
 {
-	namespace ht12
+	namespace ht
 	{
 
 		template<class...FLAGS, class RG, class FN>
@@ -818,36 +814,36 @@ namespace sgm
 		}	
 		
 
-		template<class...FLAGS, class CON, class FUNC, class init_t>
-		static auto Fold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
+		template<class...FLAGS, class RG, class FUNC, class init_t>
+		static auto Fold(RG &&rg, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, true, FlagSet<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
+			(	Forward<RG>(rg), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
 		
-		template<class...FLAGS, class CON, class FUNC>
-		static auto Fold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+		template<class...FLAGS, class RG, class FUNC>
+		static auto Fold(RG &&rg, FUNC &&func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, true, FlagSet<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), none
+			(	Forward<RG>(rg), Forward<FUNC>(func), none
 			)
 		)
 		
 		
-		template<class...FLAGS, class CON, class FUNC, class init_t>
-		static auto rFold(CON &&con, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
+		template<class...FLAGS, class RG, class FUNC, class init_t>
+		static auto rFold(RG &&rg, FUNC &&func, init_t &&init)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< true, false, FlagSet<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), Forward<init_t>(init)
+			(	Forward<RG>(rg), Forward<FUNC>(func), Forward<init_t>(init)
 			)
 		)
 		
-		template<class...FLAGS, class CON, class FUNC>
-		static auto rFold(CON &&con, FUNC &&func)-> SGM_DECLTYPE_AUTO
+		template<class...FLAGS, class RG, class FUNC>
+		static auto rFold(RG &&rg, FUNC &&func)-> SGM_DECLTYPE_AUTO
 		(
 			_Fold_impl< false, false, FlagSet<FLAGS...> >::calc
-			(	Forward<CON>(con), Forward<FUNC>(func), none
+			(	Forward<RG>(rg), Forward<FUNC>(func), none
 			)
 		)
 
@@ -873,10 +869,10 @@ namespace sgm
 
 
 template<class ITR, class FN, class DECO>
-struct std::iterator_traits< sgm::ht12::Morph_iterator<ITR, FN, DECO> >
+struct std::iterator_traits< sgm::ht::Morph_iterator<ITR, FN, DECO> >
 {
 private:
-	using _mitr_t = sgm::ht12::Morph_iterator<ITR, FN, DECO>;
+	using _mitr_t = sgm::ht::Morph_iterator<ITR, FN, DECO>;
 	using _deref_t = decltype(*sgm::Declval<_mitr_t>());
 
 public:
@@ -902,10 +898,10 @@ public:
 
 
 template<class ITR, class FN, class DECO>
-struct std::iterator_traits< sgm::ht12::Filter_iterator<ITR, FN, DECO> >
+struct std::iterator_traits< sgm::ht::Filter_iterator<ITR, FN, DECO> >
 {
 private:
-	using _fitr_t = sgm::ht12::Filter_iterator<ITR, FN, DECO>;
+	using _fitr_t = sgm::ht::Filter_iterator<ITR, FN, DECO>;
 	using _deref_t = decltype(*sgm::Declval<_fitr_t>());
 
 public:
@@ -921,7 +917,7 @@ public:
 
 
 template<bool M, class FAM>
-struct std::iterator_traits< sgm::ht12::Plait_iterator<FAM, M> >
+struct std::iterator_traits< sgm::ht::Plait_iterator<FAM, M> >
 {
 private:
 	struct _FAM_trait;
@@ -929,7 +925,7 @@ private:
 public:
 	using iterator_category = typename _FAM_trait::template tag_t<FAM>;
 	using value_type 
-	=	sgm::Decay_t<  decltype(*sgm::Declval< sgm::ht12::Plait_iterator<FAM, M> >())  >;
+	=	sgm::Decay_t<  decltype(*sgm::Declval< sgm::ht::Plait_iterator<FAM, M> >())  >;
 	
 	using difference_type = ptrdiff_t;
 	using pointer = sgm::Selective_t<M, value_type, value_type const>*;
@@ -938,7 +934,7 @@ public:
 
 
 template<bool M, class FAM>
-struct std::iterator_traits< sgm::ht12::Plait_iterator<FAM, M> >::_FAM_trait : sgm::No_Making
+struct std::iterator_traits< sgm::ht::Plait_iterator<FAM, M> >::_FAM_trait : sgm::No_Making
 {
 private:
 	template<class...ITRS>
@@ -965,12 +961,6 @@ private:
 public:
 	template<class FAM>  using tag_t = decltype( _tag(sgm::Declval<FAM>()) );	
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class RG>
-auto constexpr sgm::ht12::size(RG const &range)
-->	size_t{  return std::distance(range.begin(), range.end());  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

@@ -13,24 +13,13 @@
 namespace sgm
 {
 
-	template<class T>
-	class _sr_iterator_Helper;
+	struct srSize 
+	:	No_Making{  enum : size_t{ INTERFACE = 0xffffffffffffffffULL, DYNAMIC = 0};  };
 
-	template< class ITR, bool = sgm::is_random_access_iterator<ITR>::value >
-	struct _iterator_Distance;
+	template<class T, size_t S = srSize::DYNAMIC>  class Serial;
+	template<class T, bool IS_MUTABLE, bool IS_FORWARD>  class Serial_iterator;
 
-	template<class T, bool IS_MUTABLE, bool IS_FORWARD>
-	class Serial_iterator;
-
-
-	struct srSize : No_Making
-	{	
-		enum : size_t{ INTERFACE = ULLONG_MAX, DYNAMIC = 0};  
-	};
-
-
-	template<class T, size_t S = srSize::DYNAMIC>
-	class Serial;
+	template<class T>  class _sr_iterator_Helper;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -86,33 +75,6 @@ class sgm::_sr_iterator_Helper : No_Making
 
 	template<>
 	static bool Less<false>(size_t const idx1, size_t const idx2){  return idx1 > idx2;;  }
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class ITR>
-struct sgm::_iterator_Distance<ITR, true> : No_Making
-{
-	static auto calc(ITR bi, ITR const ei)-> size_t
-	{	
-		return static_cast<size_t>(ei - bi);
-	}
-};
-
-
-template<class ITR>
-struct sgm::_iterator_Distance<ITR, false> : No_Making
-{
-	static_assert(is_iterator<ITR>::value, "ITR doesn't have iterator interface");
-
-	static auto calc(ITR bi, ITR const ei)-> size_t
-	{
-		size_t dist = 0;
-
-		for(;  bi != ei;  bi++,  ++dist);
-
-		return dist;
-	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -267,14 +229,14 @@ class sgm::Serial
 protected:
 	template
 	<	bool TEMP_HOST = false, class ITR, class CON
-	,	class RES_ITR = decltype(Declval<CON>().begin())
+	,	class RES_ITR = decltype( Begin(Declval<CON>()) )
 	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<CON>::value >  
 	>
 	static auto _copy_AMAP(ITR bi, ITR const ei, CON& con)-> Dual_iterator<ITR, RES_ITR>
 	{
-		RES_ITR itr = con.begin();
+		RES_ITR itr = Begin(con);
 
-		for( ;  bi != ei && itr != con.end();  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
+		for( ;  bi != ei && itr != End(con);  *itr++ = Move_if<TEMP_HOST>::cast(*bi++) );
 
 		return Dual_iteration(bi, itr);
 	}
@@ -372,7 +334,7 @@ public:
 	auto operator=(CON&& con)-> Serial&
 	{
 		_copy_AMAP< is_RvalueReference<decltype(con)>::value >
-		(	con.begin(), con.end(), *this
+		(	Begin(con), End(con), *this
 		);
 
 		return *this;
@@ -453,7 +415,7 @@ public:
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	Serial(ITR bi, ITR const ei) 
 	{
-		_alloc( _iterator_Distance<ITR>::calc(bi, ei) ), 
+		_alloc( Difference(bi, ei) ), 
 		_cloning(bi, ei, capacity());
 	}
 
@@ -465,9 +427,9 @@ public:
 	>
 	Serial(CON&& con)
 	{
-		_alloc(con.size()), 
+		_alloc( Size(con) ), 
 		_cloning< is_RvalueReference<decltype(con)>::value >
-		(	con.begin(), con.end(), capacity()
+		(	Begin(con), End(con), capacity()
 		);
 	}
 
@@ -527,9 +489,7 @@ public:
 	auto operator=(CON&& con)-> Serial&
 	{
 		return 
-		_cloning< is_RvalueReference<decltype(con)>::value >
-		(	con.begin(), con.end(), con.size()
-		);
+		_cloning< is_RvalueReference<decltype(con)>::value >( Begin(con), End(con), Size(con) );
 	}
 
 
@@ -570,7 +530,7 @@ public:
 	{
 		for
 		(	assert
-			(	size() + _iterator_Distance<ITR>::calc(bi, ei) <= capacity() 
+			(	size() + Difference(bi, ei) <= capacity() 
 			&&	L"cannot merge_back : out of index.\n"
 			)	
 		;	bi != ei
