@@ -63,7 +63,7 @@ static void Test5()
 
 	sgm::Pinweight<T5> const pw1;
 
-	pw1.value().method();
+	pw1.get().method();
 
 	sgm::Pinweight<T5> pw2 = pw1;
 
@@ -71,7 +71,7 @@ static void Test5()
 
 	is_True( pw1.share_with(pw2) );
 
-	pw2.value().method();
+	pw2.get().method();
 
 	is_True( pw1.share_with(pw2) && pw1.share_count() == 2 );
 
@@ -93,7 +93,7 @@ static void Test6()
 
 	ppw = cpw;
 
-	static_assert( std::is_same< std::decay_t<decltype(ppw.value())>, int >::value, "" );
+	static_assert( std::is_same< std::decay_t<decltype(ppw.get())>, int >::value, "" );
 
 	pw = ppw;
 

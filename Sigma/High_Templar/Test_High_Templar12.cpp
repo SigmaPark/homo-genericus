@@ -46,7 +46,7 @@ bool test_ht::are_same_ranges(RG1 &&rg1, RG2 &&rg2)
 
 void test_ht::MorphTest()
 {
-	auto answer = std::initializer_list<double>{ -1, -2, -3, -4, -5 };
+	auto answer = sgm::Serial<double, 5>{ -1, -2, -3, -4, -5 };
 
 	sgm::spec::is_True
 	(	are_same_ranges
@@ -76,7 +76,7 @@ void test_ht::MorphTest()
 void test_ht::FilterTest()
 {
 	auto is_even = [](int const& x)-> bool{  return x % 2 == 0;  };
-	auto answer = std::initializer_list<int>{2, 4, 6, 8, 10};
+	auto answer = sgm::Serial<int, 5>{2, 4, 6, 8, 10};
 
 	sgm::Serial<int> const sr1 = sgm::Countable<int>(10, 1);
 

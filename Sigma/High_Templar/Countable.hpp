@@ -67,19 +67,17 @@ public:
 
 	auto operator*() const-> N{  return _number;  }
 
-
-	auto operator=(Count_iterator<N, !INCREASING> const itr)-> iter_t
-	{
-		return _number = *itr,  *this;
-	}
+	auto operator=(Count_iterator<N, !INCREASING> const itr)
+	->	iter_t{  return _number = *itr,  *this;  }
 
 
-	auto operator++(int)-> iter_t
-	{
+	auto operator++(int)->	iter_t
+	{  
 		iter_t const iter = *this;
 
 		return _number = _shifted<true>(**this),  iter;
 	}
+
 
 	auto operator--(int)-> iter_t
 	{
@@ -88,24 +86,22 @@ public:
 		return _number = _shifted<false>(**this),  iter;
 	}
 
-	template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
-	auto operator+(_N const interval) const-> iter_t
-	{	
-		return iter_t(  _shifted<true>( **this, static_cast<N>(interval) )  );
-	}
 
-	template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
-	auto operator-(_N const interval) const-> iter_t
-	{
-		return iter_t(  _shifted<false>( **this, static_cast<N>(interval) )  );
-	}
+	template<class _N>
+	auto operator+(_N const interval) const
+	->	iter_t{  return {_shifted<true>( **this, static_cast<N>(interval) )};  }
+
+	template<class _N>
+	auto operator-(_N const interval) const
+	->	iter_t{  return {_shifted<false>( **this, static_cast<N>(interval) )};  }
+
 
 	auto operator-(iter_t const itr) const-> long long
 	{
 		bool const greater_mine = **this > *itr;
 		N const du = greater_mine ? **this - *itr : *itr - **this;
 
-		assert(du <= 9223372036854775807i64 && L"the difference exceeds maximum capacity.");
+		assert(du <= 9223372036854775807LL && L"the difference exceeds maximum capacity.");
 
 		return
 		INCREASING == greater_mine
@@ -113,20 +109,19 @@ public:
 		:	-static_cast<long long>(du);
 	}
 
-	template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
+
+	template<class _N>
 	auto operator+=(_N const interval)-> iter_t&{  return *this = *this + interval;  }
 	
-	template<  class _N, class = Enable_if_t< is_Convertible<_N, N>::value >  >
+	template<class _N>
 	auto operator-=(_N const interval)-> iter_t&{  return *this = *this - interval;  }
 
 	auto operator++()-> iter_t&{  return *this += 1;  }
 	auto operator--()-> iter_t&{  return *this -= 1;  }
 
 
-	auto operator[](size_t const interval) const-> N
-	{
-		return *( *this + static_cast<N>(interval) );  
-	}
+	auto operator[](long long const interval) const
+	->	N{  return *( *this + interval );  }
 
 
 	bool operator==(iter_t const itr) const{  return **this == *itr;  }
@@ -175,7 +170,7 @@ struct std::iterator_traits< sgm::Count_iterator<N, INCREASING> >
 {
 	using iterator_category = std::random_access_iterator_tag;
 	using value_type = N;
-	using difference_type = signed long long;
+	using difference_type = long long;
 	using pointer = N const*;
 	using reference = N const&;
 };

@@ -155,7 +155,7 @@ public:
 		else if constexpr(Blank::has_rear_blank_v<ARGS...>)
 			return _cut_rear( Forward<ARGS>(args)... );
 		else if constexpr( sizeof...(ARGS) == D )
-			return _pwf.value()( Forward<ARGS>(args)... );
+			return _pwf.get()( Forward<ARGS>(args)... );
 	}
 
 
@@ -169,7 +169,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( args..., Forward<decltype(params)>(params)... );
+			return cpy_pwf.get()( args..., Forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -183,7 +183,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.value()( Forward<decltype(params)>(params)..., args... );
+			return cpy_pwf.get()( Forward<decltype(params)>(params)..., args... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 

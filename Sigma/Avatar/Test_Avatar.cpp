@@ -27,7 +27,7 @@ static void Test1()
 
 		is_True(cavt == cx);
 
-		cavt(x);
+		cavt.reset(x);
 
 		is_True(cavt == x);
 
@@ -63,7 +63,7 @@ static void Test3()
 
 	int x = 9;
 
-	avt1(x);
+	avt1.reset(x);
 
 	x = 4;
 
@@ -81,13 +81,13 @@ static void Test4()
 
 	Avatar<int const> avt1;
 
-	avt1(x);
+	avt1.reset(x);
 
 	is_True(avt1 == 3);
 
 	int const cx = 4;
 
-	avt1(cx);
+	avt1.reset(cx);
 
 	Avatar<int> avt2;
 
@@ -117,6 +117,20 @@ static void Test5()
 
 	is_True(avt1 == 3 && avt2 == 3);
 }
+
+
+static void Test6()
+{
+	int x1 = 3, x2 = 5;
+	Avatar<int> avt1 = x1, avt2 = x2;
+
+	auto i3 = avt1 + avt2, i4 = avt2 - avt1;
+	auto b1 = avt1 > avt2;
+
+	is_True(i3 == 8 && i4 == 2 && b1 == false);
+
+	[](int, int const&, int&){}(avt1, avt2, avt2);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -133,6 +147,7 @@ void Test_sgm_Avatar::test()
 		::Test3();
 		::Test4();
 		::Test5();
+		::Test6();
 		
 		std::wcout << L"Avatar Test Complete.\n";
 	}

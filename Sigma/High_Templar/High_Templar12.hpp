@@ -936,7 +936,6 @@ public:
 template<bool M, class FAM>
 struct std::iterator_traits< sgm::ht::Plait_iterator<FAM, M> >::_FAM_trait : sgm::No_Making
 {
-private:
 	template<class...ITRS>
 	using _tag_t
 	=	sgm::Selective_t
@@ -958,8 +957,8 @@ private:
 	>
 	/* Declaration Only */ static auto _tag(sgm::Family<ITRS...>) noexcept-> _tag_t<ITRS...>;
 
-public:
-	template<class FAM>  using tag_t = decltype( _tag(sgm::Declval<FAM>()) );	
+
+	template<class _FAM>  using tag_t = decltype( _tag(sgm::Declval<_FAM>()) );	
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

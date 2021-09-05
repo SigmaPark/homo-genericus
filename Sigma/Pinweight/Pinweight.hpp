@@ -85,8 +85,8 @@ public:
 	~_Pinweight_interface(){  _my_pcount_down();  }
 
 
-	auto value() const-> T const&{  return *_cpval;  }
-	operator T const&() const{  return value();  }
+	auto get() const-> T const&{  return *_cpval;  }
+	operator T const&() const{  return get();  }
 
 	auto operator->() const-> value_t const*{  return _cpval;  }
 
@@ -180,7 +180,7 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 	auto _detached_ptr()-> typename impl_t::value_t*
 	{
 		if(impl_t::share_count() > 1)
-			*this = Pinweight_t(impl_t::value());
+			*this = Pinweight_t(impl_t::get());
 			
 		return this->_cpval;
 	}
