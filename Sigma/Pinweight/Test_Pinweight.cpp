@@ -145,12 +145,12 @@ static void Test8()
 
 	is_True( pw1.share_with(pw2) );
 
-	pw1--->Set(11);
+	pw1.mut().Set(11);
 
 	is_True
 	(	!pw1.share_with(pw2) 
-	&&	pw1->Get() == 11
-	&&	pw3->Get() == 1
+	&&	pw1.get().Get() == 11
+	&&	pw3.get().Get() == 1
 	);
 
 
@@ -165,6 +165,15 @@ static void Test9()
 	auto b1 = pwi1 > pwi2;
 
 	is_True(i3 == 8 && i4 == 2 && b1 == false);
+
+	
+	Pinweight<int> pw3 = pwi2;
+
+	is_True( pw3.share_with(pwi2) );
+	
+	pw3.mut()++;
+
+	is_True( pwi2 == 5 && pw3 == 6);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
