@@ -577,9 +577,8 @@ public:
 
 	auto operator=(T *p)-> T*{  return _p = p;  }
 	
-	operator T const&() const&{  return *_p;  }
-	operator T&() &{  return *_p;  }
-	operator T&&() &&{  return *_p;  }
+	operator T const&() const{  return *_p;  }
+	operator T&(){  return *_p;  }
 
 
 #if	!defined(_SGM_OPERATOR_HELPER) && !defined(_SGM_GENERIC_OPERATOR) &&	\

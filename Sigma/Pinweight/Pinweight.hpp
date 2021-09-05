@@ -54,7 +54,8 @@ public:
 	using value_t = T;
 
 
-	_Pinweight_interface() : _cpval(new value_t()), _pcount( new count_t(1) )
+	_Pinweight_interface() 
+	:	_cpval(new value_t()), _pcount( new count_t(1) )
 	{
 		_update_ptr(_cpval);
 	}
