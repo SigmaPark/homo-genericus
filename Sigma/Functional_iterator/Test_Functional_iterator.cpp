@@ -70,13 +70,13 @@ void Test<2>()
 	);
 
 
-	auto ci = con.cbegin();
-	auto i = con.begin();
+	auto ci = con.cbegin(), ci2 = ++con.cbegin();
+	auto i = con.begin(),  i2 = ++con.begin();
 
 	//i = ci;
-	ci = i;
-	i = i;
-	ci = ci;
+	ci2 = i;
+	i2 = i;
+	ci2 = ci;
 
 	//static_cast<decltype(i)>(ci);
 	static_cast<decltype(ci)>(i);
