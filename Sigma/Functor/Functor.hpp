@@ -154,7 +154,7 @@ public:
 		else if constexpr(Blank::has_rear_blank_v<ARGS...>)
 			return _cut_rear( Forward<ARGS>(args)... );
 		else if constexpr( sizeof...(ARGS) == D )
-			return _pwf.get()( Forward<ARGS>(args)... );
+			return _pwf( Forward<ARGS>(args)... );
 	}
 
 
@@ -168,7 +168,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.get()( args..., Forward<decltype(params)>(params)... );
+			return cpy_pwf( args..., Forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -182,7 +182,7 @@ private:
 		return
 		[cpy_pwf = _pwf, args...](auto&&...params)
 		{
-			return cpy_pwf.get()( Forward<decltype(params)>(params)..., args... );
+			return cpy_pwf( Forward<decltype(params)>(params)..., args... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -236,7 +236,7 @@ public:
 	{
 		using eval_t = _Evaluator< D, constPinweight<F> >;
 
-		if constexpr( Check_All<is_Multiple>::template for_any< Decay_t<ARGS>... >::value )
+		if constexpr( (is_Multiple_v< Decay_t<ARGS> > || ...) )
 			return Apply(  eval_t(_pwf), Params( Forward<ARGS>(args)... )  );
 		else
 			return eval_t(_pwf)( Forward<ARGS>(args)... );
