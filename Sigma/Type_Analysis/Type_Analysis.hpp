@@ -197,7 +197,9 @@ namespace sgm
 	{
 	private:
 		template<class B> /* Declaration Only */ static auto _calc(B const volatile*)-> True_t;
-		template<class...> /* Declaration Only */ static auto _calc(void const volatile*)-> False_t;
+
+		template<class...> /* Declaration Only */ 
+		static auto _calc(void const volatile*)-> False_t;
 
 
 		template<class D, class B> /* Declaration Only */ 
@@ -319,14 +321,14 @@ namespace sgm
 
 
 	template< class T, class Res_t = Referenceless_t<T>&& >
-	static auto Move(T&& t) noexcept-> Res_t{  return static_cast<Res_t>(t);  }
+	static auto Move(T &&t) noexcept-> Res_t{  return static_cast<Res_t>(t);  }
 
 
 	template<class T>
-	static auto Forward(Referenceless_t<T>& t)-> T&&{  return static_cast<T&&>(t);  }
+	static auto Forward(Referenceless_t<T> &t)-> T&&{  return static_cast<T&&>(t);  }
 
 	template<class T>
-	static auto Forward(Referenceless_t<T>&& t) noexcept-> T&&{  return Move(t);  }
+	static auto Forward(Referenceless_t<T> &&t) noexcept-> T&&{  return Move(t);  }
 
 
 	template<class T> static auto immut(T &t)-> T const&{  return t;  }
@@ -340,14 +342,14 @@ namespace sgm
 	struct sgm::Move_if<false> : No_Making
 	{
 		template<class T>
-		static auto cast(T&& t)-> decltype( Forward<T>(t) ){  return Forward<T>(t);  }
+		static auto cast(T &&t)-> decltype( Forward<T>(t) ){  return Forward<T>(t);  }
 	};
 	
 	template<>
 	struct sgm::Move_if<true> : No_Making
 	{
 		template<class T>
-		static auto cast(T&& t)-> decltype( Move(t) ){  return Move(t);  }
+		static auto cast(T &&t)-> decltype( Move(t) ){  return Move(t);  }
 	};
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
@@ -382,7 +384,7 @@ namespace sgm
 	struct _Nth_element : No_Making
 	{
 		template<class T, class...ARGS>
-		static auto calc(T&& t, ARGS&&...args)-> Nth_t<IDX - 1, ARGS&&...>
+		static auto calc(T &&t, ARGS&&...args)-> Nth_t<IDX - 1, ARGS&&...>
 		{
 			return _Nth_element<IDX - 1>::calc( Forward<ARGS>(args)... );
 		}
@@ -392,14 +394,12 @@ namespace sgm
 	struct _Nth_element<0> : No_Making
 	{
 		template<class T, class...ARGS>
-		static auto calc(T&& t, ARGS&&...)-> T&&{  return Forward<T>(t);  }
+		static auto calc(T &&t, ARGS&&...)-> T&&{  return Forward<T>(t);  }
 	};
 
 	template<unsigned IDX, class...ARGS>
-	static auto Nth_elem(ARGS&&...args)-> Nth_t<IDX, ARGS&&...>
-	{
-		return _Nth_element<IDX>::calc( Forward<ARGS>(args)... );
-	}
+	static auto Nth_elem(ARGS&&...args)
+	->	Nth_t<IDX, ARGS&&...>{  return _Nth_element<IDX>::calc( Forward<ARGS>(args)... );  }
 
 
 }
@@ -451,7 +451,8 @@ namespace sgm
 	
 		#define _SGM_DECAY_TEMPLATE_ALIAS(PRE, TITLE)	\
 			template<class...ARGS>	\
-			static auto constexpr is##PRE##TITLE##_v = is##PRE##TITLE< Decay_t<ARGS>... >::value
+			static auto constexpr is##PRE##TITLE##_v \
+			=	is##PRE##TITLE< Decay_t<ARGS>... >::value
 	
 	
 		namespace sgm

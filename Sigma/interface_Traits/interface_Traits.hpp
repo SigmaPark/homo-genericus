@@ -341,7 +341,7 @@ namespace sgm
 			&&	is_Same<  Decay_t< Deref_t<RG1> >, Decay_t< Deref_t<RG2> >  >::value
 			>
 	>
-	static auto iterable_cast(RG2&& rg)-> RG1{  return RG1( Begin(rg), End(rg) );  }
+	static auto iterable_cast(RG2 &&rg)-> RG1{  return RG1( Begin(rg), End(rg) );  }
 	//========//========//========//========//=======#//========//========//========//========//===
 
 

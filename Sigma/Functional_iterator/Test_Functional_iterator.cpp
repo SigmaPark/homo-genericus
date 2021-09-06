@@ -79,7 +79,7 @@ void Test<2>()
 	ci2 = ci;
 
 	//static_cast<decltype(i)>(ci);
-	static_cast<decltype(ci)>(i);
+	ci = static_cast<decltype(ci)>(i);
 }
 
 
