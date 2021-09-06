@@ -38,72 +38,64 @@ public:
 	using value_type = Referenceless_t< decltype(Declval<F>()()) >;
 
 
-	Lazy(F f) : _f(f), _yet(true), _p(nullptr){}
+	Lazy(F f) : _f(f), _is_evaluated(false){}
 
-	Lazy(Lazy const& z) 
-	:	_f(z._f), _yet(z.has_yet())
-	,	_p( z.is_evaluated() ? new(_buf) value_type(*z._p) : nullptr )
-	{}
+	Lazy(Lazy const &z) : _f(z._f), _is_evaluated(z.is_evaluated())
+	{
+		if(z.is_evaluated())
+			new(_buf) value_type(*z);
+	}
 
-	Lazy(Lazy&& z) noexcept
-	:	_f( Move(z._f) ), _yet(z.has_yet())
-	,	_p(  z.is_evaluated() ? new(_buf) value_type( Move(*z._p) ) : nullptr  )
-	{}
+	Lazy(Lazy &&z) noexcept : _f( Move(z._f) ), _is_evaluated(z.is_evaluated())
+	{
+		if(z.is_evaluated())
+			new(_buf) value_type( Move(*z) );
+	}
 
 	~Lazy()
 	{
-		if(_p != nullptr)
-			_p->~value_type(),  _p = nullptr;
-		
-		_yet = false;
+		if(is_evaluated())
+			(**this).~value_type(),
+			_is_evaluated = false;
 	}
 
-
-	void clear()
-	{
-		this->~Lazy();
-
-		for(auto& c : _buf)
-			c = char(0);
-	}
 
 	auto get() const-> value_type const&{  return _deref(*this);  }
 	auto get()-> value_type&{  return _deref(*this);  }
 
-	void operator=(Lazy const&) = delete;
-	auto operator=(value_type const& t)-> Lazy&{  return void(get() = t),  *this;  }
-	auto operator=(value_type&& t) noexcept-> Lazy&{  return void( get() = Move(t) ),  *this;  }
+	bool is_evaluated() const{  return _is_evaluated;  }
 
-	auto operator*() const-> value_type const&{  return get();  }
-	auto operator*()-> value_type&{  return get();  }
 	operator value_type&(){  return get();  }
 	operator value_type const&() const{  return get();  }
 
-	bool has_yet() const{  return _yet;  }
-	bool is_destructed() const{  return !has_yet() && _p == nullptr;  }
-	bool is_evaluated() const{  return !has_yet() && _p != nullptr;  }
+	void operator=(Lazy const&) = delete;
+	auto operator=(value_type const &t)-> Lazy&{  return void(get() = t),  *this;  }
+	auto operator=(value_type &&t) noexcept-> Lazy&{  return void( get() = Move(t) ),  *this;  }
+
+	auto operator*() const-> value_type const&{  return *reinterpret_cast<value_type*>(_buf);  }
+	auto operator*()-> value_type&{  return *reinterpret_cast<value_type*>(_buf);  }
 
 
 private:
 	char mutable _buf[sizeof(value_type)] = {0, };
 	F _f;
-	bool mutable _yet;
-	value_type mutable *_p;
+	bool mutable _is_evaluated;
 	
 
-	template<class Z>
-	static auto _deref(Z&& z)-> decltype(*z._p)
+	template<class ME>
+	static auto _deref(ME &me)
+	->	Selective_t< is_immutable<ME>::value, value_type const, value_type >&
 	{
-		if(z.has_yet())
-			z._p = new(z._buf) value_type(z._f()),  z._yet = false;
+		if(!me.is_evaluated())
+			new(me._buf) value_type(me._f()),  me._is_evaluated = true;
 
-		return *z._p;
+		return *me;
 	}
 };	
 
 
 template<class F>
-auto sgm::Make_Lazy(F&& f)-> Lazy< Referenceless_t<F> >{  return Forward<F>(f);  }
+auto sgm::Make_Lazy(F &&f)-> Lazy< Referenceless_t<F> >{  return Forward<F>(f);  }
 
 
 #endif // end of #ifndef _SGM_LAZY_

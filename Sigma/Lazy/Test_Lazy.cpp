@@ -12,7 +12,7 @@ using sgm::spec::Specimen;
 
 
 template<>
-void Test<2>()
+void Test<1>()
 {
 	int number = 333;
 
@@ -20,7 +20,7 @@ void Test<2>()
 
 	number = 3;
 
-	sgm::spec::is_True( *Lz == Specimen(3) );
+	sgm::spec::is_True( Lz.get() == Specimen(3) );
 
 	sgm::Lazy_value_t<decltype(Lz)> s1 = Lz;
 
@@ -32,15 +32,11 @@ void Test<2>()
 
 	auto const Lz2 = Lz;
 
-	Specimen& rz = Lz;
+	Specimen &rz = Lz;
 
 	rz = 15;
 
 	sgm::spec::is_True( *Lz == Specimen(15) && *Lz2 == 24 );
-
-	Lz.~Lazy();
-
-	sgm::spec::is_True(Lz.is_destructed() && s1 == 3);
 }
 
 
@@ -52,8 +48,7 @@ void Test_sgm_Lazy::test()
 {
 	try
 	{
-		//::Test<1>();
-		::Test<2>();
+		::Test<1>();
 
 		std::wcout << L"Lazy Test Complete.\n";
 	}
