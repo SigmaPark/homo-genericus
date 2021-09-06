@@ -23,8 +23,10 @@ namespace sgm::fp
 	static auto Forward_as_Multiple(ARGS&&...args);
 
 
-	SGM_USER_DEFINED_TYPE_CHECK14(_, Multiple, class...TYPES, TYPES...);
+	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
+	struct is_Multiple;
 
+	template<class...ARGS>  static auto constexpr is_Multiple_v = is_Multiple<ARGS...>::value;
 
 	template<class T, class...ARGS>
 	static decltype(auto) Make_Flat_MTP(T&& t, ARGS&&...args);
@@ -58,6 +60,14 @@ namespace sgm::fp
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<class T>  struct sgm::fp::is_Multiple<T, sgm::False_t> : is_Multiple< Decay_t<T> >{};
+template<class T>  struct sgm::fp::is_Multiple<T, sgm::True_t> : False_t{};
+
+template<class...ARGS>  
+struct sgm::fp::is_Multiple< sgm::fp::Multiple<ARGS...>, sgm::True_t > : True_t{};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template< template<class...> class TC >

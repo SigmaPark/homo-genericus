@@ -200,7 +200,7 @@ namespace sgm
 {
 
 	template<class T>
-	static auto Pinweighting(T &&t)-> Pinweight< Referenceless_t<T> >{  return Forward<T>(t);  }
+	static auto Share(T &&t)-> Pinweight< Referenceless_t<T> >{  return Forward<T>(t);  }
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

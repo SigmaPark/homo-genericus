@@ -19,38 +19,27 @@
 namespace sgm::fp
 {
 	
-	template<unsigned D, class F>
-	class Functor;
-	
+	template<unsigned D, class F>  class Functor;
 
 	struct Blank;
 
-
-	template<unsigned D, class...ARGS>
-	class Dimension;
-
-	template<unsigned D>
-	static inline auto const Dim = Dimension<D>();
+	template<unsigned D, class...ARGS>  class Dimension;
+	template<unsigned D>  static inline auto const Dim = Dimension<D>();
 
 
-	SGM_USER_DEFINED_TYPE_CHECK14
-	(	_, Functor, SGM_MACROPACK(unsigned D, class T), SGM_MACROPACK(D, T) 
-	);
+	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
+	struct is_Functor;
+
+	template<class...ARGS>  static auto constexpr is_Functor_v = is_Functor<ARGS...>::value;
 
 
-	template<unsigned D, class F>
-	class _Evaluator;
-
+	template<unsigned D, class F>  class _Evaluator;
 
 	struct _rPass_Helper;
 
-
-	template<unsigned...INDICES>
-	struct _Permute_Helper;
-
+	template<unsigned...INDICES>  struct _Permute_Helper;
 	
-	template<class...ARGS>
-	static auto Params(ARGS&&...);
+	template<class...ARGS>  static auto Params(ARGS&&...);
 
 }
 
@@ -61,6 +50,16 @@ static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D>);
 template<unsigned _D, class _F, class..._ARGS>
 static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D, _ARGS...>&&);
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+template<class T>  
+struct sgm::fp::is_Functor<T, sgm::False_t> : sgm::fp::is_Functor< Decay_t<T> >{};
+
+template<class T>  struct sgm::fp::is_Functor<T, sgm::True_t> : False_t{};
+
+template<unsigned D, class T>  
+struct sgm::fp::is_Functor< sgm::fp::Functor<D, T>, sgm::True_t > : True_t{};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 struct sgm::fp::Blank

@@ -140,7 +140,7 @@ static void Test8()
 	};
 
 
-	auto pw1 = Pinweighting(AA()), pw2 = pw1;
+	auto pw1 = Share(AA()), pw2 = pw1;
 	constPinweight<AA> pw3 = pw1;
 
 	is_True( pw1.share_with(pw2) );
