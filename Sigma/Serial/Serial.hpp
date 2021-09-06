@@ -37,7 +37,7 @@ class sgm::_sr_iterator_Helper : No_Making
 	,	class itr2_t = Serial_iterator<T, M2, F2>
 	>
 	static auto Substitution
-	(	Serial_iterator<T, M1, F1>& itr1, Serial_iterator<T, M2, F2> const itr2
+	(	Serial_iterator<T, M1, F1> &itr1, Serial_iterator<T, M2, F2> const itr2
 	)->	itr1_t&
 	{
 		static_assert(!M1 || M2, "cannot bind immutable iterator to mutable one.");
@@ -86,12 +86,12 @@ class sgm::Serial_iterator
 
 	friend class _sr_iterator_Helper<T>;
 
-	using value_t = Selective_t<IS_MUTABLE, T, T const>;
 	using iter_t = Serial_iterator;
-	
 
 public:
-	Serial_iterator(value_t* arr, size_t idx) : _arr(arr), _idx(idx){}
+	using elem_t = Selective_t<IS_MUTABLE, T, T const>;
+
+	Serial_iterator(elem_t* arr, size_t idx) : _arr(arr), _idx(idx){}
 	Serial_iterator(iter_t const&) = default;
 
 
@@ -109,18 +109,18 @@ public:
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
-	auto operator[](size_t const interval) const-> value_t const&
+	auto operator[](size_t const interval) const-> elem_t const&
 	{
 		return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 	}
 
-	auto operator[](size_t const interval)-> value_t&
+	auto operator[](size_t const interval)-> elem_t&
 	{
 		return *( _arr + shifted(_idx, true, interval) - (IS_FORWARD ? 0 : 1) );
 	}
 
-	auto operator*() const-> value_t const&{  return (*this)[0];  }
-	auto operator*()-> value_t&{  return (*this)[0];  }
+	auto operator*() const-> elem_t const&{  return (*this)[0];  }
+	auto operator*()-> elem_t&{  return (*this)[0];  }
 	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
@@ -200,7 +200,7 @@ public:
 
 
 private:
-	value_t* _arr;
+	elem_t* _arr;
 	size_t _idx;
 
 
@@ -392,8 +392,7 @@ class sgm::Serial<T, sgm::srSize::DYNAMIC> : public Serial<T, srSize::INTERFACE>
 
 
 	template
-	<	bool TEMP_HOST = false, class ITR
-	,	class = Enable_if_t< is_iterator<ITR>::value >  
+	<	bool TEMP_HOST = false, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  
 	>
 	auto _cloning(ITR const bi, ITR const ei, size_t const length)-> Serial&
 	{
@@ -456,16 +455,11 @@ public:
 	}
 
 
-	~Serial()
-	{	
-		clear(),  ::operator delete(_core),  _core = nullptr,  _capacity = 0;  
-	}
+	~Serial(){  clear(),  ::operator delete(_core),  _core = nullptr,  _capacity = 0;  }
 
 
-	auto operator=(Serial const &sr)-> Serial&
-	{
-		return _cloning(sr.cbegin(), sr.cend(), sr.capacity());
-	}
+	auto operator=(Serial const &sr)
+	->	Serial&{  return _cloning(sr.cbegin(), sr.cend(), sr.capacity());  }
 
 
 	auto operator=(Serial &&sr) noexcept-> Serial&
@@ -484,16 +478,14 @@ public:
 	>
 	auto operator=(RG &&rg)-> Serial&
 	{
-		return 
-		_cloning< is_RvalueReference<RG&&>::value >( Begin(rg), End(rg), Size(rg) );
+		return _cloning< is_RvalueReference<RG&&>::value >( Begin(rg), End(rg), Size(rg) );
 	}
 
 
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
-	auto operator=(std::initializer_list<Q> &&iL)-> Serial&
-	{
-		return _cloning<true>(iL.begin(), iL.end(), iL.size());
-	}
+	auto operator=(std::initializer_list<Q> &&iL)
+	->	Serial&{  return _cloning<true>(iL.begin(), iL.end(), iL.size());  }
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	auto capacity() const-> size_t{  return _capacity;  }
@@ -519,8 +511,7 @@ public:
 
 
 	template
-	<	bool TEMP_HOST = false, class ITR
-	,	class = Enable_if_t< is_iterator<ITR>::value >  
+	<	bool TEMP_HOST = false, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  
 	>
 	auto merge_back(ITR bi, ITR const ei)-> Serial&
 	{
@@ -565,7 +556,7 @@ public:
 
 		return *this;
 	}
-
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 	using citer_t = typename Helper::citer_t;
 	using iter_t = typename Helper::iter_t;
@@ -586,18 +577,11 @@ public:
 
 	template
 	<	class RG
-	,	class 
-		=	Enable_if_t
-			<	is_iterable<RG>::value && !is_Same< Decay_t<RG>, Serial >::value
-			>
+	,	class = Enable_if_t<  is_iterable<RG>::value && !is_Same< Decay_t<RG>, Serial >::value  >
 	> 
 	operator RG() const{  return Decay_t<RG>(Helper::begin(), end());  }
 };// end of class Serial
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-
-//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #include <iterator>
@@ -609,8 +593,8 @@ struct std::iterator_traits< sgm::Serial_iterator<T, M, F> >
 	using iterator_category = random_access_iterator_tag;
 	using value_type = T;
 	using difference_type = long long;
-	using pointer = conditional_t<M, T*, T const*>;
-	using reference = conditional_t<M, T&, T const&>;
+	using pointer = sgm::Selective_t<M, T, T const>*;
+	using reference = sgm::Pointerless_t<pointer>&;
 };
 
 

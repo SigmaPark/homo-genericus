@@ -25,7 +25,7 @@ namespace sgm
 	<	class LAZY, class _lazy_t = Referenceless_t<LAZY>
 	,	class = Guaranteed_t< is_Lazy<_lazy_t>::value >
 	>
-	using Lazy_value_t = typename _lazy_t::type;
+	using Lazy_value_t = typename _lazy_t::value_type;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -35,25 +35,25 @@ template<class F>
 struct sgm::Lazy
 {
 public:
-	using type = Referenceless_t< decltype(Declval<F>()()) >;
+	using value_type = Referenceless_t< decltype(Declval<F>()()) >;
 
 
 	Lazy(F f) : _f(f), _yet(true), _p(nullptr){}
 
 	Lazy(Lazy const& z) 
 	:	_f(z._f), _yet(z.has_yet())
-	,	_p( z.is_evaluated() ? new(_buf) type(*z._p) : nullptr )
+	,	_p( z.is_evaluated() ? new(_buf) value_type(*z._p) : nullptr )
 	{}
 
 	Lazy(Lazy&& z) noexcept
 	:	_f( Move(z._f) ), _yet(z.has_yet())
-	,	_p(  z.is_evaluated() ? new(_buf) type( Move(*z._p) ) : nullptr  )
+	,	_p(  z.is_evaluated() ? new(_buf) value_type( Move(*z._p) ) : nullptr  )
 	{}
 
 	~Lazy()
 	{
 		if(_p != nullptr)
-			_p->~type(),  _p = nullptr;
+			_p->~value_type(),  _p = nullptr;
 		
 		_yet = false;
 	}
@@ -67,17 +67,17 @@ public:
 			c = char(0);
 	}
 
-	auto get() const-> type const&{  return _deref(*this);  }
-	auto get()-> type&{  return _deref(*this);  }
+	auto get() const-> value_type const&{  return _deref(*this);  }
+	auto get()-> value_type&{  return _deref(*this);  }
 
 	void operator=(Lazy const&) = delete;
-	auto operator=(type const& t)-> Lazy&{  return void(get() = t),  *this;  }
-	auto operator=(type&& t) noexcept-> Lazy&{  return void( get() = Move(t) ),  *this;  }
+	auto operator=(value_type const& t)-> Lazy&{  return void(get() = t),  *this;  }
+	auto operator=(value_type&& t) noexcept-> Lazy&{  return void( get() = Move(t) ),  *this;  }
 
-	auto operator*() const-> type const&{  return get();  }
-	auto operator*()-> type&{  return get();  }
-	operator type&(){  return get();  }
-	operator type const&() const{  return get();  }
+	auto operator*() const-> value_type const&{  return get();  }
+	auto operator*()-> value_type&{  return get();  }
+	operator value_type&(){  return get();  }
+	operator value_type const&() const{  return get();  }
 
 	bool has_yet() const{  return _yet;  }
 	bool is_destructed() const{  return !has_yet() && _p == nullptr;  }
@@ -85,17 +85,17 @@ public:
 
 
 private:
-	char mutable _buf[sizeof(type)] = {0, };
+	char mutable _buf[sizeof(value_type)] = {0, };
 	F _f;
 	bool mutable _yet;
-	type mutable *_p;
+	value_type mutable *_p;
 	
 
 	template<class Z>
 	static auto _deref(Z&& z)-> decltype(*z._p)
 	{
 		if(z.has_yet())
-			z._p = new(z._buf) type(z._f()),  z._yet = false;
+			z._p = new(z._buf) value_type(z._f()),  z._yet = false;
 
 		return *z._p;
 	}
