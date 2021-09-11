@@ -82,7 +82,7 @@ static void stbinding_by_family()
 {
 	auto fam = sgm::Family<int, double>(3, .14);
 
-	auto[x1, x2] = fam;
+	auto [x1, x2] = fam;
 
 	is_True( x1 == 3 && abs(x2 - .14) < 1e-7 );
 }
@@ -95,7 +95,7 @@ void Test_Case::Codomain_Merge()
 
 	int x1 = 3, x2 = 2, x3 = 4, x4 = 1;
 
-	auto[a1, a2] = *(ftr + ftr2)(x1, x2, x3, x4);	
+	auto [a1, a2] = *(ftr + ftr2)(x1, x2, x3, x4);	
 
 	is_True(a1 == 6 && a2 == 3);
 	auto a = (ftr2 | ftr + ftr2)(x1, x2, x3, x4);
