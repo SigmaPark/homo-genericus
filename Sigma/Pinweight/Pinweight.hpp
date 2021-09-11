@@ -103,14 +103,14 @@ private:
 	static auto _pcount_up(count_t *pn)-> count_t*
 	{
 		if(pn != nullptr)
-			++(*pn);
+			++*pn;
 
 		return pn;
 	}
 
 	void _my_pcount_down() const
 	{
-		if( _pcount != nullptr && --(*_pcount) == 0 )
+		if( _pcount != nullptr && --*_pcount == 0 )
 			delete _cpval, _cpval = nullptr,
 			delete _pcount, _pcount = nullptr;
 	}
