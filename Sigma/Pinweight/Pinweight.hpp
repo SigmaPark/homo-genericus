@@ -50,25 +50,12 @@ public:
 
 
 	template<  class Q, class = Enable_if_t< !is_Pinweight<Q>::value >  >
-	auto operator=(Q &&q)-> _PinweightBase&
-	{
-		_share_count_down();
-
-		_update_cpval(  new value_t( Forward<Q>(q) )  );
-		_pcount = new count_t(1);
-
-		return *this;
-	}
+	auto operator=(Q &&q)-> _PinweightBase&{  return *this = _PinweightBase( Forward<Q>(q) );  }
 
 	auto operator=(_PinweightBase const &pwb)-> _PinweightBase&
 	{
 		if( !share_with(pwb) )
-		{
-			_share_count_down(),  _pcount_up(pwb._pcount);
-
-			_update_cpval(pwb._cpval);
-			_pcount = pwb._pcount;
-		}
+			_update( pwb._cpval, _pcount_up(pwb._pcount) );
 
 		return *this;
 	}
@@ -76,14 +63,8 @@ public:
 	auto operator=(_PinweightBase &&pwb)-> _PinweightBase&
 	{
 		if( !share_with(pwb) )
-		{
-			_share_count_down();
-
-			_update_cpval(pwb._cpval);
-			_pcount = pwb._pcount;
-
+			_update(pwb._cpval, pwb._pcount),
 			pwb._cpval = nullptr,  pwb._pcount = nullptr;
-		}
 
 		return *this;
 	}
@@ -117,7 +98,13 @@ private:
 
 
 	void _update_ptr(){  static_cast< Operator_interface<T const>& >(*this) = _cpval;  }
-	void _update_cpval(T *p){  _cpval = p,  _update_ptr();  }
+
+	void _update(T *pval, count_t *pcount)
+	{
+		_share_count_down();
+		_cpval = pval,  _update_ptr();
+		_pcount = pcount;
+	}
 
 protected:
 	auto _mutable_ref()-> T&{  return *_cpval;  }
@@ -215,4 +202,3 @@ namespace sgm
 
 
 #endif // end of #ifndef _SGM_PINWEIGHT_
-
