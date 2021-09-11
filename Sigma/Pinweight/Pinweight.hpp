@@ -23,6 +23,8 @@ namespace sgm
 template<class T>
 class sgm::_PinweightBase : public Operator_interface<T const>
 {
+	using _opifc_t = Operator_interface<T const>;
+
 public:
 	using count_t = std::atomic<size_t>;
 	using value_t = T;
@@ -46,13 +48,13 @@ public:
 		_update_ptr(),  pwb._cpval = nullptr,  pwb._pcount = nullptr;
 	}
 
-	~_PinweightBase(){  _my_pcount_down();  }
+	~_PinweightBase(){  _share_count_down();  }
 
 
 	template<  class Q, class = Enable_if_t< !is_Pinweight<Q>::value >  >
 	auto operator=(Q &&q)-> _PinweightBase&
 	{
-		_my_pcount_down();
+		_share_count_down();
 
 		_cpval = new value_t( Forward<Q>(q) ),  _update_ptr();
 		_pcount = new count_t(1);
@@ -64,7 +66,7 @@ public:
 	{
 		if( !share_with(pwb) )
 		{
-			_my_pcount_down(),  _pcount_up(pwb._pcount);
+			_share_count_down(),  _pcount_up(pwb._pcount);
 
 			_cpval = pwb._cpval,  _update_ptr(),
 			_pcount = pwb._pcount;
@@ -77,7 +79,7 @@ public:
 	{
 		if( !share_with(pwb) )
 		{
-			_my_pcount_down();
+			_share_count_down();
 
 			_cpval = pwb._cpval,  _update_ptr(),  
 			_pcount = pwb._pcount;
@@ -108,7 +110,7 @@ private:
 		return pn;
 	}
 
-	void _my_pcount_down() const
+	void _share_count_down() const
 	{
 		if( _pcount != nullptr && --*_pcount == 0 )
 			delete _cpval, _cpval = nullptr,

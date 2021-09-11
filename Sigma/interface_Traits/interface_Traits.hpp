@@ -471,7 +471,7 @@ namespace sgm
 template<class T>
 class sgm::Operator_interface
 {
-private:
+protected:
 	T *_p;
 
 
