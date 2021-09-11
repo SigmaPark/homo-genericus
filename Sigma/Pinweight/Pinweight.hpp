@@ -23,8 +23,6 @@ namespace sgm
 template<class T>
 class sgm::_PinweightBase : public Operator_interface<T const>
 {
-	using _opifc_t = Operator_interface<T const>;
-
 public:
 	using count_t = std::atomic<size_t>;
 	using value_t = T;
