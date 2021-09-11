@@ -15,38 +15,94 @@ namespace sgm
 	SGM_ABBREVIABLE_PROXY(Pinweight);
 
 	template<class T>  class _PinweightBase;
+	template<class T>  struct _PinweightCore;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 template<class T>
-class sgm::_PinweightBase : public Operator_interface<T const>
+struct sgm::_PinweightCore
 {
-public:
-	using count_t = std::atomic<size_t>;
-	using value_t = T;
+	T val;
+	bool inplace;
+	std::atomic<size_t> count{1};
 
 
-	_PinweightBase() 
-	:	_cpval(new value_t()), _pcount( new count_t(1) ){  _update_ptr();  }
+	_PinweightCore() = delete;
 
-	_PinweightBase(T const &t) 
-	:	_cpval( new value_t(t) ), _pcount( new count_t(1) ){  _update_ptr();  }
 
-	_PinweightBase(T &&t) 
-	:	_cpval(  new value_t( Move(t) )  ), _pcount( new count_t(1) ){  _update_ptr();  }
-
-	_PinweightBase(_PinweightBase const &pwb)
-	:	_cpval(pwb._cpval), _pcount( _pcount_up(pwb._pcount) ){  _update_ptr();  }
-
-	_PinweightBase(_PinweightBase &&pwb) 
-	:	_cpval(pwb._cpval), _pcount(pwb._pcount)
+	template<class Q>
+	static auto Construct(Q &&q, void *vp)-> _PinweightCore*
 	{
-		_update_ptr(),  pwb._cpval = nullptr,  pwb._pcount = nullptr;
+		if(vp != nullptr)
+			return new(vp) _PinweightCore( Forward<Q>(q), true );
+		else
+			return new _PinweightCore( Forward<Q>(q), false );
 	}
 
-	~_PinweightBase(){  _share_count_down();  }
+	static void Destruct(_PinweightCore *pcore)
+	{
+		if(pcore == nullptr)
+			return;
+		
+		if(pcore->inplace)
+			pcore->val.~T(),  pcore->count.~decltype(count)();
+		else
+			delete pcore;
+
+		pcore = nullptr;
+	}
+
+
+	static void CountDown(_PinweightCore *pcore)
+	{
+		if(pcore != nullptr && --pcore->count == 0)
+			Destruct(pcore);
+	}
+
+	static auto CountUp(_PinweightCore *pcore)-> _PinweightCore*
+	{
+		if(pcore != nullptr && pcore->count != 0)
+			++pcore->count;
+
+		return pcore;
+	}
+
+private:
+	template<class Q>
+	_PinweightCore(Q &&q, bool const inp) : val( Forward<Q>(q) ), inplace(inp){}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T>
+class sgm::_PinweightBase : public Operator_interface<T const>
+{
+	using _core_t = _PinweightCore<T>;
+	using _count_t = std::atomic<size_t>;
+
+public:
+	using value_type = T;
+
+	_PinweightBase(void *vp = nullptr) 
+	:	_pcore( _core_t::Construct(T(), vp) ){  _update_ptr();  }
+
+	_PinweightBase(T const &t, void *vp = nullptr)  
+	:	_pcore( _core_t::Construct(t, vp) ){  _update_ptr();  }
+
+	_PinweightBase(T &&t, void *vp = nullptr) 
+	:	_pcore(  _core_t::Construct( Move(t), vp )  ){  _update_ptr();  }
+
+
+	_PinweightBase(_PinweightBase const &pwb) 
+	:	_pcore( _core_t::CountUp(pwb._pcore) ){  _update_ptr();  }
+
+	_PinweightBase(_PinweightBase &&pwb) 
+	:	_pcore(pwb._pcore){  _update_ptr(),  pwb._pcore = nullptr;  }
+
+
+	~_PinweightBase(){  _core_t::CountDown(_pcore);  }
 
 
 	template<  class Q, class = Enable_if_t< !is_Pinweight<Q>::value >  >
@@ -55,7 +111,7 @@ public:
 	auto operator=(_PinweightBase const &pwb)-> _PinweightBase&
 	{
 		if( !share_with(pwb) )
-			_update( pwb._cpval, _pcount_up(pwb._pcount) );
+			_update( _core_t::CountUp(pwb._pcore) );
 
 		return *this;
 	}
@@ -63,51 +119,33 @@ public:
 	auto operator=(_PinweightBase &&pwb)-> _PinweightBase&
 	{
 		if( !share_with(pwb) )
-			_update(pwb._cpval, pwb._pcount),
-			pwb._cpval = nullptr,  pwb._pcount = nullptr;
+			_update(pwb._pcore),  pwb._pcore = nullptr;
 
 		return *this;
 	}
 
 
-	auto get() const-> T const&{  return *_cpval;  }
+	auto get() const-> T const&{  return _pcore->val;  }
 
-	bool share_with(_PinweightBase const &pw) const{  return _cpval == pw._cpval;  }
-	size_t share_count() const{  return *_pcount;  }
+	bool share_with(_PinweightBase const &pw) const{  return _pcore == pw._pcore;  }
+	size_t share_count() const{  return _pcore->count;  }
 
 
 private:
-	T mutable *_cpval;
-	count_t mutable *_pcount;
+	_core_t *_pcore;
 
 
-	static auto _pcount_up(count_t *pn)-> count_t*
+	void _update_ptr(){  static_cast< Operator_interface<T const>& >(*this) = &_pcore->val;  }
+
+	void _update(_core_t *pcore)
 	{
-		if(pn != nullptr)
-			++*pn;
-
-		return pn;
-	}
-
-	void _share_count_down() const
-	{
-		if( _pcount != nullptr && --*_pcount == 0 )
-			delete _cpval, _cpval = nullptr,
-			delete _pcount, _pcount = nullptr;
-	}
-
-
-	void _update_ptr(){  static_cast< Operator_interface<T const>& >(*this) = _cpval;  }
-
-	void _update(T *pval, count_t *pcount)
-	{
-		_share_count_down();
-		_cpval = pval,  _update_ptr();
-		_pcount = pcount;
+		_core_t::CountDown(_pcore);
+		_pcore = pcore;
+		_update_ptr();
 	}
 
 protected:
-	auto _mutable_ref()-> T&{  return *_cpval;  }
+	auto _mutable_ref()-> T&{  return _pcore->val;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -120,18 +158,21 @@ class sgm::Pinweight_t
 private:
 	using _base_t = _PinweightBase<T>;
 
+	template< class Q, class _DQ = Decay_t<Q> >
+	using _enif_t 
+	=	Boolean_type
+		<	!is_Same<_DQ, Pinweight_t>::value
+		&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
+		>;
+
 public:
 	Pinweight_t() = default;
 
-	template
-	<	class Q, class _DQ = Decay_t<Q>
-	,	class 
-		=	Enable_if_t
-			<	!is_Same<_DQ, Pinweight_t>::value
-			&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
-			>
-	>
+	template<  class Q, class = Enable_if_t< _enif_t<Q>::value >  >
 	Pinweight_t(Q &&q) : _base_t( Forward<Q>(q) ){}
+
+	template<  class Q, class = Enable_if_t< _enif_t<Q>::value >  >
+	Pinweight_t(Q &&q, void *vp) : _base_t( Forward<Q>(q), vp ){}
 
 	Pinweight_t(Pinweight_t const &pw) : _base_t(pw){}
 	Pinweight_t(Pinweight_t &&pw) : _base_t( Move(pw) ){}
@@ -152,18 +193,21 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 private:
 	using _base_t = _PinweightBase<T>;
 
+	template< class Q, class _DQ = Decay_t<Q> >
+	using _enif_t 
+	=	Boolean_type
+		<	!is_Same<_DQ, Pinweight_t>::value
+		&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
+		>;
+
 public:
 	Pinweight_t() = default;
 
-	template
-	<	class Q, class _DQ = Decay_t<Q>
-	,	class 
-		=	Enable_if_t
-			<	!is_Same<_DQ, Pinweight_t>::value
-			&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
-			>
-	>
+	template<  class Q, class = Enable_if_t< _enif_t<Q>::value >  >
 	Pinweight_t(Q &&q) : _base_t( Forward<Q>(q) ){}
+
+	template<  class Q, class = Enable_if_t< _enif_t<Q>::value >  >
+	Pinweight_t(Q &&q, void *vp) : _base_t( Forward<Q>(q), vp ){}
 
 	Pinweight_t(Pinweight_t const &pw) : _base_t(pw){}
 	Pinweight_t(Pinweight_t &&pw) : _base_t( Move(pw) ){}
@@ -180,7 +224,7 @@ public:
 	->	Pinweight_t&{  return *this = static_cast<_base_t&&>( Move(pw) );  }
 
 
-	auto mut()-> typename _base_t::value_t&
+	auto mut()-> typename _base_t::value_type&
 	{
 		if(_base_t::share_count() > 1)
 			*this = Pinweight_t(_base_t::get());
