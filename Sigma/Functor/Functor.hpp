@@ -125,7 +125,9 @@ private:
 template<unsigned _D, class _F> 
 decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 {
-	return sgm::fp::Functor<_D, _F>( sgm::Forward<_F>(f) );
+	using _func_t = sgm::constPinweight< sgm::Decay_t<_F> >;
+
+	return sgm::fp::Functor<_D, _func_t>( sgm::Forward<_F>(f) );
 }
 
 
@@ -137,11 +139,11 @@ decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, _ARGS...>&& d)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class PWF>
+template<unsigned D, class F>
 class sgm::fp::_Evaluator
 {
 public:
-	_Evaluator(PWF const& pwf) : _pwf(pwf){}
+	_Evaluator(F const &f) : _f(f){}
 
 
 	template<class...ARGS>
@@ -154,7 +156,7 @@ public:
 		else if constexpr(Blank::has_rear_blank_v<ARGS...>)
 			return _cut_rear( Forward<ARGS>(args)... );
 		else if constexpr( sizeof...(ARGS) == D )
-			return _pwf( Forward<ARGS>(args)... );
+			return _f( Forward<ARGS>(args)... );
 	}
 
 
@@ -166,9 +168,9 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[cpy_pwf = _pwf, args...](auto&&...params)
+		[f = _f, args...](auto&&...params)
 		{
-			return cpy_pwf( args..., Forward<decltype(params)>(params)... );
+			return f( args..., Forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -180,9 +182,9 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[cpy_pwf = _pwf, args...](auto&&...params)
+		[f = _f, args...](auto&&...params)
 		{
-			return cpy_pwf( Forward<decltype(params)>(params)..., args... );
+			return f( Forward<decltype(params)>(params)..., args... );
 		} / Dim<D - sizeof...(ARGS)>;
 	}
 
@@ -218,7 +220,7 @@ private:
 	}
 
 
-	PWF const& _pwf;
+	F const &_f;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -234,12 +236,10 @@ public:
 	template<class...ARGS>
 	decltype(auto) operator()(ARGS&&...args) const
 	{
-		using eval_t = _Evaluator< D, constPinweight<F> >;
-
 		if constexpr( (is_Multiple_v< Decay_t<ARGS> > || ...) )
-			return Apply(  eval_t(_pwf), Params( Forward<ARGS>(args)... )  );
+			return Apply(  _Evaluator<D, F>(_f), Params( Forward<ARGS>(args)... )  );
 		else
-			return eval_t(_pwf)( Forward<ARGS>(args)... );
+			return _Evaluator<D, F>(_f)( Forward<ARGS>(args)... );
 	}
 
 
@@ -285,12 +285,9 @@ private:
 	template<unsigned _D, class _F>
 	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D>);
 
+	Functor(F f) : _f(f){}
 
-	Functor(F&& f) noexcept : _pwf( Move(f) ){}
-	Functor(F const& f) : _pwf(f){}
-
-
-	constPinweight<F> _pwf;
+	F _f;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
