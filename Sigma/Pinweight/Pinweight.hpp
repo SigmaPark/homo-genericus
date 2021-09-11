@@ -37,13 +37,13 @@ public:
 	_PinweightBase(T &&t) 
 	:	_cpval(  new value_t( Move(t) )  ), _pcount( new count_t(1) ){  _update_ptr();  }
 
-	_PinweightBase(_PinweightBase const &pwimpl)
-	:	_cpval(pwimpl._cpval), _pcount( _pcount_up(pwimpl._pcount) ){  _update_ptr();  }
+	_PinweightBase(_PinweightBase const &pwb)
+	:	_cpval(pwb._cpval), _pcount( _pcount_up(pwb._pcount) ){  _update_ptr();  }
 
-	_PinweightBase(_PinweightBase &&pwimpl) 
-	:	_cpval(pwimpl._cpval), _pcount(pwimpl._pcount)
+	_PinweightBase(_PinweightBase &&pwb) 
+	:	_cpval(pwb._cpval), _pcount(pwb._pcount)
 	{
-		_update_ptr(),  pwimpl._cpval = nullptr,  pwimpl._pcount = nullptr;
+		_update_ptr(),  pwb._cpval = nullptr,  pwb._pcount = nullptr;
 	}
 
 	~_PinweightBase(){  _my_pcount_down();  }
@@ -131,25 +131,26 @@ class sgm::Pinweight_t
 {
 	using _base_t = _PinweightBase<T>;
 
-	friend class Pinweight_t<T, Var>;
-
 public:
 	Pinweight_t() = default;
 
-	Pinweight_t(T const &t) : _base_t(t){}
-	Pinweight_t(T &&t) : _base_t( Move(t) ){}
-
-	Pinweight_t(_PinweightBase<T> const &pwbase) : _base_t(pwbase){}
-	Pinweight_t(_PinweightBase<T> &&pwbase) : _base_t( Move(pwbase) ){}
+	template
+	<	class Q, class _DQ = Decay_t<Q>
+	,	class 
+		=	Enable_if_t
+			<	!is_Same<_DQ, Pinweight_t>::value
+			&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
+			>
+	>
+	Pinweight_t(Q &&q) : _base_t( Forward<Q>(q) ){}
 
 	Pinweight_t(Pinweight_t const &pw) : _base_t(pw){}
 	Pinweight_t(Pinweight_t &&pw) : _base_t( Move(pw) ){}
 
-	~Pinweight_t() = default;
 
+	template<class Q>  
+	auto operator=(Q)-> Pinweight_t& = delete;
 
-	auto operator=(T)-> Pinweight_t& = delete;
-	auto operator=(_base_t)-> Pinweight_t& = delete;
 	auto operator=(Pinweight_t const&)-> Pinweight_t& = delete;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -165,16 +166,19 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 public:
 	Pinweight_t() = default;
 
-	Pinweight_t(T const &t) : _base_t(t){}
-	Pinweight_t(T &&t) : _base_t( Move(t) ){}
-
-	Pinweight_t(_PinweightBase<T> const &pwbase) : _base_t(pwbase){}
-	Pinweight_t(_PinweightBase<T> &&pwbase) : _base_t( Move(pwbase) ){}
+	template
+	<	class Q, class _DQ = Decay_t<Q>
+	,	class 
+		=	Enable_if_t
+			<	!is_Same<_DQ, Pinweight_t>::value
+			&&	(is_Convertible<Q&&, T>::value || is_inherited_from<_DQ, _base_t>::value) 
+			>
+	>
+	Pinweight_t(Q &&q) : _base_t( Forward<Q>(q) ){}
 
 	Pinweight_t(Pinweight_t const &pw) : _base_t(pw){}
 	Pinweight_t(Pinweight_t &&pw) : _base_t( Move(pw) ){}
 
-	~Pinweight_t() = default;
 
 	template<   class Q, class = Enable_if_t<  !is_Same< Decay_t<Q>, Pinweight_t >::value  >   >
 	auto operator=(Q &&q)
