@@ -54,7 +54,7 @@ public:
 	{
 		_share_count_down();
 
-		_cpval = new value_t( Forward<Q>(q) ),  _update_ptr();
+		_update_cpval(  new value_t( Forward<Q>(q) )  );
 		_pcount = new count_t(1);
 
 		return *this;
@@ -66,7 +66,7 @@ public:
 		{
 			_share_count_down(),  _pcount_up(pwb._pcount);
 
-			_cpval = pwb._cpval,  _update_ptr(),
+			_update_cpval(pwb._cpval);
 			_pcount = pwb._pcount;
 		}
 
@@ -79,13 +79,13 @@ public:
 		{
 			_share_count_down();
 
-			_cpval = pwb._cpval,  _update_ptr(),  
+			_update_cpval(pwb._cpval);
 			_pcount = pwb._pcount;
 
 			pwb._cpval = nullptr,  pwb._pcount = nullptr;
 		}
 
-		return *this;		
+		return *this;
 	}
 
 
@@ -117,6 +117,7 @@ private:
 
 
 	void _update_ptr(){  static_cast< Operator_interface<T const>& >(*this) = _cpval;  }
+	void _update_cpval(T *p){  _cpval = p,  _update_ptr();  }
 
 protected:
 	auto _mutable_ref()-> T&{  return *_cpval;  }
@@ -129,6 +130,7 @@ class sgm::Pinweight_t
 <	T, sgm::invar, sgm::Pinweight_T_Helper<T, sgm::invar, false, false, false> 
 > :	public _PinweightBase<T>
 {
+private:
 	using _base_t = _PinweightBase<T>;
 
 public:
@@ -160,8 +162,8 @@ template<class T>
 class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false, false, false> >
 :	public _PinweightBase<T>
 {
+private:
 	using _base_t = _PinweightBase<T>;
-
 
 public:
 	Pinweight_t() = default;
