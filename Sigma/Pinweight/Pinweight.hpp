@@ -49,13 +49,53 @@ public:
 	~_PinweightBase(){  _my_pcount_down();  }
 
 
+	template<  class Q, class = Enable_if_t< !is_Pinweight<Q>::value >  >
+	auto operator=(Q &&q)-> _PinweightBase&
+	{
+		_my_pcount_down();
+
+		_cpval = new value_t( Forward<Q>(q) ),  _update_ptr();
+		_pcount = new count_t(1);
+
+		return *this;
+	}
+
+	auto operator=(_PinweightBase const &pwb)-> _PinweightBase&
+	{
+		if( !share_with(pwb) )
+		{
+			_my_pcount_down(),  _pcount_up(pwb._pcount);
+
+			_cpval = pwb._cpval,  _update_ptr(),
+			_pcount = pwb._pcount;
+		}
+
+		return *this;
+	}
+
+	auto operator=(_PinweightBase &&pwb)-> _PinweightBase&
+	{
+		if( !share_with(pwb) )
+		{
+			_my_pcount_down();
+
+			_cpval = pwb._cpval,  _update_ptr(),  
+			_pcount = pwb._pcount;
+
+			pwb._cpval = nullptr,  pwb._pcount = nullptr;
+		}
+
+		return *this;		
+	}
+
+
 	auto get() const-> T const&{  return *_cpval;  }
 
 	bool share_with(_PinweightBase const &pw) const{  return _cpval == pw._cpval;  }
 	size_t share_count() const{  return *_pcount;  }
 
 
-protected:
+private:
 	T mutable *_cpval;
 	count_t mutable *_pcount;
 
@@ -70,15 +110,16 @@ protected:
 
 	void _my_pcount_down() const
 	{
-		if(_pcount == nullptr)
-			return;
-		else if( --(*_pcount) == 0 )
+		if( _pcount != nullptr && --(*_pcount) == 0 )
 			delete _cpval, _cpval = nullptr,
 			delete _pcount, _pcount = nullptr;
 	}
 
 
 	void _update_ptr(){  static_cast< Operator_interface<T const>& >(*this) = _cpval;  }
+
+protected:
+	auto _mutable_ref()-> T&{  return *_cpval;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -107,8 +148,8 @@ public:
 	~Pinweight_t() = default;
 
 
-	void operator=(T) = delete;
-	void operator=(_PinweightBase<T>) = delete;
+	auto operator=(T)-> Pinweight_t& = delete;
+	auto operator=(_base_t)-> Pinweight_t& = delete;
 	auto operator=(Pinweight_t const&)-> Pinweight_t& = delete;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -119,18 +160,6 @@ class sgm::Pinweight_t< T, sgm::Var, sgm::Pinweight_T_Helper<T, sgm::Var, false,
 :	public _PinweightBase<T>
 {
 	using _base_t = _PinweightBase<T>;
-
-
-	template<class Q>
-	static auto _substitute(Pinweight_t &res, Q &&q)-> Pinweight_t&
-	{
-		res._my_pcount_down();
-		
-		res._cpval = new typename _base_t::value_t( Forward<Q>(q) ),  res._update_ptr();
-		res._pcount = new typename _base_t::count_t(1);
-
-		return res; 			
-	}
 
 
 public:
@@ -147,42 +176,15 @@ public:
 
 	~Pinweight_t() = default;
 
-
-	auto operator=(T const &t)-> Pinweight_t&{  return _substitute(*this, t);  }
-	auto operator=(T &&t)-> Pinweight_t&{  return _substitute( *this, Move(t) );  }
-
-
-	auto operator=(Pinweight_t<T, invar> const &pw)-> Pinweight_t&
-	{
-		if(this->_cpval == pw._cpval)
-			return *this;
-
-		_base_t::_my_pcount_down(),  _base_t::_pcount_up(pw._pcount);
-
-		this->_cpval = pw._cpval,  _base_t::_update_ptr(),
-		this->_pcount = pw._pcount;
-
-		return *this;
-	}
-
-	auto operator=(Pinweight_t<T, invar> &&pw)-> Pinweight_t&
-	{
-		if(this->_cpval == pw._cpval)
-			return *this;
-
-		_base_t::_my_pcount_down();
-
-		this->_cpval = pw._cpval,  _base_t::_update_ptr(),  pw._cpval = nullptr,
-		this->_pcount = pw._pcount,  pw._pcount = nullptr;
-
-		return *this;
-	}
+	template<   class Q, class = Enable_if_t<  !is_Same< Decay_t<Q>, Pinweight_t >::value  >   >
+	auto operator=(Q &&q)
+	->	Pinweight_t&{  return static_cast<_base_t&>(*this) = Forward<Q>(q),  *this;  }
 
 	auto operator=(Pinweight_t const &pw)
-	->	Pinweight_t&{  return *this = static_cast< Pinweight_t<T, invar> const& >(pw);  }
+	->	Pinweight_t&{  return *this = static_cast<_base_t const&>(pw);  }
 
 	auto operator=(Pinweight_t &&pw)
-	->	Pinweight_t&{  return *this = static_cast< Pinweight_t<T, invar>&& >( Move(pw) );  }
+	->	Pinweight_t&{  return *this = static_cast<_base_t&&>( Move(pw) );  }
 
 
 	auto mut()-> typename _base_t::value_t&
@@ -190,7 +192,7 @@ public:
 		if(_base_t::share_count() > 1)
 			*this = Pinweight_t(_base_t::get());
 			
-		return *this->_cpval;
+		return _base_t::_mutable_ref();
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
