@@ -10,7 +10,7 @@
 	#error C++17 or higher version language support is required.
 #endif
 
-#include "..\idiom\idiom.hpp"
+
 #include "Multiple.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -23,10 +23,12 @@ namespace sgm::fp
 
 	struct Blank;
 
-	template<unsigned D, class...ARGS>  class Dimension;
-	template<unsigned D>  static inline auto const Dim = Dimension<D>();
+	template<unsigned D, class...FLAGS>  class Dimension;
 
-	template<class...ARGS>  struct _FunctorExecutant;
+	template<unsigned D, class...FLAGS>  
+	static inline auto const Dim = Dimension<D, FLAGS...>();
+
+	template<unsigned D, class...ARGS>  struct _FunctorExecutant;
 
 	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
 	struct is_Functor;
@@ -49,7 +51,7 @@ template<unsigned _D, class _F>
 static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D>);
 
 template<unsigned _D, class _F, class..._ARGS>
-static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D, _ARGS...>&&);
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&);
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -100,42 +102,29 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class...ARGS>
+template<unsigned D, class...FLAGS>
 class sgm::fp::Dimension
 {
 public:
-	Dimension(ARGS...args) : _mtp( static_cast<ARGS>(args)... ){}
-
-	template<class..._ARGS>
-	auto operator()(_ARGS&&..._args) const
-	{
-		return Dimension<D, decltype(_args)...>( static_cast<decltype(_args)>(_args)... );
-	}
+	template<class...ARGS>
+	auto operator()(ARGS&&...args) const
+	->	_FunctorExecutant< D, Alephless_t<ARGS&&>... >{  return { Forward<ARGS>(args)... };  }
+};
 
 
+template<unsigned D, class...ARGS>
+struct sgm::fp::_FunctorExecutant
+{
 private:
 	template<unsigned _D, class _F, class..._ARGS>
-	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D, _ARGS...>&&);
+	friend decltype(auto) constexpr ::operator/(_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&);
 
+	template<unsigned _D, class...FLAGS>  friend class sgm::fp::Dimension;
+
+	_FunctorExecutant(ARGS...args) : _mtp( static_cast<ARGS>(args)... ){}
 
 	Multiple<ARGS...> _mtp;
 };
-
-
-template<class...ARGS>
-struct sgm::fp::_FunctorExecutant
-{
-	template<class..._ARGS>
-	_FunctorExecutant(_ARGS&&...args) : mtp( Forward<_ARGS>(args)... ){}
-
-	Multiple<ARGS...> mtp;
-};
-
-namespace sgm::fp
-{
-	template<class..._ARGS>
-	_FunctorExecutant(_ARGS&&...)-> _FunctorExecutant< Alephless_t<_ARGS>... >;
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -149,7 +138,7 @@ decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 
 
 template<unsigned _D, class _F, class..._ARGS>
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, _ARGS...>&& d)
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, _ARGS...>&& d)
 {
 	return ( sgm::Forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
 }
