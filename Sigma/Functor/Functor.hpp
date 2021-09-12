@@ -26,6 +26,7 @@ namespace sgm::fp
 	template<unsigned D, class...ARGS>  class Dimension;
 	template<unsigned D>  static inline auto const Dim = Dimension<D>();
 
+	template<class...ARGS>  struct _FunctorExecutant;
 
 	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
 	struct is_Functor;
@@ -119,6 +120,22 @@ private:
 
 	Multiple<ARGS...> _mtp;
 };
+
+
+template<class...ARGS>
+struct sgm::fp::_FunctorExecutant
+{
+	template<class..._ARGS>
+	_FunctorExecutant(_ARGS&&...args) : mtp( Forward<_ARGS>(args)... ){}
+
+	Multiple<ARGS...> mtp;
+};
+
+namespace sgm::fp
+{
+	template<class..._ARGS>
+	_FunctorExecutant(_ARGS&&...)-> _FunctorExecutant< Alephless_t<_ARGS>... >;
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
