@@ -179,7 +179,7 @@ static void Test10()
 {
 	using sgm::spec::Specimen;
 
-	enum class Byte : char{} buf[2][64];
+	enum class Byte : char{} buf[2][PinweightMemory<Specimen>::value];
 
 	for(size_t i = 0;  i < 10;  ++i)
 	{

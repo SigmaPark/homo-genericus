@@ -16,6 +16,7 @@ namespace sgm
 
 	template<class T>  class _PinweightBase;
 	template<class T>  struct _PinweightCore;
+	template<class T>  struct PinweightMemory;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -72,6 +73,13 @@ struct sgm::_PinweightCore
 private:
 	template<class Q>
 	_PinweightCore(Q &&q, bool const inp) : val( Forward<Q>(q) ), inplace(inp){}
+};
+
+
+template<class T>  
+struct sgm::PinweightMemory : No_Making
+{
+	static size_t constexpr value = sizeof(T) + sizeof(std::atomic<size_t>) + sizeof(bool) + 15;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
