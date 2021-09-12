@@ -12,6 +12,7 @@
 
 
 #include "Multiple.hpp"
+#include "..\Flags\Flags.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -23,12 +24,13 @@ namespace sgm::fp
 
 	struct Blank;
 
-	template<unsigned D, class...FLAGS>  class Dimension;
+	template<unsigned D, class FLAGSET>  class Dimension;
 
 	template<unsigned D, class...FLAGS>  
-	static inline auto const Dim = Dimension<D, FLAGS...>();
+	static inline auto const Dim = Dimension< D, FlagSet<FLAGS...> >();
 
-	template<unsigned D, class...ARGS>  struct _FunctorExecutant;
+	template<unsigned D, class FLAGSET, class...ARGS>  struct _FunctorExecutant;
+
 
 	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
 	struct is_Functor;
@@ -47,11 +49,13 @@ namespace sgm::fp
 }
 
 
-template<unsigned _D, class _F>
-static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D>);
+template<unsigned _D, class _F, class FLAGSET>
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D, FLAGSET>);
 
-template<unsigned _D, class _F, class..._ARGS>
-static decltype(auto) constexpr operator/(_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&);
+template<unsigned _D, class _F, class FLAGSET, class..._ARGS>
+static decltype(auto) constexpr operator/
+(	_F&&, sgm::fp::_FunctorExecutant<_D, FLAGSET, _ARGS...>&&
+);
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -102,24 +106,29 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class...FLAGS>
+template<unsigned D, class FLAGSET>
 class sgm::fp::Dimension
 {
 public:
 	template<class...ARGS>
 	auto operator()(ARGS&&...args) const
-	->	_FunctorExecutant< D, Alephless_t<ARGS&&>... >{  return { Forward<ARGS>(args)... };  }
+	->	_FunctorExecutant< D, FLAGSET, Alephless_t<ARGS&&>... >
+	{
+		return { Forward<ARGS>(args)... };  
+	}
 };
 
 
-template<unsigned D, class...ARGS>
+template<unsigned D, class FLAGSET, class...ARGS>
 struct sgm::fp::_FunctorExecutant
 {
 private:
-	template<unsigned _D, class _F, class..._ARGS>
-	friend decltype(auto) constexpr ::operator/(_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&);
+	template<unsigned _D, class _F, class _FLAGSET, class..._ARGS>
+	friend decltype(auto) constexpr ::operator/
+	(	_F&&, sgm::fp::_FunctorExecutant<_D, _FLAGSET, _ARGS...>&&
+	);
 
-	template<unsigned _D, class...FLAGS>  friend class sgm::fp::Dimension;
+	template<unsigned _D, class _FLAGSET>  friend class sgm::fp::Dimension;
 
 	_FunctorExecutant(ARGS...args) : _mtp( static_cast<ARGS>(args)... ){}
 
@@ -128,8 +137,8 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned _D, class _F> 
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
+template<unsigned _D, class _F, class FLAGSET> 
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, FLAGSET>)
 {
 	using _func_t = sgm::constPinweight< sgm::Decay_t<_F> >;
 
@@ -137,10 +146,10 @@ decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 }
 
 
-template<unsigned _D, class _F, class..._ARGS>
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, _ARGS...>&& d)
+template<unsigned _D, class _F, class FLAGSET, class..._ARGS>
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, FLAGSET, _ARGS...>&& d)
 {
-	return ( sgm::Forward<_F>(f) / sgm::fp::Dim<_D> )(d._mtp);
+	return ( sgm::Forward<_F>(f) / sgm::fp::Dimension<_D, FLAGSET>() )(d._mtp);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -288,8 +297,8 @@ public:
 
 
 private:
-	template<unsigned _D, class _F>
-	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D>);
+	template<unsigned _D, class _F, class FLAGSET>
+	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D, FLAGSET>);
 
 	Functor(F f) : _f(f){}
 
