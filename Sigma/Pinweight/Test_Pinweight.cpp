@@ -7,7 +7,7 @@ using namespace sgm;
 using spec::is_True;
 
 
-static void Test1()
+static void Test01()
 {
 	sgm::Pinweight<float> pw;
 
@@ -17,7 +17,7 @@ static void Test1()
 }
 
 
-static void Test2()
+static void Test02()
 {
 	int const cx = 45;
 
@@ -31,7 +31,7 @@ static void Test2()
 }
 
 
-static void Test3()
+static void Test03()
 {
 	sgm::Pinweight<int> pw1 = 3, pw2 = pw1;
 
@@ -43,7 +43,7 @@ static void Test3()
 }
 
 
-static void Test4()
+static void Test04()
 {
 	sgm::Pinweight<int> pw1 = 44, pw2 = sgm::Pinweight<int>(pw1);
 
@@ -57,7 +57,7 @@ static void Test4()
 }
 
 
-static void Test5()
+static void Test05()
 {
 	class T5{  public: void method() const{}  };
 
@@ -81,7 +81,7 @@ static void Test5()
 }
 
 
-static void Test6()
+static void Test06()
 {
 	Pinweight<int> pw;
 
@@ -102,7 +102,7 @@ static void Test6()
 }
 
 
-static void Test7()
+static void Test07()
 {
 	Pinweight<double const> pw = 3;
 
@@ -126,20 +126,20 @@ static void Test7()
 }
 
 
-static void Test8()
+struct AA
 {
-	struct AA
-	{
-		int _a;
+	int _a;
 
-		AA(int a = 1) : _a(a){}
+	AA(int a = 1) : _a(a){}
 
-		int Get() const{  return _a;  }
-		int& Get(){  return _a;  }
-		void Set(int a){  _a = a;  }
-	};
+	int Get() const{  return _a;  }
+	int& Get(){  return _a;  }
+	void Set(int a){  _a = a;  }
+};
 
 
+static void Test08()
+{
 	auto pw1 = Share(AA()), pw2 = pw1;
 	constPinweight<AA> pw3 = pw1;
 
@@ -152,12 +152,10 @@ static void Test8()
 	&&	pw1.get().Get() == 11
 	&&	pw3.get().Get() == 1
 	);
-
-
 }
 
 
-static void Test9()
+static void Test09()
 {
 	constPinweight<int> pwi1 = 3, pwi2 = 5;
 
@@ -175,6 +173,31 @@ static void Test9()
 
 	is_True( pwi2 == 5 && pw3 == 6);
 }
+
+
+static void Test10()
+{
+	using sgm::spec::Specimen;
+
+	enum class Byte : char{} buf[2][64];
+
+	for(size_t i = 0;  i < 10;  ++i)
+	{
+		auto pw1 = Share( Specimen(50 + i), buf[0] );
+		auto pw2 = pw1;
+		constPinweight<Specimen> pw3(50 + i, buf[1]);
+
+		is_True
+		(	pw2 == 50 + i && pw3 == 50 + i 
+		&&	pw1.share_with(pw2) && !pw2.share_with(pw3) 
+		);
+	}
+
+	is_True
+	(	reinterpret_cast<Specimen*>(buf[0])->state == Specimen::State::DESTRUCTED
+	&&	reinterpret_cast<Specimen*>(buf[1])->state == Specimen::State::DESTRUCTED
+	);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -187,16 +210,16 @@ void Test_sgm_Pinweight::test()
 {
 	try
 	{
-		::Test1();
-		::Test2();
-		::Test3();
-		::Test4();
-		::Test5();
-		::Test6();
-		::Test7();
-		::Test8();
-		::Test9();
-
+		::Test01();
+		::Test02();
+		::Test03();
+		::Test04();
+		::Test05();
+		::Test06();
+		::Test07();
+		::Test08();
+		::Test09();
+		::Test10();
 		
 		std::wcout << L"Pinweight Test Complete.\n";
 	}

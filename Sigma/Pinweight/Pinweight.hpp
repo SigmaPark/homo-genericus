@@ -47,7 +47,7 @@ struct sgm::_PinweightCore
 			return;
 		
 		if(pcore->inplace)
-			pcore->val.~T(),  pcore->count.~decltype(count)();
+			pcore->val.~T();
 		else
 			delete pcore;
 
@@ -85,6 +85,7 @@ class sgm::_PinweightBase : public Operator_interface<T const>
 public:
 	using value_type = T;
 
+
 	_PinweightBase(void *vp = nullptr) 
 	:	_pcore( _core_t::Construct(T(), vp) ){  _update_ptr();  }
 
@@ -93,7 +94,6 @@ public:
 
 	_PinweightBase(T &&t, void *vp = nullptr) 
 	:	_pcore(  _core_t::Construct( Move(t), vp )  ){  _update_ptr();  }
-
 
 	_PinweightBase(_PinweightBase const &pwb) 
 	:	_pcore( _core_t::CountUp(pwb._pcore) ){  _update_ptr();  }
@@ -239,7 +239,8 @@ namespace sgm
 {
 
 	template<class T>
-	static auto Share(T &&t)-> Pinweight< Referenceless_t<T> >{  return Forward<T>(t);  }
+	static auto Share(T &&t, void *vp = nullptr)
+	->	Pinweight< Referenceless_t<T> >{  return {Forward<T>(t), vp};  }
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
