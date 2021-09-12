@@ -13,6 +13,7 @@
 
 #include "Multiple.hpp"
 #include "..\Flags\Flags.hpp"
+#include "..\Type_Decorator\Type_Decorator.hpp"
 #include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -30,6 +31,11 @@ namespace sgm::fp
 	static inline auto const Dim = Dimension< D, FlagSet<FLAGS...> >();
 
 	template<unsigned D, class FLAGSET, class...ARGS>  struct _FunctorExecutant;
+
+
+	template<class F, class FLAGSET>  struct _FunctionalProxy;
+	
+	struct _Default_FuncProxy;
 
 
 	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
@@ -137,10 +143,29 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class F, class>  struct sgm::fp::_FunctionalProxy{  using type = F;  };
+
+template<class F>
+struct sgm::fp::_FunctionalProxy<F, sgm::FlagSet<>>
+:	_FunctionalProxy< F, sgm::FlagSet<_Default_FuncProxy> >{};
+
+
+template<class F, class...FLAGS>
+struct sgm::fp::_FunctionalProxy< F, sgm::FlagSet<FLAGS...> >
+{
+	using type = typename Decorated<F>::template by<FLAGS...>::type;
+};
+
+
+struct sgm::fp::_Default_FuncProxy
+:	Type_Decorator{  template<class T>  using type = constPinweight<T>;  };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<unsigned _D, class _F, class FLAGSET> 
 decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, FLAGSET>)
 {
-	using _func_t = sgm::constPinweight< sgm::Decay_t<_F> >;
+	using _func_t = typename sgm::fp::_FunctionalProxy<_F, FLAGSET>::type;
 
 	return sgm::fp::Functor<_D, _func_t>( sgm::Forward<_F>(f) );
 }
@@ -402,7 +427,6 @@ namespace sgm::fp
 #else
 	#error macro SGM_FUNCTOR is already defined elsewhere.
 #endif
-
 
 
 #endif // end of #ifndef _SGM_FUNCTOR_
