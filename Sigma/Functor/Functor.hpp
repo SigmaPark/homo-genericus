@@ -174,17 +174,10 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, mtp = Multiple< Alephless_t<ARGS&&>... >(args...)](auto&&...params)
+		[f = _f, &args...](auto&&...params)
 		{
-			return
-			Apply
-			(	[&f, &params...](auto&&...unpacked)
-				{
-					return f( unpacked..., Forward<decltype(params)>(params)... );
-				}
-			,	mtp
-			);
-		} /	Dim<D - sizeof...(ARGS)>;
+			return f( Alephless_t<ARGS&&>(args)..., Forward<decltype(params)>(params)... );
+		} / Dim<D - sizeof...(ARGS)>;
 	}
 
 
@@ -195,17 +188,10 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, mtp = Multiple< Alephless_t<ARGS&&>... >(args...)](auto&&...params)
+		[f = _f, &args...](auto&&...params)
 		{
-			return
-			Apply
-			(	[&f, &params...](auto&&...unpacked)
-				{
-					return f( Forward<decltype(params)>(params)..., unpacked... );
-				}
-			,	mtp
-			);
-		} /	Dim<D - sizeof...(ARGS)>;
+			return f( Forward<decltype(params)>(params)..., Alephless_t<ARGS&&>(args)... );
+		} / Dim<D - sizeof...(ARGS)>;
 	}
 
 
@@ -350,10 +336,10 @@ private:
 					else
 						return Make_Multiple( Q(q) );
 				};
-			
-			auto[mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( Forward<decltype(args)>(args)... );
 
-			return try_multiple_f( clone(mtp1) ) + try_multiple_f( _ftr(mtp2) );
+			auto [mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( Forward<decltype(args)>(args)... );
+
+			return try_multiple_f( clone(mtp1) ) + try_multiple_f( ftr(mtp2) );
 		} / Dim<D + D2>;
 	}
 };
