@@ -12,6 +12,7 @@
 
 
 #include "Multiple.hpp"
+#include "..\Avatar\Avatar.hpp"
 
 
 namespace sgm::fp
@@ -42,6 +43,9 @@ namespace sgm::fp
 	template<unsigned...INDICES>  struct _Permute_Helper;
 	
 	template<class...ARGS>  static auto Params(ARGS&&...);
+
+	template<class T>  static auto Try_Refer(Referenceless_t<T>&)-> Avatar<T>;
+	template<class T>  static auto Try_Refer(Referenceless_t<T>&&)-> Referenceless_t<T>;
 
 }
 
@@ -141,6 +145,14 @@ decltype(auto) constexpr operator/(_F &&f, sgm::fp::_FunctorExecutant<_D, _ARGS.
 {
 	return ( sgm::Forward<_F>(f) / sgm::fp::Dimension<_D>() )(d._mtp);
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T>  
+auto sgm::fp::Try_Refer(Referenceless_t<T> &t)-> Avatar<T>{  return t;  }
+
+template<class T>  
+auto sgm::fp::Try_Refer(Referenceless_t<T> &&t)-> Referenceless_t<T>{  return Move(t);  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -307,7 +319,7 @@ private:
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator|");
 
 		return
-		[clone = Forward<ME>(me), _ftr = Alephless_t<FTR&&>(ftr)](auto&&...args)
+		[clone = Try_Refer<ME>(me), _ftr = Try_Refer<FTR>(ftr)](auto&&...args)
 		{	
 			return clone(  _ftr( Forward<decltype(args)>(args)... )  );
 		} / Dim< Decay_t<FTR>::DIMENSION >;
@@ -323,7 +335,7 @@ private:
 		enum {D2 = ftr.DIMENSION};
 
 		return
-		[clone = Forward<ME>(me), _ftr = Alephless_t<FTR&&>(ftr)](auto&&...args)
+		[clone = Try_Refer<ME>(me), _ftr = Try_Refer<FTR>(ftr)](auto&&...args)
 		{
 			auto try_multiple_f
 			=	[](auto &&q)-> decltype(auto)

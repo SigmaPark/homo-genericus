@@ -54,10 +54,6 @@ namespace sgm::fp
 	template<class...TYPES>
 	struct _Apply_Helper;
 
-
-	template< template<class...> class TC >
-	struct Type_Check_by;
-
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -67,24 +63,6 @@ template<class T>  struct sgm::fp::is_Multiple<T, sgm::True_t> : False_t{};
 
 template<class...ARGS>  
 struct sgm::fp::is_Multiple< sgm::fp::Multiple<ARGS...>, sgm::True_t > : True_t{};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template< template<class...> class TC >
-struct sgm::fp::Type_Check_by : No_Making
-{
-	template<class...TYPES>
-	static bool constexpr for_any_v = Check_All<TC>::template for_any<TYPES...>::value;
-
-	template<class...TYPES>
-	static bool constexpr for_all_v = Check_All<TC>::template for_all<TYPES...>::value;
-
-	template<class...TYPES>
-	static bool constexpr for_any_not_v = !for_all_v<TYPES...>;
-
-	template<class...TYPES>
-	static bool constexpr for_none_v = !for_any_v<TYPES...>;
-};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -141,7 +119,7 @@ public:
 
 	auto hardened() const
 	{
-		static_assert(Type_Check_by<is_RvalueReference>::for_none_v<TYPES...>);
+		static_assert( !(is_RvalueReference_v<TYPES> || ...) );
 
 		return *this;
 	}
