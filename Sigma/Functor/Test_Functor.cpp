@@ -29,11 +29,11 @@ void Test_Case::Made_from_Generic_Lambda()
 
 	is_True
 	(
-		[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(2, 3, -1) == 8
-	&&	(	[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(2, 3, __) 
+		[](auto &&x, auto &&y, auto &&z){  return x*(y - z);  } / Dim<3>(2, 3, -1) == 8
+	&&	(	[](auto &&x, auto &&y, auto &&z){  return x*(y - z);  } / Dim<3>(2, 3, __) 
 		)(-1)
 		== 8
-	&&	(	[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(__, -1)
+	&&	(	[](auto &&x, auto &&y, auto &&z){  return x*(y - z);  } / Dim<3>(__, -1)
 		)(2, 3)
 		== 8
 	);
@@ -42,7 +42,7 @@ void Test_Case::Made_from_Generic_Lambda()
 	sgm::fp::Functor const ftr
 	=	[]
 		{
-			return [](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(2, 3, __);
+			return [](auto &&x, auto &&y, auto &&z){  return x*(y - z);  } / Dim<3>(2, 3, __);
 		}();
 
 	is_True( ftr(-1) == 8 );
@@ -92,7 +92,7 @@ void Test_Case::Made_from_Other_Functor()
 void Test_Case::Composition()
 {
 	sgm::fp::Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
-	sgm::fp::Functor const halfer = [](auto&& x) {  return x / 2;  } / sgm::fp::Dim<1>;
+	sgm::fp::Functor const halfer = [](auto &&x) {  return x / 2;  } / sgm::fp::Dim<1>;
 
 	is_True(	(halfer | ftr)(2, 3, -1) == 4 );
 }
@@ -112,8 +112,8 @@ static void stbinding_by_family()
 
 void Test_Case::Codomain_Merge()
 {
-	sgm::fp::Functor const ftr = [](auto&& x, auto&& y){  return x*y;  } / sgm::fp::Dim<2>;
-	sgm::fp::Functor const ftr2 = [](auto&& x, auto&& y){  return x-y;  } / sgm::fp::Dim<2>;
+	sgm::fp::Functor const ftr = [](auto &&x, auto &&y){  return x*y;  } / sgm::fp::Dim<2>;
+	sgm::fp::Functor const ftr2 = [](auto &&x, auto &&y){  return x-y;  } / sgm::fp::Dim<2>;
 
 	int x1 = 3, x2 = 2, x3 = 4, x4 = 1;
 
@@ -129,20 +129,20 @@ void Test_Case::Codomain_Merge()
 void Test_Case::Pass_and_Permute()
 {
 	sgm::fp::Functor const ftr3 
-	=	[](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / sgm::fp::Dim<3>;
+	=	[](auto &&x, auto &&y, auto &&z){  return x*(y - z);  } / sgm::fp::Dim<3>;
 
 	int const val = 2;
 
 	is_True
 	(	(ftr3 | sgm::fp::Pass<3>)(val, 3, -1) == 8
 	&&	(ftr3 | sgm::fp::Pass<-3>)(-1, 3, 2) == 8
-	&&	( ftr3 | sgm::fp::Pass<2> + [](auto&& x){  return x/2;  } / sgm::fp::Dim<1> )(2, 3, -2) 
+	&&	( ftr3 | sgm::fp::Pass<2> + [](auto &&x){  return x/2;  } / sgm::fp::Dim<1> )(2, 3, -2) 
 		==	8
 	);
 
 
 	int x = 3, *px = &x;
-	auto const& cx = x;
+	auto const &cx = x;
 	double y = 0.618;
 
 	auto permuted = sgm::fp::Permute<1, 2, 3, 0>(3, px, cx, y);
@@ -178,7 +178,7 @@ void Test_sgm_Functor::test()
 
 		std::wcout << L"Functor Test Complete.\n";
 	}
-	catch(std::exception const& e)
+	catch(std::exception const &e)
 	{
 		std::cerr << e.what() << "Functor Test Failed.\n";
 

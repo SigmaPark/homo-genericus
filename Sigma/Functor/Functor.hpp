@@ -12,7 +12,6 @@
 
 
 #include "Multiple.hpp"
-//========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm::fp
@@ -131,14 +130,14 @@ private:
 
 
 template<unsigned _D, class _F> 
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
+decltype(auto) constexpr operator/(_F &&f, sgm::fp::Dimension<_D>)
 {
 	return sgm::fp::Functor< _D, sgm::Alephless_t<_F&&> >( sgm::Forward<_F>(f) );
 }
 
 
 template<unsigned _D, class _F, class..._ARGS>
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, _ARGS...>&& d)
+decltype(auto) constexpr operator/(_F &&f, sgm::fp::_FunctorExecutant<_D, _ARGS...> &&d)
 {
 	return ( sgm::Forward<_F>(f) / sgm::fp::Dimension<_D>() )(d._mtp);
 }
@@ -204,7 +203,7 @@ private:
 
 	template<unsigned N, class...TYPES, class...ARGS>
 	decltype(auto) _cut_rear_helper
-	(	[[maybe_unused]] Multiple<TYPES...>&& mtp, ARGS&&...args
+	(	[[maybe_unused]] Multiple<TYPES...> &&mtp, ARGS&&...args
 	)	const
 	{
 		if constexpr(N == 0)
@@ -252,26 +251,26 @@ public:
 
 
 	template<class FTR>
-	decltype(auto) operator|(FTR&& ftr) const&
+	decltype(auto) operator|(FTR &&ftr) const&
 	{
 		return _Composition( *this, Forward<FTR>(ftr) );
 	}
 
 	template<class FTR>
-	decltype(auto) operator|(FTR&& ftr) && noexcept
+	decltype(auto) operator|(FTR &&ftr) && noexcept
 	{
 		return _Composition( Move(*this), Forward<FTR>(ftr) );
 	}
 
 
 	template<class FTR>
-	decltype(auto) operator+(FTR&& ftr) const&
+	decltype(auto) operator+(FTR &&ftr) const&
 	{
 		return _Merging( *this, Forward<FTR>(ftr) );
 	}
 
 	template<class FTR>
-	decltype(auto) operator+(FTR&& ftr) && noexcept
+	decltype(auto) operator+(FTR &&ftr) && noexcept
 	{
 		return _Merging( Move(*this), Forward<FTR>(ftr) );
 	}
@@ -290,7 +289,7 @@ private:
 
 	//	Evaluation
 	template<class ME, class...ARGS>
-	static decltype(auto) _invoke(ME&& me, ARGS&&...args)
+	static decltype(auto) _invoke(ME &&me, ARGS&&...args)
 	{
 		using _Eval_t = _Evaluator< D, CopiedRef_t<ME&&, F>& >;
 
@@ -303,7 +302,7 @@ private:
 
 	//	Functional composition
 	template<class ME, class FTR>
-	static decltype(auto) _Composition(ME&& me, FTR&& ftr)
+	static decltype(auto) _Composition(ME &&me, FTR &&ftr)
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator|");
 
@@ -317,7 +316,7 @@ private:
 
 	//	Merging two Functor objects into one which returns multiple output
 	template<class ME, class FTR>
-	static decltype(auto) _Merging(ME&& me, FTR&& ftr)
+	static decltype(auto) _Merging(ME &&me, FTR &&ftr)
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator+");
 
@@ -327,7 +326,7 @@ private:
 		[clone = Forward<ME>(me), _ftr = Alephless_t<FTR&&>(ftr)](auto&&...args)
 		{
 			auto try_multiple_f
-			=	[](auto&& q)-> decltype(auto)
+			=	[](auto &&q)-> decltype(auto)
 				{
 					using Q = decltype(q);
 
@@ -349,7 +348,7 @@ private:
 template<class...ARGS>
 auto sgm::fp::Params(ARGS&&...args)
 {  
-	return Forward_as_Flat_MTP( Forward<ARGS>(args)... );  
+	return Forward_as_Flat_MTP( Forward<ARGS>(args)... );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -357,7 +356,7 @@ auto sgm::fp::Params(ARGS&&...args)
 struct sgm::fp::_rPass_Helper : No_Making
 {
 	template<class MTP, class...ARGS>
-	static decltype(auto) calc([[maybe_unused]]MTP&& mtp, ARGS&&...args)
+	static decltype(auto) calc([[maybe_unused]]MTP &&mtp, ARGS&&...args)
 	{
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  mtp.DIMENSION == IDX )
 			return Forward_as_Multiple( Forward<ARGS>(args)... );
@@ -366,14 +365,13 @@ struct sgm::fp::_rPass_Helper : No_Making
 			calc( Forward<MTP>(mtp), mtp.template forward<IDX>(), Forward<ARGS>(args)... );
 	}
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<unsigned IDX, unsigned...INDICES>
 struct sgm::fp::_Permute_Helper<IDX, INDICES...>
 {
 	template<class...TYPES, class...ARGS>
-	static decltype(auto) calc(Multiple<TYPES...>&& mtp, ARGS&&...args)
+	static decltype(auto) calc(Multiple<TYPES...> &&mtp, ARGS&&...args)
 	{
 		return 
 		_Permute_Helper<INDICES...>::calc

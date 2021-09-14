@@ -29,10 +29,10 @@ namespace sgm::fp
 	template<class...ARGS>  static auto constexpr is_Multiple_v = is_Multiple<ARGS...>::value;
 
 	template<class T, class...ARGS>
-	static decltype(auto) Make_Flat_MTP(T&& t, ARGS&&...args);
+	static decltype(auto) Make_Flat_MTP(T &&t, ARGS&&...args);
 
 	template<class T, class...ARGS>
-	static decltype(auto) Forward_as_Flat_MTP(T&& t, ARGS&&...args);
+	static decltype(auto) Forward_as_Flat_MTP(T &&t, ARGS&&...args);
 
 
 	template<unsigned Di>
@@ -43,13 +43,13 @@ namespace sgm::fp
 
 
 	template<class F, class...TYPES>
-	static decltype(auto) Apply(F&& f, Multiple<TYPES...>& mtp);
+	static decltype(auto) Apply(F &&f, Multiple<TYPES...> &mtp);
 
 	template<class F, class...TYPES>
-	static decltype(auto) Apply(F&& f, Multiple<TYPES...>&& mtp);
+	static decltype(auto) Apply(F &&f, Multiple<TYPES...> &&mtp);
 
 	template<class F, class...TYPES>
-	static decltype(auto) Apply(F&& f, Multiple<TYPES...> const& mtp);
+	static decltype(auto) Apply(F &&f, Multiple<TYPES...> const &mtp);
 
 	template<class...TYPES>
 	struct _Apply_Helper;
@@ -148,19 +148,19 @@ public:
 
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...>& mtp)
+	auto operator+(Multiple<TYPES2...> &mtp)
 	{
 		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
 	}
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...> const& mtp)
+	auto operator+(Multiple<TYPES2...> const &mtp)
 	{
 		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
 	}
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...>&& mtp)
+	auto operator+(Multiple<TYPES2...> &&mtp)
 	{
 		return _Merge_Helper<TYPES2...>::calc( *this, Move(mtp) );
 	}
@@ -209,7 +209,7 @@ private:
 	struct _Merge_Helper : No_Making
 	{
 		template<class MTP1, class MTP2, class...ARGS>
-		static auto calc(MTP1&& mtp1, MTP2&& mtp2, ARGS&&...args)
+		static auto calc(MTP1 &&mtp1, MTP2 &&mtp2, ARGS&&...args)
 		{
 			if constexpr
 			(	auto constexpr nof_args = sizeof...(ARGS)
@@ -259,7 +259,7 @@ auto sgm::fp::Forward_as_Multiple(ARGS&&...args)
 
 
 template<class T, class...ARGS>
-decltype(auto) sgm::fp::Make_Flat_MTP(T&&t, [[maybe_unused]]ARGS&&...args)
+decltype(auto) sgm::fp::Make_Flat_MTP(T &&t, [[maybe_unused]]ARGS&&...args)
 {
 	if constexpr( sizeof...(ARGS) > 0 )
 		return Make_Flat_MTP( Forward<T>(t) ) + Make_Flat_MTP( Forward<ARGS>(args)... );
@@ -271,7 +271,7 @@ decltype(auto) sgm::fp::Make_Flat_MTP(T&&t, [[maybe_unused]]ARGS&&...args)
 
 
 template<class T, class...ARGS>
-decltype(auto) sgm::fp::Forward_as_Flat_MTP(T&& t, [[maybe_unused]]ARGS&&...args)
+decltype(auto) sgm::fp::Forward_as_Flat_MTP(T &&t, [[maybe_unused]]ARGS&&...args)
 {
 	if constexpr( sizeof...(ARGS) > 0 )
 		return
@@ -290,7 +290,7 @@ template<unsigned D1>
 struct sgm::fp::_2FMTP_Helper : No_Making
 {
 	template<unsigned N = 0, class MTP1, class MTP2, class...ARGS>
-	static decltype(auto) calc(MTP1&& mtp1, MTP2&& mtp2, Multiple<ARGS...>& amtp)
+	static decltype(auto) calc(MTP1 &&mtp1, MTP2 &&mtp2, Multiple<ARGS...> &amtp)
 	{
 		if constexpr(N == amtp.DIMENSION)
 			return Forward_as_Multiple( Move(mtp1), Move(mtp2) ).hardened();
@@ -321,19 +321,19 @@ static auto sgm::fp::Forward_as_2FMTP(ARGS&&...args)
 
 
 template<class F, class...TYPES>
-decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...>& mtp)
+decltype(auto) sgm::fp::Apply(F &&f, Multiple<TYPES...> &mtp)
 {
 	return _Apply_Helper<TYPES...>::calc( Forward<F>(f), mtp );
 }
 
 template<class F, class...TYPES>
-decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...>&& mtp)
+decltype(auto) sgm::fp::Apply(F &&f, Multiple<TYPES...> &&mtp)
 {
 	return _Apply_Helper<TYPES...>::calc( Forward<F>(f), Move(mtp) );
 }
 
 template<class F, class...TYPES>
-decltype(auto) sgm::fp::Apply(F&& f, Multiple<TYPES...> const& mtp)
+decltype(auto) sgm::fp::Apply(F &&f, Multiple<TYPES...> const &mtp)
 {
 	return _Apply_Helper<TYPES...>::calc( Forward<F>(f), mtp );
 }
@@ -343,7 +343,7 @@ template<class...TYPES>
 struct sgm::fp::_Apply_Helper
 {
 	template<class F, class MTP, class...ARGS>
-	static decltype(auto) calc(F&& f, [[maybe_unused]]MTP&& mtp, ARGS&&...args)
+	static decltype(auto) calc(F &&f, [[maybe_unused]]MTP &&mtp, ARGS&&...args)
 	{
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  sizeof...(TYPES) == IDX )
 			return f( Forward<ARGS>(args)... );
