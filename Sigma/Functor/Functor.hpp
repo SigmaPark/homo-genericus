@@ -12,9 +12,6 @@
 
 
 #include "Multiple.hpp"
-#include "..\Flags\Flags.hpp"
-#include "..\Type_Decorator\Type_Decorator.hpp"
-#include "..\Pinweight\Pinweight.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -25,17 +22,12 @@ namespace sgm::fp
 
 	struct Blank;
 
-	template<unsigned D, class FLAGSET>  class Dimension;
+	template<unsigned D>  class Dimension;
 
-	template<unsigned D, class...FLAGS>  
-	static inline auto const Dim = Dimension< D, FlagSet<FLAGS...> >();
+	template<unsigned D>  
+	static inline auto const Dim = Dimension<D>();
 
-	template<unsigned D, class FLAGSET, class...ARGS>  struct _FunctorExecutant;
-
-
-	template<class F, class FLAGSET>  struct _FunctionalProxy;
-	
-	struct _Default_FuncProxy;
+	template<unsigned D, class...ARGS>  struct _FunctorExecutant;
 
 
 	template<   class T, class = Boolean_type<  is_Same< T, Decay_t<T> >::value  >   >  
@@ -44,7 +36,7 @@ namespace sgm::fp
 	template<class...ARGS>  static auto constexpr is_Functor_v = is_Functor<ARGS...>::value;
 
 
-	template<unsigned D, class F>  class _Evaluator;
+	template<unsigned D, class refF>  class _Evaluator;
 
 	struct _rPass_Helper;
 
@@ -55,13 +47,11 @@ namespace sgm::fp
 }
 
 
-template<unsigned _D, class _F, class FLAGSET>
-static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D, FLAGSET>);
+template<unsigned _D, class _F>
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::Dimension<_D>);
 
-template<unsigned _D, class _F, class FLAGSET, class..._ARGS>
-static decltype(auto) constexpr operator/
-(	_F&&, sgm::fp::_FunctorExecutant<_D, FLAGSET, _ARGS...>&&
-);
+template<unsigned _D, class _F, class..._ARGS>
+static decltype(auto) constexpr operator/(_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&);
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -112,29 +102,26 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class FLAGSET>
+template<unsigned D>
 class sgm::fp::Dimension
 {
 public:
 	template<class...ARGS>
 	auto operator()(ARGS&&...args) const
-	->	_FunctorExecutant< D, FLAGSET, Alephless_t<ARGS&&>... >
-	{
-		return { Forward<ARGS>(args)... };  
-	}
+	->	_FunctorExecutant< D, Alephless_t<ARGS&&>... >{  return { Forward<ARGS>(args)... };  }
 };
 
 
-template<unsigned D, class FLAGSET, class...ARGS>
+template<unsigned D, class...ARGS>
 struct sgm::fp::_FunctorExecutant
 {
 private:
-	template<unsigned _D, class _F, class _FLAGSET, class..._ARGS>
+	template<unsigned _D, class _F, class..._ARGS>
 	friend decltype(auto) constexpr ::operator/
-	(	_F&&, sgm::fp::_FunctorExecutant<_D, _FLAGSET, _ARGS...>&&
+	(	_F&&, sgm::fp::_FunctorExecutant<_D, _ARGS...>&&
 	);
 
-	template<unsigned _D, class _FLAGSET>  friend class sgm::fp::Dimension;
+	template<unsigned _D>  friend class sgm::fp::Dimension;
 
 	_FunctorExecutant(ARGS...args) : _mtp( static_cast<ARGS>(args)... ){}
 
@@ -143,47 +130,26 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class F, class>  struct sgm::fp::_FunctionalProxy{  using type = F;  };
-
-template<class F>
-struct sgm::fp::_FunctionalProxy<F, sgm::FlagSet<>>
-:	_FunctionalProxy< F, sgm::FlagSet<_Default_FuncProxy> >{};
-
-
-template<class F, class...FLAGS>
-struct sgm::fp::_FunctionalProxy< F, sgm::FlagSet<FLAGS...> >
+template<unsigned _D, class _F> 
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D>)
 {
-	using type = typename Decorated<F>::template by<FLAGS...>::type;
-};
-
-
-struct sgm::fp::_Default_FuncProxy
-:	Type_Decorator{  template<class T>  using type = constPinweight<T>;  };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<unsigned _D, class _F, class FLAGSET> 
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::Dimension<_D, FLAGSET>)
-{
-	using _func_t = typename sgm::fp::_FunctionalProxy<_F, FLAGSET>::type;
-
-	return sgm::fp::Functor<_D, _func_t>( sgm::Forward<_F>(f) );
+	return sgm::fp::Functor< _D, sgm::Alephless_t<_F&&> >( sgm::Forward<_F>(f) );
 }
 
 
-template<unsigned _D, class _F, class FLAGSET, class..._ARGS>
-decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, FLAGSET, _ARGS...>&& d)
+template<unsigned _D, class _F, class..._ARGS>
+decltype(auto) constexpr operator/(_F&& f, sgm::fp::_FunctorExecutant<_D, _ARGS...>&& d)
 {
-	return ( sgm::Forward<_F>(f) / sgm::fp::Dimension<_D, FLAGSET>() )(d._mtp);
+	return ( sgm::Forward<_F>(f) / sgm::fp::Dimension<_D>() )(d._mtp);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class F>
+template<unsigned D, class refF>
 class sgm::fp::_Evaluator
 {
 public:
-	_Evaluator(F const &f) : _f(f){}
+	_Evaluator(refF f) : _f(f){}
 
 
 	template<class...ARGS>
@@ -208,10 +174,17 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, args...](auto&&...params)
+		[f = _f, mtp = Multiple< Alephless_t<ARGS&&>... >(args...)](auto&&...params)
 		{
-			return f( args..., Forward<decltype(params)>(params)... );
-		} / Dim<D - sizeof...(ARGS)>;
+			return
+			Apply
+			(	[&f, &params...](auto&&...unpacked)
+				{
+					return f( unpacked..., Forward<decltype(params)>(params)... );
+				}
+			,	mtp
+			);
+		} /	Dim<D - sizeof...(ARGS)>;
 	}
 
 
@@ -222,10 +195,17 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, args...](auto&&...params)
+		[f = _f, mtp = Multiple< Alephless_t<ARGS&&>... >(args...)](auto&&...params)
 		{
-			return f( Forward<decltype(params)>(params)..., args... );
-		} / Dim<D - sizeof...(ARGS)>;
+			return
+			Apply
+			(	[&f, &params...](auto&&...unpacked)
+				{
+					return f( Forward<decltype(params)>(params)..., unpacked... );
+				}
+			,	mtp
+			);
+		} /	Dim<D - sizeof...(ARGS)>;
 	}
 
 
@@ -260,7 +240,7 @@ private:
 	}
 
 
-	F const &_f;
+	refF _f;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -272,62 +252,110 @@ public:
 	static auto constexpr DIMENSION = D;
 
 
-	//	Evaluation
 	template<class...ARGS>
-	decltype(auto) operator()(ARGS&&...args) const
+	decltype(auto) operator()(ARGS&&...args) const&
 	{
+		return _invoke( *this, Forward<ARGS>(args)... );
+	}
+
+	template<class...ARGS>
+	decltype(auto) operator()(ARGS&&...args) && noexcept
+	{
+		return _invoke( Move(*this), Forward<ARGS>(args)... );
+	}
+
+
+	template<class FTR>
+	decltype(auto) operator|(FTR&& ftr) const&
+	{
+		return _Composition( *this, Forward<FTR>(ftr) );
+	}
+
+	template<class FTR>
+	decltype(auto) operator|(FTR&& ftr) && noexcept
+	{
+		return _Composition( Move(*this), Forward<FTR>(ftr) );
+	}
+
+
+	template<class FTR>
+	decltype(auto) operator+(FTR&& ftr) const&
+	{
+		return _Merging( *this, Forward<FTR>(ftr) );
+	}
+
+	template<class FTR>
+	decltype(auto) operator+(FTR&& ftr) && noexcept
+	{
+		return _Merging( Move(*this), Forward<FTR>(ftr) );
+	}
+
+
+private:
+	F _f;
+
+
+	template<unsigned _D, class _F>
+	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D>);
+
+
+	Functor(F f) : _f(f){}
+
+
+	//	Evaluation
+	template<class ME, class...ARGS>
+	static decltype(auto) _invoke(ME&& me, ARGS&&...args)
+	{
+		using _Eval_t = _Evaluator< D, CopiedRef_t<ME&&, F>& >;
+
 		if constexpr( (is_Multiple_v< Decay_t<ARGS> > || ...) )
-			return Apply(  _Evaluator<D, F>(_f), Params( Forward<ARGS>(args)... )  );
+			return Apply(  _Eval_t(me._f), Params( Forward<ARGS>(args)... )  );
 		else
-			return _Evaluator<D, F>(_f)( Forward<ARGS>(args)... );
+			return _Eval_t(me._f)( Forward<ARGS>(args)... );
 	}
 
 
 	//	Functional composition
-	template<class FTR>
-	decltype(auto) operator|(FTR&& ftr) const
+	template<class ME, class FTR>
+	static decltype(auto) _Composition(ME&& me, FTR&& ftr)
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator|");
 
 		return
-		[clone = *this, ftr](auto&&...args)
+		[clone = Forward<ME>(me), _ftr = Alephless_t<FTR&&>(ftr)](auto&&...args)
 		{	
-			return clone(  ftr( Forward<decltype(args)>(args)... )  );
+			return clone(  _ftr( Forward<decltype(args)>(args)... )  );
 		} / Dim< Decay_t<FTR>::DIMENSION >;
 	}
 
 
 	//	Merging two Functor objects into one which returns multiple output
-	template<class FTR>
-	decltype(auto) operator+(FTR&& ftr) const
+	template<class ME, class FTR>
+	static decltype(auto) _Merging(ME&& me, FTR&& ftr)
 	{
 		static_assert(is_Functor_v<FTR>, "Functor type is needed after Functor::operator+");
 
 		enum {D2 = ftr.DIMENSION};
 
 		return
-		[clone = *this, ftr](auto&&...args)
+		[clone = Forward<ME>(me), _ftr = Alephless_t<FTR&&>(ftr)](auto&&...args)
 		{
+			auto try_multiple_f
+			=	[](auto&& q)-> decltype(auto)
+				{
+					using Q = decltype(q);
+
+					if constexpr(is_Multiple_v<Q>)
+						return Q(q);
+					else
+						return Make_Multiple( Q(q) );
+				};
+			
 			auto[mtp1, mtp2] = *Forward_as_2FMTP<D, D2>( Forward<decltype(args)>(args)... );
 
-			using res1_t = decltype( clone(mtp1) );
-			using res2_t = decltype( ftr(mtp2) );
-
-			return
-			(	Selective_t< is_Multiple_v<res1_t>, res1_t, Multiple<res1_t> >( clone(mtp1) )
-			+	Selective_t< is_Multiple_v<res2_t>, res2_t, Multiple<res2_t> >( ftr(mtp2) )
-			);
+			return try_multiple_f( clone(mtp1) ) + try_multiple_f( _ftr(mtp2) );
 		} / Dim<D + D2>;
 	}
-
-
-private:
-	template<unsigned _D, class _F, class FLAGSET>
-	friend decltype(auto) constexpr ::operator/(_F&&, Dimension<_D, FLAGSET>);
-
-	Functor(F f) : _f(f){}
-
-	F _f;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

@@ -37,6 +37,15 @@ void Test_Case::Made_from_Generic_Lambda()
 		)(2, 3)
 		== 8
 	);
+
+	//	Closure dangling test
+	sgm::fp::Functor const ftr
+	=	[]
+		{
+			return [](auto&& x, auto&& y, auto&& z){  return x*(y - z);  } / Dim<3>(2, 3, __);
+		}();
+
+	is_True( ftr(-1) == 8 );
 }
 
 
@@ -66,6 +75,17 @@ void Test_Case::Made_from_Other_Functor()
 	&&	ftr1(-1)	== 8
 	&&	ftr2(2, 3) == 8
 	);
+
+	//	Closure dangling test
+	sgm::fp::Functor const ftr3
+	=	[]
+		{
+			sgm::fp::Functor const ftr = SGM_FUNCTOR(Test_Case::tfunc, 3);
+			int x = 2;
+			return ftr( sgm::Decay(x), 3, __ );
+		}();
+
+	is_True( ftr3(-1) == 8 );
 }
 
 
@@ -77,6 +97,8 @@ void Test_Case::Composition()
 	is_True(	(halfer | ftr)(2, 3, -1) == 4 );
 }
 
+
+#include <cmath>
 
 static void stbinding_by_family()
 {

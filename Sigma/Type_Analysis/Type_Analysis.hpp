@@ -335,6 +335,8 @@ namespace sgm
 	template<class T> static auto immut(T *p)-> T const*{  return p;  }
 	template<class T> static auto immut(T&&) = delete;
 
+	template<class T> static auto Decay(T &&t)-> Referenceless_t<T>{  return t;  }
+
 
 	template<bool TEMP_HOST>  struct Move_if;
 

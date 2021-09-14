@@ -348,11 +348,21 @@ struct sgm::fp::_Apply_Helper
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  sizeof...(TYPES) == IDX )
 			return f( Forward<ARGS>(args)... );
 		else
+		{
+			using _nth_t = Nth_t<IDX, TYPES...>;
+
+			using _carrying_t
+			=	Selective_t
+				<	is_RvalueReference_v<MTP&&> && is_RvalueReference_v<_nth_t&&>
+				,	_nth_t&&, decltype(mtp.template forward<IDX>())
+				>;
+
 			return
 			calc
 			(	Forward<F>(f), Forward<MTP>(mtp)
-			,	Forward<ARGS>(args)..., mtp.template get<IDX>()
+			,	Forward<ARGS>(args)..., static_cast<_carrying_t>(mtp.template forward<IDX>())
 			);
+		}
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
