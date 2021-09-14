@@ -156,11 +156,11 @@ auto sgm::fp::Try_Refer(Referenceless_t<T> &&t)-> Referenceless_t<T>{  return Mo
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<unsigned D, class refF>
+template<unsigned D, class F>
 class sgm::fp::_Evaluator
 {
 public:
-	_Evaluator(refF f) : _f(f){}
+	_Evaluator(F f) : _f( Forward<F>(f) ){}
 
 
 	template<class...ARGS>
@@ -185,7 +185,8 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, &args...](auto&&...params)
+		[f = Try_Refer<F>(_f), mtp = Multiple< Alephless_t<ARGS&&>... >(args...)]
+		(auto&&...params)
 		{
 			return f( Alephless_t<ARGS&&>(args)..., Forward<decltype(params)>(params)... );
 		} / Dim<D - sizeof...(ARGS)>;
@@ -199,7 +200,8 @@ private:
 		static_assert( D > sizeof...(ARGS), "function over estimation." );
 
 		return
-		[f = _f, &args...](auto&&...params)
+		[f = Try_Refer<F>(_f), mtp = Multiple< Alephless_t<ARGS&&>... >(args...)]
+		(auto&&...params)
 		{
 			return f( Forward<decltype(params)>(params)..., Alephless_t<ARGS&&>(args)... );
 		} / Dim<D - sizeof...(ARGS)>;
@@ -237,7 +239,7 @@ private:
 	}
 
 
-	refF _f;
+	F _f;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -303,12 +305,15 @@ private:
 	template<class ME, class...ARGS>
 	static decltype(auto) _invoke(ME &&me, ARGS&&...args)
 	{
-		using _Eval_t = _Evaluator< D, CopiedRef_t<ME&&, F>& >;
+		using _carrying_t = CopiedRef_t<ME&&, F>;
 
-		if constexpr( (is_Multiple_v< Decay_t<ARGS> > || ...) )
-			return Apply(  _Eval_t(me._f), Params( Forward<ARGS>(args)... )  );
+		if constexpr
+		(	_Evaluator<D, _carrying_t> evaluator = static_cast<_carrying_t>(me._f)
+		;	(is_Multiple_v< Decay_t<ARGS> > || ...) 
+		)
+			return Apply(  Move(evaluator), Params( Forward<ARGS>(args)... )  );
 		else
-			return _Eval_t(me._f)( Forward<ARGS>(args)... );
+			return evaluator( Forward<ARGS>(args)... );
 	}
 
 
