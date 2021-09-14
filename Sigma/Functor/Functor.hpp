@@ -432,9 +432,7 @@ namespace sgm::fp
 	=	[](auto&&...args)
 		{
 			return
-			_Permute_Helper<INDICES...>::calc
-			(	Params( Forward<decltype(args)>(args)... )  
-			);
+			_Permute_Helper<INDICES...>::calc(  Params( Forward<decltype(args)>(args)... )  );
 		} / Dim<sizeof...(INDICES)>;
 
 }
