@@ -31,8 +31,7 @@ namespace sgm
 	static auto Make_Family(TYPES...types)-> Family<TYPES...>;
 
 	template<class...TYPES>
-	static auto Forward_as_Family(TYPES&&...types)
-	noexcept(Check_All<is_RvalueReference>::template for_any<TYPES&&...>::value)
+	static auto Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
 	-> Family<TYPES&&...>;
 
 	template<class...TYPES>
@@ -95,10 +94,16 @@ namespace std
 	->	typename sgm::Family_member< N, sgm::Family<TYPES...> >::type&&
 	{
 		return
-		static_cast
-		<	typename sgm::Family_member< N, sgm::Family<TYPES...> >::family_type&&  
-		>
-		(fam)._val;
+		sgm::Move_if
+		<	sgm::is_RvalueReference
+			<	typename sgm::Family_member< N, sgm::Family<TYPES...> >::type&&
+			>::	value 
+		>::	cast
+			(	static_cast
+				<	typename sgm::Family_member< N, sgm::Family<TYPES...> >::family_type&&  
+				>	
+				(fam)._val
+			);
 	}
 
 
@@ -365,8 +370,7 @@ auto sgm::Make_Family(TYPES...types)-> Family<TYPES...>{  return {types...};  }
 
 
 template<class...TYPES>
-auto sgm::Forward_as_Family(TYPES&&...types) 
-noexcept(Check_All<is_RvalueReference>::template for_any<TYPES&&...>::value)
+auto sgm::Forward_as_Family(TYPES&&...types)  noexcept(Aleph_Check<TYPES&&...>::value)
 -> Family<TYPES&&...>{  return { Forward<TYPES>(types)... };  }
 
 

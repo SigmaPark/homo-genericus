@@ -54,7 +54,7 @@ static void Test03()
 	(	Specimen(7), s1, s2, std::move(s3)
 	);
 	
-	auto&&[a1, a2, a3, a4] = *mtp1;
+	auto&&[a1, a2, a3, a4] = mtp1;
 
 	static_assert
 	(	std::is_same_v< decltype(a1), Specimen >
@@ -143,7 +143,7 @@ static void Test07()
 	Specimen s1 = 9, s2 = 8, s3 = 90;
 
 	auto[mtp1, mtp2]
-	=	*fp::Forward_as_2FMTP<2, 2>
+	=	fp::Forward_as_2FMTP<2, 2>
 		(	Specimen(2), s1, static_cast<Specimen const&>(s2), std::move(s3)
 		);
 

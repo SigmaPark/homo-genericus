@@ -65,6 +65,43 @@ struct sgm::fp::is_Multiple< sgm::fp::Multiple<ARGS...>, sgm::True_t > : True_t{
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+namespace std
+{
+#ifndef _UTILITY_
+	template<class>
+	struct tuple_size;
+
+	template<size_t, class>
+	struct tuple_element;
+#endif
+
+	template<class...TYPES>
+	struct tuple_size< sgm::fp::Multiple<TYPES...> >{  enum{value = sizeof...(TYPES)};  };
+	
+	template<class...TYPES>
+	struct tuple_size< sgm::fp::Multiple<TYPES...> const > 
+	:	tuple_size< sgm::fp::Multiple<TYPES...> >{};	
+
+
+	template<size_t N, class...TYPES>
+	struct tuple_element< N, sgm::fp::Multiple<TYPES...> >
+	{
+		using type = sgm::Nth_t<N, TYPES...>;
+
+		static_assert( N < sizeof...(TYPES), "out of index" );
+	};
+	
+	template<size_t N, class...TYPES>
+	struct tuple_element< N, sgm::fp::Multiple<TYPES...> const >
+	{
+		using type = sgm::Nth_t<N, TYPES...> const;
+
+		static_assert( N < sizeof...(TYPES), "out of index" );
+	};
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<class...TYPES>
 class sgm::fp::Multiple
 {
@@ -80,13 +117,12 @@ public:
 	Multiple(TYPES...types) : _fam(  fam_t( Forward<TYPES>(types)... )  ){}
 
 
-	auto operator*() const&-> fam_t const&{  return _fam;  }
-	auto operator*() &-> fam_t&{  return _fam;  }
-	auto operator*() &&-> fam_t&&{  return Move(_fam);  }
-
-
-	template<unsigned IDX> decltype(auto) get(){  return std::get<IDX>(_fam);  }
-	template<unsigned IDX> decltype(auto) get() const{  return std::get<IDX>(_fam);  }
+	template<unsigned IDX>  decltype(auto) get() const&{  return std::get<IDX>(_fam);  }
+	template<unsigned IDX>  decltype(auto) get() &{  return std::get<IDX>(_fam);  }
+	template<unsigned IDX>  decltype(auto) get() &&{  return std::get<IDX>( Move(_fam) );  }
+	template<class Q>  decltype(auto) get() const&{  return std::get<Q>(_fam);  }
+	template<class Q>  decltype(auto) get() &{  return std::get<Q>(_fam);  }
+	template<class Q>  decltype(auto) get() &&{  return std::get<Q>( Move(_fam) );  }
 
 
 	template<unsigned IDX = _ULMAX>
@@ -125,21 +161,57 @@ public:
 
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...> &mtp)
+	auto operator+(Multiple<TYPES2...> &mtp) const&
 	{
 		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
 	}
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...> const &mtp)
+	auto operator+(Multiple<TYPES2...> const &mtp) const&
 	{
 		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
 	}
 
 	template<class...TYPES2>
-	auto operator+(Multiple<TYPES2...> &&mtp)
+	auto operator+(Multiple<TYPES2...> &&mtp) const&
 	{
 		return _Merge_Helper<TYPES2...>::calc( *this, Move(mtp) );
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> &mtp) &
+	{
+		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> const &mtp) &
+	{
+		return _Merge_Helper<TYPES2...>::calc(*this, mtp);
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> &&mtp) &
+	{
+		return _Merge_Helper<TYPES2...>::calc( *this, Move(mtp) );
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> &mtp) &&
+	{
+		return _Merge_Helper<TYPES2...>::calc( Move(*this), mtp );
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> const &mtp) &&
+	{
+		return _Merge_Helper<TYPES2...>::calc( Move(*this), mtp );
+	}
+
+	template<class...TYPES2>
+	auto operator+(Multiple<TYPES2...> &&mtp) &&
+	{
+		return _Merge_Helper<TYPES2...>::calc( Move(*this), Move(mtp) );
 	}
 
 

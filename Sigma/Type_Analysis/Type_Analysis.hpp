@@ -285,6 +285,9 @@ namespace sgm
 		template<> struct for_any<> : False_t{};
 	};
 
+	template<class... TYPES>
+	struct Aleph_Check : Check_All<is_RvalueReference>::template for_any<TYPES...>{};
+
 
 	template< template<class...> class FUNCTOR >
 	struct Satisfying : No_Making

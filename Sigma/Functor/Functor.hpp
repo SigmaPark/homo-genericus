@@ -1,3 +1,3 @@
 #pragma once
-#include "Functor17.hpp"
+//#include "Functor17.hpp"	// deprecated
 #include "Functor18.hpp"
