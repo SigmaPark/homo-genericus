@@ -4,7 +4,6 @@
 #define _SGM_MULTIPLE_
 
 
-#include "..\Type_Analysis\Type_Analysis.hpp"
 #include "..\Family\Family.hpp"
 //========//========//========//========//=======#//========//========//========//========//=======#
 

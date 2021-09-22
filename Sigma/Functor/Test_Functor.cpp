@@ -157,6 +157,24 @@ void Test_Case::Pass_and_Permute()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+struct TestF18
+{
+	static void Test01();
+
+};
+
+
+void TestF18::Test01()
+{
+	int y = 10;
+
+	sgm::f18::Functor ftr1 = [](auto x, auto const& y){  return x + y;  };
+
+
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 #include "Test_Functor.hpp"
 #include <iostream>
 
@@ -175,6 +193,8 @@ void Test_sgm_Functor::test()
 		Test_Case::Codomain_Merge();
 
 		Test_Case::Pass_and_Permute();
+
+
 
 		std::wcout << L"Functor Test Complete.\n";
 	}
