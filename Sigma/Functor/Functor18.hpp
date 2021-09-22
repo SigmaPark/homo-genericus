@@ -9,6 +9,8 @@ namespace sgm::f18
 	
 	using fp::Multiple;
 
+	//struct _Multiple_Helper;
+
 	struct Blank;
 
 	template<class closure_t, class invoker_t>  struct FnExpr;
@@ -260,6 +262,26 @@ decltype(auto) constexpr operator/(FN&& fn, sgm::f18::As_Functor const) noexcept
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
+//struct sgm::f18::_Multiple_Helper
+//{
+//	template<class... TYPES, class... ARGS>
+//	static decltype(auto) _next(Multiple<TYPES...>&& mtp, ARGS&&... args)
+//	{
+//		size_t constexpr nof_types = sizeof...(TYPES);
+//
+//		static_assert(nof_types != 0);
+//
+//		if constexpr(nof_types == 1)
+//			return Multiple<>{};
+//		else if constexpr( auto constexpr IDX = sizeof...(ARGS) + 1;  nof_types == IDX )
+//			return Multiple<ARGS&&...>{Forward<ARGS>(args)...};
+//		else
+//			return _next( Move(mtp), Forward<ARGS>(args)..., mtp.template forward<IDX>() );
+//	}	
+//};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
 template<class closure_t, class invoker_t>
 struct sgm::f18::FnExpr
 {
@@ -302,50 +324,36 @@ private:
 	}
 
 
-	template<class... TYPES, class... ARGS>
-	static decltype(auto) _nextMultiple(Multiple<TYPES...>&& mtp, ARGS&&... args)
-	{
-		size_t constexpr nof_types = sizeof...(TYPES);
-
-		static_assert(nof_types != 0);
-
-		if constexpr(nof_types == 1)
-			return Multiple<>{};
-		else if constexpr( auto constexpr IDX = sizeof...(ARGS) + 1;  nof_types == IDX )
-			return Multiple<ARGS&&...>{Forward<ARGS>(args)...};
-		else
-			return _nextMultiple( Move(mtp), Forward<ARGS>(args)..., mtp.template forward<IDX>() );
-	}
-
-
-	template<class ME, class... TYPES, class... ARGS>
+	template<unsigned INPUT_IDX = 0, class ME, class... TYPES, class... ARGS>
 	static decltype(auto) _evaluate(ME&& me, Multiple<TYPES...>&& inputs, ARGS&&... args)
 	{
+		using _closure_t = decltype(me.closure);
+
 		size_t constexpr
-			nof_closure = me.closure.indices.nof_indices_v,
+			nof_closure = _closure_t::indices.nof_indices_v,
 			nof_inputs = sizeof...(TYPES),
 			nof_args = sizeof...(ARGS),
 			max_nof_args = nof_closure + nof_inputs;
 
 		if constexpr(max_nof_args == nof_args)
 			return me.invoker( Forward<ARGS>(args)... );
-		else if constexpr(me.closure.template has_idx_v<nof_args>)
+		else if constexpr(_closure_t::template has_idx_v<nof_args>)
 		{
-			auto&& closure_elem = me.closure.template get<nof_args>();
+			auto&& closure_elem = _closure_t::template get<nof_args>();
 
 			return 
-			_evaluate
+			_evaluate<INPUT_IDX>
 			(	Forward<ME>(me), Move(inputs), Forward<ARGS>(args)...
 			,	Move_if< is_RvalueReference<ME&&>::value >::cast(closure_elem)
 			);
 		}
 		else
 		{
-			auto&& input_elem = inputs.template forward<0>();
+			auto&& input_elem = inputs.template forward<INPUT_IDX>();
 
 			return
-			_evaluate
-			(	Forward<ME>(me), _nextMultiple( Move(inputs) ), Forward<ARGS>(args)...
+			_evaluate<INPUT_IDX+1>
+			(	Forward<ME>(me), Move(inputs), Forward<ARGS>(args)...
 			,	static_cast<decltype(input_elem)>(input_elem)
 			);
 		}

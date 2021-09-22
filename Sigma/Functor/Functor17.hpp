@@ -320,11 +320,10 @@ private:
 	static decltype(auto) _invoke(ME &&me, ARGS&&...args)
 	{
 		using _carrying_t = CopiedRef_t<ME&&, F>;
+		
+		_Evaluator<D, _carrying_t> evaluator = static_cast<_carrying_t>(me._f);
 
-		if constexpr
-		(	_Evaluator<D, _carrying_t> evaluator = static_cast<_carrying_t>(me._f)
-		;	(is_Multiple_v< Decay_t<ARGS> > || ...) 
-		)
+		if constexpr( (is_Multiple_v< Decay_t<ARGS> > || ...) )
 			return Apply(  Move(evaluator), Params( Forward<ARGS>(args)... )  );
 		else
 			return evaluator( Forward<ARGS>(args)... );

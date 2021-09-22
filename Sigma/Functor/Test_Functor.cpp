@@ -170,10 +170,9 @@ void TestF18::Test01()
 
 	sgm::f18::Functor ftr1 = [](auto const& y){  return 2*y;  };
 	
-	//auto res1 
-	//=	(	[](auto const& y) {  return 2*y;  } / sgm::f18::as_functor 
-	//	)(y);
+	auto res1 = ( [](auto const& y) {  return 2*y;  } / sgm::f18::as_functor )(y);
 
+	is_True(res1 == 20);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -197,7 +196,7 @@ void Test_sgm_Functor::test()
 
 		Test_Case::Pass_and_Permute();
 
-
+		TestF18::Test01();
 
 		std::wcout << L"Functor Test Complete.\n";
 	}
