@@ -168,8 +168,11 @@ void TestF18::Test01()
 {
 	int y = 10;
 
-	sgm::f18::Functor ftr1 = [](auto x, auto const& y){  return x + y;  };
-
+	sgm::f18::Functor ftr1 = [](auto const& y){  return 2*y;  };
+	
+	//auto res1 
+	//=	(	[](auto const& y) {  return 2*y;  } / sgm::f18::as_functor 
+	//	)(y);
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
