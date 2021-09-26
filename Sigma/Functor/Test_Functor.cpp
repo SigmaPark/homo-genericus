@@ -17,6 +17,7 @@ struct TestF18
 	static void Test08();
 	static void Test09();
 	static void Test10();
+	static void Test11();
 
 	template<class RG1, class RG2>
 	static bool are_same_ranges(RG1 &&rg1, RG2 &&rg2)
@@ -68,12 +69,12 @@ void TestF18::Test03()
 	auto f1 = [](auto x, auto y){  return x+y;  };
 	auto f2 = [](auto x){  return 2*x;  };
 
-	auto y = (f2/sgm::fp::as_functor | f1)(3, 5);
+	auto y = (f2/sgm::fp::as_functor * f1)(3, 5);
 
 	is_True(y == 16);
 
 	sgm::fp::Functor ftr2 = f2;
-	sgm::fp::Functor cps_ftr = ftr2 | f1;
+	sgm::fp::Functor cps_ftr = ftr2 * f1;
 
 	is_True( cps_ftr(6.0, 9.0) == 30.0 );
 }
@@ -181,8 +182,8 @@ void TestF18::Test09()
 
 	Functor const ftr1
 	=	Fold(_, std::plus<>())
-	|	Morph(_, [](double const x){  return std::pow(x, -2.0);  })
-	|	integers;
+	*	Morph(_, [](size_t const x){  return std::pow(x, -2.0);  })
+	*	integers;
 
 	auto const res = ftr1(N, 1);
 
@@ -199,12 +200,20 @@ void TestF18::Test10()
 
 	Functor const ftr1
 	=	Fold(_, std::plus<>())
-	|	Morph( _, [](size_t const x){  return (x % 2 == 1 ? -1.0 : 1.0)/double(2*x + 1);  } )
-	|	integers;
+	*	Morph( _, [](size_t const x){  return (x % 2 == 1 ? -1.0 : 1.0)/double(2*x + 1);  } )
+	*	integers;
 
 	auto const res = ftr1(N);
 
 	is_True( std::abs(res - ans) < 1e-4 );
+}
+
+
+void TestF18::Test11()
+{
+	using namespace sgm::fp;
+
+	is_True( Functor()(1) == 1 );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -227,6 +236,7 @@ void Test_sgm_Functor::test()
 		TestF18::Test08();
 		TestF18::Test09();
 		TestF18::Test10();
+		TestF18::Test11();
 
 		std::wcout << L"Functor Test Complete.\n";
 	}

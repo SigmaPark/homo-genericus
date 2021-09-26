@@ -34,6 +34,8 @@ namespace sgm::fp
 
 	struct _Composition;
 
+	struct _identity_Function;
+
 	template<unsigned... INDICES>  struct _Permute_Helper;
 
 }
@@ -117,27 +119,27 @@ public:
 
 
 	template<unsigned QN>
-	auto get() const&
+	decltype(auto) get() const&
 	{
 		unsigned constexpr NTH = _indexer_Helper::template _Place_Helper< QN, indexer<INDICES...> >::value;
 
 		static_assert(NTH != _indexer_Helper::INVALID_N);
 
-		return mtp.template get<NTH>();	
+		return mtp.template forward<NTH>();	
 	}
 
 	template<unsigned QN>
-	auto get() &
+	decltype(auto) get() &
 	{
 		unsigned constexpr NTH = _indexer_Helper::template _Place_Helper< QN, indexer<INDICES...> >::value;
 
 		static_assert(NTH != _indexer_Helper::INVALID_N);
 
-		return mtp.template get<NTH>();
+		return mtp.template forward<NTH>();
 	}
 
 	template<unsigned QN>
-	auto get() && noexcept
+	decltype(auto) get() && noexcept
 	{
 		unsigned constexpr NTH = _indexer_Helper::template _Place_Helper< QN, indexer<INDICES...> >::value;
 
@@ -344,6 +346,17 @@ private:
 			return Forward<decltype(fn2)>(fn2)(  Forward<decltype(fn1)>(fn1)( Forward<decltype(args)>(args)... )  );
 		};
 };
+
+
+struct sgm::fp::_identity_Function
+{
+	static auto constexpr func
+	=	[](auto&& a, auto&&... args) constexpr
+		->	Selective_t< sizeof...(args) != 0, Multiple<decltype(a), decltype(args)...>, decltype(a) >
+		{
+			return {Forward<decltype(a)>(a), Forward<decltype(args)>(args)...};
+		};
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -371,7 +384,7 @@ public:
 
 
 	template<class FN>
-	decltype(auto) operator|(FN&& fn) && noexcept
+	decltype(auto) operator*(FN&& fn) && noexcept
 	{
 		return _composite( Move(*this), Forward<FN>(fn) );
 	}
@@ -395,13 +408,13 @@ private:
 
 
 	template<class FN>
-	decltype(auto) operator|(FN&& fn) & noexcept(is_RvalueReference<FN&&>::value)
+	decltype(auto) operator*(FN&& fn) & noexcept(is_RvalueReference<FN&&>::value)
 	{
 		return _composite( *this, Forward<FN>(fn) );
 	}
 
 	template<class FN>
-	decltype(auto) operator|(FN&& fn) const& noexcept(is_RvalueReference<FN&&>::value)
+	decltype(auto) operator*(FN&& fn) const& noexcept(is_RvalueReference<FN&&>::value)
 	{
 		return _composite( *this, Forward<FN>(fn) );
 	}
@@ -439,6 +452,9 @@ template<class hFXP>
 class sgm::fp::Functor : public Operator_interface<hFXP>
 {
 public:
+	constexpr Functor() noexcept 
+	:	Functor( FnExpr< Closure<>, decltype(_identity_Function::func) >(Closure{}, _identity_Function::func) ){}
+
 	template<class _closure_t, class _invoker_t>
 	Functor(FnExpr<_closure_t, _invoker_t>&& fxp) noexcept
 	:	_hfxp(  _FXP_Helper::harden( Move(fxp) )  ){  *static_cast< Operator_interface<hFXP>* >(this) = &_hfxp;  }
@@ -458,6 +474,8 @@ private:
 
 namespace sgm::fp
 {
+	Functor()-> Functor< FnExpr<Closure<>, decltype(_identity_Function::func)> >;
+
 	template<class F>
 	Functor(F&&)
 	->	Functor
