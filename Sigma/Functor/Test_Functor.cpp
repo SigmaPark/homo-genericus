@@ -69,14 +69,17 @@ void TestF18::Test03()
 	auto f1 = [](auto x, auto y){  return x+y;  };
 	auto f2 = [](auto x){  return 2*x;  };
 
-	auto y = (f2/sgm::fp::as_functor * f1)(3, 5);
+	auto y = (f2 / sgm::fp::as_functor * f1)(3, 5);
 
 	is_True(y == 16);
 
 	sgm::fp::Functor ftr2 = f2;
 	sgm::fp::Functor cps_ftr = ftr2 * f1;
 
-	is_True( cps_ftr(6.0, 9.0) == 30.0 );
+	is_True
+	(	cps_ftr(6.0, 9.0) == 30.0 
+	&&	(cps_ftr*sgm::fp::Functor())(6.0, 9.0) == 30.0
+	);
 }
 
 
