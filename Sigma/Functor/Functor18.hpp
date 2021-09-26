@@ -341,7 +341,7 @@ private:
 	template<class closure_t, class invoker_t>  friend struct sgm::fp::FnExpr;
 
 	static auto constexpr func
-	=	[](auto&& fn2, auto&& fn1, auto&&... args)
+	=	[](auto&& fn2, auto&& fn1, auto&&... args)-> decltype(auto)
 		{
 			return Forward<decltype(fn2)>(fn2)(  Forward<decltype(fn1)>(fn1)( Forward<decltype(args)>(args)... )  );
 		};
