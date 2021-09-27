@@ -20,6 +20,8 @@ namespace test_ht
 	static void Plait_Test();
 	static void Plait_loop_Test();
 
+	static void Test01();
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -161,6 +163,25 @@ void test_ht::Plait_loop_Test()
 	(	are_same_ranges(sr2, std::initializer_list<int>{0, 5, 10, 15})
 	);
 }
+
+
+#include <vector>
+
+
+void test_ht::Test01()
+{
+	std::vector<float> vec1{1,2,3}, vec2{10, 20, 30};
+
+	sgm::spec::is_True
+	(	are_same_ranges
+		(	sgm::ht::Morph
+			(	sgm::ht::Plait(vec1, vec2)
+			,	[](auto const &fam){  return std::get<1>(fam)/std::get<0>(fam);  }
+			)
+		,	std::vector<float>{10, 10, 10}
+		)
+	);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -179,6 +200,8 @@ void Test_sgm_High_Templar12::test()
 		FoldTest();
 		Plait_Test();
 		Plait_loop_Test();
+
+		test_ht::Test01();
 
 		std::wcout << L"High Templar 12 Test Complete.\n";
 	}

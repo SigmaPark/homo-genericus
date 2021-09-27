@@ -235,13 +235,29 @@ private:
 	struct _Deco : No_Making{  template<class Q>  using type = _Decorated_t<Q, FS>;  };
 
 	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
-	using _crxitr_t = Decay_t< decltype(Declval<RG const>().rbegin()) >;	
+
+
+	SGM_HAS_MEMFUNC(rbegin);
+
+	template<  class _RG, bool = Has_MemFunc_rbegin< Referenceless_t<_RG> >::value  >  
+	struct __rxitr;
+
+	template<class _RG>  struct __rxitr<_RG, false>{  using type = None;  };
+
+	template<class _RG>  
+	struct __rxitr<_RG, true>
+	{
+		using type = Decay_t<  decltype(Declval< Referenceless_t<_RG> >().rbegin())  >;
+	};
+
+	using _crxitr_t = typename __rxitr<RG const>::type;	
 	
+
 	using _xitr_t
 	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
 
-	using _rxitr_t
-	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().rbegin()) >, _crxitr_t  >;
+	using _rxitr_t = Selective_t<  ASK_MUTABLE, typename __rxitr<RG>::type, _crxitr_t  >;
+
 
 	using _norefFN_t = Referenceless_t<FN>;
 
@@ -340,13 +356,27 @@ private:
 	struct _Deco : No_Making{  template<class Q>  using type = _Decorated_t<Q, FS>;  };
 
 	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
-	using _crxitr_t = Decay_t< decltype(Declval<RG const>().rbegin()) >;	
+
+
+	SGM_HAS_MEMFUNC(rbegin);
+
+	template<  class _RG, bool = Has_MemFunc_rbegin< Referenceless_t<_RG> >::value  >  
+	struct __rxitr;
+
+	template<class _RG>  struct __rxitr<_RG, false>{  using type = None;  };
+
+	template<class _RG>  
+	struct __rxitr<_RG, true>
+	{
+		using type = Decay_t<  decltype(Declval< Referenceless_t<_RG> >().rbegin())  >;
+	};
+
+	using _crxitr_t = typename __rxitr<RG const>::type;
 
 	using _xitr_t
 	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
 
-	using _rxitr_t
-	=	Selective_t<  ASK_MUTABLE, Decay_t< decltype(Declval<RG>().rbegin()) >, _crxitr_t  >;
+	using _rxitr_t = Selective_t<  ASK_MUTABLE, typename __rxitr<RG>::type, _crxitr_t  >;
 
 
 	template<class itr_t>  class _Filter_FN;
@@ -774,9 +804,11 @@ class sgm::ht::Plait_range : public cPlait_range<CS...>
 public:
 	Plait_range(CS...args) : _cz(args...){}
 	
+	auto begin() const-> SGM_DECLTYPE_AUTO(_cz::begin())
+	auto end() const-> SGM_DECLTYPE_AUTO(_cz::end())
+
 	auto begin()-> _iter_t{  return _cz::template _Get_iter<true>::of(*this);  }
 	auto end()-> _iter_t{  return _cz::template _Get_iter<false>::of(*this);  }
-
 
 	using value_type = Decay_t<decltype(*Declval<_iter_t>())>;
 
