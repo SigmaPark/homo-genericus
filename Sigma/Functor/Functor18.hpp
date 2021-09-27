@@ -42,6 +42,10 @@ namespace sgm::fp
 template<class FN>
 static decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) 
 noexcept(sgm::is_RvalueReference<FN&&>::value);
+
+
+template<class FN, class... TYPES>
+static decltype(auto) operator*(FN&& fn, sgm::fp::Multiple<TYPES...>&& mtp) noexcept;
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
 
 
@@ -255,11 +259,6 @@ struct sgm::fp::identical_Functor
 	using identical_FnExpr_t = FnExpr<Closure<>, decltype(identity)>;
 };
 
-namespace sgm::fp
-{
-	static identical_Functor constexpr as_functor{};
-}
-
 
 template<class FN>
 decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) noexcept(sgm::is_RvalueReference<FN&&>::value)
@@ -270,6 +269,13 @@ decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) noexcept
 		return sgm::Move(fn);
 	else
 		return FnExpr( Closure{}, sgm::Forward<FN>(fn) );
+}
+
+
+template<class FN, class... TYPES>
+decltype(auto) operator*(FN&& fn, sgm::fp::Multiple<TYPES...>&& mtp) noexcept
+{
+	return sgm::fp::Apply( sgm::Forward<FN>(fn)*sgm::fp::identical_Functor{}, sgm::Move(mtp) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -389,7 +395,6 @@ public:
 private:
 	friend class sgm::Operator_interface<FnExpr>;
 	friend struct sgm::fp::_Evaluation;
-	friend class sgm::fp::Functor<typename sgm::fp::identical_Functor::identical_FnExpr_t>;
 
 
 	template<class... ARGS>
@@ -464,7 +469,6 @@ public:
 
 	auto operator=(Functor const&)-> Functor& = delete;
 
-
 private:
 	hFXP _hfxp;
 };
@@ -475,15 +479,17 @@ class sgm::fp::Functor<typename sgm::fp::identical_Functor::identical_FnExpr_t> 
 {
 public:
 	template<class...ARGS>
-	decltype(auto) operator()(ARGS&&... args) const{  return _identity_expr( Forward<ARGS>(args)... );  }
+	decltype(auto) operator()(ARGS&&... args) const
+	{  
+		typename identical_Functor::identical_FnExpr_t fxp(Closure{}, identical_Functor::identity);
+
+		return Move(fxp)( Forward<ARGS>(args)... );
+	}
 
 	template<class FN>
 	decltype(auto) operator*(FN&& fn) const{  return Forward<FN>(fn) * *this;  }
 
 	auto operator=(Functor const&)-> Functor& = delete;
-
-private:
-	typename sgm::fp::identical_Functor::identical_FnExpr_t _identity_expr{Closure{}, identical_Functor::identity};
 };
 
 

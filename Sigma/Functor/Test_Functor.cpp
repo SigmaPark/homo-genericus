@@ -39,7 +39,7 @@ void TestF18::Test01()
 
 	sgm::fp::Functor ftr1 = [](auto&& x, auto const& y){  return 2*x*y;  };
 	
-	auto res1 = ( [](auto&& x, auto const& y){  return 2*x*y;  } * sgm::fp::Functor() )(2, y);
+	auto res1 = ( [](auto&& x, auto const& y){  return 2*x*y;  } * sgm::fp::Functor{} )(2, y);
 
 	is_True( res1 == 20 && ftr1(2, y) == 20 );
 }
@@ -50,7 +50,7 @@ void TestF18::Test02()
 	int y = 5;
 
 	is_True
-	(	( [](int&& x, auto const& y){  return 2*x*y;  } * sgm::fp::Functor() )
+	(	( [](int&& x, auto const& y){  return 2*x*y;  } * sgm::fp::Functor{} )
 		(sgm::fp::_, y)(2)
 	==	20	
 	);
@@ -69,7 +69,7 @@ void TestF18::Test03()
 	auto f1 = [](auto x, auto y){  return x+y;  };
 	auto f2 = [](auto x){  return 2*x;  };
 
-	auto y = (sgm::fp::Functor() * f2 * f1)(3, 5);
+	auto y = (sgm::fp::Functor{} * f2 * f1)(3, 5);
 
 	is_True(y == 16);
 
@@ -216,6 +216,14 @@ void TestF18::Test11()
 	using namespace sgm::fp;
 
 	is_True( Functor()(1) == 1 );
+
+	int x = 3;
+
+	using sgm::spec::Specimen;
+
+	auto f1 = [](int x, Specimen&& y, int const& z){  return x + y.val + z;  };
+
+	is_True(  f1 * Functor{}( 3, []{  return Specimen(4);  }(), x ) == 10  );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

@@ -395,7 +395,7 @@ struct sgm::fp::_Apply_Helper
 	static decltype(auto) calc(F &&f, [[maybe_unused]]MTP &&mtp, ARGS&&...args)
 	{
 		if constexpr( auto constexpr IDX = sizeof...(ARGS);  sizeof...(TYPES) == IDX )
-			return f( Forward<ARGS>(args)... );
+			return Forward<F>(f)( Forward<ARGS>(args)... );
 		else
 		{
 			using _nth_t = Nth_t<IDX, TYPES...>;
