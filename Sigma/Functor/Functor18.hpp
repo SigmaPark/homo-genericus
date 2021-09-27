@@ -13,7 +13,7 @@ namespace sgm::fp
 
 	struct _FXP_Helper;
 
-	struct As_Functor;
+	struct identical_Functor;
 
 
 	template<class hFXP>  class Functor;
@@ -34,15 +34,13 @@ namespace sgm::fp
 
 	struct _Composition;
 
-	struct _identity_Function;
-
 	template<unsigned... INDICES>  struct _Permute_Helper;
 
 }
 
 
 template<class FN>
-static decltype(auto) constexpr operator/(FN&& fn, sgm::fp::As_Functor) 
+static decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) 
 noexcept(sgm::is_RvalueReference<FN&&>::value);
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
 
@@ -243,19 +241,28 @@ namespace sgm::fp
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-struct sgm::fp::As_Functor
+struct sgm::fp::identical_Functor
 {
-	constexpr As_Functor() = default;
+	constexpr identical_Functor() = default;
+
+	static auto constexpr identity
+	=	[](auto&& a, auto&&... args) constexpr
+		->	Selective_t< sizeof...(args) != 0, Multiple<decltype(a), decltype(args)...>, decltype(a) >
+		{
+			return {Forward<decltype(a)>(a), Forward<decltype(args)>(args)...};
+		};
+
+	using identical_FnExpr_t = FnExpr<Closure<>, decltype(identity)>;
 };
 
 namespace sgm::fp
 {
-	static As_Functor constexpr as_functor{};
+	static identical_Functor constexpr as_functor{};
 }
 
 
 template<class FN>
-decltype(auto) constexpr operator/(FN&& fn, sgm::fp::As_Functor const) noexcept(sgm::is_RvalueReference<FN&&>::value)
+decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) noexcept(sgm::is_RvalueReference<FN&&>::value)
 {
 	using namespace sgm::fp;
 
@@ -346,17 +353,6 @@ private:
 			return Forward<decltype(fn2)>(fn2)(  Forward<decltype(fn1)>(fn1)( Forward<decltype(args)>(args)... )  );
 		};
 };
-
-
-struct sgm::fp::_identity_Function
-{
-	static auto constexpr func
-	=	[](auto&& a, auto&&... args) constexpr
-		->	Selective_t< sizeof...(args) != 0, Multiple<decltype(a), decltype(args)...>, decltype(a) >
-		{
-			return {Forward<decltype(a)>(a), Forward<decltype(args)>(args)...};
-		};
-};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -383,7 +379,7 @@ public:
 	}
 
 
-	template<class FN>
+	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
 	decltype(auto) operator*(FN&& fn) && noexcept
 	{
 		return _composite( Move(*this), Forward<FN>(fn) );
@@ -392,6 +388,8 @@ public:
 
 private:
 	friend class sgm::Operator_interface<FnExpr>;
+	friend struct sgm::fp::_Evaluation;
+	friend class sgm::fp::Functor<typename sgm::fp::identical_Functor::identical_FnExpr_t>;
 
 
 	template<class... ARGS>
@@ -407,13 +405,13 @@ private:
 	}
 
 
-	template<class FN>
+	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
 	decltype(auto) operator*(FN&& fn) & noexcept(is_RvalueReference<FN&&>::value)
 	{
 		return _composite( *this, Forward<FN>(fn) );
 	}
 
-	template<class FN>
+	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
 	decltype(auto) operator*(FN&& fn) const& noexcept(is_RvalueReference<FN&&>::value)
 	{
 		return _composite( *this, Forward<FN>(fn) );
@@ -433,7 +431,9 @@ private:
 	template<class ME, class FN>
 	static decltype(auto) _composite(ME&& me, FN&& fn) noexcept(Aleph_Check<ME&&, FN&&>::value)
 	{
-		Closure c(  indexer<0, 1>{}, Forward_as_Multiple( Forward<ME>(me), Forward<FN>(fn) / as_functor )  );
+		Closure c
+		(	indexer<0, 1>{}, Forward_as_Multiple(  Forward<ME>(me), Forward<FN>(fn) * identical_Functor{}  )
+		);
 
 		return FnExpr<decltype(c), decltype(_Composition::func)>( Move(c), _Composition::func );		
 	}
@@ -452,29 +452,44 @@ template<class hFXP>
 class sgm::fp::Functor : public Operator_interface<hFXP>
 {
 public:
-	constexpr Functor() noexcept 
-	:	Functor( FnExpr< Closure<>, decltype(_identity_Function::func) >(Closure{}, _identity_Function::func) ){}
-
 	template<class _closure_t, class _invoker_t>
 	Functor(FnExpr<_closure_t, _invoker_t>&& fxp) noexcept
-	:	_hfxp(  _FXP_Helper::harden( Move(fxp) )  ){  *static_cast< Operator_interface<hFXP>* >(this) = &_hfxp;  }
+	:	_hfxp(  _FXP_Helper::harden( Move(fxp) )  ){  static_cast< Operator_interface<hFXP>& >(*this) = &_hfxp;  }
 
 	template
 	<	class FN, class = Enable_if_t<  !_FXP_Helper::is_FnExpr_v<FN> && !is_Same_v< Decay_t<FN>, Functor >  >  
 	>
-	Functor(FN&& fn) noexcept(is_RvalueReference<FN&&>::value) : Functor( Forward<FN>(fn) / as_functor ){}
+	Functor(FN&& fn) noexcept(is_RvalueReference<FN&&>::value) : Functor( Forward<FN>(fn) * identical_Functor{} ){}
 
 
 	auto operator=(Functor const&)-> Functor& = delete;
+
 
 private:
 	hFXP _hfxp;
 };
 
 
+template<>
+class sgm::fp::Functor<typename sgm::fp::identical_Functor::identical_FnExpr_t> : public identical_Functor
+{
+public:
+	template<class...ARGS>
+	decltype(auto) operator()(ARGS&&... args) const{  return _identity_expr( Forward<ARGS>(args)... );  }
+
+	template<class FN>
+	decltype(auto) operator*(FN&& fn) const{  return Forward<FN>(fn) * *this;  }
+
+	auto operator=(Functor const&)-> Functor& = delete;
+
+private:
+	typename sgm::fp::identical_Functor::identical_FnExpr_t _identity_expr{Closure{}, identical_Functor::identity};
+};
+
+
 namespace sgm::fp
 {
-	Functor()-> Functor< FnExpr<Closure<>, decltype(_identity_Function::func)> >;
+	Functor()-> Functor<typename identical_Functor::identical_FnExpr_t>;
 
 	template<class F>
 	Functor(F&&)
@@ -515,10 +530,9 @@ namespace sgm::fp
 {
 	template<unsigned... INDICES>
 	inline static Functor const Permute 
-	=	[](auto&&... args)
+	=	[](auto&&... args)-> decltype(auto)
 		{
-			return
-			_Permute_Helper<INDICES...>::calc(  Forward_as_Flat_MTP( Forward<decltype(args)>(args)... )  );
+			return _Permute_Helper<INDICES...>::calc(  Forward_as_Flat_MTP( Forward<decltype(args)>(args)... )  );
 		};
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
@@ -536,7 +550,7 @@ namespace sgm::fp
 #ifndef _SGM_FP_HIGH_TEMPLAR
 	#define _SGM_FP_HIGH_TEMPLAR(NAME)	\
 		inline static Functor const NAME	\
-		=	[](auto&&... args){  return ht::NAME( Forward<decltype(args)>(args)... );  }
+		=	[](auto&&... args)-> decltype(auto){  return ht::NAME( Forward<decltype(args)>(args)... );  }
 
 	_SGM_FP_HIGH_TEMPLAR(Morph);
 	_SGM_FP_HIGH_TEMPLAR(Filter);
@@ -553,11 +567,11 @@ namespace sgm::fp
 
 	template<class... FLAGS>
 	inline static Functor const Fold_par
-	=	[](auto&&... args){  return ht::Fold<FLAGS...>( Forward<decltype(args)>(args)... );  };
+	=	[](auto&&... args)-> decltype(auto){  return ht::Fold<FLAGS...>( Forward<decltype(args)>(args)... );  };
 
 	template<class... FLAGS>
 	inline static Functor const rFold_par
-	=	[](auto&&... args){  return ht::rFold<FLAGS...>( Forward<decltype(args)>(args)... );  };
+	=	[](auto&&... args)-> decltype(auto){  return ht::rFold<FLAGS...>( Forward<decltype(args)>(args)... );  };
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
