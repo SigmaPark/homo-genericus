@@ -18,6 +18,7 @@ struct TestF18
 	static void Test09();
 	static void Test10();
 	static void Test11();
+	static void Test12();
 
 	template<class RG1, class RG2>
 	static bool are_same_ranges(RG1 &&rg1, RG2 &&rg2)
@@ -225,6 +226,25 @@ void TestF18::Test11()
 
 	is_True(  f1 * Functor{}( 3, []{  return Specimen(4);  }(), x ) == 10  );
 }
+
+
+void TestF18::Test12()
+{
+	using sgm::spec::Specimen;
+	using namespace sgm::fp;
+
+	auto L0 = [](Specimen s1, Specimen s2)-> Specimen{  return s1.val * s2.val;  };
+	Functor L1 = L0*Functor{}( Specimen::create(2, {6}), _ );
+	Functor L2 = L0*Functor{}( Specimen::create(5, {6}), _ );
+
+	is_True
+	(	(Functor{} * L1 * L2 )(2).val == 20
+	);
+
+	Functor const ftr1 = Functor{} * L1 * L2;
+
+	is_True( ftr1(2).val == 20 );
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -247,6 +267,7 @@ void Test_sgm_Functor::test()
 		TestF18::Test09();
 		TestF18::Test10();
 		TestF18::Test11();
+		TestF18::Test12();
 
 		std::wcout << L"Functor Test Complete.\n";
 	}

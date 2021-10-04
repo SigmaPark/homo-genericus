@@ -4,6 +4,7 @@
 #define _SGM_SPECIFICATION_
 
 #include "..\interface_Traits\interface_Traits.hpp"
+#include <iostream>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -107,22 +108,66 @@ namespace sgm
 			} state;
 
 			int val;
+			bool msg[7] = {0, };
 
 
-			Specimen() : state(DEFAULT_CONSTRUCTION), val(0){}
-			Specimen(int const n, int const n2 = 0) : state(MANUAL_CONSTRUCTION), val(n + n2){}
-			Specimen(Specimen const& spec) : state(COPY_CONSTRUCTION), val(spec.val){}
+			static auto create
+			(	int val_
+			,	std::initializer_list<size_t> &&msg = {}
+			)->	Specimen
+			{
+				Specimen res{val_};
+
+				for(auto m : msg)
+					res.msg[m] = true;
+
+				if(res.msg[1])
+					std::wcerr << L"MANUAL_CONSTRUCTION\n";
+
+				return res;
+			}
+
+
+			Specimen() : state(DEFAULT_CONSTRUCTION), val(0)
+			{
+				if(msg[0])
+					std::wcerr << L"DEFAULT_CONSTRUCTION\n";
+			}
+
+			Specimen(int const n, int const n2 = 0) : state(MANUAL_CONSTRUCTION), val(n + n2)
+			{
+				if(msg[1])
+					std::wcerr << L"MANUAL_CONSTRUCTION\n";
+			}
+
+			Specimen(Specimen const& spec) : state(COPY_CONSTRUCTION), val(spec.val)
+			{
+				if(msg[2])
+					std::wcerr << L"COPY_CONSTRUCTION\n";				
+			}
 			
 			Specimen(Specimen&& spec) throw() : state(MOVE_CONSTRUCTION), val(spec.val)
 			{
 				spec.~Specimen();
+
+				if(msg[3])
+					std::wcerr << L"MOVE_CONSTRUCTION\n";
 			}
 
-			~Specimen(){  state = DESTRUCTED,  val = 0;  }
+			~Specimen()
+			{
+				state = DESTRUCTED,  val = 0;  
+
+				if(msg[6])
+					std::wcerr << L"DESTRUCTED\n";
+			}
 
 			auto operator=(Specimen const& spec)-> Specimen&
 			{
 				state = COPY_ASSIGNMENT,  val = spec.val;
+
+				if(msg[4])
+					std::wcerr << L"COPY_ASSIGNMENT\n";
 				
 				return *this;
 			}
@@ -132,6 +177,9 @@ namespace sgm
 				state = MOVE_ASSIGNMENT,  val = spec.val;
 				
 				spec.~Specimen();
+
+				if(msg[5])
+					std::wcerr << L"MOVE_ASSIGNMENT\n";
 
 				return *this;
 			}

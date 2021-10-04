@@ -223,6 +223,7 @@ struct sgm::fp::_FXP_Helper : No_Making
 		else
 			return harden( Forward<MTP>(mtp), Forward<ARGS>(args)..., mtp.template forward<nof_args>() );
 	}
+
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -268,7 +269,7 @@ decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) noexcept
 	if constexpr(_FXP_Helper::is_FnExpr_v<FN>)
 		return sgm::Move(fn);
 	else
-		return FnExpr( Closure{}, sgm::Forward<FN>(fn) );
+		return FnExpr< Closure<>, sgm::Alephless_t<FN&&> >( Closure{}, sgm::Forward<FN>(fn) );
 }
 
 
@@ -437,10 +438,13 @@ private:
 	static decltype(auto) _composite(ME&& me, FN&& fn) noexcept(Aleph_Check<ME&&, FN&&>::value)
 	{
 		Closure c
-		(	indexer<0, 1>{}, Forward_as_Multiple(  Forward<ME>(me), Forward<FN>(fn) * identical_Functor{}  )
+		(	indexer<0, 1>{}
+		,	Multiple<ME&&, decltype(fn*identical_Functor{})>
+			(	Forward<ME>(me), Forward<FN>(fn) * identical_Functor{} 
+			)
 		);
 
-		return FnExpr<decltype(c), decltype(_Composition::func)>( Move(c), _Composition::func );		
+		return FnExpr<decltype(c), decltype(_Composition::func)>( Move(c), _Composition::func );
 	}
 };
 
@@ -466,6 +470,18 @@ public:
 	>
 	Functor(FN&& fn) noexcept(is_RvalueReference<FN&&>::value) : Functor( Forward<FN>(fn) * identical_Functor{} ){}
 
+	template<class _X>
+	Functor(Functor<_X> const& rhs) : Functor(rhs){}
+
+	template<class _X>
+	Functor(Functor<_X>&& rhs) noexcept : Functor( Move(rhs) ){}
+
+
+	Functor(Functor const &rhs) : _hfxp(rhs._hfxp){  static_cast< Operator_interface<hFXP>& >(*this) = &_hfxp;  }
+
+	Functor(Functor&& rhs) noexcept 
+	:	_hfxp( Move(rhs._hfxp) ){  static_cast< Operator_interface<hFXP>& >(*this) = &_hfxp;  }
+
 
 	auto operator=(Functor const&)-> Functor& = delete;
 
@@ -480,14 +496,13 @@ class sgm::fp::Functor<typename sgm::fp::identical_Functor::identical_FnExpr_t> 
 public:
 	template<class...ARGS>
 	decltype(auto) operator()(ARGS&&... args) const
-	{  
-		typename identical_Functor::identical_FnExpr_t fxp(Closure{}, identical_Functor::identity);
-
-		return Move(fxp)( Forward<ARGS>(args)... );
+	{
+		return identical_Functor::identity( Forward<ARGS>(args)... );
 	}
 
-	template<class FN>
-	decltype(auto) operator*(FN&& fn) const{  return Forward<FN>(fn) * *this;  }
+
+	template<   class FN, class = Enable_if_t<  !is_Same_v< Decay_t<FN>, identical_Functor >  >   >
+	decltype(auto) operator*(FN&& fn) const{  return Forward<FN>(fn) * identical_Functor{};  }
 
 	auto operator=(Functor const&)-> Functor& = delete;
 };
@@ -506,6 +521,12 @@ namespace sgm::fp
 			,	FnExpr< Closure<>, Alephless_t<F> >
 			>
 		>;
+
+	template<class _X>
+	Functor(Functor<_X> const&)-> Functor<_X>;
+
+	template<class _X>
+	Functor(Functor<_X>&&)-> Functor<_X>;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -547,6 +568,15 @@ namespace sgm::fp
 #include "..\High_Templar\High_Templar.hpp"
 
 
+#ifndef SGM_1st_Class_Citizen
+	#define SGM_1st_Class_Citizen(NAME, ...)	\
+		[](auto&&... args)-> decltype(auto){  return NAME __VA_ARGS__ ( decltype(args)(args)... );  }
+
+#else
+	#error SGM_1st_Class_Citizen was already defined somewhere else.
+#endif
+
+
 namespace sgm::fp
 {
 
@@ -555,8 +585,7 @@ namespace sgm::fp
 
 #ifndef _SGM_FP_HIGH_TEMPLAR
 	#define _SGM_FP_HIGH_TEMPLAR(NAME)	\
-		inline static Functor const NAME	\
-		=	[](auto&&... args)-> decltype(auto){  return ht::NAME( Forward<decltype(args)>(args)... );  }
+		inline static Functor const NAME = SGM_1st_Class_Citizen(ht::NAME) 
 
 	_SGM_FP_HIGH_TEMPLAR(Morph);
 	_SGM_FP_HIGH_TEMPLAR(Filter);
