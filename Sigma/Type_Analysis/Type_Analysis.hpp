@@ -389,7 +389,7 @@ namespace sgm
 	struct _Nth_element : No_Making
 	{
 		template<class T, class...ARGS>
-		static auto calc(T &&t, ARGS&&...args)-> Nth_t<IDX - 1, ARGS&&...>
+		static auto calc(T&&, ARGS&&...args)-> Nth_t<IDX - 1, ARGS&&...>
 		{
 			return _Nth_element<IDX - 1>::calc( Forward<ARGS>(args)... );
 		}

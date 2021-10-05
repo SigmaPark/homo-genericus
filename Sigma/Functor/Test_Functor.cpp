@@ -38,9 +38,9 @@ void TestF18::Test01()
 {
 	int y = 5;
 
-	sgm::fp::Functor ftr1 = [](auto&& x, auto const& y){  return 2*x*y;  };
+	sgm::fp::Functor ftr1 = SGM_LAMBDA(2*_0*_1); 
 	
-	auto res1 = ( [](auto&& x, auto const& y){  return 2*x*y;  } * sgm::fp::Functor{} )(2, y);
+	auto res1 = ( SGM_LAMBDA(2*_0*_1) * sgm::fp::Functor{} )(2, y);
 
 	is_True( res1 == 20 && ftr1(2, y) == 20 );
 }
@@ -67,8 +67,8 @@ void TestF18::Test02()
 
 void TestF18::Test03()
 {
-	auto f1 = [](auto x, auto y){  return x+y;  };
-	auto f2 = [](auto x){  return 2*x;  };
+	auto f1 = SGM_LAMBDA(_0 + _1); 
+	auto f2 = SGM_LAMBDA(2*_0);
 
 	auto y = (sgm::fp::Functor{} * f2 * f1)(3, 5);
 
@@ -184,8 +184,8 @@ void TestF18::Test09()
 	double const ans = std::pow( std::acos(0)*2, 2 )/6.0;
 
 	Functor const ftr1
-	=	Fold(_, std::plus<>())
-	*	Morph(_, [](size_t const x){  return std::pow(x, -2.0);  })
+	=	Fold( _, std::plus<>() )
+	*	Morph(  _, SGM_LAMBDA( std::pow(_0, -2.0) )  )
 	*	integers;
 
 	auto const res = ftr1(N, 1);
@@ -203,7 +203,7 @@ void TestF18::Test10()
 
 	Functor const ftr1
 	=	Fold(_, std::plus<>())
-	*	Morph( _, [](size_t const x){  return (x % 2 == 1 ? -1.0 : 1.0)/double(2*x + 1);  } )
+	*	Morph(  _, SGM_LAMBDA( (_0 % 2 == 1 ? -1.0 : 1.0) / double(2*_0 + 1) )  )
 	*	integers;
 
 	auto const res = ftr1(N);
@@ -222,7 +222,7 @@ void TestF18::Test11()
 
 	using sgm::spec::Specimen;
 
-	auto f1 = [](int x, Specimen&& y, int const& z){  return x + y.val + z;  };
+	auto f1 = SGM_LAMBDA(_0 + _1.val + _2); 
 
 	is_True(  f1 * Functor{}( 3, []{  return Specimen(4);  }(), x ) == 10  );
 }
@@ -236,6 +236,9 @@ void TestF18::Test12()
 	auto L0 = [](Specimen s1, Specimen s2)-> Specimen{  return s1.val * s2.val;  };
 	Functor L1 = L0*Functor{}( Specimen::create(2, {6}), _ );
 	Functor L2 = L0*Functor{}( Specimen::create(5, {6}), _ );
+	Functor L3 = L2;
+
+	static_assert( sgm::is_Same_v<decltype(L3), decltype(L2)> );
 
 	is_True
 	(	(Functor{} * L1 * L2 )(2).val == 20
@@ -244,6 +247,9 @@ void TestF18::Test12()
 	Functor const ftr1 = Functor{} * L1 * L2;
 
 	is_True( ftr1(2).val == 20 );
+
+	
+	
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

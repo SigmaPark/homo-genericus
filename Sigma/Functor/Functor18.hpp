@@ -36,6 +36,8 @@ namespace sgm::fp
 
 	template<unsigned... INDICES>  struct _Permute_Helper;
 
+	template<size_t IDX, class... ARGS>
+	inline static decltype(auto) _Try_nth_elem(ARGS&&... args) noexcept;
 }
 
 
@@ -439,7 +441,7 @@ private:
 	{
 		Closure c
 		(	indexer<0, 1>{}
-		,	Multiple<ME&&, decltype(fn*identical_Functor{})>
+		,	Multiple< ME&&, decltype( Forward<FN>(fn) * identical_Functor{} ) >
 			(	Forward<ME>(me), Forward<FN>(fn) * identical_Functor{} 
 			)
 		);
@@ -469,13 +471,6 @@ public:
 	<	class FN, class = Enable_if_t<  !_FXP_Helper::is_FnExpr_v<FN> && !is_Same_v< Decay_t<FN>, Functor >  >  
 	>
 	Functor(FN&& fn) noexcept(is_RvalueReference<FN&&>::value) : Functor( Forward<FN>(fn) * identical_Functor{} ){}
-
-	template<class _X>
-	Functor(Functor<_X> const& rhs) : Functor(rhs){}
-
-	template<class _X>
-	Functor(Functor<_X>&& rhs) noexcept : Functor( Move(rhs) ){}
-
 
 	Functor(Functor const &rhs) : _hfxp(rhs._hfxp){  static_cast< Operator_interface<hFXP>& >(*this) = &_hfxp;  }
 
@@ -521,12 +516,6 @@ namespace sgm::fp
 			,	FnExpr< Closure<>, Alephless_t<F> >
 			>
 		>;
-
-	template<class _X>
-	Functor(Functor<_X> const&)-> Functor<_X>;
-
-	template<class _X>
-	Functor(Functor<_X>&&)-> Functor<_X>;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -574,6 +563,38 @@ namespace sgm::fp
 
 #else
 	#error SGM_1st_Class_Citizen was already defined somewhere else.
+#endif
+
+
+template<size_t IDX, class... ARGS>
+decltype(auto) sgm::fp::_Try_nth_elem([[maybe_unused]]ARGS&&... args) noexcept
+{
+	if constexpr( IDX < sizeof...(ARGS) )
+		return sgm::Nth_elem<IDX>(args...);
+	else
+		return sgm::none;
+}
+
+#ifndef SGM_LAMBDA
+	#define SGM_LAMBDA(...)		\
+		[&](auto&&... args)-> decltype(auto)	\
+		{	\
+			[[maybe_unused]]auto&& _0 = sgm::fp::_Try_nth_elem<0>(args...);	\
+			[[maybe_unused]]auto&& _1 = sgm::fp::_Try_nth_elem<1>(args...);	\
+			[[maybe_unused]]auto&& _2 = sgm::fp::_Try_nth_elem<2>(args...);	\
+			[[maybe_unused]]auto&& _3 = sgm::fp::_Try_nth_elem<3>(args...);	\
+			[[maybe_unused]]auto&& _4 = sgm::fp::_Try_nth_elem<4>(args...);	\
+			[[maybe_unused]]auto&& _5 = sgm::fp::_Try_nth_elem<5>(args...);	\
+			[[maybe_unused]]auto&& _6 = sgm::fp::_Try_nth_elem<6>(args...);	\
+			[[maybe_unused]]auto&& _7 = sgm::fp::_Try_nth_elem<7>(args...);	\
+			[[maybe_unused]]auto&& _8 = sgm::fp::_Try_nth_elem<8>(args...);	\
+			[[maybe_unused]]auto&& _9 = sgm::fp::_Try_nth_elem<9>(args...);	\
+			\
+			return __VA_ARGS__;	\
+		}
+
+#else
+	#error SGM_LAMBDA was already defined somewhere else.
 #endif
 
 
