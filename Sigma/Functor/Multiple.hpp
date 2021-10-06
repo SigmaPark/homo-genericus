@@ -140,13 +140,7 @@ public:
 		if constexpr(IDX == _ULMAX)
 			return _forward();
 		else
-		{
-			using elem_t = Nth_t<IDX, TYPES...>;
-
-			static_assert(!is_LvalueReference<elem_t>::value);
-			
-			return static_cast<elem_t>(get<IDX>());
-		}
+			return static_cast< Nth_t<IDX, TYPES...> >(get<IDX>());
 	}
 
 

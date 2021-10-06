@@ -40,7 +40,7 @@ void TestF18::Test01()
 
 	sgm::fp::Functor ftr1 = SGM_LAMBDA(2*_0*_1); 
 	
-	auto res1 = ( SGM_LAMBDA(2*_0*_1) * sgm::fp::Functor{} )(2, y);
+	auto res1 = SGM_LAMBDA(2*_0*_1)(2, y);
 
 	is_True( res1 == 20 && ftr1(2, y) == 20 );
 }
@@ -67,15 +67,17 @@ void TestF18::Test02()
 
 void TestF18::Test03()
 {
-	auto f1 = SGM_LAMBDA(_0 + _1); 
-	auto f2 = SGM_LAMBDA(2*_0);
+	using namespace sgm::fp;
 
-	auto y = (sgm::fp::Functor{} * f2 * f1)(3, 5);
+	Functor f1 = SGM_LAMBDA(_0 + _1); 
+	Functor f2 = SGM_LAMBDA(2*_0);
+
+	auto y = (f2 * f1)(3, 5);
 
 	is_True(y == 16);
 
-	sgm::fp::Functor ftr2 = f2;
-	sgm::fp::Functor cps_ftr = ftr2 * f1;
+	Functor ftr2 = f2;
+	Functor cps_ftr = ftr2 * f1;
 
 	is_True
 	(	cps_ftr(6.0, 9.0) == 30.0 
@@ -224,7 +226,7 @@ void TestF18::Test11()
 
 	auto f1 = SGM_LAMBDA(_0 + _1.val + _2); 
 
-	is_True(  f1 * Functor{}( 3, []{  return Specimen(4);  }(), x ) == 10  );
+	is_True(  f1( 3, []{  return Specimen(4);  }(), x ) == 10  );
 }
 
 
@@ -234,7 +236,7 @@ void TestF18::Test12()
 	using namespace sgm::fp;
 
 	auto L0 = [](Specimen s1, Specimen s2)-> Specimen{  return s1.val * s2.val;  };
-	Functor L1 = L0*Functor{}( Specimen::create(2, {6}), _ );
+	auto L1 = ( L0*Functor{}( Specimen::create(2, {6}), _ ) ).eval();
 	Functor L2 = L0*Functor{}( Specimen::create(5, {6}), _ );
 	Functor L3 = L2;
 
@@ -247,9 +249,6 @@ void TestF18::Test12()
 	Functor const ftr1 = Functor{} * L1 * L2;
 
 	is_True( ftr1(2).val == 20 );
-
-	
-	
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

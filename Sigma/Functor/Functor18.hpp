@@ -9,7 +9,7 @@ namespace sgm::fp
 	
 	struct Blank;
 
-	template<class closure_t, class invoker_t>  struct FnExpr;
+	template<class closure_t, class invoker_t, unsigned MIN_D = 0xffff'ffffUL>  struct FnExpr;
 
 	struct _FXP_Helper;
 
@@ -187,8 +187,8 @@ struct sgm::fp::_FXP_Helper : No_Making
 	template<class T>  struct is_FnExpr<T, False_t> : is_FnExpr< Decay_t<T> >{};
 	template<class T>  struct is_FnExpr<T, True_t> : False_t{};
 	
-	template<class _closure_t, class _invoker_t>
-	struct is_FnExpr< FnExpr<_closure_t, _invoker_t>, True_t > : True_t{};
+	template<class _closure_t, class _invoker_t, unsigned MIN_D>
+	struct is_FnExpr< FnExpr<_closure_t, _invoker_t, MIN_D>, True_t > : True_t{};
 
 	template<class T>  static bool constexpr is_FnExpr_v = is_FnExpr<T>::value;
 
@@ -200,9 +200,10 @@ struct sgm::fp::_FXP_Helper : No_Making
 		{
 			using closure_t = decltype(t.closure);
 			using invoker_t = decltype(t.invoker);
+			unsigned constexpr MIN_D = t.MINIMAL_DIMENSION;
 
 			return
-			FnExpr< decltype( harden(Declval<closure_t>()) ), decltype( harden(Declval<invoker_t>()) ) >
+			FnExpr< decltype( harden(Declval<closure_t>()) ), decltype( harden(Declval<invoker_t>()) ), MIN_D >
 			{	harden( Forward<closure_t>(t.closure) ), harden( Forward<invoker_t>(t.invoker) )
 			};
 		}
@@ -268,8 +269,8 @@ decltype(auto) constexpr operator*(FN&& fn, sgm::fp::identical_Functor) noexcept
 {
 	using namespace sgm::fp;
 
-	if constexpr(_FXP_Helper::is_FnExpr_v<FN>)
-		return sgm::Move(fn);
+	if constexpr(_FXP_Helper::is_FnExpr_v<FN> || _Functor_Helper::is_Functor<FN>::value)
+		return sgm::Forward<FN>(fn);
 	else
 		return FnExpr< Closure<>, sgm::Alephless_t<FN&&> >( Closure{}, sgm::Forward<FN>(fn) );
 }
@@ -286,7 +287,7 @@ decltype(auto) operator*(FN&& fn, sgm::fp::Multiple<TYPES...>&& mtp) noexcept
 struct sgm::fp::_Evaluation : No_Making
 {
 private:
-	template<class closure_t, class invoker_t>  friend struct sgm::fp::FnExpr;
+	template<class closure_t, class invoker_t, unsigned MIN_D>  friend struct sgm::fp::FnExpr;
 
 
 	template
@@ -307,7 +308,7 @@ private:
 			);
 
 			return
-			FnExpr< decltype(merged_closure), CopiedRef_t<ME&&, decltype(me.invoker)> >
+			FnExpr< decltype(merged_closure), CopiedRef_t<ME&&, decltype(me.invoker)>, NOF_BLANK >
 			(	Move(merged_closure), CopiedRef_t<ME&&, decltype(me.invoker)>(me.invoker)
 			);
 		}
@@ -354,7 +355,7 @@ private:
 struct sgm::fp::_Composition : No_Making
 {
 private:
-	template<class closure_t, class invoker_t>  friend struct sgm::fp::FnExpr;
+	template<class closure_t, class invoker_t, unsigned MIN_D>  friend struct sgm::fp::FnExpr;
 
 	static auto constexpr func
 	=	[](auto&& fn2, auto&& fn1, auto&&... args)-> decltype(auto)
@@ -365,13 +366,15 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-template<class closure_t, class invoker_t>
+template<class closure_t, class invoker_t, unsigned MIN_D>
 struct sgm::fp::FnExpr
 {
 public:
+	static unsigned constexpr MINIMAL_DIMENSION = MIN_D;
+
 	closure_t closure;
 	invoker_t invoker;
-
+	
 
 	template<class _closure_t, class _invoker_t>
 	FnExpr(_closure_t&& clsr, _invoker_t&& ivk) noexcept(Aleph_Check<_closure_t&&, _invoker_t&&>::value)
@@ -387,19 +390,6 @@ public:
 		return _invoke(  Move(*this), Forward_as_Flat_MTP( Forward<ARGS>(args)... )  );
 	}
 
-
-	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
-	decltype(auto) operator*(FN&& fn) && noexcept
-	{
-		return _composite( Move(*this), Forward<FN>(fn) );
-	}
-
-
-private:
-	friend class sgm::Operator_interface<FnExpr>;
-	friend struct sgm::fp::_Evaluation;
-
-
 	template<class... ARGS>
 	decltype(auto) operator()(ARGS&&... args) const& noexcept( (is_RvalueReference<ARGS&&>::value ||...) )
 	{
@@ -414,6 +404,12 @@ private:
 
 
 	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
+	decltype(auto) operator*(FN&& fn) && noexcept
+	{
+		return _composite( Move(*this), Forward<FN>(fn) );
+	}
+
+	template<  class FN, class = Enable_if_t< !is_Same_v< Decay_t<FN>, identical_Functor > >  >
 	decltype(auto) operator*(FN&& fn) & noexcept(is_RvalueReference<FN&&>::value)
 	{
 		return _composite( *this, Forward<FN>(fn) );
@@ -426,6 +422,15 @@ private:
 	}
 
 
+	auto eval() && noexcept
+	{
+		Functor res = Move(*this);
+
+		return res;
+	}
+
+
+private:
 	template<class ME, class... TYPES>
 	static decltype(auto) _invoke(ME&& me, Multiple<TYPES...>&& inputs) noexcept
 	{
@@ -439,14 +444,16 @@ private:
 	template<class ME, class FN>
 	static decltype(auto) _composite(ME&& me, FN&& fn) noexcept(Aleph_Check<ME&&, FN&&>::value)
 	{
+		auto&& fxp = Forward<FN>(fn) * identical_Functor{};
+		using fxp_t = decltype(fxp);
+		auto constexpr D = fxp.MINIMAL_DIMENSION;
+
 		Closure c
 		(	indexer<0, 1>{}
-		,	Multiple< ME&&, decltype( Forward<FN>(fn) * identical_Functor{} ) >
-			(	Forward<ME>(me), Forward<FN>(fn) * identical_Functor{} 
-			)
+		,	Multiple<ME&&, fxp_t>( Forward<ME>(me), Forward<fxp_t>(fxp) )
 		);
 
-		return FnExpr<decltype(c), decltype(_Composition::func)>( Move(c), _Composition::func );
+		return FnExpr<decltype(c), decltype(_Composition::func), D>( Move(c), _Composition::func );
 	}
 };
 
@@ -463,8 +470,13 @@ template<class hFXP>
 class sgm::fp::Functor : public Operator_interface<hFXP>
 {
 public:
-	template<class _closure_t, class _invoker_t>
-	Functor(FnExpr<_closure_t, _invoker_t>&& fxp) noexcept
+	using closure_t = decltype(Declval<hFXP>().closure);
+	using invoker_t = decltype(Declval<hFXP>().invoker);
+	static unsigned constexpr MINIMAL_DIMENSION = Decay_t<hFXP>::MINIMAL_DIMENSION;
+
+
+	template<class _closure_t, class _invoker_t, unsigned D>
+	Functor(FnExpr<_closure_t, _invoker_t, D>&& fxp) noexcept
 	:	_hfxp(  _FXP_Helper::harden( Move(fxp) )  ){  static_cast< Operator_interface<hFXP>& >(*this) = &_hfxp;  }
 
 	template
@@ -577,7 +589,8 @@ decltype(auto) sgm::fp::_Try_nth_elem([[maybe_unused]]ARGS&&... args) noexcept
 
 #ifndef SGM_LAMBDA
 	#define SGM_LAMBDA(...)		\
-		[&](auto&&... args)-> decltype(auto)	\
+	sgm::fp::Functor	\
+	{	[&](auto&&... args)-> decltype(auto)	\
 		{	\
 			[[maybe_unused]]auto&& _0 = sgm::fp::_Try_nth_elem<0>(args...);	\
 			[[maybe_unused]]auto&& _1 = sgm::fp::_Try_nth_elem<1>(args...);	\
@@ -591,8 +604,9 @@ decltype(auto) sgm::fp::_Try_nth_elem([[maybe_unused]]ARGS&&... args) noexcept
 			[[maybe_unused]]auto&& _9 = sgm::fp::_Try_nth_elem<9>(args...);	\
 			\
 			return __VA_ARGS__;	\
-		}
-
+		}	\
+	}
+	
 #else
 	#error SGM_LAMBDA was already defined somewhere else.
 #endif
