@@ -236,8 +236,8 @@ void TestF18::Test12()
 	using namespace sgm::fp;
 
 	auto L0 = [](Specimen s1, Specimen s2)-> Specimen{  return s1.val * s2.val;  };
-	auto L1 = ( L0*Functor{}( Specimen::create(2, {6}), _ ) ).eval();
-	Functor L2 = L0*Functor{}( Specimen::create(5, {6}), _ );
+	auto L1 = ( L0*Functor{}( Specimen{2}, _ ) ).eval();
+	Functor L2 = L0*Functor{}( Specimen{5}, _ );
 	Functor L3 = L2;
 
 	static_assert( sgm::is_Same_v<decltype(L3), decltype(L2)> );

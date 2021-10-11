@@ -5,6 +5,11 @@
 
 #include "..\Family\Family.hpp"
 
+//	minimum versions for C++17 main syntex support.
+#ifndef SGM_SYNTEX_VERSION_CPP17
+	#error C++17 or higher version of language support is required.
+#endif
+
 
 #define RECURSION(...)	\
 	(auto...args) mutable	\

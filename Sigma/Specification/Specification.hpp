@@ -5,6 +5,7 @@
 
 #include "..\interface_Traits\interface_Traits.hpp"
 #include <iostream>
+#include <functional>
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -105,15 +106,40 @@ namespace sgm
 			,	COPY_ASSIGNMENT
 			,	MOVE_ASSIGNMENT
 			,	DESTRUCTED
-			} state;
+			};
 
+
+			static void Notice(State const s)
+			{
+				auto show_f = [](wchar_t const* str){  std::wcout << str << L'\n';  };
+
+			#define _SHOW_STATE_AND_BREAK(STATE)  case State::STATE:  show_f(L#STATE);  break
+
+				switch(s)
+				{
+				_SHOW_STATE_AND_BREAK(DEFAULT_CONSTRUCTION);
+				_SHOW_STATE_AND_BREAK(MANUAL_CONSTRUCTION);
+				_SHOW_STATE_AND_BREAK(COPY_CONSTRUCTION);
+				_SHOW_STATE_AND_BREAK(MOVE_CONSTRUCTION);
+				_SHOW_STATE_AND_BREAK(COPY_ASSIGNMENT);
+				_SHOW_STATE_AND_BREAK(MOVE_ASSIGNMENT);
+				_SHOW_STATE_AND_BREAK(DESTRUCTED);
+				}
+
+			#undef _SHOW_STATE_AND_BREAK
+			}
+
+
+			State state;
 			int val;
 			bool msg[7] = {0, };
+			std::function<void(State)> notice = Notice;
 
 
 			static auto create
 			(	int val_
 			,	std::initializer_list<size_t> &&msg = {}
+			,	std::function<void(State)> notice_ = Notice
 			)->	Specimen
 			{
 				Specimen res{val_};
@@ -121,45 +147,48 @@ namespace sgm
 				for(auto m : msg)
 					res.msg[m] = true;
 
+				res.notice = notice_;
+
 				if(res.msg[1])
-					std::wcerr << L"MANUAL_CONSTRUCTION\n";
+					res.notice(State::MANUAL_CONSTRUCTION);
 
 				return res;
 			}
 
 
-			Specimen() : state(DEFAULT_CONSTRUCTION), val(0)
-			{
-				if(msg[0])
-					std::wcerr << L"DEFAULT_CONSTRUCTION\n";
-			}
+			Specimen() : state(DEFAULT_CONSTRUCTION), val(0){}
 
-			Specimen(int const n, int const n2 = 0) : state(MANUAL_CONSTRUCTION), val(n + n2)
-			{
-				if(msg[1])
-					std::wcerr << L"MANUAL_CONSTRUCTION\n";
-			}
+			Specimen(int const n, int const n2 = 0) : state(MANUAL_CONSTRUCTION), val(n + n2){}
 
-			Specimen(Specimen const& spec) : state(COPY_CONSTRUCTION), val(spec.val)
+			Specimen(Specimen const& spec) 
+			:	state(COPY_CONSTRUCTION), val(spec.val), notice(spec.notice)
 			{
+				for( size_t i = 0;  i < std::size(msg);  ++i )
+					msg[i] = spec.msg[i];
+
 				if(msg[2])
-					std::wcerr << L"COPY_CONSTRUCTION\n";				
+					notice(state);
 			}
 			
-			Specimen(Specimen&& spec) throw() : state(MOVE_CONSTRUCTION), val(spec.val)
+			Specimen(Specimen&& spec) throw() 
+			:	state(MOVE_CONSTRUCTION), val(spec.val), notice( Move(spec.notice) )
 			{
+				
+				for( size_t i = 0;  i < std::size(msg);  ++i )
+					msg[i] = spec.msg[i];
+
 				spec.~Specimen();
 
 				if(msg[3])
-					std::wcerr << L"MOVE_CONSTRUCTION\n";
+					notice(state);
 			}
 
 			~Specimen()
 			{
-				state = DESTRUCTED,  val = 0;  
+				state = DESTRUCTED,  val = 0;
 
 				if(msg[6])
-					std::wcerr << L"DESTRUCTED\n";
+					notice(state);
 			}
 
 			auto operator=(Specimen const& spec)-> Specimen&
@@ -167,7 +196,7 @@ namespace sgm
 				state = COPY_ASSIGNMENT,  val = spec.val;
 
 				if(msg[4])
-					std::wcerr << L"COPY_ASSIGNMENT\n";
+					notice(state);
 				
 				return *this;
 			}
@@ -179,7 +208,7 @@ namespace sgm
 				spec.~Specimen();
 
 				if(msg[5])
-					std::wcerr << L"MOVE_ASSIGNMENT\n";
+					notice(state);
 
 				return *this;
 			}

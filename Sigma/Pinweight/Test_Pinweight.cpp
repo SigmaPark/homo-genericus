@@ -181,7 +181,7 @@ static void Test10()
 
 	enum class Byte : char{} buf[2][PinweightMemory<Specimen>::value];
 
-	for(size_t i = 0;  i < 10;  ++i)
+	for(int i = 0;  i < 10;  ++i)
 	{
 		auto pw1 = Share( Specimen(50 + i), buf[0] );
 		auto pw2 = pw1;

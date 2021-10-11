@@ -17,7 +17,7 @@
 
 #ifndef SGM_COMPILE_FAILED
 	#define SGM_COMPILE_FAILED(...) \
-		void(*const nop)() = []{  static_assert(false, #__VA_ARGS__);  }()
+		void(*const compile_fail)() = []{  static_assert(false, #__VA_ARGS__);  }()
 
 #else
 	#error SGM_COMPILE_FAILED was already defined somewhere else.
