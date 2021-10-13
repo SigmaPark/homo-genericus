@@ -41,11 +41,12 @@ static void Test1()
 
 static void Test2()
 {
-	spec::All_True
-	<	std::is_convertible< Avatar<double>, Avatar<double const> >::value
-	,	!std::is_convertible< Avatar<double const>, Avatar<double> >::value
-	>();
-
+	static_assert
+	(	(	std::is_convertible< Avatar<double>, Avatar<double const> >::value
+		&&	!std::is_convertible< Avatar<double const>, Avatar<double> >::value
+		)
+	,	""
+	);
 
 	Avatar<double const> cavt = Avatar<double>();
 
@@ -101,13 +102,15 @@ static void Test5()
 
 	Avatar<  Avatar< Avatar<int> const >  > avt1 = x;
 
-	spec::All_True
-	<	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
-	,	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
-	,	is_constAvatar<  constAvatar< Avatar<int> >  >::value
-	,	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
-	,	is_constAvatar< Avatar< Avatar<int> > const  >::value
-	>();
+	static_assert
+	(	(	is_constAvatar<   Avatar<  Avatar< Avatar<int> const >  >   >::value
+		&&	is_constAvatar<   Avatar<  Avatar< Avatar<int const> >  >   >::value
+		&&	is_constAvatar<  constAvatar< Avatar<int> >  >::value
+		&&	is_constAvatar<   Avatar<  Avatar< Avatar<int> > const  >   >::value
+		&&	is_constAvatar< Avatar< Avatar<int> > const  >::value
+		)
+	,	""
+	);
 
 //	int const cx = 40;
 

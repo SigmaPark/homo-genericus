@@ -32,14 +32,6 @@ namespace sgm
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
 
 
-		template<int B = 1, int...BS>
-		struct All_True : Selective_t< B == 1, All_True<BS...>, Guaranteed_t<B> >{};
-
-		template<> 
-		struct All_True<>{};
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
-
-
 		struct Judge : No_Making
 		{
 			template

@@ -19,7 +19,6 @@ namespace test_ht
 	static void FoldTest();
 	static void Plait_Test();
 	static void Plait_loop_Test();
-
 	static void Test01();
 
 }
@@ -189,7 +188,7 @@ void test_ht::Test01()
 #include <iostream>
 
 
-void Test_sgm_High_Templar12::test()
+void Test_sgm_High_Templar::test()
 {
 	try
 	{
@@ -200,14 +199,13 @@ void Test_sgm_High_Templar12::test()
 		FoldTest();
 		Plait_Test();
 		Plait_loop_Test();
+		Test01();
 
-		test_ht::Test01();
-
-		std::wcout << L"High Templar 12 Test Complete.\n";
+		std::wcout << L"High Templar Test Complete.\n";
 	}
 	catch(sgm::spec::Exception e)
 	{
-		std::wcout << L"High Templar 12 Test Failed.\n";
+		std::wcout << L"High Templar Test Failed.\n";
 
 		throw e;
 	}
