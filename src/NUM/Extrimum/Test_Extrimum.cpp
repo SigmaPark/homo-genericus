@@ -1,19 +1,19 @@
-//#include "Mathematics.hpp"
 #include "Extremum.hpp"
-#include "..\Specification\Specification.hpp"
+#include "Sigma\Specification\Specification.hpp"
 
 
+using sgm::spec::is_True;
 using namespace sgm;
 
 
 static void Test01()
 {
-	spec::All_True
-	<	num::Constants::Decimal_v<float, 0> == 1
-	,	num::Constants::Decimal_v<float, 1> == 10
-	,	num::Constants::Decimal_v<float, 2> == 100
-	,	num::Constants::Decimal_v<float, 3> == 1000
-	>();
+	static_assert
+	(	num::Constants::Decimal_v<float, 0> == 1
+	&&	num::Constants::Decimal_v<float, 1> == 10
+	&&	num::Constants::Decimal_v<float, 2> == 100
+	&&	num::Constants::Decimal_v<float, 3> == 1000
+	);
 }
 
 
@@ -23,12 +23,12 @@ struct _Compare
 	pair_t _thresholds;
 
 	
-	_Compare(X x_thres, Y y_thres) : _thresholds( {abs(x_thres), abs(y_thres)} ){}
+	_Compare(X x_thres, Y y_thres) : _thresholds( {std::abs(x_thres), std::abs(y_thres)} ){}
 	_Compare(X thres) : _Compare(thres, thres){}
 
 	bool operator()(pair_t A, pair_t B) const
 	{
-		return abs(A.x - B.x) < _thresholds.x && abs(A.y - B.y) < _thresholds.y;
+		return std::abs(A.x - B.x) < _thresholds.x && std::abs(A.y - B.y) < _thresholds.y;
 	}
 };
 
@@ -46,7 +46,7 @@ static void Test02()
 			(	parabola_f, domain, threshold
 			);
 
-	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
+	is_True( _Compare<double>(threshold)(gs_searched, answer) );
 }
 
 
@@ -62,7 +62,7 @@ static void Test03()
 			(	sine_f, std::initializer_list<double>{0.0, pi}, threshold
 			);
 
-	spec::is_True( _Compare<double>(threshold)(gs_searched, answer) );
+	is_True( _Compare<double>(threshold)(gs_searched, answer) );
 }
 
 
@@ -88,7 +88,7 @@ static void Test04()
 		,	std::begin(x) //, y	// optional 
 		);
 
-	spec::is_True
+	is_True
 	(	converged
 	&&	abs(x[0] - 1.0) < 5*epsilon
 	&&	abs(x[1] - 2.0) < 5*epsilon
@@ -97,11 +97,11 @@ static void Test04()
 }
 
 
-#include "Test_Mathematics.hpp"
+#include "Test_Extrimum.hpp"
 #include <iostream>
 
 
-void Test_sgm_Mathematics::test()
+void Test_num_Extrimum::test()
 {
 	try
 	{
@@ -110,7 +110,7 @@ void Test_sgm_Mathematics::test()
 		::Test03();
 		::Test04();
 		
-		std::wcout << L"Mathematics Test Complete.\n";
+		std::wcout << L"Extrimum Test Complete.\n";
 	}
 	catch (std::exception e)
 	{

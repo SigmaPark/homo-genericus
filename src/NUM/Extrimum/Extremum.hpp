@@ -32,8 +32,8 @@ template<class X, class Y>
 struct sgm::num::XY_Pair{  X x;  Y y;  };
 
 
-#include "..\interface_Traits\interface_Traits17.hpp"
-#include "..\Serial\Serial.hpp"
+#include "Sigma\interface_Traits\interface_Traits17.hpp"
+#include "Sigma\Serial\Serial.hpp"
 
 
 template<sgm::num::Extreme XT>
