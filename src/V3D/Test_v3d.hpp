@@ -20,14 +20,21 @@ namespace v3d::test
 template<>
 struct v3d::test::_Equivalent<v3d::test::_Equiv_Number_Tag>
 {
+private:
 	template<class T>
-	static T constexpr epsilon
-	=	std::is_same_v<T, float> ? T(FLT_EPSILON)
-	:	std::is_same_v<T, double> ? T(DBL_EPSILON)
-	:	std::is_same_v<T, long double> ? T(LDBL_EPSILON)
-	:	/* otherwise */ T( []{  static_assert(std::is_floating_point_v<T>, "NOT a Real Number.");  return 0;  }() );
+	static auto constexpr _epsilon() noexcept
+	{
+		static_assert(std::is_floating_point_v<T>, "NOT a Real Number.");
 
+		auto constexpr res 
+		=	std::is_same_v<T, double> ? T(DBL_EPSILON)
+		:	std::is_same_v<T, long double> ? T(LDBL_EPSILON)
+		:	/* otherwise */ T(FLT_EPSILON);
 
+		return res;
+	}
+
+public:
 	template<class L, class R, class...TYPES>
 	static bool calc(L Lhs, R rhs, TYPES...args)
 	{
@@ -36,7 +43,7 @@ struct v3d::test::_Equivalent<v3d::test::_Equiv_Number_Tag>
 		else if constexpr(std::is_integral_v<L> || std::is_pointer_v<L>)
 			return Lhs == rhs;
 		else if constexpr(std::is_floating_point_v<L>)
-			return abs(Lhs - rhs) < static_cast<L>(1e3) * epsilon<L>;
+			return abs(Lhs - rhs) < static_cast<L>(1e3) * _epsilon<L>();
 		else
 			void(*const compile_fail)() = []{  static_assert(false, "no method to compare them.");  };
 	}

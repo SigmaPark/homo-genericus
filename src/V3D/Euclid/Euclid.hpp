@@ -17,6 +17,7 @@ namespace v3d
 
 
 	template<class S, class D>  static auto Projection(S &&src, D &&des);
+	template<class S, class D>  static auto sqrDistance(S &&src, D &&des);
 	template<class S, class D>  static auto Distance(S &&src, D &&des);
 	template<class S, class D>  static auto intersection(S &&src, D &&des);
 
@@ -298,6 +299,20 @@ auto v3d::Projection(S &&src, D &&des)
 		:	std::nullopt;
 	}
 	else SGM_COMPILE_FAILED(no suitable method for v3d::Projection .);
+}
+
+
+template<class S, class D>
+auto v3d::sqrDistance(S &&src, D &&des)
+{
+	if constexpr(trait::is_v3dVec_v<S> && trait::is_v3dVec_v<D>)
+		return (  Position( std::forward<D>(des) ) - Position( std::forward<S>(src) )  ).sqr_norm();
+	else if constexpr(trait::is_v3dVec_v<S> && trait::is_Plane_v<D>)
+		return std::pow( des.signed_dist_to(src), 2 );
+	else if constexpr(trait::is_v3dVec_v<S> && trait::is_Line_v<D>)
+		return ( src - Projection(src, des) ).sqr_norm();
+	//else if constexpr(trait::is_Line_v<S> && trait::is_Line_v<D>)		// Least Square Problem
+	else SGM_COMPILE_FAILED(no suitable method for v3d::Distance .);	
 }
 
 
