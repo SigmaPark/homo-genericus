@@ -78,10 +78,7 @@ private:
 	template<bool M>  using _fnitr_t = Functional_iterator<M, IS_FORWARD, FTR>;
 
 public:
-	static_assert
-	(	std::is_invocable_v<FTR, size_t>
-	&&	std::is_copy_constructible_v<FTR> && std::is_copy_assignable_v<FTR>
-	);
+	static_assert(std::is_invocable_v<FTR, size_t>);
 
 
 	Functional_iterator(FTR const ftr, size_t const idx) : _ftr(ftr), _idx(idx){}
