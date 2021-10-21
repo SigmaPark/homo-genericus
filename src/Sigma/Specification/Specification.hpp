@@ -17,18 +17,14 @@ namespace sgm
 
 		struct Exception{};
 
-
-		template<class...>		//	to avoid warning C4505
-		static void is_True(){}
-
-		template<class...BOOLS>
-		static void is_True(bool const b, BOOLS...bs)	//	have to change name. : not "is"
+		
+		inline static void is_True(bool const b)	noexcept(false)
 		{
 			if(!b)
 				throw Exception();
-			else
-				is_True(bs...);
 		}
+
+		inline static void is_False(bool const b) noexcept(false){  is_True(!b);  }
 		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
 
 

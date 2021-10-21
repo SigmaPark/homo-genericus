@@ -203,12 +203,12 @@ void TestF18::Test10()
 	size_t constexpr N = 10000;
 	double const ans = .5*std::acos(0);
 
-	Functor const ftr1
-	=	Fold(_, std::plus<>())
-	*	Morph(  _, SGM_LAMBDA( (_0 % 2 == 1 ? -1.0 : 1.0) / double(2*_0 + 1) )  )
-	*	integers;
-
-	auto const res = ftr1(N);
+	auto const res
+	=	Compose
+		(	Fold( _, SGM_LAMBDA(_0 + _1) )
+		,	Morph(  _, SGM_LAMBDA( (_0 % 2 == 1 ? -1.0 : 1.0) / double(2*_0 + 1) )  )
+		,	integers
+		)(N);
 
 	is_True( std::abs(res - ans) < 1e-4 );
 }

@@ -34,6 +34,10 @@ namespace sgm::fp
 
 	struct _Composition;
 
+	template<class... FS>
+	inline static decltype(auto) Compose(FS&&... fs);
+
+
 	template<unsigned... INDICES>  struct _Permute_Helper;
 
 	template<size_t IDX, class... ARGS>
@@ -571,7 +575,9 @@ namespace sgm::fp
 
 #ifndef SGM_1st_Class_Citizen
 	#define SGM_1st_Class_Citizen(NAME, ...)	\
-		[](auto&&... args)-> decltype(auto){  return NAME __VA_ARGS__ ( decltype(args)(args)... );  }
+		sgm::fp::Functor	\
+		{	[](auto&&... args)-> decltype(auto){  return NAME __VA_ARGS__ ( decltype(args)(args)... );  }	\
+		}
 
 #else
 	#error SGM_1st_Class_Citizen was already defined somewhere else.
@@ -610,6 +616,13 @@ decltype(auto) sgm::fp::_Try_nth_elem([[maybe_unused]]ARGS&&... args) noexcept
 #else
 	#error SGM_LAMBDA was already defined somewhere else.
 #endif
+
+
+template<class... FS>
+decltype(auto) sgm::fp::Compose(FS&&... fs)
+{
+	return ( Functor{} * ... * Forward<FS>(fs) );
+}
 
 
 namespace sgm::fp

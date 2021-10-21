@@ -777,10 +777,10 @@ static void _13_invalid_when_divided_by_0()
 
 	is_True( is_valid(Mat0) && is_valid(Mat1) && is_valid(Vec1) );
 
-	is_True
-	(	!is_valid(Mat1/0) && !is_valid( Mat1/std::complex<float>(0) )
-	&&	!is_valid(Vec1/0) && !is_valid( Vec1/std::complex<float>(0) )
-	&&	!is_valid(Matrix<float, 2, 2>::Zero().normalized())
+	sgm::spec::is_False
+	(	is_valid(Mat1/0) || is_valid( Mat1/std::complex<float>(0) )
+	||	is_valid(Vec1/0) || is_valid( Vec1/std::complex<float>(0) )
+	||	is_valid(Matrix<float, 2, 2>::Zero().normalized())
 	);
 
 	is_True
@@ -802,7 +802,7 @@ static void _14_invalid_Matrix()
 
 	Mat3 = NULLMAT;
 
-	is_True( !is_valid(Mat1) && !is_valid(Mat2) && !is_valid(Mat3) );
+	sgm::spec::is_False( is_valid(Mat1) || is_valid(Mat2) || is_valid(Mat3) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
