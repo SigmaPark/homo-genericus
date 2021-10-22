@@ -181,9 +181,12 @@ public:
 	auto operator=(Morph_iterator<ITR2, FN, DECO> const mitr)
 	->	_Self&{  return _xitr = mitr._xitr,  _pfn = mitr._pfn,  *this;  }
 
-
+#pragma warning(push)
+//	return value can be a temporary value or its address.
+#pragma warning(disable : 4172)
 	auto operator*() const-> Y{  return (*_pfn)(*_xitr);  }
 	auto operator*()-> Y{  return (*_pfn)(*_xitr);  }
+#pragma warning(pop)
 
 	auto operator++()-> _Self&{  return ++_xitr,  *this;  }
 	auto operator++(int)-> _Self{  _Self const itr = *this;  return ++*this,  itr;  }
