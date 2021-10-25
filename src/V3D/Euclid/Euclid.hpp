@@ -356,11 +356,13 @@ auto v3d::intersection(S &&src, D &&des)
 template<class T>  
 struct v3d::Spatial<T, 0>
 {
+	using scalar_type = T;
+
 	Vector<T, 3> position = {};  
 
-	auto x() const{  return position(0);  }    auto x()-> float&{  return position(0);  }
-	auto y() const{  return position(1);  }    auto y()-> float&{  return position(1);  }
-	auto z() const{  return position(2);  }    auto z()-> float&{  return position(2);  }
+	auto x() const{  return position(0);  }    auto x()-> scalar_type&{  return position(0);  }
+	auto y() const{  return position(1);  }    auto y()-> scalar_type&{  return position(1);  }
+	auto z() const{  return position(2);  }    auto z()-> scalar_type&{  return position(2);  }
 };
 
 

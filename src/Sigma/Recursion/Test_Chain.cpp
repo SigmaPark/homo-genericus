@@ -29,20 +29,8 @@ static void Chain_Test()
 #include "Test_Chain.hpp"
 
 
-void Test_sgm_Chain::test()
-{
-	try
-	{
-		//::Factorial_Test();
-		//::Fibonacci_Test();
-		Chain_Test();
-		
-		std::wcout << L"Recursion Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Recursion Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Chain)
+{	//::Factorial_Test
+	//::Fibonacci_Test
+	Chain_Test
+};

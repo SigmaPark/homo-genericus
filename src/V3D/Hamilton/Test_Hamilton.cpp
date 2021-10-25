@@ -14,7 +14,7 @@ static void _identical(TYPES...types)
 }
 
 
-static void _01_Construction_and_Resize()
+static void _Construction_and_Resize()
 {
 	{
 		Matrix<float, 2, 2> Mat;
@@ -136,7 +136,7 @@ static void _01_Construction_and_Resize()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _02_Substitution()
+static void _Substitution()
 {
 	Matrix<float, 2, 3> const ansMat
 	{	1, 3, 5
@@ -242,7 +242,7 @@ static void _02_Substitution()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _03_Element()
+static void _Element()
 {
 	{	
 		Matrix<float, 3, 2> Mat
@@ -273,7 +273,7 @@ static void _03_Element()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _04_Partial_Access()
+static void _Partial_Access()
 {
 	Matrix<float, 4, 3> const Mat0
 	{	2, 4, 6
@@ -359,7 +359,7 @@ static void _04_Partial_Access()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _05_inversion_and_transpose()
+static void _inversion_and_transpose()
 {
 	{
 		Matrix<float, 2, 2> const Mat
@@ -394,7 +394,7 @@ static void _05_inversion_and_transpose()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _06_Static_Matrix()
+static void _Static_Matrix()
 {
 	::_identical
 	(	Matrix<float, 3, 3>::identity()
@@ -440,7 +440,7 @@ static void _06_Static_Matrix()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _07_Algebra()
+static void _Algebra()
 {
 	{
 		Matrix<float, 2, 2> const X1
@@ -498,7 +498,7 @@ static void _07_Algebra()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _08_internal_Array()
+static void _internal_Array()
 {
 	std::vector<float> const src_iterable{2, 4, 6, 8, 10, 12};
 
@@ -531,7 +531,7 @@ static void _08_internal_Array()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _09_Column_and_Row_Space()
+static void _Column_and_Row_Space()
 {
 	std::vector< Vector<float, 3> > Vecs1
 	{	Vector<float, 3>{1, 1, 1}
@@ -571,7 +571,7 @@ static void _09_Column_and_Row_Space()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _10_UnitVector()
+static void _UnitVector()
 {
 	{
 		UnitVec<float> uVec1(3);
@@ -643,7 +643,7 @@ static void _10_UnitVector()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _11_OrthogonalMatrix()
+static void _OrthogonalMatrix()
 {
 	{
 		OrthogonalMat<float, 3> otnMat1;
@@ -734,7 +734,7 @@ static void _11_OrthogonalMatrix()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _12_Skipped()
+static void _Skipped()
 {
 	{
 		/**	Mathematically wrong unit vector but accepted as v3d::UnitVec .
@@ -764,7 +764,7 @@ static void _12_Skipped()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _13_invalid_when_divided_by_0()
+static void _invalid_when_divided_by_0()
 {
 	Matrix<float> Mat0;
 
@@ -793,7 +793,7 @@ static void _13_invalid_when_divided_by_0()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _14_invalid_Matrix()
+static void _invalid_Matrix()
 {
 	static_assert(std::is_convertible_v< NullMat_t, Matrix<float> >);
 
@@ -807,7 +807,7 @@ static void _14_invalid_Matrix()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-static void _15_as_Vector_iterable()
+static void _as_Vector_iterable()
 {
 	{
 		auto Mat 
@@ -861,28 +861,26 @@ void test::HamiltonTutorial::test()
 {
 	try
 	{
-		::_01_Construction_and_Resize();
-		::_02_Substitution();
-		::_03_Element();
-		::_04_Partial_Access();
-		::_05_inversion_and_transpose();
-		::_06_Static_Matrix();
-		::_07_Algebra();
-		::_08_internal_Array();
-		::_09_Column_and_Row_Space();
-		::_10_UnitVector();
-		::_11_OrthogonalMatrix();
-		::_12_Skipped();
-		::_13_invalid_when_divided_by_0();
-		::_14_invalid_Matrix();
-		::_15_as_Vector_iterable();	
+		::_Construction_and_Resize();
+		::_Substitution();
+		::_Element();
+		::_Partial_Access();
+		::_inversion_and_transpose();
+		::_Static_Matrix();
+		::_Algebra();
+		::_internal_Array();
+		::_Column_and_Row_Space();
+		::_UnitVector();
+		::_OrthogonalMatrix();
+		::_Skipped();
+		::_invalid_when_divided_by_0();
+		::_invalid_Matrix();
+		::_as_Vector_iterable();	
 
 		std::wcout << L"Hamilton Test Complete.\n";
 	}
-	catch(...)
+	catch(sgm::spec::Exception const &e)
 	{
-		std::wcout << L"Hamilton Test Failed.\n";
-
-		throw;
+		std::wcout << L"Hamilton Test Failed : " << e.what() << std::endl;
 	}
 }

@@ -188,25 +188,33 @@ void test_ht::Test01()
 #include <iostream>
 
 
-void Test_sgm_High_Templar::test()
-{
-	try
-	{
-		using namespace test_ht;
+SGM_SPEC_TESTS(sgm_High_Templar)
+{	test_ht::MorphTest
+,	test_ht::FilterTest
+,	test_ht::FoldTest
+,	test_ht::Plait_Test
+,	test_ht::Plait_loop_Test
+,	test_ht::Test01
+};
 
-		MorphTest();
-		FilterTest();
-		FoldTest();
-		Plait_Test();
-		Plait_loop_Test();
-		Test01();
 
-		std::wcout << L"High Templar Test Complete.\n";
-	}
-	catch(sgm::spec::Exception e)
-	{
-		std::wcout << L"High Templar Test Failed.\n";
-
-		throw e;
-	}
-}
+//void Test_sgm_High_Templar::test()
+//{
+//	try
+//	{
+//		using namespace test_ht;
+//
+//		MorphTest();
+//		FilterTest();
+//		FoldTest();
+//		Plait_Test();
+//		Plait_loop_Test();
+//		Test01();
+//
+//		std::wcout << L"High Templar Test Complete.\n";
+//	}
+//	catch(sgm::spec::Exception const &e)
+//	{
+//		std::wcout << L"High Templar Test Failed : " << e.what() << std::endl;
+//	}
+//}

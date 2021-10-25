@@ -128,22 +128,10 @@ void Test<5>()
 #include <iostream>
 
 
-void Test_sgm_Maybe::test()
-{
-	try
-	{
-		::Test<1>();
-		::Test<2>();
-		::Test<3>();
-		::Test<4>();
-		::Test<5>();
-
-		std::wcout << L"Maybe Test Complete. \n";
-	}
-	catch(...)
-	{
-		std::wcerr << L"Maybe Test Failed. \n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Maybe)
+{	::Test<1>
+,	::Test<2>
+,	::Test<3>
+,	::Test<4>
+,	::Test<5>
+};

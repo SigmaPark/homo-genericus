@@ -44,18 +44,6 @@ void Test<1>()
 #include <iostream>
 
 
-void Test_sgm_Lazy::test()
-{
-	try
-	{
-		::Test<1>();
-
-		std::wcout << L"Lazy Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Lazy Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Lazy)
+{	::Test<1>
+};

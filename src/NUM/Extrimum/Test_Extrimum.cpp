@@ -112,10 +112,8 @@ void Test_num_Extrimum::test()
 		
 		std::wcout << L"Extrimum Test Complete.\n";
 	}
-	catch (std::exception e)
+	catch (sgm::spec::Exception const &e)
 	{
-		std::cerr << e.what() << std::endl;
-
-		throw e;
+		std::wcerr << L"Extrimum Test Failed : " << e.what() << std::endl;
 	}
 }

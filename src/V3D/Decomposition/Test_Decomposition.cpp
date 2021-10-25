@@ -224,10 +224,8 @@ void test::Decomposition_Tutorial::test()
 
 		std::wcout << L"Decomposition Test Complete.\n";
 	}
-	catch(...)
+	catch(sgm::spec::Exception const &e)
 	{
-		std::wcerr << L"Decomposition Test Failed.\n";
-
-		throw;
+		std::wcerr << L"Decomposition Test Failed. : " << e.what() << std::endl;
 	}
 }

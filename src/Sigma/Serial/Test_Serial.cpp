@@ -607,37 +607,25 @@ void Static::Element()
 #include "Test_Serial.hpp"
 
 
-void Test_sgm_Serial::test()
-{
-	try
-	{
-		Dynamic::Construction();
-		Dynamic::Copy_Construction();
-		Dynamic::Move_Construction();
-		Dynamic::Assignment();
-		Dynamic::Move_Assignment();
-		Dynamic::Clear_and_Destruction();
-		Dynamic::Type_Conversion_into_iterable();
-		Dynamic::Swap();
-		Dynamic::Element();
-		Dynamic::Push();
-		Dynamic::Pop();
 
-		Static::Construction();
-		Static::No_Move_Construction();
-		Static::Assignment();
-		Static::Move_Assignment();
-		Static::Destruction();
-		Static::Type_Conversion_into_iterable();
-		Static::Swap();
-		Static::Element();
-		
-		std::wcout << L"Serial Test Complete.\n";
-	}
-	catch(sgm::spec::Exception e)
-	{
-		std::wcout << L"Serial Test Failed.\n";
-
-		throw e;
-	}
-}
+SGM_SPEC_TESTS(sgm_Serial)
+{	Dynamic::Construction
+,	Dynamic::Copy_Construction
+,	Dynamic::Move_Construction
+,	Dynamic::Assignment
+,	Dynamic::Move_Assignment
+,	Dynamic::Clear_and_Destruction
+,	Dynamic::Type_Conversion_into_iterable
+,	Dynamic::Swap
+,	Dynamic::Element
+,	Dynamic::Push
+,	Dynamic::Pop
+,	Static::Construction
+,	Static::No_Move_Construction
+,	Static::Assignment
+,	Static::Move_Assignment
+,	Static::Destruction
+,	Static::Type_Conversion_into_iterable
+,	Static::Swap
+,	Static::Element
+};

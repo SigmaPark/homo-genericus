@@ -209,10 +209,8 @@ void test::QuaternionTutorial::test()
 
 		std::wcout << L"Quaternion Test Complete.\n";
 	}
-	catch(...)
+	catch(sgm::spec::Exception const &e)
 	{
-		std::wcerr << L"Quaternion Test Failed.\n";
-
-		throw;
+		std::wcerr << L"Quaternion Test Failed : " << e.what() << std::endl;
 	}
 }

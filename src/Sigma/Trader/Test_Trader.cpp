@@ -190,22 +190,10 @@ void Test<5>()
 #include <iostream>
 
 
-void Test_sgm_Trader::test()
-{
-	try
-	{
-		::Test<1>();
-		::Test<2>();
-		::Test<3>();
-		::Test<4>();
-		::Test<5>();
-
-		std::wcout << L"Trader Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Trader Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Trader)
+{	::Test<1>
+,	::Test<2>
+,	::Test<3>
+,	::Test<4>
+,	::Test<5>
+};

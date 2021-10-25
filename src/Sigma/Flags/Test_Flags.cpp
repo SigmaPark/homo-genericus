@@ -28,18 +28,6 @@ template<>  void Test<1>()
 #include <iostream>
 
 
-void Test_sgm_Flags::test()
-{
-	try
-	{
-		::Test<1>();
-
-		std::wcout << L"Flags Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Flags Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Flags)
+{	::Test<1>
+};

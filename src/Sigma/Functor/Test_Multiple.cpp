@@ -195,25 +195,13 @@ static void Test08()
 #include <iostream>
 
 
-void Test_sgm_Multiple::test()
-{
-	try
-	{
-		::Test01();
-		::Test02(); 
-		::Test03();
-		::Test04();
-		::Test05();
-		::Test06();
-		::Test07();
-		::Test08();
-
-		std::wcout << L"Multiple Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcerr << L"Multiple Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Multiple)
+{	::Test01
+,	::Test02
+,	::Test03
+,	::Test04
+,	::Test05
+,	::Test06
+,	::Test07
+,	::Test08
+};

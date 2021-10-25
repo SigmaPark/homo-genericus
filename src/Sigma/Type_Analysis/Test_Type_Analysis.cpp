@@ -88,21 +88,9 @@ static void Test_Declval() noexcept
 #include <iostream>
 
 
-void Test_sgm_Type_Analysis::test()
-{
-	try
-	{
-		::Test_No_Making();
-		::Test_Boolean_type();
-		::Test_Specifiers();
-		::Test_Declval();
-
-		std::wcout << L"Type_Analysis Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcerr << L"Type_Analysis Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Type_Analysis)
+{	::Test_No_Making
+,	::Test_Boolean_type
+,	::Test_Specifiers
+,	::Test_Declval
+};

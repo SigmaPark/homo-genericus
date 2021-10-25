@@ -206,27 +206,15 @@ static void Test10()
 #include <functional>
 
 
-void Test_sgm_Pinweight::test()
-{
-	try
-	{
-		::Test01();
-		::Test02();
-		::Test03();
-		::Test04();
-		::Test05();
-		::Test06();
-		::Test07();
-		::Test08();
-		::Test09();
-		::Test10();
-		
-		std::wcout << L"Pinweight Test Complete.\n";
-	}
-	catch(spec::Exception e)
-	{
-		std::wcout << L"Pinweight Test Failed.\n";
-
-		throw e;
-	}
-}
+SGM_SPEC_TESTS(sgm_Pinweight)
+{	::Test01
+,	::Test02
+,	::Test03
+,	::Test04
+,	::Test05
+,	::Test06
+,	::Test07
+,	::Test08
+,	::Test09
+,	::Test10
+};

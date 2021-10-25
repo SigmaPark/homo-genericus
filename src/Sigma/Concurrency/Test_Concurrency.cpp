@@ -48,17 +48,7 @@ void Test<2>()
 #include <iostream>
 
 
-void Test_sgm_Concurrency::test()
-{
-	try
-	{
-		::Test<1>();
-		::Test<2>();
-
-		std::wcout << L"Concurrency Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcerr << L"Concurrency Test Failed.\n";
-	}
-}
+SGM_SPEC_TESTS(sgm_Concurrency)
+{	::Test<1>
+,	::Test<2>
+};

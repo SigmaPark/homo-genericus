@@ -141,23 +141,11 @@ static void Test6()
 #include <iostream>
 
 
-void Test_sgm_Avatar::test() 
-{
-	try
-	{
-		::Test1();
-		::Test2();
-		::Test3();
-		::Test4();
-		::Test5();
-		::Test6();
-		
-		std::wcout << L"Avatar Test Complete.\n";
-	}
-	catch(spec::Exception e)
-	{
-		std::wcout << L"Avatar Test Failed.\n";
-
-		throw e;
-	}
-}
+SGM_SPEC_TESTS(sgm_Avatar)
+{	::Test1
+,	::Test2
+,	::Test3
+,	::Test4
+,	::Test5
+,	::Test6
+};

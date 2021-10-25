@@ -120,20 +120,8 @@ void Test<3>()
 #include "Test_Functional_iterator.hpp"
 
 
-void Test_sgm_Functional_iterator::test()
-{
-	try
-	{
-		::Test<1>();
-		::Test<2>();
-		::Test<3>();
-
-		std::wcout << L"Test Functional_iterator Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Test Functional_iterator Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Functional_iterator)
+{	::Test<1>
+,	::Test<2>
+,	::Test<3>
+};

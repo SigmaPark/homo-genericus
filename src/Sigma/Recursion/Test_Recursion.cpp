@@ -79,20 +79,8 @@ static void Range_Check()
 #include "Test_Recursion.hpp"
 
 
-void Test_sgm_Recursion::test()
-{
-	try
-	{
-		::Factorial_Test();
-		::Fibonacci_Test();
-		::Range_Check();
-		
-		std::wcout << L"Recursion Test Complelete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"Recursion Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Recursion)
+{	::Factorial_Test
+,	::Fibonacci_Test
+,	::Range_Check
+};

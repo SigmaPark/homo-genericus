@@ -739,6 +739,10 @@ public:
 	}
 
 
+	operator _impl_t const&() const{  return _impl;  }
+	operator _impl_t&(){  return _impl;  }
+
+
 	auto resize(size_t const i, size_t const j)-> Matrix&
 	{
 		static_assert(!trait::is_Static_v<ROWS> && !trait::is_Static_v<COLS>, "CANNOT resize fixed size matrix");

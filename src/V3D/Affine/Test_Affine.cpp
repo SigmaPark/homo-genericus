@@ -226,10 +226,8 @@ void test::AffineTutorial::test()
 
 		std::wcout << L"Affine Test Complete.\n";
 	}
-	catch(...)
+	catch(sgm::spec::Exception const &e)
 	{
-		std::wcerr << L"Affine Test Failed.\n";
-
-		throw;
+		std::wcerr << L"Affine Test Failed : " << e.what() << std::endl;
 	}
 }

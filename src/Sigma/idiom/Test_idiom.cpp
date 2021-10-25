@@ -255,24 +255,12 @@ static void Test04()
 
 #include "Test_idiom.hpp"
 #include <iostream>
-
 #include <climits>
 
-void Test_sgm_idiom::test()
-{
-	try
-	{
-		::Test01();
-		::Test02();
-		::Test03();
-		::Test04();
 
-		std::wcout << L"idiom Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcout << L"idiom Test Failes.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_idiom)
+{	::Test01
+,	::Test02
+,	::Test03
+,	::Test04
+};

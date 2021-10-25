@@ -197,26 +197,14 @@ static void Test09()
 #include <iostream>
 
 
-void Test_sgm_Family::test()
-{
-	try
-	{
-		::Test01();
-		::Test02();
-		::Test03();
-		::Test04();
-		::Test05();
-		::Test06();
-		::Test07();
-		::Test08();
-		::Test09();
-
-		std::wcout << L"Family Test Complete.\n";
-	}
-	catch(...)
-	{
-		std::wcerr << L"Family Test Failed.\n";
-
-		throw;
-	}
-}
+SGM_SPEC_TESTS(sgm_Family)
+{	::Test01
+,	::Test02
+,	::Test03
+,	::Test04
+,	::Test05
+,	::Test06
+,	::Test07
+,	::Test08
+,	::Test09
+};

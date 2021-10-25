@@ -280,10 +280,8 @@ void test::EuclidTutorial::test()
 
 		std::wcout << L"Euclid Test Complete.\n";
 	}
-	catch(...)
+	catch(sgm::spec::Exception const &e)
 	{
-		std::wcerr << L"Euclid Test Failed.\n";
-
-		throw;
+		std::wcerr << L"Euclid Test Failed. : " << e.what() << std::endl;
 	}
 }

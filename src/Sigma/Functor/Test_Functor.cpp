@@ -257,29 +257,17 @@ void TestF18::Test12()
 #include <iostream>
 
 
-void Test_sgm_Functor::test()
-{
-	try
-	{
-		TestF18::Test01();
-		TestF18::Test02();
-		TestF18::Test03();
-		TestF18::Test04();
-		TestF18::Test05();
-		TestF18::Test06();
-		TestF18::Test07();
-		TestF18::Test08();
-		TestF18::Test09();
-		TestF18::Test10();
-		TestF18::Test11();
-		TestF18::Test12();
-
-		std::wcout << L"Functor Test Complete.\n";
-	}
-	catch(std::exception const &e)
-	{
-		std::cerr << e.what() << "Functor Test Failed.\n";
-
-		throw e;
-	}
-}
+SGM_SPEC_TESTS(sgm_Functor)
+{	TestF18::Test01
+,	TestF18::Test02
+,	TestF18::Test03
+,	TestF18::Test04
+,	TestF18::Test05
+,	TestF18::Test06
+,	TestF18::Test07
+,	TestF18::Test08
+,	TestF18::Test09
+,	TestF18::Test10
+,	TestF18::Test11
+,	TestF18::Test12
+};

@@ -9,23 +9,38 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+#define SGM_SPEC_TESTS(TITLE)	\
+	struct _##TITLE##_Test_Helper	\
+	{	\
+		static std::initializer_list<void(*)()> test_list;	\
+	};	\
+	\
+	void Test_##TITLE::test()	\
+	{	\
+		try \
+		{	\
+			for(auto test : _##TITLE##_Test_Helper::test_list)	\
+				test();	\
+			\
+			std::wcout << L#TITLE << L" Test Complete.\n";	\
+		} \
+		catch(sgm::spec::Exception const &e)	\
+		{	\
+			std::wcerr << L#TITLE << L" Test Failed : " << e.what() << std::endl;	\
+		}	\
+	}	\
+	\
+	std::initializer_list<void(*)()> _##TITLE##_Test_Helper::test_list =
+
+
 namespace sgm
 {
 	namespace spec
 	{
 		
 
-		struct Exception{};
-
-		
-		inline static void is_True(bool const b)	noexcept(false)
-		{
-			if(!b)
-				throw Exception();
-		}
-
-		inline static void is_False(bool const b) noexcept(false){  is_True(!b);  }
-		//--------//--------//--------//--------//-------#//--------//--------//--------//--------	
+		class Exception;
+		class Testbed;
 
 
 		struct Judge : No_Making
@@ -212,5 +227,73 @@ namespace sgm
 
 	}
 }
+
+
+class sgm::spec::Exception
+{
+public:
+	Exception(wchar_t const* const msg = nullptr) : _msg(msg){}
+
+	virtual auto what() const
+	->	wchar_t const*{  return _msg == nullptr ? L"sgm::spec::Exception" : _msg;  }
+
+
+protected:
+	wchar_t const *_msg;
+};
+
+
+class sgm::spec::Testbed
+{
+public:
+	Testbed(wchar_t const *title = L"\b") : _title(title){}
+
+
+	template<class F, class...FS>
+	void operator()(F f, FS...fs) const
+	{
+		try
+		{
+			f();
+
+			(*this)(fs...);
+		}
+		catch(Exception const &e)
+		{
+			std::wcerr << _title << L" Test Failed : " << e.what() << std::endl;
+		}
+	}
+
+	template<class...>
+	void operator()() const
+	{
+		std::wcout << _title << L" Test Complete.\n";
+	}
+
+
+private:
+	wchar_t const *_title; 
+};
+
+
+namespace sgm
+{
+	namespace spec
+	{
+
+		inline static void is_True(bool const b, Exception const &e = {})	noexcept(false)
+		{
+			if(!b)
+				throw e;
+		}
+
+		inline static void is_False(bool const b, Exception const& e = {}) noexcept(false)
+		{
+			is_True(!b, e);  
+		}
+		
+	}
+}
+
 
 #endif // end of #ifndef _SGM_SPECIFICATION_
