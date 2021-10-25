@@ -243,39 +243,6 @@ protected:
 };
 
 
-class sgm::spec::Testbed
-{
-public:
-	Testbed(wchar_t const *title = L"\b") : _title(title){}
-
-
-	template<class F, class...FS>
-	void operator()(F f, FS...fs) const
-	{
-		try
-		{
-			f();
-
-			(*this)(fs...);
-		}
-		catch(Exception const &e)
-		{
-			std::wcerr << _title << L" Test Failed : " << e.what() << std::endl;
-		}
-	}
-
-	template<class...>
-	void operator()() const
-	{
-		std::wcout << _title << L" Test Complete.\n";
-	}
-
-
-private:
-	wchar_t const *_title; 
-};
-
-
 namespace sgm
 {
 	namespace spec
