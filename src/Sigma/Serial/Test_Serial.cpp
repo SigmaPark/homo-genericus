@@ -607,7 +607,6 @@ void Static::Element()
 #include "Test_Serial.hpp"
 
 
-
 SGM_SPEC_TESTS(sgm_Serial)
 {	Dynamic::Construction
 ,	Dynamic::Copy_Construction
