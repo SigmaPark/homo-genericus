@@ -4,14 +4,14 @@
 namespace v3d::test
 {
 	
-	struct Decomposition_Tutorial;
+	struct DecompositionTutorial;
 
 }
 
 
-struct v3d::test::Decomposition_Tutorial
+struct v3d::test::DecompositionTutorial
 {
-	Decomposition_Tutorial() = delete;
+	DecompositionTutorial() = delete;
 
 	static void test();
 };

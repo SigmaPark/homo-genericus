@@ -194,7 +194,6 @@ static void Test09()
 
 
 #include "Test_Family.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Family)

@@ -192,7 +192,6 @@ static void Test08()
 
 
 #include "Test_Multiple.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Multiple)

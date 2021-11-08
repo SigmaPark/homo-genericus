@@ -85,7 +85,6 @@ static void Test_Declval() noexcept
 
 
 #include "Test_Type_Analysis.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Type_Analysis)

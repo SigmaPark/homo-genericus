@@ -116,7 +116,6 @@ void Test<3>()
 }
 
 
-#include <iostream>
 #include "Test_Functional_iterator.hpp"
 
 

@@ -187,7 +187,6 @@ void Test<5>()
 
 
 #include "Test_Trader.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Trader)

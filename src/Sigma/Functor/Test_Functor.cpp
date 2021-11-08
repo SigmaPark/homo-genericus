@@ -254,7 +254,6 @@ void TestF18::Test12()
 
 
 #include "Test_Functor.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Functor)

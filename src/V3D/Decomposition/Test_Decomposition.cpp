@@ -211,21 +211,10 @@ static void Singular_Value_Decomp()
 
 
 #include "Test_Decomposition.hpp"
-#include <iostream>
 
 
-void test::Decomposition_Tutorial::test()
-{
-	try
-	{
-		::Least_Square_Solution();
-		::Eigen_Decomp();
-		::Singular_Value_Decomp();
-
-		std::wcout << L"Decomposition Test Complete.\n";
-	}
-	catch(sgm::spec::Exception const &e)
-	{
-		std::wcerr << L"Decomposition Test Failed. : " << e.what() << std::endl;
-	}
-}
+SGM_SPECIFICATION_TESTS(test::, Decomposition, Tutorial)
+{	::Least_Square_Solution
+,	::Eigen_Decomp
+,	::Singular_Value_Decomp
+};

@@ -9,13 +9,13 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#define SGM_SPEC_TESTS(TITLE)	\
+#define SGM_SPECIFICATION_TESTS(PREFIX, TITLE, SUFFIX)	\
 	struct _##TITLE##_Test_Helper	\
 	{	\
 		static std::initializer_list<void(*)()> test_list;	\
 	};	\
 	\
-	void Test_##TITLE::test()	\
+	void PREFIX##TITLE##SUFFIX::test()	\
 	{	\
 		try \
 		{	\
@@ -31,6 +31,9 @@
 	}	\
 	\
 	std::initializer_list<void(*)()> _##TITLE##_Test_Helper::test_list =
+
+
+#define SGM_SPEC_TESTS(TITLE)  SGM_SPECIFICATION_TESTS(Test_, TITLE, /**/)
 
 
 namespace sgm

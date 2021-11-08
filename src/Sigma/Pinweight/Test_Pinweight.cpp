@@ -202,7 +202,6 @@ static void Test10()
 
 
 #include "Test_Pinweight.hpp"
-#include <iostream>
 #include <functional>
 
 

@@ -3,7 +3,6 @@
 
 #include "..\Specification\Specification.hpp"
 #include <functional>
-#include <iostream>
 
 
 using namespace sgm;

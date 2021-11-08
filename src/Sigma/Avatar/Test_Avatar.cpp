@@ -138,7 +138,6 @@ static void Test6()
 
 
 #include "Test_Avatar.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Avatar)

@@ -41,7 +41,6 @@ void Test<1>()
 
 
 #include "Test_Lazy.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Lazy)

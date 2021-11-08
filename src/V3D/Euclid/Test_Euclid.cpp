@@ -265,23 +265,13 @@ static void _08_Fitting()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-void test::EuclidTutorial::test()
-{
-	try
-	{
-		::_01_Construction();
-		::_02_Projection();
-		::_03_Distance();
-		::_04_intersection();
-		::_05_Direction();
-		::_06_Average();
-		::_07_Position();
-		::_08_Fitting();
-
-		std::wcout << L"Euclid Test Complete.\n";
-	}
-	catch(sgm::spec::Exception const &e)
-	{
-		std::wcerr << L"Euclid Test Failed. : " << e.what() << std::endl;
-	}
-}
+SGM_SPECIFICATION_TESTS(test::, Euclid, Tutorial)
+{	::_01_Construction
+,	::_02_Projection
+,	::_03_Distance
+,	::_04_intersection
+,	::_05_Direction
+,	::_06_Average
+,	::_07_Position
+,	::_08_Fitting
+};

@@ -196,21 +196,11 @@ static void _06_Algebra()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-void test::QuaternionTutorial::test()
-{
-	try
-	{
-		::_01_Construction();
-		::_02_Substitution();
-		::_03_Element();
-		::_04_Norm();
-		::_05_Unary_Operation();
-		::_06_Algebra();
-
-		std::wcout << L"Quaternion Test Complete.\n";
-	}
-	catch(sgm::spec::Exception const &e)
-	{
-		std::wcerr << L"Quaternion Test Failed : " << e.what() << std::endl;
-	}
-}
+SGM_SPECIFICATION_TESTS(test::, Quaternion, Tutorial)
+{	::_01_Construction
+,	::_02_Substitution
+,	::_03_Element
+,	::_04_Norm
+,	::_05_Unary_Operation
+,	::_06_Algebra
+};

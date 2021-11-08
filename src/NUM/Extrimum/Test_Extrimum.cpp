@@ -98,22 +98,11 @@ static void Test04()
 
 
 #include "Test_Extrimum.hpp"
-#include <iostream>
 
 
-void Test_num_Extrimum::test()
-{
-	try
-	{
-		::Test01();
-		::Test02();
-		::Test03();
-		::Test04();
-		
-		std::wcout << L"Extrimum Test Complete.\n";
-	}
-	catch (sgm::spec::Exception const &e)
-	{
-		std::wcerr << L"Extrimum Test Failed : " << e.what() << std::endl;
-	}
-}
+SGM_SPEC_TESTS(num_Extrimum)
+{	::Test01
+,	::Test02
+,	::Test03
+,	::Test04
+};

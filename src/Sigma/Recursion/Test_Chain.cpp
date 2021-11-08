@@ -25,7 +25,6 @@ static void Chain_Test()
 }
 
 
-#include <iostream>
 #include "Test_Chain.hpp"
 
 

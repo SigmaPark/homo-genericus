@@ -254,7 +254,6 @@ static void Test04()
 
 
 #include "Test_idiom.hpp"
-#include <iostream>
 #include <climits>
 
 

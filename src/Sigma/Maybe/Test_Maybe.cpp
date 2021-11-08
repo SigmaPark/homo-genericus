@@ -125,7 +125,6 @@ void Test<5>()
 
 
 #include "Test_Maybe.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Maybe)

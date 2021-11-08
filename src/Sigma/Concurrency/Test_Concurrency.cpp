@@ -45,7 +45,6 @@ void Test<2>()
 
 
 #include "Test_Concurrency.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Concurrency)

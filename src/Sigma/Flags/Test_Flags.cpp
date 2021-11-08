@@ -23,9 +23,7 @@ template<>  void Test<1>()
 }
 
 
-
 #include "Test_Flags.hpp"
-#include <iostream>
 
 
 SGM_SPEC_TESTS(sgm_Flags)

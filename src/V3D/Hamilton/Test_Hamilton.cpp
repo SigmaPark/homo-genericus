@@ -854,33 +854,20 @@ static void _as_Vector_iterable()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-#include <iostream>
-
-
-void test::HamiltonTutorial::test()
-{
-	try
-	{
-		::_Construction_and_Resize();
-		::_Substitution();
-		::_Element();
-		::_Partial_Access();
-		::_inversion_and_transpose();
-		::_Static_Matrix();
-		::_Algebra();
-		::_internal_Array();
-		::_Column_and_Row_Space();
-		::_UnitVector();
-		::_OrthogonalMatrix();
-		::_Skipped();
-		::_invalid_when_divided_by_0();
-		::_invalid_Matrix();
-		::_as_Vector_iterable();	
-
-		std::wcout << L"Hamilton Test Complete.\n";
-	}
-	catch(sgm::spec::Exception const &e)
-	{
-		std::wcout << L"Hamilton Test Failed : " << e.what() << std::endl;
-	}
-}
+SGM_SPECIFICATION_TESTS(v3d::test::, Hamilton, Tutorial)
+{	::_Construction_and_Resize
+,	::_Substitution
+,	::_Element
+,	::_Partial_Access
+,	::_inversion_and_transpose
+,	::_Static_Matrix
+,	::_Algebra
+,	::_internal_Array
+,	::_Column_and_Row_Space
+,	::_UnitVector
+,	::_OrthogonalMatrix
+,	::_Skipped
+,	::_invalid_when_divided_by_0
+,	::_invalid_Matrix
+,	::_as_Vector_iterable	
+};

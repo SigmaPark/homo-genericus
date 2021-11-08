@@ -214,20 +214,10 @@ static void _05_Euler_Angles()
 }
 
 
-void test::AffineTutorial::test()
-{
-	try
-	{
-		::_01_Construction();
-		::_02_Composition_and_Transfer();
-		::_03_Composition_and_Transfer_2();
-		::_04_Reflection();
-		::_05_Euler_Angles();
-
-		std::wcout << L"Affine Test Complete.\n";
-	}
-	catch(sgm::spec::Exception const &e)
-	{
-		std::wcerr << L"Affine Test Failed : " << e.what() << std::endl;
-	}
-}
+SGM_SPECIFICATION_TESTS(test::, Affine, Tutorial)
+{	::_01_Construction
+,	::_02_Composition_and_Transfer
+,	::_03_Composition_and_Transfer_2
+,	::_04_Reflection
+,	::_05_Euler_Angles
+};
