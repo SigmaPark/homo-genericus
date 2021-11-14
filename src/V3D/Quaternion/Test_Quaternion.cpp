@@ -9,7 +9,7 @@ using namespace v3d;
 template<class...ARGS>
 static void _identical(ARGS...args)
 {
-	test::_Equivalent<test::_Equiv_Quaternion_Tag>::calc(args...);
+	is_True( test::_Equivalent<test::_Equiv_Quaternion_Tag>::calc(args...) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -113,7 +113,7 @@ static void _04_Norm()
 	{
 		Quaternion<float> q1(1, -1, -1, 1);
 
-		float const squard_norm = 1*1 + (-1)*(-1) + (-1)*(-1) * 1*1, norm = std::sqrt(squard_norm);
+		float const squard_norm = 1*1 + (-1)*(-1) + (-1)*(-1) + 1*1, norm = std::sqrt(squard_norm);
 
 		_identical( q1.sqr_norm(), squard_norm );
 		_identical( q1.norm(), norm );

@@ -498,6 +498,19 @@ static void _Algebra()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
+static void _Vector_Computing()
+{
+	Vector<float, 3> const X1{1, 0, 0}, X2{0, 1, 0}, X3{2, 3, 4};
+
+	::_identical
+	(	X3.dot( X1.cross(X2) )
+	,	X1.cross(X2).dot(X3)
+	,	4
+	);
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
 static void _internal_Array()
 {
 	std::vector<float> const src_iterable{2, 4, 6, 8, 10, 12};
@@ -862,6 +875,7 @@ SGM_SPECIFICATION_TESTS(v3d::test::, Hamilton, Tutorial)
 ,	::_inversion_and_transpose
 ,	::_Static_Matrix
 ,	::_Algebra
+,	::_Vector_Computing
 ,	::_internal_Array
 ,	::_Column_and_Row_Space
 ,	::_UnitVector

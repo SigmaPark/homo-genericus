@@ -209,6 +209,12 @@ auto v3d::_Pi()-> T const&
 struct v3d::Direction : sgm::No_Making
 {
 public:
+	template<class U1, class U2>
+	static bool are_acute_angled(U1 const &u1, U2 const &u2){  return u1.dot(u2) > 0;  }
+
+	template<class U1, class U2>
+	static bool are_obtuse_angled(U1 const &u1, U2 const &u2){  return u1.dot(u2) < 0;  }
+	
 	template
 	<	class U1, class U2, class...ARGS
 	,	class = std::enable_if_t< trait::has_Matrix_interface_v<U1> && trait::has_Matrix_interface_v<U2> >
