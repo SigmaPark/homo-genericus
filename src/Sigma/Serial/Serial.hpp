@@ -464,6 +464,8 @@ public:
 
 	auto operator=(Serial &&sr) noexcept-> Serial&
 	{
+		this->~Serial();
+
 		_capacity = sr.capacity(),  _size = sr.size(),  _core = sr._core,
 		sr._capacity = sr._size = 0,  sr._core = nullptr;
 
