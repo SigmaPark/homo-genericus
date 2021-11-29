@@ -24,9 +24,7 @@ BEGIN_CODE_BLOCK(1)
 		sum += i;
 
 	is_True(sum == 55);
-END_CODE_BLOCK(1)
-
-	LOAD_CODE_BLOCK(1);
+END_AND_LOAD_CODE_BLOCK(1)
 }
 
 
@@ -38,7 +36,13 @@ static void outro()
 		html_block_guard bg("strong center");
 
 		mdo << "Thank you for watching";
-	}
+	}	
+
+	if
+	(	auto const image = __MD_MATERIALS__ + "\\sample_img.png"
+	;	std::filesystem::exists(image) 
+	)
+		mdo << "\n![](" << image << ")\n";
 }
 
 

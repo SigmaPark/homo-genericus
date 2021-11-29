@@ -12,3 +12,4 @@ Gauss solved this when he was in elementary school.
 ```
 ---
 <strong><center>Thank you for watching</strong></center>
+![](..\..\src\Sigma\Tutorial\md_materials\sample_img.png)

@@ -8,6 +8,10 @@
 
 #define BEGIN_CODE_BLOCK(IDX) /* nothing */
 #define END_CODE_BLOCK(IDX) /* nothing */
+#define END_AND_LOAD_CODE_BLOCK(IDX)  LOAD_CODE_BLOCK(IDX);
+
+#define __CURRENT_SOURCE_DIRECTORY__  sgm::tut::_Current_File_Directory( _DOUBLE_UNDERBAR_MACRO_HELPER(FILE) )
+#define __MD_MATERIALS__  __CURRENT_SOURCE_DIRECTORY__ + "\\md_materials"
 
 
 #include <exception>
@@ -31,12 +35,14 @@ namespace sgm::tut
 	[[maybe_unused]] static void is_True(bool const b) noexcept(false);
 	[[maybe_unused]] static void is_False(bool const b) noexcept(false);
 
-	class md_block_guard;
+	class md_guard;
 	class html_block_guard;
-	
+	class md_block_guard;
 
 	class _MD_Stream;
 	class _MD_Stream_Guard;
+
+	[[maybe_unused]] static auto _Current_File_Directory(std::string s)-> std::string;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
@@ -76,7 +82,6 @@ public:
 		s.append("md");
 
 		_filepath = std::move(s);
-		//_filepath = s + ".md";
 	}
 
 	bool is_open() const{  return _filepath != std::string();  }
@@ -86,7 +91,7 @@ public:
 	void print_and_close()
 	{
 		assert(is_open());
-		
+
 		for( std::ofstream ofs(_filepath);  !_contents.empty();  ofs << _contents.front(),  _contents.pop() );
 
 		_filepath = {};
@@ -152,15 +157,22 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-class sgm::tut::md_block_guard
+class sgm::tut::md_guard
 {
 public:
-	md_block_guard(std::string begin) : md_block_guard(begin, begin){}
-	md_block_guard(std::string begin, std::string end) : _end(end){  mdo << begin; }
-	~md_block_guard(){  mdo << _end; }
+	md_guard(std::string begin) : md_guard(begin, begin){}
+	md_guard(std::string begin, std::string end) : _end(end){  mdo << begin; }
+	~md_guard(){  mdo << _end; }
 
 private:
 	std::string _end;
+};
+
+
+class sgm::tut::md_block_guard : public md_guard
+{
+public:
+	md_block_guard(std::string s = "") : md_guard( std::string("```") + s + "\n", "```\n" ){}
 };
 
 
@@ -254,9 +266,10 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 
 	std::string const
 		cb_begin = std::string("BEGIN_CODE_BLOCK(") + std::to_string(code_block_index) + ")",
-		cb_end = std::string("END_CODE_BLOCK(") + std::to_string(code_block_index) + ")";
+		cb_end = std::string("END_CODE_BLOCK(") + std::to_string(code_block_index) + ")",
+		cb_end2 = std::string("END_AND_LOAD_CODE_BLOCK(") + std::to_string(code_block_index) + ")";
 
-	auto is_same_str_f
+	auto are_same_str_f
 	=	[](std::string const& s1, std::string const& s2, size_t const size)
 		{
 			bool res = s1.size() >= size && s2.size() >= size;
@@ -266,12 +279,27 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 			return res;
 		};
 
-	md_block_guard bg("```cpp\n", "```\n");
+
+	md_block_guard bg("cpp");
 
 	for(std::string buf;  std::getline(file, buf);  )
-		if( is_same_str_f(buf, cb_begin, cb_begin.size()) )
-			for( std::getline(file, buf);  !is_same_str_f(buf, cb_end, cb_end.size());  std::getline(file, buf) )
+		if( are_same_str_f(buf, cb_begin, cb_begin.size()) )
+			for
+			(	std::getline(file, buf)
+			;	!are_same_str_f(buf, cb_end, cb_end.size()) && !are_same_str_f(buf, cb_end2, cb_end2.size())
+			;	std::getline(file, buf) 
+			)
 				mdo << buf + "\n";
+}
+
+
+auto sgm::tut::_Current_File_Directory(std::string s)-> std::string
+{
+	auto const last_bs = s.find_last_of('\\');
+
+	s.erase(s.begin()+last_bs, s.end());
+
+	return s.c_str();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
