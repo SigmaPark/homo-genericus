@@ -718,21 +718,20 @@ private:
 		);
 	}
 
-	static auto _from_OrthogonalMat(_OrthoMat_t const &m)
+	static auto _from_OrthogonalMat(_OrthoMat_t const &m)-> _UQtn_t
 	{
 		T const _2w = std::sqrt( T(1) + m(0, 0) + m(1, 1) + m(2, 2) );
 		Vector<T, 3> const _2v = Vector<T, 3>{m(2, 1) - m(1, 2), m(0, 2) - m(2, 0), m(1, 0) - m(0, 1)} / _2w;
 
-		return Skipped<_UQtn_t>( T(.5)*Quaternion<T>(_2w, _2v) );
+		return T(.5)*Quaternion<T>(_2w, _2v);
 	}
 
-	static auto _to_OrthogonamMat(_UQtn_t const &q)
+	static auto _to_OrthogonamMat(_UQtn_t const &q)-> _OrthoMat_t
 	{
 		T const &w = q.w();
 		Vector<T, 3> const &v = q.v();
 
-		return
-		Skipped<_OrthoMat_t>( (w*w - v.sqr_norm())*OrthogonalMat<T, 3>::identity() + 2*w*v.skew() + 2*v.dyadic(v) );
+		return (w*w - v.sqr_norm())*OrthogonalMat<T, 3>::identity() + 2*w*v.skew() + 2*v.dyadic(v);
 	}
 
 };

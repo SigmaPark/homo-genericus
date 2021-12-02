@@ -475,16 +475,6 @@ auto v3d::Average(CON &&con, W &&weight)
 {
 	static_assert(sgm::is_iterable<CON>::value);
 	using deref_t = std::decay_t< sgm::Deref_t<CON> >;
-
-	bool constexpr is_weight_function = std::is_invocable_v<W, deref_t>;
-
-	using den_t
-	=	std::conditional_t
-		<	is_weight_function
-		,	std::invoke_result_t<W, deref_t>
-		,	typename _Average_Helper::_denominator<deref_t>::type
-		>;
-
 	using res_t = std::conditional_t< std::is_integral_v<deref_t>, float, deref_t >;
 	using summand_t =	typename _Average_Helper::_summand<deref_t>::type;
 
@@ -495,9 +485,17 @@ auto v3d::Average(CON &&con, W &&weight)
 
 	auto &&elem0 = static_cast<summand_t const&>( *Begin(con) );
 	summand_t sum = elem0 - elem0;
-	auto den = static_cast<den_t>(0);
 
-	if constexpr(is_weight_function)
+	auto den
+	=	[]
+		{
+			if constexpr(std::is_invocable_v<W, deref_t>)
+				return std::invoke_result_t<W, deref_t>(0);
+			else
+				return typename _Average_Helper::_denominator<deref_t>::type(0);
+		}();
+
+	if constexpr(std::is_invocable_v<W, deref_t>)
 		for(auto const &t : con)
 		{
 			auto const w = weight(t);

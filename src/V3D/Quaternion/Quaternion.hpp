@@ -233,6 +233,9 @@ public:
 	auto normalize()-> UnitQuaternion&{  return *this;  }
 
 
+	static auto Slerp(UnitQuaternion const &uq0, UnitQuaternion const &uq1, T const t)-> UnitQuaternion;
+
+
 private:
 	_Qtn _qtn;
 
@@ -250,6 +253,23 @@ private:
 
 template<  class S, class T, class = std::enable_if_t< std::is_convertible_v<S, double> >  >
 static auto operator*(S const s, v3d::UnitQuaternion<T> const &q){  return q*s;  }
+
+
+template<class T>
+auto v3d::UnitQuaternion<T>::Slerp(UnitQuaternion const &uq0, UnitQuaternion const &uq1, T const t)-> UnitQuaternion
+{
+	auto const cos_half_theta = (uq1*uq0.inv()).w();
+	UnitQuaternion const iuq0_uq1 = uq0.inv()*(cos_half_theta > 0 ? uq1 : -uq1);
+
+	if( v3d::are_almost_same<T>(iuq0_uq1.w(), 1) )
+		return uq0;
+
+	v3d::UnitVec<T, 3> const v = iuq0_uq1.v();
+	T const half_theta = std::acos(  std::clamp( iuq0_uq1.w(), T(-1), T(1) )  );
+	T const ct = std::cos(t*half_theta),  st = std::sin(t*half_theta);
+
+	return uq0 * UnitQuaternion(ct, st*v);
+}
 
 
 #endif //  end of #ifndef _V3D_QUATERNION_
