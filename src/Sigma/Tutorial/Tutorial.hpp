@@ -31,6 +31,12 @@ namespace sgm::tut
 	
 	[[maybe_unused]] 
 	static void Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false);
+
+	[[maybe_unused]] 
+	static auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
+
+	[[maybe_unused]]
+	static auto Free_writing(std::string const& description)-> std::string;
 	
 	[[maybe_unused]] static void is_True(bool const b) noexcept(false);
 	[[maybe_unused]] static void is_False(bool const b) noexcept(false);
@@ -290,6 +296,89 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 			;	std::getline(file, buf) 
 			)
 				mdo << buf + "\n";
+}
+
+
+auto sgm::tut::Load_image(std::string const& image_name, size_t const image_width)-> std::string
+{
+	auto const size_str
+	=	image_width == 0 ? std::string("") : std::string(" width =\"") + std::to_string(image_width) + "\"";
+
+	return std::string("<img src=\"") + "md_materials\\" + image_name + "\"" + size_str + ">";
+}
+
+
+auto sgm::tut::Free_writing(std::string const& str)-> std::string
+{
+	auto is_empty_line_f
+	=	[](std::string const& line)-> bool
+		{
+			for(auto const c : line)
+				if(c != ' ' && c != '\t' && c != '\n')
+					return false;
+
+			return true;
+		};
+
+	auto tab_count_f
+	=	[](std::string const& line)-> size_t
+		{
+			size_t res = 0;
+
+			for(auto const c : line)
+				if(c == '\t')
+					++res;
+				else
+					break;
+
+			return res;
+		};
+
+	std::queue<std::string> qs;
+	size_t total_str_len = 0,  min_nof_tab = std::numeric_limits<size_t>::max();
+
+	auto enqueue_f
+	=	[&qs, &total_str_len, &min_nof_tab, is_empty_line_f, tab_count_f](auto itr1, auto itr2)
+		{
+			std::string s(itr1, itr2);
+
+			if( !is_empty_line_f(s) )
+				min_nof_tab = std::min( min_nof_tab, tab_count_f(s) );
+
+			qs.emplace( std::move(s) );
+
+			total_str_len += std::distance(itr1, itr2);
+		};
+
+	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)
+		if(itr2 == str.cend())
+		{
+			enqueue_f(itr1, itr2);
+
+			break;
+		}
+		else if(*itr2 == '\n')
+		{
+			enqueue_f(itr1, itr2);
+
+			itr1 = itr2 + 1;
+		}
+
+
+	std::string res;
+	res.reserve(total_str_len + 2*qs.size());
+
+	for(;  !qs.empty();  qs.pop())
+	{
+		if( auto const& s = qs.front();  !is_empty_line_f(s) )
+			res.append(s.cbegin() + min_nof_tab, s.cend());
+		else
+			res.append(s);
+
+		res.append("  \n");
+	}
+
+	return res;
 }
 
 

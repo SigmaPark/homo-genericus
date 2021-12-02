@@ -2,6 +2,12 @@
 ## subtitle
 What is the integer sum from 1 to 10?  
 Gauss solved this when he was in elementary school.  
+  
+Now,  
+let's check  
+how to implement it  
+by C++  
+			  
 ```cpp
 	int sum = 0;
 
@@ -11,5 +17,4 @@ Gauss solved this when he was in elementary school.
 	is_True(sum == 55);
 ```
 ---
-<strong><center>Thank you for watching</strong></center>
-![](..\..\src\Sigma\Tutorial\md_materials\sample_img.png)
+<strong><center>Thank you for watching</strong></center><center><img src="md_materials\sample_img.png" width ="200"></center>

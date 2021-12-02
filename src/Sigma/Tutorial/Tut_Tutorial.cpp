@@ -11,7 +11,15 @@ static void intro()
 	<<	"# Title\n"
 	<<	"## subtitle\n"
 	<<	"What is the integer sum from 1 to 10?  \n"
-	<<	"Gauss solved this when he was in elementary school.  \n";
+	<<	"Gauss solved this when he was in elementary school.  \n"
+	<<	Free_writing
+		(	R"(
+			Now,
+			let's check
+			how to implement it
+			by C++
+			)"
+		);
 }
 
 
@@ -37,12 +45,11 @@ static void outro()
 
 		mdo << "Thank you for watching";
 	}	
+	{
+		html_block_guard bg("center");
 
-	if
-	(	auto const image = __MD_MATERIALS__ + "\\sample_img.png"
-	;	std::filesystem::exists(image) 
-	)
-		mdo << "\n![](" << image << ")\n";
+		mdo << Load_image("sample_img.png", 200);
+	}
 }
 
 
