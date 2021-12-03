@@ -8,10 +8,11 @@
 
 #define BEGIN_CODE_BLOCK(IDX) /* nothing */
 #define END_CODE_BLOCK(IDX) /* nothing */
-#define END_AND_LOAD_CODE_BLOCK(IDX)  LOAD_CODE_BLOCK(IDX);
+#define END_CODE_BLOCK_AND_LOAD(IDX)  sgm::tut::mdo << LOAD_CODE_BLOCK(IDX);
 
 #define __CURRENT_SOURCE_DIRECTORY__  sgm::tut::_Current_File_Directory( _DOUBLE_UNDERBAR_MACRO_HELPER(FILE) )
 #define __MD_MATERIALS__  __CURRENT_SOURCE_DIRECTORY__ + "\\md_materials"
+#define LOAD_DESCRIPTION_FILE(FILE)  sgm::tut::Load_file(__MD_MATERIALS__ + "\\" + FILE)
 
 
 #include <exception>
@@ -27,16 +28,16 @@ namespace sgm::tut
 {
 
 	[[maybe_unused]] static auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
-	[[maybe_unused]] static void Load_file(std::filesystem::path const& filepath) noexcept(false);
+	[[maybe_unused]] static auto Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string;
 	
 	[[maybe_unused]] 
-	static void Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false);
+	static auto Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
+	-> std::string;
 
 	[[maybe_unused]] 
 	static auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
 
-	[[maybe_unused]]
-	static auto Free_writing(std::string const& description)-> std::string;
+	[[maybe_unused]] static auto Code_writing(std::string const& code, std::string const &lang = "")->std::string;
 	
 	[[maybe_unused]] static void is_True(bool const b) noexcept(false);
 	[[maybe_unused]] static void is_False(bool const b) noexcept(false);
@@ -44,6 +45,9 @@ namespace sgm::tut
 	class md_guard;
 	class html_block_guard;
 	class md_block_guard;
+
+	class tabless_description;
+	class code_description;
 
 	class _MD_Stream;
 	class _MD_Stream_Guard;
@@ -62,6 +66,99 @@ void sgm::tut::is_True(bool const b) noexcept(false)
 
 
 void sgm::tut::is_False(bool const b) noexcept(false){  is_True(!b);  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
+class sgm::tut::tabless_description
+{
+public:
+	tabless_description(std::string&& s) : _str(  _tabless_string( std::move(s) )  ){}
+
+private:
+	friend class sgm::tut::_MD_Stream;
+
+	std::string _str;
+
+	static auto _tabless_string(std::string&& s)-> std::string;
+};
+
+
+[[maybe_unused]] static auto operator ""_mdo(char const* str, size_t)-> sgm::tut::tabless_description
+{
+	return std::string(str);
+}
+
+
+auto sgm::tut::tabless_description::_tabless_string(std::string&& str)-> std::string
+{
+	auto is_empty_line_f
+	=	[](std::string const& line)-> bool
+		{
+			for(auto const c : line)
+				if(c != ' ' && c != '\t' && c != '\n')
+					return false;
+
+			return true;
+		};
+
+	std::queue<std::string> qs;
+	size_t total_str_len = 0;
+
+	auto enqueue_f
+	=	[&qs, &total_str_len, is_empty_line_f](auto itr1, auto itr2)
+		{
+			if( !is_empty_line_f({itr1, itr2}) )
+				for(;  *itr1 == '\t';  ++itr1);
+
+			std::string s(itr1, itr2);
+
+			qs.emplace( std::move(s) );
+
+			total_str_len += std::distance(itr1, itr2);
+		};
+
+	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)
+		if(itr2 == str.cend())
+		{
+			enqueue_f(itr1, itr2);
+
+			break;
+		}
+		else if(*itr2 == '\n')
+		{
+			enqueue_f(itr1, itr2);
+
+			itr1 = itr2 + 1;
+		}
+
+
+	std::string res;
+	res.reserve(total_str_len + 2*qs.size());
+
+	for(;  !qs.empty();  qs.pop())
+		res.append(qs.front() + "  \n");
+	
+	return res;	
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
+class sgm::tut::code_description
+{
+public:
+	code_description(std::string&& s) : _str( Code_writing(s) ){}
+
+private:
+	friend class sgm::tut::_MD_Stream;
+
+	std::string _str;
+};
+
+
+[[maybe_unused]] static auto operator ""_code(char const *str, size_t)-> sgm::tut::code_description
+{
+	return std::string(str);
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -112,6 +209,10 @@ public:
 			
 		if constexpr(std::is_convertible_v<_T, std::string>)
 			_contents.push( std::forward<T>(t) );
+		else if constexpr(std::is_same_v<_T, tabless_description>)
+			*this << t._str;
+		else if constexpr(std::is_same_v<_T, code_description>)
+			*this << t._str;
 		else if constexpr(std::is_same_v<_T, char>)
 			*this << std::string{t};
 		else if constexpr(std::is_same_v<_T, bool>)
@@ -252,18 +353,42 @@ auto sgm::tut::HTML_tag(std::string const& contents, std::string const& tag)-> s
 }
 
 
-void sgm::tut::Load_file(std::filesystem::path const& filepath) noexcept(false)
+auto sgm::tut::Load_image(std::string const& image_name, size_t const image_width)-> std::string
+{
+	auto const size_str
+	=	image_width == 0 ? std::string("") : std::string(" width =\"") + std::to_string(image_width) + "\"";
+
+	return std::string("<img src=\"") + "md_materials\\" + image_name + "\"" + size_str + ">";
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
+auto sgm::tut::Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string
 {
 	if( !std::filesystem::exists(filepath) )
-		throw std::exception("the file to be loaded doesn't exist.");
+	{
+		std::wcerr << filepath << std::endl;
 
+		throw std::exception("the file to be loaded doesn't exist.");
+	}
+
+	std::queue<std::string> qs;
+	size_t nof_char = 0;
 	std::ifstream file(filepath);
 
-	for(std::string buf;  std::getline(file, buf);  mdo << buf << "\n");
+	for( std::string buf;  std::getline(file, buf);  qs.push(buf+"  \n"),  nof_char += buf.size() + 4 );
+
+	std::string merged_str;
+	
+	for( merged_str.reserve(nof_char);  !qs.empty();  qs.pop() )
+		merged_str.append(qs.front());
+
+	return merged_str;
 }
 
 
-void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
+auto sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
+->	std::string
 {
 	if( !std::filesystem::exists(filepath) )
 		throw std::exception("the file to be loaded doesn't exist.");
@@ -273,7 +398,7 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 	std::string const
 		cb_begin = std::string("BEGIN_CODE_BLOCK(") + std::to_string(code_block_index) + ")",
 		cb_end = std::string("END_CODE_BLOCK(") + std::to_string(code_block_index) + ")",
-		cb_end2 = std::string("END_AND_LOAD_CODE_BLOCK(") + std::to_string(code_block_index) + ")";
+		cb_end2 = std::string("END_CODE_BLOCK_AND_LOAD(") + std::to_string(code_block_index) + ")";
 
 	auto are_same_str_f
 	=	[](std::string const& s1, std::string const& s2, size_t const size)
@@ -285,8 +410,8 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 			return res;
 		};
 
-
-	md_block_guard bg("cpp");
+	std::queue<std::string> qs;
+	size_t nof_char = 0;
 
 	for(std::string buf;  std::getline(file, buf);  )
 		if( are_same_str_f(buf, cb_begin, cb_begin.size()) )
@@ -295,20 +420,19 @@ void sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 			;	!are_same_str_f(buf, cb_end, cb_end.size()) && !are_same_str_f(buf, cb_end2, cb_end2.size())
 			;	std::getline(file, buf) 
 			)
-				mdo << buf + "\n";
+				qs.push(buf + "\n"),  
+				nof_char += buf.size() + 1;
+
+	std::string merged_str;
+	
+	for( merged_str.reserve(nof_char);  !qs.empty();  qs.pop() )
+		merged_str.append(qs.front());
+
+	return Code_writing(merged_str, "cpp");
 }
 
 
-auto sgm::tut::Load_image(std::string const& image_name, size_t const image_width)-> std::string
-{
-	auto const size_str
-	=	image_width == 0 ? std::string("") : std::string(" width =\"") + std::to_string(image_width) + "\"";
-
-	return std::string("<img src=\"") + "md_materials\\" + image_name + "\"" + size_str + ">";
-}
-
-
-auto sgm::tut::Free_writing(std::string const& str)-> std::string
+auto sgm::tut::Code_writing(std::string const& str, std::string const& lang)-> std::string
 {
 	auto is_empty_line_f
 	=	[](std::string const& line)-> bool
@@ -366,9 +490,9 @@ auto sgm::tut::Free_writing(std::string const& str)-> std::string
 
 
 	std::string res;
-	res.reserve(total_str_len + 2*qs.size());
+	res.reserve(8 + lang.size() + total_str_len + 2*qs.size());
 
-	for(;  !qs.empty();  qs.pop())
+	for(  res.append( std::string("```") + lang + "\n" );  !qs.empty();  qs.pop()  )
 	{
 		if( auto const& s = qs.front();  !is_empty_line_f(s) )
 			res.append(s.cbegin() + min_nof_tab, s.cend());
@@ -377,6 +501,12 @@ auto sgm::tut::Free_writing(std::string const& str)-> std::string
 
 		res.append("  \n");
 	}
+	
+	do	
+		res.pop_back();
+	while(res.back() != '\n');
+	
+	res.append("```\n");
 
 	return res;
 }

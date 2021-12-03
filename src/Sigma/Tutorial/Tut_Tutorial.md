@@ -2,19 +2,24 @@
 ## subtitle
 What is the integer sum from 1 to 10?  
 Gauss solved this when he was in elementary school.  
-  
-Now,  
-let's check  
-how to implement it  
-by C++  
-			  
+Now,    
+let's check    
+how to implement it    
+by C++    
+		  
 ```cpp
-	int sum = 0;
-
-	for(int i = 1;  i <= 10;  ++i)
-		sum += i;
-
-	is_True(sum == 55);
+int sum = 0;  
+  
+for(int i = 1;  i <= 10;  ++i)  
+	sum += i;  
+  
+is_True(sum == 55);  
 ```
 ---
+You  
+Only  
+Live  
+Once.  
+  
+Please never waste your time.  
 <strong><center>Thank you for watching</strong></center><center><img src="md_materials\sample_img.png" width ="200"></center>

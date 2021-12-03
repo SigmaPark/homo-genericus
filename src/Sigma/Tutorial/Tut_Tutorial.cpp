@@ -12,14 +12,12 @@ static void intro()
 	<<	"## subtitle\n"
 	<<	"What is the integer sum from 1 to 10?  \n"
 	<<	"Gauss solved this when he was in elementary school.  \n"
-	<<	Free_writing
-		(	R"(
-			Now,
-			let's check
-			how to implement it
-			by C++
-			)"
-		);
+	<<	"\
+		Now,  \n\
+		let's check  \n\
+		how to implement it  \n\
+		by C++  \n\
+		"_mdo;
 }
 
 
@@ -32,13 +30,15 @@ BEGIN_CODE_BLOCK(1)
 		sum += i;
 
 	is_True(sum == 55);
-END_AND_LOAD_CODE_BLOCK(1)
+END_CODE_BLOCK_AND_LOAD(1)
 }
 
 
 static void outro()
 {
 	mdo << "---" << '\n';
+
+	mdo << LOAD_DESCRIPTION_FILE("YOLO.txt");
 	
 	{
 		html_block_guard bg("strong center");
