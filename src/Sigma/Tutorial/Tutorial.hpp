@@ -3,16 +3,10 @@
 #define _SGM_TUTORIAL_
 
 
-#define _LOAD_CODE_BLOCK_HELPER(FILEPATH, IDX)  sgm::tut::Load_code_block(__##FILEPATH##__, IDX)
-#define LOAD_CODE_BLOCK(IDX)  _LOAD_CODE_BLOCK_HELPER(FILE, IDX)
-
-#define BEGIN_CODE_BLOCK(IDX) /* nothing */
-#define END_CODE_BLOCK(IDX) /* nothing */
-#define END_CODE_BLOCK_AND_LOAD(IDX)  sgm::tut::mdo << LOAD_CODE_BLOCK(IDX);
+#define _LOAD_CODE_BLOCK_HELPER(FILEPATH, IDX)  sgm::tut::_Load_code_block(__##FILEPATH##__, IDX)
 
 #define __CURRENT_SOURCE_DIRECTORY__  sgm::tut::_Current_File_Directory( _DOUBLE_UNDERBAR_MACRO_HELPER(FILE) )
 #define __MD_MATERIALS__  __CURRENT_SOURCE_DIRECTORY__ + "\\md_materials"
-#define LOAD_DESCRIPTION_FILE(FILE)  sgm::tut::Load_file(__MD_MATERIALS__ + "\\" + FILE)
 
 
 #include <exception>
@@ -24,21 +18,23 @@
 #include <queue>
 
 
+#define LOAD_CODE_BLOCK(IDX)  _LOAD_CODE_BLOCK_HELPER(FILE, IDX)
+
+#define BEGIN_CODE_BLOCK(IDX) /* nothing */
+#define END_CODE_BLOCK(IDX) /* nothing */
+#define END_CODE_BLOCK_AND_LOAD(IDX)  sgm::tut::mdo << LOAD_CODE_BLOCK(IDX);
+
+#define LOAD_DESCRIPTION_FILE(FILE)  sgm::tut::_Load_file(__MD_MATERIALS__ + "\\" + FILE)
+
+
 namespace sgm::tut
 {
 
 	[[maybe_unused]] static auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
-	[[maybe_unused]] static auto Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string;
 	
-	[[maybe_unused]] 
-	static auto Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
-	-> std::string;
-
 	[[maybe_unused]] 
 	static auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
 
-	[[maybe_unused]] static auto Code_writing(std::string const& code, std::string const &lang = "")->std::string;
-	
 	[[maybe_unused]] static void is_True(bool const b) noexcept(false);
 	[[maybe_unused]] static void is_False(bool const b) noexcept(false);
 
@@ -46,13 +42,21 @@ namespace sgm::tut
 	class html_block_guard;
 	class md_block_guard;
 
-	class tabless_description;
-	class code_description;
+
+
+	class _tabless_description;
+	class _code_description;
 
 	class _MD_Stream;
 	class _MD_Stream_Guard;
 
 	[[maybe_unused]] static auto _Current_File_Directory(std::string s)-> std::string;
+	[[maybe_unused]] static auto _Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string;
+	[[maybe_unused]] static auto _Code_writing(std::string const& code, std::string const &lang = "")-> std::string;
+
+	[[maybe_unused]] static auto _Load_code_block
+	(	std::filesystem::path const& filepath, int code_block_index
+	)	noexcept(false)->	std::string;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
@@ -69,10 +73,10 @@ void sgm::tut::is_False(bool const b) noexcept(false){  is_True(!b);  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-class sgm::tut::tabless_description
+class sgm::tut::_tabless_description
 {
 public:
-	tabless_description(std::string&& s) : _str(  _tabless_string( std::move(s) )  ){}
+	_tabless_description(std::string&& s) : _str(  _tabless_string( std::move(s) )  ){}
 
 private:
 	friend class sgm::tut::_MD_Stream;
@@ -83,13 +87,13 @@ private:
 };
 
 
-[[maybe_unused]] static auto operator ""_mdo(char const* str, size_t)-> sgm::tut::tabless_description
+[[maybe_unused]] static auto operator ""_mdo(char const* str, size_t)-> sgm::tut::_tabless_description
 {
 	return std::string(str);
 }
 
 
-auto sgm::tut::tabless_description::_tabless_string(std::string&& str)-> std::string
+auto sgm::tut::_tabless_description::_tabless_string(std::string&& str)-> std::string
 {
 	auto is_empty_line_f
 	=	[](std::string const& line)-> bool
@@ -143,10 +147,10 @@ auto sgm::tut::tabless_description::_tabless_string(std::string&& str)-> std::st
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-class sgm::tut::code_description
+class sgm::tut::_code_description
 {
 public:
-	code_description(std::string&& s) : _str( Code_writing(s) ){}
+	_code_description(std::string&& s) : _str( _Code_writing(s) ){}
 
 private:
 	friend class sgm::tut::_MD_Stream;
@@ -155,7 +159,7 @@ private:
 };
 
 
-[[maybe_unused]] static auto operator ""_code(char const *str, size_t)-> sgm::tut::code_description
+[[maybe_unused]] static auto operator ""_code(char const *str, size_t)-> sgm::tut::_code_description
 {
 	return std::string(str);
 }
@@ -209,9 +213,9 @@ public:
 			
 		if constexpr(std::is_convertible_v<_T, std::string>)
 			_contents.push( std::forward<T>(t) );
-		else if constexpr(std::is_same_v<_T, tabless_description>)
+		else if constexpr(std::is_same_v<_T, _tabless_description>)
 			*this << t._str;
-		else if constexpr(std::is_same_v<_T, code_description>)
+		else if constexpr(std::is_same_v<_T, _code_description>)
 			*this << t._str;
 		else if constexpr(std::is_same_v<_T, char>)
 			*this << std::string{t};
@@ -363,7 +367,7 @@ auto sgm::tut::Load_image(std::string const& image_name, size_t const image_widt
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-auto sgm::tut::Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string
+auto sgm::tut::_Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string
 {
 	if( !std::filesystem::exists(filepath) )
 	{
@@ -387,7 +391,7 @@ auto sgm::tut::Load_file(std::filesystem::path const& filepath) noexcept(false)-
 }
 
 
-auto sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
+auto sgm::tut::_Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
 ->	std::string
 {
 	if( !std::filesystem::exists(filepath) )
@@ -428,11 +432,11 @@ auto sgm::tut::Load_code_block(std::filesystem::path const& filepath, int code_b
 	for( merged_str.reserve(nof_char);  !qs.empty();  qs.pop() )
 		merged_str.append(qs.front());
 
-	return Code_writing(merged_str, "cpp");
+	return _Code_writing(merged_str, "cpp");
 }
 
 
-auto sgm::tut::Code_writing(std::string const& str, std::string const& lang)-> std::string
+auto sgm::tut::_Code_writing(std::string const& str, std::string const& lang)-> std::string
 {
 	auto is_empty_line_f
 	=	[](std::string const& line)-> bool
@@ -555,6 +559,18 @@ auto sgm::tut::_Current_File_Directory(std::string s)-> std::string
 
 
 #define SGM_DEFAULT_TUTORIAL(TITLE)  SGM_TUTORIAL(Tut_, TITLE, /**/)
+
+
+#define SGM_TUTORIAL_CLASS(PREFIX, TITLE, SUFFIX) \
+	struct PREFIX##TITLE##SUFFIX	\
+	{	\
+		PREFIX##TITLE##SUFFIX() = delete;	\
+		\
+		static void print();	\
+	}
+
+
+#define SGM_DEFAULT_TUTORIAL_CLASS(TITLE)  SGM_TUTORIAL_CLASS(Tut_, TITLE, /**/)
 
 
 #endif // end of #ifndef _SGM_TUTORIAL_
