@@ -473,9 +473,9 @@ protected:
 
 	auto _inv() const-> Rigid_Body_Transform
 	{
-		auto const im = ortho_mat().transpose();
+		auto const ir = rotator().inv();
 
-		return{im, -im*vec()};
+		return {ir, -ir(vec())};
 	}
 
 	template<class Q>
@@ -529,6 +529,9 @@ public:
 	>
 	auto operator=(Q &&q)-> Rotation&{  return *this = Rotation( std::forward<Q>(q) );  }
 
+
+	auto inv() const-> Rotation{  return -angle();  }
+
 	auto cortho_mat() const-> OrthogonalMat<T, 2>{  return _to_OrthogonalMat(_angle);  }
 	decltype(auto) ortho_mat() const{  return cortho_mat();  }
 
@@ -544,11 +547,12 @@ public:
 	auto angle() const-> T{  return _angle;  }
 
 	auto operator()(Vector<T, 2> const &v) const-> Vector<T, 2>{  return ortho_mat()*v;  }
+	auto operator()(UnitVec<T, 2> const &u) const-> UnitVec<T, 2>{  return (*this)(u.vec());  }
 
 	template<class...ARGS>
 	auto rotate(ARGS&&...args) const-> Rotation<T, 2>
 	{
-		return Rotation<T, 2>( std::forward<ARGS>(args)... )._angle + _angle;
+		return Rotation<T, 2>( std::forward<ARGS>(args)... ).angle() + angle();
 	}
 
 private:
@@ -625,6 +629,8 @@ public:
 	}
 
 
+	auto inv() const-> Rotation{  return cunit_qtn().inv();  }
+
 	auto cunit_qtn() const-> _UQtn_t const&{  return _uqtn;  }
 	decltype(auto) unit_qtn() const{  return cunit_qtn();  }
 	auto unit_qtn()-> _UQtn_t&{  return _uqtn;  }
@@ -663,11 +669,13 @@ public:
 		return ( _uqtn*Quaternion<T>(0, v)*_uqtn.inv() ).v();
 	}
 
+	auto operator()(UnitVec<T, 3> const &u) const-> UnitVec<T, 3>{  return (*this)(u.vec());  }
+
 
 	template<class...ARGS>
 	auto rotate(ARGS&&...args) const
 	{
-		_UQtn_t const q = Rotation<T, 3>( std::forward<ARGS>(args)... ).unit_qtn();
+		_UQtn_t const q = Rotation<T, 3>( std::forward<ARGS>(args)... ).cunit_qtn();
 
 		return Rotation(q*_uqtn);
 	}
