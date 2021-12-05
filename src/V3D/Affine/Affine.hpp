@@ -554,17 +554,14 @@ public:
 private:
 	T _angle;
 
-	static auto _to_OrthogonalMat(T const angle)
+	static auto _to_OrthogonalMat(T const angle)-> OrthogonalMat<T, 2>
 	{
 		T const c = std::cos(angle), s = std::sin(angle);
 
 		return
-		Skipped< OrthogonalMat<T, 2> >
-		(	Matrix<T, 2, 2>
-			{	c, -s
-			,	s, c
-			}
-		);
+		{	c, -s
+		,	s, c
+		};
 	}
 
 	static auto _from_OrthogonalMat(OrthogonalMat<T, 2> const &m)-> T
@@ -680,11 +677,11 @@ private:
 	_UQtn_t _uqtn;
 
 
-	static auto _from_Spin(UnitVec<T, 3> const &u, T const theta)
+	static auto _from_Spin(UnitVec<T, 3> const &u, T const theta)-> _UQtn_t
 	{
 		T const h = T(.5)*theta;
 
-		return Skipped<_UQtn_t>( std::cos(h), std::sin(h)*u );
+		return {std::cos(h), std::sin(h)*u};
 	}
 
 	static auto _to_Spin(_UQtn_t const &q)-> Vector<T, 3>
@@ -702,7 +699,7 @@ private:
 	*	and rotate by gamma radian along z-axis.
 	*	In other words, by rotation matrix multiplications, Rz(gamma) * Ry(beta) * Rx(alpha) for column vector .
 	*/
-	static auto _from_Euler_angles(T const alpha, T const beta, T const gamma)
+	static auto _from_Euler_angles(T const alpha, T const beta, T const gamma)-> _UQtn_t
 	{
 		T const
 			ha = T(.5)*alpha, hb = T(.5)*beta, hg = T(.5)*gamma,
@@ -710,12 +707,11 @@ private:
 			sa = std::sin(ha), sb = std::sin(hb), sg = std::sin(hg);
 
 		return
-		Skipped<_UQtn_t>
-		(	ca*cb*cg + sa*sb*sg
+		{	ca*cb*cg + sa*sb*sg
 		,	sa*cb*cg - ca*sb*sg
 		,	ca*sb*cg + sa*cb*sg
 		,	ca*cb*sg - sa*sb*cg
-		);
+		};
 	}
 
 	static auto _from_OrthogonalMat(_OrthoMat_t const &m)-> _UQtn_t
