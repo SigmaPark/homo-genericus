@@ -1,14 +1,17 @@
 #pragma once
-
-
 #ifndef _V3D_HAMILTON_
 #define _V3D_HAMILTON_
-//========//========//========//========//=======#//========//========//========//========//=======#//========//========
 
 
 #include "Sigma\interface_Traits\interface_Traits.hpp"
 #include <type_traits>
 #include <climits>
+
+
+//	minimum versions for C++11 main syntex support.
+#ifndef SGM_SYNTEX_VERSION_CPP17
+	#error C++17 or higher version of language support is required.
+#endif
 
 
 namespace v3d
