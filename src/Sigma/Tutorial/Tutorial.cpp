@@ -1,9 +1,10 @@
 #include "Tutorial.hpp"
-#include <exception>
+#include <filesystem>
 #include <fstream>
 #include <queue>
-#include <cassert>
 #include <iostream>
+#include <exception>
+#include <cassert>
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
 
 
@@ -92,7 +93,7 @@ sgm::tut::_MD_Stream_Guard::~_MD_Stream_Guard()
 	{
 		mdo.close();
 
-		std::filesystem::remove(filepath);
+		std::filesystem::remove( static_cast<std::filesystem::path>(filepath) );
 	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
@@ -244,10 +245,9 @@ auto sgm::tut::Load_image(std::string const& image_name, size_t const image_widt
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
-auto sgm::tut::_Load_code_block(std::filesystem::path const& filepath, int code_block_index) noexcept(false)
-->	std::string
+auto sgm::tut::_Load_code_block(std::string const& filepath, int code_block_index) noexcept(false)-> std::string
 {
-	if( !std::filesystem::exists(filepath) )
+	if(  !std::filesystem::exists( static_cast<std::filesystem::path>(filepath) )  )
 		throw std::exception("the file to be loaded doesn't exist.");
 
 	std::ifstream file(filepath);
@@ -289,15 +289,11 @@ auto sgm::tut::_Load_code_block(std::filesystem::path const& filepath, int code_
 }
 
 
-auto sgm::tut::_Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string
+auto sgm::tut::_Load_file(std::string const& filepath) noexcept(false)-> std::string
 {
-	if( !std::filesystem::exists(filepath) )
-	{
-		std::wcerr << filepath << std::endl;
-
+	if(  !std::filesystem::exists( static_cast<std::filesystem::path>(filepath) )  )
 		throw std::exception("the file to be loaded doesn't exist.");
-	}
-
+	
 	std::queue<std::string> qs;
 	size_t nof_char = 0;
 	std::ifstream file(filepath);

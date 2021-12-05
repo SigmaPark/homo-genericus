@@ -9,7 +9,6 @@
 #define __MD_MATERIALS__  __CURRENT_SOURCE_DIRECTORY__ + "\\md_materials"
 
 
-#include <filesystem>
 #include <string>
 
 
@@ -42,9 +41,9 @@ namespace sgm::tut
 	class _MD_Stream;
 	class _MD_Stream_Guard;
 
-	auto _Load_file(std::filesystem::path const& filepath) noexcept(false)-> std::string;
+	auto _Load_file(std::string const& filepath) noexcept(false)-> std::string;
 	auto _Code_writing(std::string const& code, std::string const &lang = "")-> std::string;
-	auto _Load_code_block(std::filesystem::path const& filepath, int code_block_index)	noexcept(false)->	std::string;
+	auto _Load_code_block(std::string const& filepath, int code_block_index)	noexcept(false)->	std::string;
 	auto _Current_File_Directory(std::string s)-> std::string;
 	void _Print_Message(std::string&& msg);
 
@@ -154,7 +153,7 @@ public:
 	~_MD_Stream_Guard();
 
 	bool is_successful;
-	std::filesystem::path filepath;
+	std::string filepath;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
