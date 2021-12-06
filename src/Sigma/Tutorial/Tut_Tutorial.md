@@ -22,4 +22,4 @@ Live
 Once.  
   
 Please never waste your time.  
-<strong><center>Thank you for watching</strong></center><center><img src="md_materials\sample_img.png" width ="200"></center>
+<strong><center>Thank you for watching</strong></center><center><img src=".\md_materials\sample_img.png" width ="200"></center>

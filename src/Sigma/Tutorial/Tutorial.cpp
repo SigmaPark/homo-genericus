@@ -240,7 +240,7 @@ auto sgm::tut::Load_image(std::string const& image_name, size_t const image_widt
 	auto const size_str
 	=	image_width == 0 ? std::string("") : std::string(" width =\"") + std::to_string(image_width) + "\"";
 
-	return std::string("<img src=\"") + "md_materials\\" + image_name + "\"" + size_str + ">";
+	return std::string("<img src=\"") + ".\\md_materials\\" + image_name + "\"" + size_str + ">";
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
