@@ -12,8 +12,8 @@ namespace v3d
 	
 	template<class T, size_t DIM>  class Oriented;
 
-	template<class T, size_t DIM = 3>  class Plane;
-	template<class T, size_t DIM = 3>  class Line;
+	template<class T, size_t DIM>  class Plane;
+	template<class T, size_t DIM>  class Line;
 
 
 	template<class S, class D>  static auto Projection(S &&src, D &&des);
@@ -188,6 +188,29 @@ private:
 	Vector<T, DIM> _position;
 	UnitVec<T, DIM> _tangent;	
 };
+
+
+namespace v3d
+{
+
+	template
+	<	class V, class U
+	,	class = std::enable_if_t< trait::is_FixedSizeMat_v<V> && trait::is_FixedSizeMat_v<U> >
+	,	class S = typename std::decay_t<V>::value_type
+	,	size_t DIM = trait::Dimension_v<V>
+	>
+	Plane(V&&, U&&)-> Plane<S, DIM>;
+
+
+	template
+	<	class V, class U
+	,	class = std::enable_if_t< trait::is_FixedSizeMat_v<V> && trait::is_FixedSizeMat_v<U> >
+	,	class S = typename std::decay_t<V>::value_type
+	,	size_t DIM = trait::Dimension_v<V>
+	>
+	Line(V&&, U&&)-> Line<S, DIM>;
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 

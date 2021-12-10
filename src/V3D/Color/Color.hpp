@@ -27,9 +27,7 @@ namespace v3d
 namespace v3d::trait
 {
 
-	template<class T>  static bool constexpr is_Color_v
-	=	std::is_constructible_v<Colorable, T> && !std::is_base_of_v<Colorable, T>;
-
+	template<class T>  static bool constexpr is_Color_v = std::is_constructible_v<Colorable, T>;
 	template<class T>  using is_Color = sgm::Boolean_type< is_Color_v<T> >;
 
 }
@@ -39,6 +37,7 @@ namespace v3d::trait
 struct v3d::Color_rgb
 {
 	uint8_t r, g, b;
+
 
 	static auto constexpr Red()-> Color_rgb{  return {255, 0, 0};  }
 	static auto constexpr Green()-> Color_rgb{  return {0, 255, 0};  }
@@ -92,6 +91,7 @@ public:
 
 private:
 	Color_rgb _rgb;
+
 
 	static auto _mod(float const x, int const den)-> float;
 };

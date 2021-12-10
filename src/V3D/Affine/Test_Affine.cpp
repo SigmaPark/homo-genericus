@@ -26,7 +26,7 @@ static void _01_Construction()
 
 		::_identical
 		(	atr1, atr2, atr3, atr4, atr5
-		,	Affine_Transform<float, 3>(Matrix<float, 3, 3>::identity(), Vector<float, 3>::Zero())
+		,	Affine_Transform(Matrix<float, 3, 3>::identity(), Vector<float, 3>::Zero())
 		);
 	}
 	{
@@ -38,7 +38,7 @@ static void _01_Construction()
 
 		::_identical
 		(	sbtr1, sbtr2, sbtr3, sbtr4
-		,	Scalable_Body_Transform<float, 3>(Matrix<float, 3, 3>::identity(), Vector<float, 3>::Zero(), 1)
+		,	Scalable_Body_Transform(Matrix<float, 3, 3>::identity(), Vector<float, 3>::Zero(), 1)
 		);
 	}
 	{
@@ -50,7 +50,7 @@ static void _01_Construction()
 
 		::_identical
 		(	rbtr1, rbtr2, rbtr3, rbtr4
-		,	Rigid_Body_Transform<float, 3>(OrthogonalMat<float, 3>::identity(), Vector<float, 3>::Zero())
+		,	Rigid_Body_Transform(OrthogonalMat<float, 3>::identity(), Vector<float, 3>::Zero())
 		);
 	}
 }
@@ -59,7 +59,7 @@ static void _01_Construction()
 static void _02_Composition_and_Transfer()
 {
 	{
-		Affine_Transform<float, 2> const
+		Affine_Transform const
 			atr1
 			(	Matrix<float, 2, 2>
 				{	0, -1
@@ -84,7 +84,7 @@ static void _02_Composition_and_Transfer()
 		::_identical(Vec1, Vector<float>{2, 1});
 	}
 	{
-		Scalable_Body_Transform<float, 2> const
+		Scalable_Body_Transform const
 			sbtr1
 			(	OrthogonalMat<float, 2>
 				{	0, -1
@@ -111,7 +111,7 @@ static void _02_Composition_and_Transfer()
 		::_identical(Vec1, Vector<float>{2, 1});
 	}
 	{
-		Rigid_Body_Transform<float, 2> const
+		Rigid_Body_Transform const
 			rbtr1 = Afn<float, 2>.rotate(Pi<float>/2).translate(1, 0),
 			rbtr2 = Afn<float, 2>.translate(0, -1);
 
@@ -149,7 +149,7 @@ static void _03_Composition_and_Transfer_2()
 		);
 	}
 	{
-		std::vector< Vector<float, 3> > iterable
+		std::vector iterable
 		{	Vector<float, 3>{1, 0, 0}
 		,	Vector<float, 3>{0, 2, 0}
 		,	Vector<float, 3>{0, 0, 3}
@@ -172,7 +172,7 @@ static void _04_Reflection()
 		::_identical( v1 >> Afn<float, 3>.reflect(UnitVec<float, 3>{1, 1, 1}), -v1 );
 
 		::_identical
-		(	v1 >> Afn<float, 3>.reflect( Plane<float, 3>(Vector<float>{1, 1, 1}/2, UnitVec<float, 3>{1, 1, 1}) )
+		(	v1 >> Afn<float, 3>.reflect( Plane(Vector<float, 3>{1, 1, 1}/2, UnitVec<float, 3>{1, 1, 1}) )
 		,	Vector<float, 3>::Zero()
 		);
 	}

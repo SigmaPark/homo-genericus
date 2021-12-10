@@ -151,7 +151,10 @@ namespace v3d::trait
 	template<class MAT>  static bool constexpr is_v3dMat_v = is_v3dMat< std::decay_t<MAT> >::value;
 
 	template<class TM>  struct is_TempMat;
-	template<class TM>  static bool constexpr is_TempMat_v = is_TempMat<TM>::value;  
+	template<class TM>  static bool constexpr is_TempMat_v = is_TempMat<TM>::value; 
+
+	template<class MAT>  static bool constexpr is_Convertible_to_v3dMat_v = is_v3dMat_v<MAT> || is_TempMat_v<MAT>;
+	template<class MAT>  struct is_Convertible_to_v3dMat;
 
 	template<class MAT>  struct is_v3dVec;
 	template<class MAT>  static bool constexpr is_v3dVec_v = is_v3dVec< std::decay_t<MAT> >::value;
@@ -173,7 +176,7 @@ namespace v3d::trait
 	template<class MAT>  static auto constexpr storing_order_v 
 	=	[]() constexpr
 		{
-			static_assert(is_v3dMat_v<MAT> || is_TempMat_v<MAT>);
+			static_assert(is_Convertible_to_v3dMat_v<MAT>);
 
 			return std::decay_t<MAT>::STORING_ORDER;
 		}();
@@ -182,7 +185,7 @@ namespace v3d::trait
 	template<class MAT>  static bool constexpr is_FixedSizeMat_v
 	=	[]() constexpr	
 		{
-			if constexpr(is_v3dMat_v<MAT> || is_TempMat_v<MAT>)
+			if constexpr(is_Convertible_to_v3dMat_v<MAT>)
 				return is_Static_v< std::decay_t<MAT>::ROW_SIZE > && is_Static_v< std::decay_t<MAT>::COL_SIZE >;
 			else
 				return false;
@@ -204,7 +207,7 @@ namespace v3d::trait
 		{
 			using _M = std::decay_t<MAT>;
 
-			if constexpr(is_v3dMat_v<_M> || is_TempMat_v<MAT>)
+			if constexpr(is_Convertible_to_v3dMat_v<MAT>)
 				return is_FixedSizeMat_v<_M> && _M::ROW_SIZE >= 2 && _M::COL_SIZE >= 2;
 			else
 				return false;
@@ -293,7 +296,7 @@ struct v3d::trait::is_v3dMat
 {
 private:
 	template<class T, size_t ROWS, size_t COLS, Storing_Order STOR> /* Declaration Only */
-	static auto _calc(v3d::Matrix<T, ROWS, COLS, STOR> const volatile*)-> sgm::True_t;
+	static auto _calc(Matrix<T, ROWS, COLS, STOR> const volatile*)-> sgm::True_t;
 
 	template<class...> /* Declaration Only */  static auto _calc(void const volatile*)-> sgm::False_t;
 
@@ -308,8 +311,7 @@ struct v3d::trait::is_TempMat
 {
 private:
 	template<class T, size_t ROWS, size_t COLS, Storing_Order STOR> /* Declaration Only */
-	static auto _calc(_MatrixAdaptor<T, ROWS, COLS, STOR> const volatile*)
-	->	sgm::Boolean_type< !is_complexible_v<T> >;
+	static auto _calc(_MatrixAdaptor<T, ROWS, COLS, STOR> const volatile*)-> sgm::True_t;
 
 	template<class...> /* Declaration Only */  static auto _calc(void const volatile*)-> sgm::False_t;
 	
@@ -317,6 +319,10 @@ public:
 	using type = decltype( _calc(std::declval< std::remove_reference_t<TM>* >()) );
 	static bool constexpr value = type::value;
 };
+
+
+template<class MAT>
+struct v3d::trait::is_Convertible_to_v3dMat : sgm::Boolean_type<  is_Convertible_to_v3dMat_v<MAT>  >{};
 
 
 template<class MAT>

@@ -41,14 +41,12 @@ public:
 
 	using type = sgm::Boolean_type<value>;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
 template<class T>
 class v3d::Quaternion
 {
-private:
-	static_assert(trait::is_real_v<T>);
-
 public:
 	using scalar_type = T;
 
@@ -58,12 +56,12 @@ public:
 	Quaternion(Vector<T, 3> const &v) : Quaternion(0, v){}
 	Quaternion(Vector<T, 3> &&v) noexcept : Quaternion( 0, std::move(v) ){}
 
+	template<  class S, class = std::enable_if_t< !std::is_same_v<S, T> && trait::is_real_v<S> >  >
+	Quaternion(Quaternion<S> const &q) : Quaternion( _cast_impl(q) ){}
 
-	template
-	<	class Q
-	,	class = std::enable_if_t<  !std::is_same_v< Quaternion, std::decay_t<Q> > && trait::is_Quaternion_v<Q>  >
-	>
-	Quaternion(Q &&q) : Quaternion( _cast<Q>(q) ){}
+	template<  class S, class = std::enable_if_t< !std::is_same_v<S, T> && trait::is_real_v<S> >  >
+	Quaternion(Quaternion<S> &&q) : Quaternion(  _cast_impl( std::move(q) )  ){}
+
 
 	template<   class Q, class = std::enable_if_t<  !std::is_same_v< Quaternion, std::decay_t<Q> >  >   >
 	auto operator=(Q &&q)-> Quaternion&{  return *this = _cast<Q>(q);  }
@@ -164,6 +162,28 @@ private:
 };
 
 
+namespace v3d
+{
+	
+	template<class T>
+	using int_to_float_t = std::conditional_t< std::is_integral_v<T>, float, T >;
+
+
+	template<  class T, class = std::enable_if_t< std::is_integral_v<T> || std::is_floating_point_v<T> >  >
+	Quaternion(T const = 0, T const = 0, T const = 0, T const = 0)-> Quaternion< int_to_float_t<T> >;
+
+	template<class T>
+	Quaternion(T const, Vector<T, 3> const&)-> Quaternion< int_to_float_t<T> >;
+
+	template<class T>
+	Quaternion(T const, Vector<T, 3>&&) noexcept-> Quaternion< int_to_float_t<T> >;
+
+	template<  class T, class = std::enable_if_t< trait::is_v3dVec_v<T> >  >
+	Quaternion(T&&)-> Quaternion< typename std::decay_t<T>::value_type >;
+
+}
+
+
 template<  class S, class T, class = std::enable_if_t< std::is_convertible_v<S, double> >  >
 static auto operator*(S const s, v3d::Quaternion<T> const &q){  return q * s;  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
@@ -251,8 +271,21 @@ private:
 };
 
 
+namespace v3d
+{
+	
+	template< class...ARGS, class S = typename decltype( Quaternion(std::declval<ARGS&&>()...) )::scalar_type >
+	UnitQuaternion(ARGS&&...)-> UnitQuaternion<S>;
+
+	template<  class U, class = std::enable_if_t< trait::is_UnitVec_v<U> >  >
+	UnitQuaternion(U&&)-> UnitQuaternion<  std::decay_t< decltype( std::declval<U>()(0) ) >  >;
+
+}
+
+
 template<  class S, class T, class = std::enable_if_t< std::is_convertible_v<S, double> >  >
 static auto operator*(S const s, v3d::UnitQuaternion<T> const &q){  return q*s;  }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
 template<class T>

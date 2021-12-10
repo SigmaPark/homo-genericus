@@ -17,21 +17,23 @@ static void _identical(TYPES...types)
 static void _01_Construction()
 {
 	{
-		Plane<float, 3> P1, P2(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+		Plane<float, 3> P1;
+		Plane P2(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 		auto P3 = P1;
 
 		::_identical
 		(	P1, P2, P3
-		,	Plane<float, 3>(Vector<float, 3>{3, 3, 0}, -UnitVec<float, 3>::Axis<2>())
+		,	Plane(Vector<float, 3>{3, 3, 0}, -UnitVec<float, 3>::Axis<2>())
 		);
 	}
 	{
-		Line<float, 3> L1, L2(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+		Line<float, 3> L1;
+		Line L2(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 		auto L3 = L1;
 
 		::_identical
 		(	L1, L2, L3
-		,	Line<float, 3>(Vector<float, 3>{0, 0, -23}, -UnitVec<float, 3>::Axis<2>())
+		,	Line(Vector<float, 3>{0, 0, -23}, -UnitVec<float, 3>::Axis<2>())
 		);
 	}
 }
@@ -40,23 +42,23 @@ static void _01_Construction()
 static void _02_Projection()
 {
 	Vector<float, 3> const v1{1, 2, 3};
-	Plane<float, 3> const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
-	Line<float, 3> const L1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+	Plane const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+	Line const L1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 
 	::_identical( Projection(v1, P1), Vector<float, 3>{1, 2, 0} );
 	::_identical( Projection(v1, L1), Vector<float, 3>{0, 0, 3} );
 
-	Line<float, 3> const L2(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});
+	Line const L2(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});
 
-	::_identical( *Projection(L2, P1), Line<float, 3>(Vector<float, 3>{1, 0, 0}, UnitVec<float, 3>::Axis<1>()) );
+	::_identical( *Projection(L2, P1), Line(Vector<float, 3>{1, 0, 0}, UnitVec<float, 3>::Axis<1>()) );
 }
 
 
 static void _03_Distance()
 {
 	Vector<float, 3> const v0{0, 0, 0}, v1{0, 1, 1};
-	Plane<float, 3> const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
-	Line<float, 3> const L1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+	Plane const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+	Line const L1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 
 	::_identical( Distance(v0, v1), (v1 - v0).norm() );
 	::_identical( Distance(v1, P1), 1 );
@@ -66,8 +68,8 @@ static void _03_Distance()
 
 static void _04_intersection()
 {
-	Line<float, 3> const L1(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});	
-	Plane<float, 3> const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
+	Line const L1(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});	
+	Plane const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 
 	::_identical( *intersection(L1, P1), Vector<float, 3>{1, 0, 0} );
 }
@@ -97,7 +99,7 @@ static void _06_Average()
 		is_True(!mean.has_value());
 	}
 	{
-		auto const mean = Average(std::initializer_list<int>{1, 2, 3, 4});
+		auto const mean = Average(std::initializer_list{1, 2, 3, 4});
 
 		static_assert( std::is_same_v< std::decay_t<decltype(*mean)>, float > );
 
@@ -120,7 +122,7 @@ static void _06_Average()
 	{
 		auto const mean
 		=	Average
-			(	std::initializer_list< Vector<float, 2> >
+			(	std::initializer_list
 				{	Vector<float, 2>{1, 0}
 				,	Vector<float, 2>{-1, 0}
 				,	Vector<float, 2>{0, -1}
@@ -135,7 +137,7 @@ static void _06_Average()
 	{
 		auto const mean
 		=	Average
-			(	std::initializer_list< UnitVec<float, 2> >
+			(	std::initializer_list
 				{	UnitVec<float, 2>{1, 0}
 				,	UnitVec<float, 2>{-1, 0}
 				,	UnitVec<float, 2>{0, -1}
@@ -181,8 +183,8 @@ static void _07_Position()
 	{
 		Vector<float, 3> const pos{1, 2, 3};
 
-		Plane<float, 3> P1(pos, UnitVec<float, 3>::Axis<2>());
-		Line<float, 3> L1(pos, UnitVec<float, 3>::Axis<2>());
+		Plane P1(pos, UnitVec<float, 3>::Axis<2>());
+		Line L1(pos, UnitVec<float, 3>::Axis<2>());
 
 		static_assert
 		(	std::is_same_v< decltype( Position(P1) ), Vector<float, 3>& >
@@ -198,7 +200,7 @@ static void _07_Position()
 
 static void _08_Fitting()
 {
-	std::vector< Vector<float, 3> > positions
+	std::vector positions
 	{	Vector<float, 3>{-10.f, -1.f, -.05f}
 	,	Vector<float, 3>{0.f, -1.f, 0.f}	
 	,	Vector<float, 3>{10.f, -1.f, .2f}	 

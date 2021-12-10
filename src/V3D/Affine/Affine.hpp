@@ -13,12 +13,12 @@ namespace v3d
 
 	template<class A>  class _Affine_interface;
 
-	template<class T, size_t DIM = 3>  class Affine_Transform;
-	template<class T, size_t DIM = 3>  class Scalable_Body_Transform;
-	template<class T, size_t DIM = 3>  class Rigid_Body_Transform;
-	template<class T, size_t DIM = 3>  class Rotation;
+	template<class T, size_t DIM>  class Affine_Transform;
+	template<class T, size_t DIM>  class Scalable_Body_Transform;
+	template<class T, size_t DIM>  class Rigid_Body_Transform;
+	template<class T, size_t DIM>  class Rotation;
 
-	template<class T, size_t DIM = 3>  inline auto const Afn = Rigid_Body_Transform<T, DIM>();
+	template<class T, size_t DIM>  inline auto const Afn = Rigid_Body_Transform<T, DIM>();
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#//========//========
@@ -228,7 +228,7 @@ protected:
 
 	template<class...ARGS>
 	auto _rotate(ARGS const&...args) const
-	->	Affine_Transform{  return _compose(  Rigid_Body_Transform<T, DIM>( Rotation<T, DIM>(args...) )  );  }
+	->	Affine_Transform{  return _compose(  Rigid_Body_Transform( Rotation<T, DIM>(args...) )  );  }
 
 	template<class Q>
 	auto _reflect(Q const &q) const-> Affine_Transform
@@ -252,6 +252,29 @@ private:
 	Matrix<T, DIM, DIM> _mat_part;
 	Vector<T, DIM> _vec_part;
 };
+
+
+namespace v3d
+{
+
+	template
+	<	class M, class V
+	,	class = std::enable_if_t< trait::is_FixedSizeMat_v<M> && trait::is_FixedSizeMat_v<V> >
+	,	class _S = typename std::decay_t<V>::value_type
+	,	size_t _DIM = trait::Dimension_v<V>
+	>
+	Affine_Transform(M&&, V&&)-> Affine_Transform<_S, _DIM>;
+
+	template
+	<	class A
+	,	class = std::enable_if_t< trait::is_AffineTr_v<A> >
+	,	class _V = std::decay_t< decltype(std::declval<A>().vec()) >
+	,	class _S = typename std::decay_t<_V>::value_type
+	,	size_t _DIM = trait::Dimension_v<_V>
+	>
+	Affine_Transform(A const&)-> Affine_Transform<_S, _DIM>;
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -320,7 +343,7 @@ protected:
 	auto _compose(Q const &q) const
 	{
 		if constexpr(trait::is_Affine_Transform_v<Q>)
-			return Affine_Transform<T, DIM>(q.mat()*mat(), q.mat()*vec() + q.vec());
+			return Affine_Transform(q.mat()*mat(), q.mat()*vec() + q.vec());
 		else if constexpr(trait::is_Scalable_Body_Transform_v<Q>)
 			return Scalable_Body_Transform(q.ortho_mat()*ortho_mat(), q.mat()*vec() + q.vec(), q.scalar()*scalar());
 		else if constexpr(trait::is_Rigid_Body_Transform_v<Q>)
@@ -351,9 +374,9 @@ protected:
 	auto _translate(Q const &q) const-> Scalable_Body_Transform{  return{ortho_mat(), vec() + q, scalar()};  }
 
 	template<class...ARGS>
-	auto _rotate(ARGS const&...args) const->	Scalable_Body_Transform
+	auto _rotate(ARGS const&...args) const-> Scalable_Body_Transform
 	{
-		return _compose(  Rigid_Body_Transform<T, DIM>( Rotation<T, DIM>(args...) )  );  
+		return _compose(  Rigid_Body_Transform( Rotation<T, DIM>(args...) )  );  
 	}
 
 	template<class Q>
@@ -381,6 +404,27 @@ private:
 	Vector<T, DIM> _vec_part;
 	T _scalar;
 };
+
+
+namespace v3d
+{
+	
+	template
+	<	class M, class V, class S
+	,	class
+		=	std::enable_if_t< trait::is_FixedSizeMat_v<M> && trait::is_FixedSizeMat_v<V> && trait::is_real_v<S> >
+	,	class _scalar_type = typename std::decay_t<V>::value_type
+	,	size_t _DIM = trait::Dimension_v<V>
+	>
+	Scalable_Body_Transform(M&&, V&&, S const)-> Scalable_Body_Transform<_scalar_type, _DIM>;
+
+	template<class T, size_t DIM>
+	Scalable_Body_Transform(Rigid_Body_Transform<T, DIM> const&)-> Scalable_Body_Transform<T, DIM>;
+
+	template<class T, size_t DIM>
+	Scalable_Body_Transform(Rotation<T, DIM> const&)-> Scalable_Body_Transform<T, DIM>;
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -452,9 +496,9 @@ protected:
 	auto _compose(Q const &q) const
 	{
 		if constexpr(trait::is_Affine_Transform_v<Q>)
-			return Affine_Transform<T, DIM>(q.mat()*mat(), q.mat()*vec() + q.vec());
+			return Affine_Transform(q.mat()*mat(), q.mat()*vec() + q.vec());
 		else if constexpr(trait::is_Scalable_Body_Transform_v<Q>)
-			return Scalable_Body_Transform<T, DIM>(q.ortho_mat()*ortho_mat(), q.mat()*vec() + q.vec(), q.scalar());
+			return Scalable_Body_Transform(q.ortho_mat()*ortho_mat(), q.mat()*vec() + q.vec(), q.scalar());
 		else if constexpr(trait::is_Rigid_Body_Transform_v<Q>)
 			return Rigid_Body_Transform(rotator().rotate(q.rotator()), q.mat()*vec() + q.vec());
 		else if constexpr(trait::is_Rotation_v<Q>)
@@ -502,6 +546,31 @@ private:
 	Rotation<T, DIM> _rotation_part;
 	Vector<T, DIM> _vec_part;
 };
+
+
+namespace v3d
+{
+	
+	template
+	<	class R, class V
+	,	class
+		=	std::enable_if_t
+			<	(trait::is_Rotation_v<R> || trait::is_Quaternion_v<R> || trait::is_Convertible_to_v3dMat_v<R>)
+			&&	trait::is_FixedSizeMat_v<V>
+			>
+	,	class _scalar_type = typename std::decay_t<V>::value_type
+	,	size_t _DIM = trait::Dimension_v<V>
+	>
+	Rigid_Body_Transform(R&&, V&&)-> Rigid_Body_Transform<_scalar_type, _DIM>;
+
+	template
+	<	class R, class = std::enable_if_t< trait::is_Rotation_v<R> >
+	,	class _scalar_type = typename std::decay_t<R>::scalar_type
+	,	size_t _DIM = std::decay_t< decltype(std::declval<R>().cortho_mat()) >::COL_SIZE
+	>
+	Rigid_Body_Transform(R&&)-> Rigid_Body_Transform<_scalar_type, _DIM>;
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
@@ -739,6 +808,26 @@ private:
 	}
 
 };
+
+
+namespace v3d
+{
+	
+	template
+	<	class OTM
+	,	class = std::enable_if_t< trait::is_OrthogonalMat_v<OTM> >
+	,	class _scalar_type = typename std::decay_t<OTM>::value_type
+	,	size_t _DIM = std::decay_t<OTM>::COL_SIZE
+	>
+	Rotation(OTM&&)-> Rotation<_scalar_type, _DIM>;
+
+	template<  class QTN, class = std::enable_if_t< trait::is_Quaternion_v<QTN> >  >
+	Rotation(QTN&&)-> Rotation< typename std::decay_t<QTN>::scalar_type, 3 >;
+
+	template<  class UVEC, class T, class = std::enable_if_t< trait::is_UnitVec_v<UVEC> >  >
+	Rotation(UVEC&&, T const)-> Rotation< typename std::decay_t<UVEC>::value_type, 3 >;
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
