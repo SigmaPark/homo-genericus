@@ -389,4 +389,11 @@ auto sgm::tut::_Current_File_Directory(std::string s)-> std::string
 }
 
 
+void sgm::tut::_Create_directory_if_empty(std::string const& s)
+{
+	if( std::filesystem::path const path = s;  !std::filesystem::exists(path) )
+		std::filesystem::create_directory(path);
+}
+
+
 void sgm::tut::_Print_Message(std::string&& msg){  std::cout << std::move(msg);  }

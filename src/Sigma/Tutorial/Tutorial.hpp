@@ -45,6 +45,7 @@ namespace sgm::tut
 	auto _Code_writing(std::string const& code, std::string const &lang = "")-> std::string;
 	auto _Load_code_block(std::string const& filepath, int code_block_index)	noexcept(false)->	std::string;
 	auto _Current_File_Directory(std::string s)-> std::string;
+	void _Create_directory_if_empty(std::string const& s);
 	void _Print_Message(std::string&& msg);
 
 }
@@ -142,6 +143,8 @@ auto sgm::tut::_MD_Stream::operator<<(T&& t)-> _MD_Stream&
 namespace sgm::tut
 {
 	inline _MD_Stream& mdo = _MD_Stream::instance();
+	inline char const* newl = "  \n";
+	inline char const* empty_line = "\n\n&nbsp;  \n\n";
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
@@ -204,6 +207,7 @@ private:
 	void PREFIX##TITLE##SUFFIX::print()		\
 	{	\
 		sgm::tut::_MD_Stream_Guard guard( _DOUBLE_UNDERBAR_MACRO_HELPER(FILE) );	\
+		sgm::tut::_Create_directory_if_empty(__MD_MATERIALS__);	\
 		\
 		try \
 		{	\
