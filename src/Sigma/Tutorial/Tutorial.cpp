@@ -187,6 +187,8 @@ auto sgm::tut::_tabless_description::_tabless_string(std::string&& str)-> std::s
 		}
 
 
+	for ( ;  _is_empty_line(qs.front());  qs.pop() );
+
 	std::string res;
 	res.reserve(total_str_len + 2*qs.size());
 
@@ -245,6 +247,18 @@ auto sgm::tut::Load_image(std::string const& image_name, size_t const image_widt
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
 
+auto sgm::tut::Empty_lines(size_t nof_el)-> std::string
+{
+	std::string const nbsp = "&nbsp;  \n";
+	std::string spaces;
+
+	for( spaces.reserve(nof_el*nbsp.size());  nof_el-->0;  spaces.append(nbsp) );
+
+	return std::string("\n\n") + spaces + "\n";
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
 auto sgm::tut::_Load_code_block(std::string const& filepath, int code_block_index) noexcept(false)-> std::string
 {
 	if(  !std::filesystem::exists( static_cast<std::filesystem::path>(filepath) )  )
@@ -257,6 +271,19 @@ auto sgm::tut::_Load_code_block(std::string const& filepath, int code_block_inde
 		cb_end = std::string("END_CODE_BLOCK(") + std::to_string(code_block_index) + ")",
 		cb_end2 = std::string("END_CODE_BLOCK_AND_LOAD(") + std::to_string(code_block_index) + ")";
 
+	auto trimmed_str_f
+	=	[](std::string const& s)-> std::string
+		{
+			if( s.empty() || _is_empty_line(s) )
+				return s;
+			
+			auto fitr = s.cbegin();
+
+			for(;  *fitr == ' ' || *fitr == '\t';  ++fitr);
+
+			return {fitr, s.cend()};
+		};
+
 	auto are_same_str_f
 	=	[](std::string const& s1, std::string const& s2, size_t const size)
 		{
@@ -267,14 +294,17 @@ auto sgm::tut::_Load_code_block(std::string const& filepath, int code_block_inde
 			return res;
 		};
 
+
 	std::queue<std::string> qs;
 	size_t nof_char = 0;
 
 	for(std::string buf;  std::getline(file, buf);  )
-		if( are_same_str_f(buf, cb_begin, cb_begin.size()) )
+		if(  are_same_str_f( trimmed_str_f(buf), cb_begin, cb_begin.size() )  )
 			for
 			(	std::getline(file, buf)
-			;	!are_same_str_f(buf, cb_end, cb_end.size()) && !are_same_str_f(buf, cb_end2, cb_end2.size())
+			;	(	!are_same_str_f( trimmed_str_f(buf), cb_end, cb_end.size() ) 
+				&&	!are_same_str_f( trimmed_str_f(buf), cb_end2, cb_end2.size() )
+				)
 			;	std::getline(file, buf) 
 			)
 				qs.push(buf + "\n"),  
@@ -354,6 +384,9 @@ auto sgm::tut::_Code_writing(std::string const& str, std::string const& lang)-> 
 
 			itr1 = itr2 + 1;
 		}
+
+
+	for( ;  _is_empty_line(qs.front());  qs.pop() );
 
 
 	std::string res;

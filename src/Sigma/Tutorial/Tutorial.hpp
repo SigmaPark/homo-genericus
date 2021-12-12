@@ -26,6 +26,7 @@ namespace sgm::tut
 
 	auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
 	auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
+	auto Empty_lines(size_t nof_empty_lines = 1)-> std::string;
 
 	void is_True(bool const b) noexcept(false);
 	void is_False(bool const b) noexcept(false);
@@ -143,8 +144,8 @@ auto sgm::tut::_MD_Stream::operator<<(T&& t)-> _MD_Stream&
 namespace sgm::tut
 {
 	inline _MD_Stream& mdo = _MD_Stream::instance();
-	inline char const* newl = "  \n";
-	inline char const* empty_line = "\n\n&nbsp;  \n\n";
+	inline std::string const newl = "  \n";
+	inline std::string const empty_line = Empty_lines(1);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
 
