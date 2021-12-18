@@ -21,6 +21,13 @@ namespace v3d
 	template<class S, class D>  static auto Distance(S &&src, D &&des);
 	template<class S, class D>  static auto intersection(S &&src, D &&des);
 
+
+	template<class T>
+	static auto Ray_intersects_Triangle
+	(	Line<T, 3> const& ray, Vector<T, 3> const& v0, Vector<T, 3> const& v1, Vector<T, 3> const& v2
+	)->	bool;
+
+
 	struct Direction;
 
 	template<class CON>  static auto Average(CON &&con);
@@ -220,7 +227,7 @@ namespace v3d
 template<class T>  
 auto v3d::_Pi()-> T const&
 {
-	static T const pi = acos( T(0) )*2;
+	static T const pi = 2*std::acos( T(0) );
 
 	return pi;
 }
@@ -745,5 +752,42 @@ private:
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#//--------//--------
+
+
+template<class T>
+auto v3d::Ray_intersects_Triangle
+(	Line<T, 3> const& ray, Vector<T, 3> const& v0, Vector<T, 3> const& v1, Vector<T, 3> const& v2
+)-> bool
+{
+	if( !is_valid(ray.position()) || !is_valid(ray.tangent()) )
+		return false;
+
+	Vector<T, 3> const edge01 = v1 - v0,  edge20 = v0 - v2,  edge12 = v2 - v1;
+
+	if
+	(	auto constexpr epsilon = 16*std::numeric_limits<T>::epsilon()
+	;	edge01.sqr_norm() < epsilon || edge20.sqr_norm() < epsilon || Direction::are_parallel(edge01, edge20)
+	)
+		return false;
+
+	UnitVec<T, 3> const tnormal = edge01.cross(-edge20);
+	
+	if(  auto const wp = intersection( ray, Plane(v0, tnormal) );  !wp  )
+		return false;
+	else
+	{
+		Vector<T, 3> const p0 = v0 - *wp,  p1 = v1 - *wp,  p2 = v2 - *wp;
+
+		bool const direc[]
+		=	{	tnormal.dot( p0.cross(p1) ) > T(0)
+			,	tnormal.dot( p1.cross(p2) ) > T(0)
+			,	tnormal.dot( p2.cross(p0) ) > T(0)
+			};
+
+		auto const nofT = std::count( sgm::Begin(direc), sgm::End(direc), true );
+
+		return nofT == 0 || nofT == 3;
+	}
+}
 
 #endif // end of #ifndef _V3D_EUCLID_
