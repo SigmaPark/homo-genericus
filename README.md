@@ -1,8 +1,37 @@
-# Sigma : generic purpose template library
-* ## Requirement
-    C++11 or higher version of C++ syntex and standard library support is required.
+# SGM  
+	Generic Purpose Template Library
+	
+# S3D  
+	Library for 3D Geometric Algorithms  
+	Set system environment valriable $EIGEN_DIR for 3rd party library "Eigen" Directory.
 
-* ## 3<sup>rd</sup> party libraries and environment variable setting
-    Set environment variable **THIRD_PARTY_LIB_DIR** with proper directory in your system.
-    There, you need to set 3rd party libraries listed below
-    1.   [Eigen](https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.zip) 
+
+# Minimum C++ Syntex Requirements
+	## C++11
+	-	SGM/Abbreviable
+	-	SGM/Allocator
+	-	SGM/Array
+	-	SGM/Boomerang
+	-	SGM/Concurrency
+	-	SGM/Exception
+	-	SGM/Family
+	-	SGM/Flag_Set
+	-	SGM/High_Templar
+	-	SGM/interface_Traits
+	-	SGM/iterable
+	-	SGM/Operator_of
+	-	SGM/Span
+	-	SGM/Specification
+	-	SGM/Type_Analysis
+
+	## C++17
+	-	SGM/Recursion
+	-	SGM/Functor
+
+	-	S3D
+
+
+# Minimum Compiler Requirements
+	-	MSVC 1914 (Visual Studio 2017)
+	-	GCC 10.2.1
+	-	Clang 9.0.1

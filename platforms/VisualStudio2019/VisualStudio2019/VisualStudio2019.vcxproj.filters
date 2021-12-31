@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SGM">
+      <UniqueIdentifier>{30a7cdab-fb75-460a-982f-2529443675ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Specification">
+      <UniqueIdentifier>{f9c7c607-4e38-482b-a44d-bb71de065bd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Exception">
+      <UniqueIdentifier>{c504a178-e0f8-4a78-a6b1-73c41d8f16f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Type_Analysis">
+      <UniqueIdentifier>{e60449c6-168a-46c1-9e49-544290d8fa98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Allocator">
+      <UniqueIdentifier>{3d3ff6fe-1cd0-44de-9662-05ed2ec8e1a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\interface_Traits">
+      <UniqueIdentifier>{fa49f2c6-8732-451a-9c92-2d6a44f56e42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\iterable">
+      <UniqueIdentifier>{3370ccc5-07e4-4415-ac44-3b09938a13c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Array">
+      <UniqueIdentifier>{817c0a9d-c5fa-42d4-a678-4ca15ab95912}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Family">
+      <UniqueIdentifier>{4d8ae336-7cb3-4716-8b56-b699a440c70d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Flag_Set">
+      <UniqueIdentifier>{8e2b6ae7-a358-4cf6-ad90-e5036cf21d86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Concurrency">
+      <UniqueIdentifier>{965881bb-06e3-4e4d-a54f-2cc3bb46da4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\High_Templar">
+      <UniqueIdentifier>{0b92e1de-3805-4a03-9046-f64aa9c9ecfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Operators_of">
+      <UniqueIdentifier>{a43b9330-036f-4c10-b8e0-bf258eb3a36f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Functor">
+      <UniqueIdentifier>{2415d83d-d4d2-41e8-805c-e21dbd08b474}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Recursion">
+      <UniqueIdentifier>{bc406b3e-c9c3-4496-8c16-4d42b9a8033f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Abbreviable">
+      <UniqueIdentifier>{b013968c-e42c-4836-8abe-50faa7ac9624}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Boomerang">
+      <UniqueIdentifier>{e4385ae9-4b42-428f-b0e0-02951d84ffdb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\List">
+      <UniqueIdentifier>{73aaf36d-e7bc-471c-8a98-98f19d865ca7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SGM\Span">
+      <UniqueIdentifier>{163cfde9-e4a4-4cdc-8b68-99f72ece4f0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D">
+      <UniqueIdentifier>{ee58334e-7101-4435-94cb-cf12f80052da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D\Affine">
+      <UniqueIdentifier>{3a17931a-da41-4997-9429-9b0d3355e5af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D\Decomposition">
+      <UniqueIdentifier>{23f5fe01-eeea-47b2-af81-af0f8e9c9b13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D\Euclid">
+      <UniqueIdentifier>{d43d7803-29b7-47d4-92e2-49589b83173e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D\Hamilton">
+      <UniqueIdentifier>{c401eba7-520b-417c-ba36-d46a3d61c17a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="S3D\Quaternion">
+      <UniqueIdentifier>{5e97be0e-6b72-4cc1-b2d3-145cacb79b3e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="VS2019_main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\WorldTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.cpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.cpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.cpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Array\Test_Array.cpp">
+      <Filter>SGM\Array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Boomerang\Test_Boomerang.cpp">
+      <Filter>SGM\Boomerang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Concurrency\Test_Concurrency.cpp">
+      <Filter>SGM\Concurrency</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Family\Test_Family.cpp">
+      <Filter>SGM\Family</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Flag_Set\Test_Flag_Set.cpp">
+      <Filter>SGM\Flag_Set</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Functor\Test_Functor.cpp">
+      <Filter>SGM\Functor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Functor\Test_Parameters.cpp">
+      <Filter>SGM\Functor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\High_Templar\Test_High_Templar.cpp">
+      <Filter>SGM\High_Templar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\interface_Traits\Test_interface_Traits.cpp">
+      <Filter>SGM\interface_Traits</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\iterable\Test_iterable.cpp">
+      <Filter>SGM\iterable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\List\Test_List.cpp">
+      <Filter>SGM\List</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Operators_of\Test_Operators_of.cpp">
+      <Filter>SGM\Operators_of</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Recursion\Test_Recursion.cpp">
+      <Filter>SGM\Recursion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Span\Test_Span.cpp">
+      <Filter>SGM\Span</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Type_Analysis\Test_Type_Analysis.cpp">
+      <Filter>SGM\Type_Analysis</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\S3D\Hamilton\Test_Hamilton.cpp">
+      <Filter>S3D\Hamilton</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\S3D\Decomposition\Test_Decomposition.cpp">
+      <Filter>S3D\Decomposition</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\S3D\Euclid\Test_Euclid.cpp">
+      <Filter>S3D\Euclid</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\S3D\Quaternion\Test_Quaternion.cpp">
+      <Filter>S3D\Quaternion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\S3D\Affine\Test_Affine.cpp">
+      <Filter>S3D\Affine</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\WorldTest.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Abbreviable.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Avatar.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Maybe.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Pinweight.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Allocator\Allocator.hpp">
+      <Filter>SGM\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Array\Array.hpp">
+      <Filter>SGM\Array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Array\Test_Array.hpp">
+      <Filter>SGM\Array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Boomerang\Boomerang.hpp">
+      <Filter>SGM\Boomerang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Boomerang\Test_Boomerang.hpp">
+      <Filter>SGM\Boomerang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Concurrency\Concurrency.hpp">
+      <Filter>SGM\Concurrency</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Concurrency\Test_Concurrency.hpp">
+      <Filter>SGM\Concurrency</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Exception\Exception.hpp">
+      <Filter>SGM\Exception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Family\Family.hpp">
+      <Filter>SGM\Family</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Family\Test_Family.hpp">
+      <Filter>SGM\Family</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Flag_Set\Flag_Set.hpp">
+      <Filter>SGM\Flag_Set</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Flag_Set\Test_Flag_Set.hpp">
+      <Filter>SGM\Flag_Set</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Functor\Functor.hpp">
+      <Filter>SGM\Functor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Functor\Parameters.hpp">
+      <Filter>SGM\Functor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Functor\Test_Functor.hpp">
+      <Filter>SGM\Functor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Functor\Test_Parameters.hpp">
+      <Filter>SGM\Functor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\High_Templar\Countable.hpp">
+      <Filter>SGM\High_Templar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\High_Templar\High_Templar.hpp">
+      <Filter>SGM\High_Templar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\High_Templar\Test_High_Templar.hpp">
+      <Filter>SGM\High_Templar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\interface_Traits\interface_Traits.hpp">
+      <Filter>SGM\interface_Traits</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\interface_Traits\Test_interface_Traits.hpp">
+      <Filter>SGM\interface_Traits</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\iterable\iterable.hpp">
+      <Filter>SGM\iterable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\iterable\Test_iterable.hpp">
+      <Filter>SGM\iterable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\List\List.hpp">
+      <Filter>SGM\List</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\List\Test_List.hpp">
+      <Filter>SGM\List</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Operators_of\Operators_of.hpp">
+      <Filter>SGM\Operators_of</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Operators_of\Test_Operators_of.hpp">
+      <Filter>SGM\Operators_of</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Recursion\Recursion.hpp">
+      <Filter>SGM\Recursion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Recursion\Test_Recursion.hpp">
+      <Filter>SGM\Recursion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Span\Span.hpp">
+      <Filter>SGM\Span</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Span\Test_Span.hpp">
+      <Filter>SGM\Span</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Specification\Specification.hpp">
+      <Filter>SGM\Specification</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Type_Analysis\Test_Type_Analysis.hpp">
+      <Filter>SGM\Type_Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Type_Analysis\Type_Analysis.hpp">
+      <Filter>SGM\Type_Analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Test_s3d.hpp">
+      <Filter>S3D</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Hamilton\_Hamilton_by_Eigen.hpp">
+      <Filter>S3D\Hamilton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Hamilton\Hamilton.hpp">
+      <Filter>S3D\Hamilton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Hamilton\Test_Hamilton.hpp">
+      <Filter>S3D\Hamilton</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Decomposition\_Decomposition_by_Eigen.hpp">
+      <Filter>S3D\Decomposition</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Decomposition\Decomposition.hpp">
+      <Filter>S3D\Decomposition</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Decomposition\Test_Decomposition.hpp">
+      <Filter>S3D\Decomposition</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Euclid\Euclid.hpp">
+      <Filter>S3D\Euclid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Euclid\Test_Euclid.hpp">
+      <Filter>S3D\Euclid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Quaternion\Quaternion.hpp">
+      <Filter>S3D\Quaternion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Quaternion\Test_Quaternion.hpp">
+      <Filter>S3D\Quaternion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Affine\Affine.hpp">
+      <Filter>S3D\Affine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\S3D\Affine\Test_Affine.hpp">
+      <Filter>S3D\Affine</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="postbuild.bat">
+      <Filter>소스 파일</Filter>
+    </None>
+  </ItemGroup>
+</Project>
