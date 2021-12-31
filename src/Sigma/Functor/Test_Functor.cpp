@@ -250,6 +250,62 @@ void TestF18::Test12()
 
 	is_True( ftr1(2).val == 20 );
 }
+
+
+struct Debug
+{
+	static void Case01();
+	static void Case02();
+};
+
+
+void Debug::Case01()
+{
+	using namespace sgm::fp;
+
+	sgm::Serial<float> const vec1{1.f, 2.f ,3.f}, vec2{10.f, 20.f, 30.f};
+	sgm::Serial<float> const ans{10.f, 10.f, 10.f};
+
+	is_True
+	(	TestF18::are_same_ranges
+		(	Morph
+			(	Plait(vec1, vec2)
+			,	SGM_LAMBDA(_0.template get<1>()/_0.template get<0>())
+			)
+		,	ans
+		)
+	);
+
+
+	Functor const ftr
+	=	Morph( _, SGM_LAMBDA(_0.template get<1>()/_0.template get<0>()) )
+	*	Plait(_, _);
+
+	is_True
+	(	TestF18::are_same_ranges( ftr(vec1, vec2), ans )
+	);
+}
+
+
+void Debug::Case02()
+{
+	using namespace sgm::fp;
+
+	//sgm::Serial<bool> const sr0{true, false, true};
+	//sgm::Serial<int> const sr1{2, 4, 6};
+	//sgm::Serial<int> const ans{2, 6};
+
+	//Functor const ftr
+	//=	Morph( _, SGM_LAMBDA(_0.template get<1>()) )
+	//*	Filter( _, SGM_LAMBDA(_0.template get<0>()) )
+	//*	Plait(_, _);
+
+	//is_True
+	//(	TestF18::are_same_ranges
+	//	(	ftr(sr0, sr1), ans
+	//	)
+	//);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -269,4 +325,6 @@ SGM_SPEC_TESTS(sgm_Functor)
 ,	TestF18::Test10
 ,	TestF18::Test11
 ,	TestF18::Test12
+,	Debug::Case01
+,	Debug::Case02
 };

@@ -327,6 +327,89 @@ namespace sgm
 
 	template<class RG>
 	static auto End(RG &&rg)-> SGM_DECLTYPE_AUTO(  _End_Helper<RG>::get( Forward<RG>(rg) )  )
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
+
+
+	template<class RG, class T = void>
+	struct Has_rbegin : No_Making
+	{
+	private:
+		template<class Q> /* Declaration Only */ 
+		static auto _has_rbegin(int)
+		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().rbegin()) ) >;
+
+		template<class...>  static auto _has_rbegin(...)-> False_t;
+
+	public:
+		static bool constexpr value = decltype( _has_rbegin< Decay_t<RG> >(0) )::value;
+	};
+
+
+	template<class RG, class T = void>
+	struct Has_rend : No_Making
+	{
+	private:
+		template<class Q> /* Declaration Only */ 
+		static auto _has_rend(int)
+		->	SFINAE_t< decltype( static_cast<T>(*Declval<Q>().rend()) ) >;
+
+		template<class...>  static auto _has_rend(...)-> False_t;
+
+	public:
+		static bool constexpr value = decltype( _has_rend< Decay_t<RG> >(0) )::value;
+	};
+
+
+	template
+	<	class RG
+	,	int 
+		=	Has_rbegin< Referenceless_t<RG> >::value ? 1
+		:	is_Array< Referenceless_t<RG> >::value ? 2
+		:	/* otherwise */ 0
+	>
+	struct _rBegin_Helper;
+
+	template<class RG>
+	struct _rBegin_Helper<RG, 1> : No_Making
+	{
+		template<class _RG>  static auto get(_RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.rbegin()  )
+	};
+
+	template<class RG>
+	struct _rBegin_Helper<RG, 2> : No_Making
+	{
+		template<class A>  static auto get(A &&arr)-> SGM_DECLTYPE_AUTO(  --End(arr)  )
+	};
+
+	template<class RG>
+	static auto rBegin(RG &&rg)-> SGM_DECLTYPE_AUTO(  _rBegin_Helper<RG>::get( Forward<RG>(rg) )  )
+
+
+	template
+	<	class RG
+	,	int 
+		=	Has_rend< Referenceless_t<RG> >::value ? 1
+		:	is_BoundedArray< Referenceless_t<RG> >::value ? 2
+		:	/* otherwise */ 0
+	>
+	struct _rEnd_Helper;
+
+	template<class RG>
+	struct _rEnd_Helper<RG, 1> : No_Making
+	{
+		template<class _RG>  static auto get(_RG &&rg)-> SGM_DECLTYPE_AUTO(  rg.rend()  )
+	};
+
+	template<class RG>
+	struct _rEnd_Helper<RG, 2> : No_Making
+	{
+		template<class A>
+		static auto get(A &&arr)-> SGM_DECLTYPE_AUTO(  --Begin(arr)  )
+	};
+
+	template<class RG>
+	static auto rEnd(RG &&rg)-> SGM_DECLTYPE_AUTO(  _rEnd_Helper<RG>::get( Forward<RG>(rg) )  )
+	//--------//--------//--------//--------//-------#//--------//--------//--------//--------//---
 
 
 	template<class RG, class T = void>

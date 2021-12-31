@@ -240,9 +240,13 @@ private:
 	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
 
 
-	SGM_HAS_MEMFUNC(rbegin);
-
-	template<  class _RG, bool = Has_MemFunc_rbegin< Referenceless_t<_RG> >::value  >  
+	template
+	<	class _RG
+	,	bool 
+		=	(	Has_rbegin< Referenceless_t<_RG> >::value 
+			||	is_BoundedArray< Referenceless_t<_RG> >::value
+			)
+	>  
 	struct __rxitr;
 
 	template<class _RG>  struct __rxitr<_RG, false>{  using type = None;  };
@@ -250,7 +254,7 @@ private:
 	template<class _RG>  
 	struct __rxitr<_RG, true>
 	{
-		using type = Decay_t<  decltype(Declval< Referenceless_t<_RG> >().rbegin())  >;
+		using type = Decay_t<  decltype( rBegin(Declval< Referenceless_t<_RG> >()) )  >;
 	};
 
 	using _crxitr_t = typename __rxitr<RG const>::type;	
@@ -361,9 +365,13 @@ private:
 	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
 
 
-	SGM_HAS_MEMFUNC(rbegin);
-
-	template<  class _RG, bool = Has_MemFunc_rbegin< Referenceless_t<_RG> >::value  >  
+	template
+	<	class _RG
+	,	bool 
+		=	(	Has_rbegin< Referenceless_t<_RG> >::value 
+			||	is_BoundedArray< Referenceless_t<_RG> >::value
+			)
+	>  
 	struct __rxitr;
 
 	template<class _RG>  struct __rxitr<_RG, false>{  using type = None;  };
@@ -371,7 +379,7 @@ private:
 	template<class _RG>  
 	struct __rxitr<_RG, true>
 	{
-		using type = Decay_t<  decltype(Declval< Referenceless_t<_RG> >().rbegin())  >;
+		using type = Decay_t<  decltype( rBegin(Declval< Referenceless_t<_RG> >()) )  >;
 	};
 
 	using _crxitr_t = typename __rxitr<RG const>::type;
