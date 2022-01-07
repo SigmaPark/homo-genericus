@@ -202,7 +202,7 @@ def main():
                 ,   'Test_Affine.hpp'
                 ,   'Test_Affine.cpp'
                 ]
-                ["Decomposition"
+            ,   ["Decomposition"
                 ,   'Decomposition.hpp'
                 ,   '_Decomposition_by_Eigen.hpp'
                 ,   'Test_Decomposition.hpp'

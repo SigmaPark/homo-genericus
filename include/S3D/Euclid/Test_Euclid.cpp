@@ -69,9 +69,9 @@ static void Distance()
 	s3d::Plane const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 	s3d::Line const L1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 
-	::_identical( Distance(v0, v1), (v1 - v0).norm() );
-	::_identical( Distance(v1, P1), 1 );
-	::_identical( Distance(v1, L1), 1 );
+	::_identical( s3d::Distance(v0, v1), (v1 - v0).norm() );
+	::_identical( s3d::Distance(v1, P1), 1 );
+	::_identical( s3d::Distance(v1, L1), 1 );
 }
 
 

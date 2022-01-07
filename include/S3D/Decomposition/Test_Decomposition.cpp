@@ -53,7 +53,7 @@ static void Eigen_Decomp()
 	auto _are_parallel_f
 	=	[](auto const v1, auto const v2)
 		{  
-			::_identical(  abs( v1.normalized().dot(v2.normalized()) ), 1.f  );  
+			::_identical(  std::abs( v1.normalized().dot(v2.normalized()) ), 1.f  );  
 		};
 
 	{

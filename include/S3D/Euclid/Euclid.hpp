@@ -366,7 +366,7 @@ auto s3d::Distance(S&& src, D&& des)
 	if constexpr(trait::is_StrictVec<S>::value && trait::is_StrictVec<D>::value)
 		return (des - src).norm();
 	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
-		return abs( des.signed_dist_to(src) );
+		return std::abs( des.signed_dist_to(src) );
 	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
 		return ( src - Projection(src, des) ).norm();
 	//else if constexpr(trait::is_Line<S>::value && trait::is_Line_v<D>::value)
