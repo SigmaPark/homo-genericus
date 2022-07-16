@@ -405,7 +405,7 @@ struct s3d::_Eval_Helper : Unconstructible
 {
 private:
 	template<class MAT>
-	friend decltype(auto) s3d::Eval(MAT&& mat) noexcept(is_Rvalue_Reference<MAT&&>::value);
+	friend decltype(auto) s3d::Eval(MAT&& mat) noexcept(sgm::is_Rvalue_Reference<MAT&&>::value);
 
 
 	template< class T, class MAT, class _M = Decay_t<MAT> >
@@ -455,10 +455,15 @@ private:
 };
 
 
-template<class MAT>
-decltype(auto) s3d::Eval(MAT&& mat) noexcept(is_Rvalue_Reference<MAT&&>::value)
+namespace s3d
 {
-	return _Eval_Helper::_Eval( Forward<MAT>(mat) );
+
+	template<class MAT>
+	decltype(auto) Eval(MAT&& mat) noexcept(is_Rvalue_Reference<MAT&&>::value)
+	{
+		return _Eval_Helper::_Eval( Forward<MAT>(mat) );
+	}
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -479,24 +484,29 @@ namespace s3d
 }
 
 
-template<class T, bool SIGNALING> 
-T constexpr s3d::_NaN_Helper() noexcept
+namespace s3d
 {
-	static_assert(!std::is_integral_v<T>);
 
-	if constexpr(std::is_floating_point_v<T>)
-		return 
-		SIGNALING 
-		?	std::numeric_limits<T>::signaling_NaN() 
-		:	std::numeric_limits<T>::quiet_NaN();
-	else if constexpr(trait::is_complex<T>::value)
+	template<class T, bool SIGNALING> 
+	T constexpr _NaN_Helper() noexcept
 	{
-		using real_t = trait::value_t<T>;
-
-		return {_NaN_Helper<real_t, SIGNALING>(), _NaN_Helper<real_t, SIGNALING>()};
+		static_assert(!std::is_integral_v<T>);
+	
+		if constexpr(std::is_floating_point_v<T>)
+			return 
+			SIGNALING 
+			?	std::numeric_limits<T>::signaling_NaN() 
+			:	std::numeric_limits<T>::quiet_NaN();
+		else if constexpr(trait::is_complex<T>::value)
+		{
+			using real_t = trait::value_t<T>;
+	
+			return {_NaN_Helper<real_t, SIGNALING>(), _NaN_Helper<real_t, SIGNALING>()};
+		}
+		else 
+			return Compile_Fails(); //	no method to generate NaN object .
 	}
-	else 
-		return Compile_Fails(); //	no method to generate NaN object .
+
 }
 
 
@@ -511,84 +521,89 @@ namespace std
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class MAT>
-decltype(auto) s3d::_Mat_implementor(MAT&& m)
+namespace s3d
 {
-	if constexpr(trait::is_Matrix<MAT>::value)
+
+	template<class MAT>
+	decltype(auto) _Mat_implementor(MAT&& m)
 	{
-		using impl_t = typename Decay_t<MAT>::_impl_t;
-
-		return 
-		static_cast<  Selective_t< is_immutable<MAT>::value, impl_t const, impl_t >&  >(m._impl);
+		if constexpr(trait::is_Matrix<MAT>::value)
+		{
+			using impl_t = typename Decay_t<MAT>::_impl_t;
+			using res_t = Selective_t< is_immutable<MAT>::value, impl_t const, impl_t >&;
+			
+			return static_cast<res_t>(m._impl);
+		}
+		else
+			return Forward<MAT>(m);
 	}
-	else
-		return Forward<MAT>(m);
-}
-
-
-template<class T, int DP>  
-auto s3d::Are_almost_same(T t1, T t2)-> bool
-{
-	if constexpr(std::is_integral_v<T>)
-		return t1 == t2;
-	else if constexpr(std::is_floating_point_v<T>)
-		return 
-		(	std::abs(t1 - t2) 
-		<	static_cast<T>(_CX_POW<10, DP>()) * std::numeric_limits<T>::epsilon()
-		);
-	else if constexpr(trait::is_complex<T>::value)
+	
+	
+	template<class T, int DP>  
+	auto Are_almost_same(T t1, T t2)-> bool
 	{
-		using real_t = trait::value_t<T>;
-
-		return
-		(	Are_almost_same<real_t, DP>(t1.real(), t2.real()) 
-		&&	Are_almost_same<real_t, DP>(t1.imag(), t2.imag())
-		);
+		if constexpr(std::is_integral_v<T>)
+			return t1 == t2;
+		else if constexpr(std::is_floating_point_v<T>)
+			return 
+			(	std::abs(t1 - t2) 
+			<	static_cast<T>(_CX_POW<10, DP>()) * std::numeric_limits<T>::epsilon()
+			);
+		else if constexpr(trait::is_complex<T>::value)
+		{
+			using real_t = trait::value_t<T>;
+	
+			return
+			(	Are_almost_same<real_t, DP>(t1.real(), t2.real()) 
+			&&	Are_almost_same<real_t, DP>(t1.imag(), t2.imag())
+			);
+		}
+		else 
+			return Compile_Fails(); // no method to compare them.
 	}
-	else 
-		return Compile_Fails(); // no method to compare them.
-}
+	
+	
+	template<class MAT>
+	auto is_valid(MAT const& mat) noexcept-> bool
+	{
+		if constexpr(trait::Has_Matrix_interface<MAT>::value)
+			return mat.size() == 0 || !std::isnan( mat(0, 0) );
+		else 
+			return Compile_Fails(); // no method to judge it if valid.
+	}
+	
+	
+	template<class MAT>  
+	auto Has_Vector_interface(MAT const& mat) noexcept-> bool
+	{
+		if constexpr(trait::Has_Matrix_interface<MAT>::value)
+			return (mat.rows() == 1 || mat.cols() == 1) && mat.size() > 1;
+		else
+			return false;
+	}
+	
+	
+	template<class MAT>
+	auto is_Square_Matrix(MAT const& mat) noexcept-> bool
+	{
+		if constexpr(trait::Has_Matrix_interface<MAT>::value)
+			return mat.rows() == mat.cols() && mat.cols() > 1;
+		else
+			return Compile_Fails();	 // Not a Matrix.
+	}
+	
+	
+	template<size_t BASE, std::size_t POWER>  
+	auto constexpr _CX_POW() noexcept-> std::size_t
+	{
+		if constexpr(POWER == 0)
+			return 1;
+		else if constexpr(BASE == 0)
+			return 0;
+		else
+			return BASE*_CX_POW<BASE, POWER - 1>();
+	}
 
-
-template<class MAT>
-auto s3d::is_valid(MAT const& mat) noexcept-> bool
-{
-	if constexpr(trait::Has_Matrix_interface<MAT>::value)
-		return mat.size() == 0 || !std::isnan( mat(0, 0) );
-	else 
-		return Compile_Fails(); // no method to judge it if valid.
-}
-
-
-template<class MAT>  
-auto s3d::Has_Vector_interface(MAT const& mat) noexcept-> bool
-{
-	if constexpr(trait::Has_Matrix_interface<MAT>::value)
-		return (mat.rows() == 1 || mat.cols() == 1) && mat.size() > 1;
-	else
-		return false;
-}
-
-
-template<class MAT>
-auto s3d::is_Square_Matrix(MAT const& mat) noexcept-> bool
-{
-	if constexpr(trait::Has_Matrix_interface<MAT>::value)
-		return mat.rows() == mat.cols() && mat.cols() > 1;
-	else
-		return Compile_Fails();	 // Not a Matrix.
-}
-
-
-template<std::size_t BASE, std::size_t POWER>  
-auto constexpr s3d::_CX_POW() noexcept-> std::size_t
-{
-	if constexpr(POWER == 0)
-		return 1;
-	else if constexpr(BASE == 0)
-		return 0;
-	else
-		return BASE*_CX_POW<BASE, POWER - 1>();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -765,23 +780,28 @@ private:
 };
 
 
-template<class CON, class MAT, class>
-void s3d::_MatCopy(CON&& con, MAT& mat) noexcept(is_Rvalue_Reference<CON&&>::value)
+namespace s3d
 {
-	using elem1_t = trait::value_t<MAT>;
 
-	using elem2_t 
-	=	Selective_t
-		<	is_Same<  elem1_t, Decay_t< trait::Deref_t<CON> >  >::value
-		,	elem1_t const&
-		,	elem1_t   
-		>;
+	template<class CON, class MAT, class>
+	void _MatCopy(CON&& con, MAT& mat) noexcept(is_Rvalue_Reference<CON&&>::value)
+	{
+		using elem1_t = trait::value_t<MAT>;
+	
+		using elem2_t 
+		=	Selective_t
+			<	is_Same<  elem1_t, Decay_t< trait::Deref_t<CON> >  >::value
+			,	elem1_t const&
+			,	elem1_t   
+			>;
+	
+	
+		elem1_t* p = &mat(0, 0);
+	
+		for(auto const& x : con)
+			*p++ = static_cast<elem2_t>(x);
+	}
 
-
-	elem1_t* p = &mat(0, 0);
-
-	for(auto const& x : con)
-		*p++ = static_cast<elem2_t>(x);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -882,7 +902,7 @@ public:
 
 
 	template<   class Q, class = Enable_if_t<  !is_Same< Decay_t<Q>, Matrix >::value  >   >
-	auto operator=(Q&& q)-> Matrix&
+	auto operator=([[maybe_unused]] Q&& q)-> Matrix&
 	{
 		if constexpr(is_iterable<Q>::value)
 		{
@@ -1147,10 +1167,15 @@ static decltype(auto) operator*(T t, s3d::Matrix<U, ROWS, COLS, STOR> const& m){
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class RES, class...ARGS, class>
-auto s3d::Skipped(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+namespace s3d
 {
-	return RES( _ExemptionTag{}, Forward<ARGS>(args)... );
+
+	template<class RES, class...ARGS, class>
+	auto Skipped(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+	{
+		return RES( _ExemptionTag{}, Forward<ARGS>(args)... );
+	}
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -1426,31 +1451,36 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class MAT, class>
-auto s3d::as_col_space(MAT& mat)
+namespace s3d
 {
-	return Morph( Countable(mat.cols()), _VecSpace_Helper<MAT, 1>(mat) );
-}
 
+	template<class MAT, class>
+	auto as_col_space(MAT& mat)
+	{
+		return Morph( Countable(mat.cols()), _VecSpace_Helper<MAT, 1>(mat) );
+	}
+	
+	
+	template<class MAT, class>
+	auto as_row_space(MAT& mat)
+	{
+		return Morph( Countable(mat.rows()), _VecSpace_Helper<MAT, 2>(mat) );	
+	}
+	
+	
+	template<class MAT, class>
+	auto as_icol_space(MAT& mat)
+	{
+		return Morph( Countable(mat.cols()), _VecSpace_Helper<MAT, -1>(mat) );
+	}
+	
+	
+	template<class MAT, class>
+	auto as_irow_space(MAT& mat)
+	{
+		return Morph( Countable(mat.rows()), _VecSpace_Helper<MAT, -2>(mat) );
+	}
 
-template<class MAT, class>
-auto s3d::as_row_space(MAT& mat)
-{
-	return Morph( Countable(mat.rows()), _VecSpace_Helper<MAT, 2>(mat) );	
-}
-
-
-template<class MAT, class>
-auto s3d::as_icol_space(MAT& mat)
-{
-	return Morph( Countable(mat.cols()), _VecSpace_Helper<MAT, -1>(mat) );
-}
-
-
-template<class MAT, class>
-auto s3d::as_irow_space(MAT& mat)
-{
-	return Morph( Countable(mat.rows()), _VecSpace_Helper<MAT, -2>(mat) );
 }
 
 

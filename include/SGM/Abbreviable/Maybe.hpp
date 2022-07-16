@@ -273,14 +273,19 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>
-auto sgm::make_Maybe(T&& t) noexcept(is_Rvalue_Reference<T&&>::value)
-->	Selective_t
-	<	is_immutable<T>::value
-	,	constMaybe< Decay_t<T> >, Maybe< Decay_t<T> >
-	>
-{  
-	return Forward<T>(t);  
+namespace sgm
+{
+
+	template<class T>
+	auto make_Maybe(T&& t) noexcept(is_Rvalue_Reference<T&&>::value)
+	->	Selective_t
+		<	is_immutable<T>::value
+		,	constMaybe< Decay_t<T> >, Maybe< Decay_t<T> >
+		>
+	{  
+		return Forward<T>(t);  
+	}
+
 }
 
 

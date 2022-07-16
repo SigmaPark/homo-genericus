@@ -57,21 +57,26 @@ struct sgm::_Recursion_helper_detail::_Binded_Lambda
 };
 
 
-template<class F, class...TYPES, class...ARGS>
-decltype(auto) sgm::_Recursion_helper_detail::_Apply
-(	F&& f, sgm::Family<TYPES...>&& fam, ARGS&&...args
-)	noexcept
+namespace sgm::_Recursion_helper_detail
 {
-	auto constexpr FAM_SIZE = sizeof...(TYPES), IDX = sizeof...(ARGS);
 
-	if constexpr(FAM_SIZE == IDX)
-		return f( Forward<ARGS>(args)... );
-	else
-		return
-		_Apply
-		(	Move(f), Move(fam), Forward<ARGS>(args)...
-		,	static_cast< Nth_t<IDX, TYPES&&...> >( std::get<IDX>(fam) )
-		);
+	template<class F, class...TYPES, class...ARGS>
+	decltype(auto) _Apply
+	(	F&& f, [[maybe_unused]] Family<TYPES...>&& fam, ARGS&&...args
+	)	noexcept
+	{
+		auto constexpr FAM_SIZE = sizeof...(TYPES), IDX = sizeof...(ARGS);
+	
+		if constexpr(FAM_SIZE == IDX)
+			return f( Forward<ARGS>(args)... );
+		else
+			return
+			_Apply
+			(	Move(f), Move(fam), Forward<ARGS>(args)...
+			,	static_cast< Nth_t<IDX, TYPES&&...> >( std::get<IDX>(fam) )
+			);
+	}
+
 }
 
 

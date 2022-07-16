@@ -214,15 +214,6 @@ namespace s3d
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>  
-auto s3d::_Pi()-> T const&
-{
-	static T const pi = 2*std::acos( T(0) );
-
-	return pi;
-}
-
-
 struct s3d::Direction : Unconstructible
 {
 public:
@@ -327,71 +318,101 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class S, class D>
-auto s3d::Projection(S&& src, D&& des)
+namespace s3d
 {
-	if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
-		return src - des.normal()*des.signed_dist_to(src);
-	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
-		return des.position() + des.tangent()*des.tangent().dot(src - des.position());
-	else if constexpr(trait::is_Line<S>::value && trait::is_Plane<D>::value)
-	{
-		decltype(src.tangent()) const tgt = Projection(src.tangent().vec(), des);
-		using line_t = Referenceless_t<S>;
 
-		return 
-		is_valid(tgt) 
-		?	make_Maybe(  line_t( Projection(src.position(), des), tgt )  )
-		:	NullMyb;
+	template<class T>  
+	auto _Pi()-> T const&
+	{
+		static T const pi = 2*std::acos( T(0) );
+	
+		return pi;
 	}
-}
-
-
-template<class S, class D>
-auto s3d::sqrDistance(S&& src, D&& des)
-{
-	if constexpr(trait::is_StrictVec<S>::value && trait::is_StrictVec<D>::value)
-		return (  Position( Forward<D>(des) ) - Position( Forward<S>(src) )  ).sqr_norm();
-	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
-		return std::pow( des.signed_dist_to(src), 2 );
-	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
-		return ( src - Projection(src, des) ).sqr_norm();
-	//else if constexpr(trait::is_Line<S>::value && trait::is_Line_v<D>::value)
-}
-
-
-template<class S, class D>
-auto s3d::Distance(S&& src, D&& des)
-{
-	if constexpr(trait::is_StrictVec<S>::value && trait::is_StrictVec<D>::value)
-		return (des - src).norm();
-	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
-		return std::abs( des.signed_dist_to(src) );
-	else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
-		return ( src - Projection(src, des) ).norm();
-	//else if constexpr(trait::is_Line<S>::value && trait::is_Line_v<D>::value)
-}
-
-
-template<class S, class D>
-auto s3d::intersection(S&& src, D&& des)
-{
-	if constexpr(trait::is_Line<S>::value && trait::is_Plane<D>::value)
+	
+	
+	template<class S, class D>
+	auto Projection(S&& src, D&& des)
 	{
-		using pos_t = typename Referenceless_t<S>::position_t;
-
-		if
-		(	auto const den = des.normal().dot(src.tangent())
-		;	!Are_almost_same< trait::value_t<pos_t>, 2 >(den, 0) 
-		)
+		if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
+			return src - des.normal()*des.signed_dist_to(src);
+		else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
+			return des.position() + des.tangent()*des.tangent().dot(src - des.position());
+		else if constexpr(trait::is_Line<S>::value && trait::is_Plane<D>::value)
+		{
+			decltype(src.tangent()) const tgt = Projection(src.tangent().vec(), des);
+			using line_t = Referenceless_t<S>;
+	
 			return 
-			make_Maybe<pos_t>
-			(	src.position() 
-			+	src.tangent() * des.normal().dot(des.position() - src.position())/den
-			);
-		else
-			return Maybe<pos_t>{};
+			is_valid(tgt) 
+			?	make_Maybe(  line_t( Projection(src.position(), des), tgt )  )
+			:	NullMyb;
+		}
 	}
+	
+	
+	template<class S, class D>
+	auto sqrDistance(S&& src, D&& des)
+	{
+		if constexpr(trait::is_StrictVec<S>::value && trait::is_StrictVec<D>::value)
+			return (  Position( Forward<D>(des) ) - Position( Forward<S>(src) )  ).sqr_norm();
+		else if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
+			return std::pow( des.signed_dist_to(src), 2 );
+		else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
+			return ( src - Projection(src, des) ).sqr_norm();
+		//else if constexpr(trait::is_Line<S>::value && trait::is_Line_v<D>::value)
+	}
+	
+	
+	template<class S, class D>
+	auto Distance(S&& src, D&& des)
+	{
+		if constexpr(trait::is_StrictVec<S>::value && trait::is_StrictVec<D>::value)
+			return (des - src).norm();
+		else if constexpr(trait::is_StrictVec<S>::value && trait::is_Plane<D>::value)
+			return std::abs( des.signed_dist_to(src) );
+		else if constexpr(trait::is_StrictVec<S>::value && trait::is_Line<D>::value)
+			return ( src - Projection(src, des) ).norm();
+		//else if constexpr(trait::is_Line<S>::value && trait::is_Line_v<D>::value)
+	}
+	
+	
+	template<class S, class D>
+	auto intersection(S&& src, D&& des)
+	{
+		if constexpr(trait::is_Line<S>::value && trait::is_Plane<D>::value)
+		{
+			using pos_t = typename Referenceless_t<S>::position_t;
+	
+			if
+			(	auto const den = des.normal().dot(src.tangent())
+			;	!Are_almost_same< trait::value_t<pos_t>, 2 >(den, 0) 
+			)
+				return 
+				make_Maybe<pos_t>
+				(	src.position() 
+				+	src.tangent() * des.normal().dot(des.position() - src.position())/den
+				);
+			else
+				return Maybe<pos_t>{};
+		}
+	}
+
+
+	template<class T>
+	decltype(auto) Position(T&& t)
+	{
+		if constexpr
+		(	trait::Has_Matrix_interface<T>::value 
+		&&	!trait::is_StrictMat<T>::value && !trait::is_UnitVec<T>::value)
+		{
+			assert( Has_Vector_interface(t) );
+	
+			return Forward<T>(t);
+		}
+		else if constexpr(trait::is_Oriented<T>::value)
+			return _Position_Helper<T&&>::cast(t.position());
+	}
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -410,22 +431,6 @@ private:
 		return Selective_t< is_Rvalue_Reference<T>::value, Referenceless_t<Q>&&, Q&& >(q);
 	}
 };
-
-
-template<class T>
-decltype(auto) s3d::Position(T&& t)
-{
-	if constexpr
-	(	trait::Has_Matrix_interface<T>::value 
-	&&	!trait::is_StrictMat<T>::value && !trait::is_UnitVec<T>::value)
-	{
-		assert( Has_Vector_interface(t) );
-
-		return Forward<T>(t);
-	}
-	else if constexpr(trait::is_Oriented<T>::value)
-		return _Position_Helper<T&&>::cast(t.position());
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

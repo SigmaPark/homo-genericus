@@ -136,11 +136,16 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class _T, class _FDB>
-auto sgm::throw_Boomerang(_T&& t, _FDB&& feedback)
-->	Boomerang< Referenceless_t<_T>, Referenceless_t<_FDB> >
+namespace sgm
 {
-	return {Forward<_T>(t), Forward<_FDB>(feedback)};
+
+	template<class _T, class _FDB>
+	auto throw_Boomerang(_T&& t, _FDB&& feedback)
+	->	Boomerang< Referenceless_t<_T>, Referenceless_t<_FDB> >
+	{
+		return {Forward<_T>(t), Forward<_FDB>(feedback)};
+	}
+
 }
 
 

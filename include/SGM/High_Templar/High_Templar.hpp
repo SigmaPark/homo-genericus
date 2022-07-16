@@ -1136,10 +1136,12 @@ public:
 	}
 
 	template<class FNJ_FLAG>
-	auto eval() const
-	->	Array<value_type>{  return _Array_Evaluation<FNJ_FLAG>::calc(*this);  }
+	auto eval() const-> Array< typename cPlait_Range<RGS...>::value_type >
+	{
+		return _Array_Evaluation<FNJ_FLAG>::calc(*this);  
+	}
 
-	operator Array<value_type>() const{  return eval();  }
+	operator Array< typename cPlait_Range<RGS...>::value_type >() const{  return eval();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

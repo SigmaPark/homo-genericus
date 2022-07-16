@@ -206,66 +206,71 @@ namespace std
 }
 
 
-template<class PPK1, class PPK2>
-auto sgm::fp::Merge_Params(PPK1&& ppk1, PPK2&& ppk2)
+namespace sgm::fp
 {
-	return 
-	Param_Pack
-	(	_Construction_by_Family_Tag{}
-	,	Merge_Families( Forward<PPK1>(ppk1).as_Family(), Forward<PPK2>(ppk2).as_Family() )
-	);
-}
 
-
-template<class PPK>
-auto sgm::fp::Harden_Params(PPK&& ppk)
-{
-	return 
-	Param_Pack(  _Construction_by_Family_Tag{}, Harden( Forward<PPK>(ppk).as_Family() )  );
-}
-
-
-template<class T, class...ARGS>
-auto sgm::fp::_Param_Pack_Flattening(T&& t, [[maybe_unused]] ARGS&&...args)
-{
-	if constexpr( sizeof...(ARGS) != 0 )
-		return
-		Merge_Params
-		(	_Param_Pack_Flattening( Forward<T>(t) )
-		,	_Param_Pack_Flattening( Forward<ARGS>(args)... )
+	template<class PPK1, class PPK2>
+	auto Merge_Params(PPK1&& ppk1, PPK2&& ppk2)
+	{
+		return 
+		Param_Pack
+		(	_Construction_by_Family_Tag{}
+		,	Merge_Families( Forward<PPK1>(ppk1).as_Family(), Forward<PPK2>(ppk2).as_Family() )
 		);
-	else if constexpr(is_Param_Pack<T>::value)
-		return Forward<T>(t);
-	else
-		return Param_Pack(  _Construction_by_Family_Tag{}, Family<T&&>( Forward<T>(t) )  );
-}
+	}
+	
+	
+	template<class PPK>
+	auto Harden_Params(PPK&& ppk)
+	{
+		return 
+		Param_Pack(  _Construction_by_Family_Tag{}, Harden( Forward<PPK>(ppk).as_Family() )  );
+	}
+	
+	
+	template<class T, class...ARGS>
+	auto _Param_Pack_Flattening(T&& t, [[maybe_unused]] ARGS&&...args)
+	{
+		if constexpr( sizeof...(ARGS) != 0 )
+			return
+			Merge_Params
+			(	_Param_Pack_Flattening( Forward<T>(t) )
+			,	_Param_Pack_Flattening( Forward<ARGS>(args)... )
+			);
+		else if constexpr(is_Param_Pack<T>::value)
+			return Forward<T>(t);
+		else
+			return Param_Pack(  _Construction_by_Family_Tag{}, Family<T&&>( Forward<T>(t) )  );
+	}
+	
+	
+	template<class...ARGS>
+	auto Parameters(ARGS&&...args)
+	{
+		return _Param_Pack_Flattening( Forward<ARGS>(args)... );
+	}
+	
+	
+	template<class FUNC, class PPK, class...ARGS>
+	decltype(auto) Apply_Params(FUNC&& func, [[maybe_unused]] PPK&& ppk, ARGS&&...args)
+	{
+		using fam_t = typename Decay_t<PPK>::fam_t;
+		size_t constexpr IDX = sizeof...(ARGS);
+	
+		if constexpr(IDX == std::tuple_size<fam_t>::value)
+			return func( Forward<ARGS>(args)... );
+		else
+			return
+			Apply_Params
+			(	Forward<FUNC>(func), Forward<PPK>(ppk)
+			,	Forward<ARGS>(args)...
+			,	Move_if
+				<	is_Rvalue_Reference< typename Family_member<IDX, fam_t>::type&& >::value  
+				>
+				( std::get<IDX>(ppk.as_Family()) )
+			);
+	}
 
-
-template<class...ARGS>
-auto sgm::fp::Parameters(ARGS&&...args)
-{
-	return _Param_Pack_Flattening( Forward<ARGS>(args)... );
-}
-
-
-template<class FUNC, class PPK, class...ARGS>
-decltype(auto) sgm::fp::Apply_Params(FUNC&& func, [[maybe_unused]] PPK&& ppk, ARGS&&...args)
-{
-	using fam_t = typename Decay_t<PPK>::fam_t;
-	size_t constexpr IDX = sizeof...(ARGS);
-
-	if constexpr(IDX == std::tuple_size<fam_t>::value)
-		return func( Forward<ARGS>(args)... );
-	else
-		return
-		Apply_Params
-		(	Forward<FUNC>(func), Forward<PPK>(ppk)
-		,	Forward<ARGS>(args)...
-		,	Move_if
-			<	is_Rvalue_Reference< typename Family_member<IDX, fam_t>::type&& >::value  
-			>
-			( std::get<IDX>(ppk.as_Family()) )
-		);
 }
 
 

@@ -94,7 +94,7 @@ private:
 
 public:
 	template<class MAT, class FS>
-	void operator()(MAT&& m, FS&& fs)
+	void operator()(MAT&& m, [[maybe_unused]] FS&& fs)
 	{
 		Eigen::BDCSVD< Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> > const svd
 		(	_Mat_implementor( Forward<MAT>(m) ), _bit_flag<FS>()
@@ -171,7 +171,7 @@ private:
 
 
 	template<class M = sgm::None const>
-	void _clear(M& m = {})
+	void _clear([[maybe_unused]] M& m = {})
 	{
 		if constexpr(is_None<M>::value)
 			_clear(_U),  _clear(_V);

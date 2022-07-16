@@ -519,14 +519,17 @@ struct sgm::_Merge_Fam_Helper
 };
 
 
-template<class FAM1, class FAM2>
-auto sgm::Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(Aleph_Check<FAM1&&, FAM2&&>::value)
-->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
+namespace sgm
 {
-	return
-	_Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::calc
-	(	Forward<FAM1>(fam1), Forward<FAM2>(fam2)
-	);
+	template<class FAM1, class FAM2>
+	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(Aleph_Check<FAM1&&, FAM2&&>::value)
+	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
+	{
+		return
+		_Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::calc
+		(	Forward<FAM1>(fam1), Forward<FAM2>(fam2)
+		);
+	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -578,33 +581,37 @@ struct sgm::_Harden_Fam_Helper<false, TFAM, TYPES...> : Unconstructible
 };
 
 
-template< template<class...> class TFAM, class...TYPES >
-auto sgm::Harden(TFAM<TYPES...>& fam_like)
-->	typename sgm::_Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
+namespace sgm
 {
-	return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc(fam_like);
+
+	template< template<class...> class TFAM, class...TYPES >
+	auto Harden(TFAM<TYPES...>& fam_like)
+	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
+	{
+		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc(fam_like);
+	}
+	
+	template< template<class...> class TFAM, class...TYPES >
+	auto Harden(TFAM<TYPES...>&& fam_like)
+	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
+	{
+		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc( Move(fam_like) );
+	}
+
+
+	template<class...TYPES>
+	auto Make_Family(TYPES...types)-> Family<TYPES...>{  return {types...};  }
+	
+	
+	template<class...TYPES>
+	auto Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
+	-> Family<TYPES&&...>{  return {Forward<TYPES>(types)...};  }
+	
+	
+	template<class...TYPES>
+	auto Tie(TYPES&...types)-> Family<TYPES&...>{  return {types...};  }
+
 }
-
-template< template<class...> class TFAM, class...TYPES >
-auto sgm::Harden(TFAM<TYPES...>&& fam_like)
-->	typename sgm::_Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
-{
-	return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc( Move(fam_like) );
-}
-//========//========//========//========//=======#//========//========//========//========//=======#
-
-
-template<class...TYPES>
-auto sgm::Make_Family(TYPES...types)-> Family<TYPES...>{  return {types...};  }
-
-
-template<class...TYPES>
-auto sgm::Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
--> Family<TYPES&&...>{  return {Forward<TYPES>(types)...};  }
-
-
-template<class...TYPES>
-auto sgm::Tie(TYPES&...types)-> Family<TYPES&...>{  return {types...};  }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 

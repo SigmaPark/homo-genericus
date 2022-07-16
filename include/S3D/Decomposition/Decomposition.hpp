@@ -81,20 +81,24 @@ namespace s3d::trait
 	template<class ITR, class COMP>
 	static auto is_Sorted(ITR bi, ITR const ei, COMP&& comp)-> bool;
 
-
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class ITR, class COMP>
-auto s3d::trait::is_Sorted(ITR bi, ITR const ei, COMP&& comp)-> bool
+namespace s3d::trait
 {
-	if(bi != ei)
-		for( auto itr = Next(bi);  itr != ei;  ++bi,  ++itr )
-			if( !comp(*bi, *itr) )
-				return false;
 
-	return true;
+	template<class ITR, class COMP>
+	auto is_Sorted(ITR bi, ITR const ei, COMP&& comp)-> bool
+	{
+		if(bi != ei)
+			for( auto itr = Next(bi);  itr != ei;  ++bi,  ++itr )
+				if( !comp(*bi, *itr) )
+					return false;
+	
+		return true;
+	}
+
 }
 
 

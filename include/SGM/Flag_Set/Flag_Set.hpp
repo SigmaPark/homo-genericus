@@ -109,10 +109,6 @@ struct sgm::Has_Flag : Decay_t<FS>::template Has<FLAG>{};
 template< template<class> class CONDITION, class FS >  
 struct sgm::Has_Satisfying_Flag
 :	Boolean_Not<  is_None< typename Decay_t<FS>::template Satisfying_t<CONDITION> >  >{};
-
-
-template<class...FLAGS>
-static auto sgm::Flags(FLAGS...args)-> Flag_Set<FLAGS...>{  return{args...};  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -121,25 +117,35 @@ struct sgm::_Flag_Pick_Helper : Unconstructible
 {
 	using type = Referenceless_t< decltype( std::get<FLAG>(Declval<FS>()._fs) ) >;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class FLAG, class FS, class>
-auto sgm::Pick_Flag(FS&& flagset) noexcept(Aleph_Check<FS&&>::value)-> Picked_Flag_t<FLAG, FS>
+namespace sgm
 {
-	return 
-	std::get< Picked_Flag_t<FLAG, FS> >
-	(	Move_if< is_Rvalue_Reference<FS&&>::value >(flagset._fs)
-	);
-}
+
+	template<class...FLAGS>
+	auto Flags(FLAGS...args)-> Flag_Set<FLAGS...>{  return{args...};  }
 
 
-template< template<class> class CONDITION, class FS, class >
-auto sgm::Satisfying_Flag(FS&& flagset) noexcept(Aleph_Check<FS&&>::value)
-->	Satisfying_Flag_t<CONDITION, FS>
-{
-	using flag_t = Satisfying_Flag_t<CONDITION, FS>;
+	template<class FLAG, class FS, class>
+	auto Pick_Flag(FS&& flagset) noexcept(Aleph_Check<FS&&>::value)-> Picked_Flag_t<FLAG, FS>
+	{
+		return 
+		std::get< Picked_Flag_t<FLAG, FS> >
+		(	Move_if< is_Rvalue_Reference<FS&&>::value >(flagset._fs)
+		);
+	}
+	
+	
+	template< template<class> class CONDITION, class FS, class >
+	auto Satisfying_Flag(FS&& flagset) noexcept(Aleph_Check<FS&&>::value)
+	->	Satisfying_Flag_t<CONDITION, FS>
+	{
+		using flag_t = Satisfying_Flag_t<CONDITION, FS>;
+	
+		return Pick_Flag<flag_t>( Forward<FS>(flagset) );
+	}
 
-	return Pick_Flag<flag_t>( Forward<FS>(flagset) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

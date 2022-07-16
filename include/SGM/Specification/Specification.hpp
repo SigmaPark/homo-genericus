@@ -208,11 +208,11 @@ namespace sgm
         }   \
         catch(sgm::Exception const& e)  \
         {   \
-            std::cout << #TITLE << " test failed.\n\t" << e.what() << std::endl;    \
+            std::cout << '\n' << #TITLE << " test failed.\n\t" << e.what() << std::endl;    \
         }   \
         catch(...)  \
         {   \
-            std::cout << #TITLE << " test failed.\n\t" << "unexpected error.\n";    \
+            std::cout << '\n' << #TITLE << " test failed.\n\t" << "unexpected error.\n";    \
         }   \
     }   \
     \

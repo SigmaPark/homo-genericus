@@ -679,14 +679,18 @@ namespace sgm::fp
 namespace sgm::fp::_Lambda_detail
 {
 
+#pragma warning(push)
+//	All parameters of args... don't have to be used .
+#pragma warning(disable : 4100)
 	template<size_t IDX, class...ARGS>
 	static decltype(auto) Try_Nth_Param([[maybe_unused]] ARGS&&...args) noexcept
 	{
 		if constexpr( IDX < sizeof...(ARGS) )
-			return sgm::Nth_Param<IDX>(args...);
+			return Nth_Param<IDX>(args...);
 		else
-			return sgm::None{};
+			return None{};
 	}	
+#pragma warning(pop)
 
 }
 
