@@ -27,9 +27,6 @@ namespace sgm
     using std::size_t;
     using std::ptrdiff_t;
 
-    static size_t constexpr MAXIMUM_VALUE_OF_SIZE_TYPE = 0xffffffffffffffffULL;
-    static ptrdiff_t constexpr MAXIMUM_VALUE_OF_PTRDIFF_TYPE = 0x7fffffffffffffffLL;
-
 }
 
 

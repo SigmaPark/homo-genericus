@@ -9,6 +9,7 @@
 #define _SGM_FAMILY_
 
 
+#include <limits>
 #include "../Type_Analysis/Type_Analysis.hpp"
 
 
@@ -186,7 +187,7 @@ struct sgm::_Family_index_Helper
 
 template<class Q, class...TYPES>
 struct sgm::_Family_index_Helper<0, Q, TYPES...> 
-:	As_value_itself<std::size_t, MAXIMUM_VALUE_OF_SIZE_TYPE>{};
+:	As_value_itself< std::size_t, std::numeric_limits<std::size_t>::max() >{};
 
 
 template<std::size_t N>
@@ -198,7 +199,7 @@ struct sgm::_Family_get_Helper
 };
 
 template<>
-struct sgm::_Family_get_Helper<sgm::MAXIMUM_VALUE_OF_SIZE_TYPE>
+struct sgm::_Family_get_Helper< std::numeric_limits<std::size_t>::max() >
 {
 	template<class FAM> 
 	static auto calc(FAM) noexcept-> None{  return{};  }

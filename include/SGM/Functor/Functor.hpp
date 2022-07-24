@@ -31,7 +31,7 @@ namespace sgm::fp
 	struct Blank;
 
 
-	template<class CLSR, class NVK, unsigned MIN_D = 0xffff'ffffUL>  
+	template< class CLSR, class NVK, unsigned MIN_D = std::numeric_limits<unsigned>::max() >  
 	struct _FuncExpr;
 
 
@@ -104,7 +104,7 @@ struct sgm::fp::_indexer
 namespace sgm::fp::_indexer_detail
 {
 
-	static unsigned constexpr INVALID_N = 0xffff'ffffUL;
+	static unsigned constexpr INVALID_N = std::numeric_limits<unsigned>::max();
 
 
 	template<unsigned QN, class idxr_t, unsigned = 0>  

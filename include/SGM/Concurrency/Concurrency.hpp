@@ -9,9 +9,10 @@
 #define _SGM_CONCURRENCY_
 
 
+#include <future>
+#include <limits>
 #include "../Type_Analysis/Type_Analysis.hpp"
 #include "../Exception/Exception.hpp"
-#include <future>
 
 
 namespace sgm
@@ -19,7 +20,7 @@ namespace sgm
 	
 	struct Nof_Hardware_Core
 	{	
-		static unsigned constexpr DYNAMIC = 0xffffffffUL;
+		static unsigned constexpr DYNAMIC = std::numeric_limits<unsigned>::max();
 		
 		enum class When_Fails : unsigned{SEQUANCIAL = 1, THROW = DYNAMIC};
 	};

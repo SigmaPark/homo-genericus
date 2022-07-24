@@ -11,6 +11,7 @@
 
 #include <new>
 #include <cstddef>
+#include <limits>
 #include "../Type_Analysis/Type_Analysis.hpp"
 
 
@@ -49,7 +50,7 @@ public:
 	void deallocate(pointer p, size_type){  ::operator delete(p);  }
 
 	auto max_size() const noexcept
-	->	size_type{  return size_type(MAXIMUM_VALUE_OF_SIZE_TYPE) / sizeof(value_type);  }
+	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
 
 	template<class Q, class...ARGS>
 	void construct(Q* p, ARGS&&...args){  new(p) Q( Forward<ARGS>(args)... );  }

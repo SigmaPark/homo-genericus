@@ -12,7 +12,7 @@
 #include "SGM/High_Templar/Countable.hpp"
 #include "SGM/High_Templar/High_Templar.hpp"
 #include <type_traits>
-#include <climits>
+#include <limits>
 #include <complex>
 #include <cmath>
 
@@ -574,7 +574,7 @@ namespace s3d
 	
 	
 	template<class MAT>  
-	auto Has_Vector_interface(MAT const& mat) noexcept-> bool
+	auto Has_Vector_interface([[maybe_unused]] MAT const& mat) noexcept-> bool
 	{
 		if constexpr(trait::Has_Matrix_interface<MAT>::value)
 			return (mat.rows() == 1 || mat.cols() == 1) && mat.size() > 1;
@@ -715,7 +715,8 @@ private:
 
 	template<class VEC>
 	static void resize_if_needed
-	(	Matrix<T, ROWS, COLS, STOR>& Lhs, VEC const& baseVector, size_t const nof_baseVector
+	(	[[maybe_unused]] Matrix<T, ROWS, COLS, STOR>& Lhs
+	,	VEC const& baseVector, size_t const nof_baseVector
 	)
 	{
 		[[maybe_unused]] auto const base_size = baseVector.size();
@@ -1274,7 +1275,7 @@ public:
 
 
 	template<size_t IDX = DYNAMIC>
-	static auto Axis(size_t idx = DYNAMIC)
+	static auto Axis([[maybe_unused]] size_t idx = DYNAMIC)
 	->	Selective_t< trait::is_StaticSize<IDX>::value, UnitVec const&, UnitVec >
 	{
 		static_assert(trait::is_StaticSize<SIZE>::value);

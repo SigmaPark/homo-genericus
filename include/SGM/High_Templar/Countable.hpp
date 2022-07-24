@@ -9,9 +9,10 @@
 #define _SGM_COUNTABLE_
 
 
-#include "../Type_Analysis/Type_Analysis.hpp"
 #include <cassert>
+#include <limits>
 #include <iterator>
+#include "../Type_Analysis/Type_Analysis.hpp"
 
 
 namespace sgm
@@ -103,7 +104,7 @@ public:
 		size_t const diff_ULL = greater_mine ? **this - *itr : *itr - **this;
 
 		assert
-		(	diff_ULL <= static_cast<size_t>(MAXIMUM_VALUE_OF_PTRDIFF_TYPE) 
+		(	diff_ULL <= static_cast<size_t>(std::numeric_limits<ptrdiff_t>::max()) 
 		&&	"the difference exceeds maximum threshold value.\n"
 		);
 

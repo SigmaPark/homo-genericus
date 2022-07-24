@@ -22,7 +22,7 @@ namespace sgm
 	
 	struct arrSize : Unconstructible
 	{
-		static size_t constexpr INTERFACE = MAXIMUM_VALUE_OF_SIZE_TYPE,  DYNAMIC = 0;
+		static size_t constexpr INTERFACE = std::numeric_limits<size_t>::max(),  DYNAMIC = 0;
 	};
 
 
@@ -173,7 +173,7 @@ public:
 		auto const diff_ULL = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
 
 		assert
-		(	diff_ULL <= static_cast<size_t>(MAXIMUM_VALUE_OF_PTRDIFF_TYPE)
+		(	diff_ULL <= static_cast<size_t>(std::numeric_limits<ptrdiff_t>::max())
 		&&	"the difference exceeds maximum threshold value.\n"
 		);
 

@@ -9,14 +9,17 @@
 #define _SGM_SPAN_
 
 
+#include <limits>
 #include "../iterable/iterable.hpp"
 
 
 namespace sgm
 {
 
-	struct SpanSize
-	:	Unconstructible{  enum : size_t{INTERFACE = MAXIMUM_VALUE_OF_PTRDIFF_TYPE, DYNAMIC = 0};  };
+	struct SpanSize : Unconstructible
+	{
+		enum : size_t{INTERFACE = std::numeric_limits<size_t>::max(), DYNAMIC = 0};  
+	};
 
 
 	template<class T, size_t S = SpanSize::DYNAMIC, class ITR = T*>
