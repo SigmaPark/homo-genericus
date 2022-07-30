@@ -9,7 +9,7 @@
 #define _SGM_MATHEXPR_
 
 
-#include "../interface_Traits/interface_Traits.hpp"
+#include "../Type_Analysis/Type_Analysis.hpp"
 #include <cstdint>
 
 

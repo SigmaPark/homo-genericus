@@ -43,13 +43,6 @@ namespace s3d
 	static auto intersection(S&& src, D&& des);
 
 
-	template<class T>  
-	inline auto _Pi()-> T const&;
-
-	template<class T>  
-	inline T const& Pi = _Pi<T>();
-
-
 	struct Direction;
 
 

@@ -716,7 +716,7 @@ private:
 	template<class VEC>
 	static void resize_if_needed
 	(	[[maybe_unused]] Matrix<T, ROWS, COLS, STOR>& Lhs
-	,	VEC const& baseVector, size_t const nof_baseVector
+	,	VEC const& baseVector, [[maybe_unused]] size_t const nof_baseVector
 	)
 	{
 		[[maybe_unused]] auto const base_size = baseVector.size();
@@ -752,7 +752,9 @@ private:
 	}
 
 
-	static void resize_if_needed(Matrix<T, ROWS, COLS, STOR>& Lhs, size_t const nof_elements)
+	static void resize_if_needed
+	(	Matrix<T, ROWS, COLS, STOR>& Lhs, [[maybe_unused]] size_t const nof_elements
+	)
 	{
 		if constexpr( !trait::is_FixedSizeMat<decltype(Lhs)>::value )
 		{
