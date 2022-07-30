@@ -172,6 +172,10 @@ def main():
                 ,   'Test_List.hpp'
                 ,   'Test_List.cpp'
                 ]
+            ,   ["Mathexpr"
+                ,   'Mathexpr.hpp'
+                ,   'Test_Mathexpr.hpp'
+                ]
             ,   ["Operators_of"
                 ,   'Operators_of.hpp'
                 ,   'Test_Operators_of.hpp'

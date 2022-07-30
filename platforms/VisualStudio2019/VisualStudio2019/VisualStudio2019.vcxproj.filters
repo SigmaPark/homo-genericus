@@ -88,6 +88,9 @@
     <Filter Include="S3D\Quaternion">
       <UniqueIdentifier>{5e97be0e-6b72-4cc1-b2d3-145cacb79b3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SGM\Mathexpr">
+      <UniqueIdentifier>{42fcf0ef-0225-4db8-a422-2fd3f5fb0154}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VS2019_main.cpp">
@@ -331,6 +334,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\S3D\Affine\Test_Affine.hpp">
       <Filter>S3D\Affine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Mathexpr\Mathexpr.hpp">
+      <Filter>SGM\Mathexpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Mathexpr\Test_Mathexpr.hpp">
+      <Filter>SGM\Mathexpr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

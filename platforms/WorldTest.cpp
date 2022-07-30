@@ -83,6 +83,7 @@ bool wt::Tests(char const* const module_title) noexcept
 #include "SGM/Recursion/Test_Recursion.hpp"
 #include "SGM/Span/Test_Span.hpp"
 #include "SGM/Type_Analysis/Test_Type_Analysis.hpp"
+#include "SGM/Mathexpr/Test_Mathexpr.hpp"
 
 #include "S3D/Hamilton/Test_Hamilton.hpp"
 #include "S3D/Decomposition/Test_Decomposition.hpp"
