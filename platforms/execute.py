@@ -22,7 +22,6 @@ def execute_if_exist(file_dir):
 def main():
     if os.name == "nt":
         execute_if_exist("VCPP/build/Release/VCPP_Solution.exe")
-        execute_if_exist("VisualStudio2019/x64/Debug/VisualStudio2019.exe")
 
     if os.name == "posix":
         execute_if_exist("GPP/build/GPP_Solution")

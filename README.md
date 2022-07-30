@@ -19,6 +19,7 @@
 	-	SGM/High_Templar
 	-	SGM/interface_Traits
 	-	SGM/iterable
+	-	SGM/Mathexpr
 	-	SGM/Operator_of
 	-	SGM/Span
 	-	SGM/Specification
@@ -32,6 +33,6 @@
 
 
 # Minimum Compiler Requirements
-	-	MSVC 1914 (Visual Studio 2017)
+	-	MSVC 19.14 (Visual Studio 2017)
 	-	GCC 10.2.1
 	-	Clang 9.0.1

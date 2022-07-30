@@ -6,12 +6,14 @@
 
 #include "Test_Quaternion.hpp"
 #include "../Euclid/Euclid.hpp"
+#include "SGM/Mathexpr/Mathexpr.hpp"
 
 
 using sgm::spec::is_True;
 using s3d::Vector;
 using s3d::UnitVec;
 
+auto constexpr Pi = sgm::Mathexpr::pi<float>();
 
 template<class...ARGS>
 static void _identical(ARGS...args)
@@ -195,7 +197,7 @@ static void Algebra()
 	{
 		s3d::Quaternion const q1 = UnitVec<float, 3>::Axis<0>(); 
 
-		float const theta = s3d::Pi<float>/2;
+		float const theta = ::Pi/2;
 
 		s3d::UnitQuaternion const q2
 		(	std::cos(theta/2)
@@ -209,7 +211,7 @@ static void Algebra()
 
 static void Slerp()
 {
-	float const theta = s3d::Pi<float> / 4;
+	float const theta = ::Pi / 4;
 	float const x1 = std::cos(theta), y1 = std::sin(theta);
 		
 	s3d::UnitQuaternion<float> const q0(0, 1, 0, 0), q1(0, x1, y1, 0);

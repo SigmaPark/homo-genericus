@@ -3,6 +3,7 @@
 #=========#=========#=========#=========#=========#=========#=========#=========#=========#=========
 
 
+import sys
 import os
 import subprocess
 
@@ -58,7 +59,7 @@ def Posix_platforms(exe_list):
     Build("", "Clang", "Unix Makefiles", "make", exe_list)
 
 
-def NT_platforms(exe_list):
+def NT_platforms(exe_list, vs_ver):
     null_list = []
 
     ms_v141_d \
@@ -71,15 +72,42 @@ def NT_platforms(exe_list):
         -- /p:CharacterSet=Unicode /p:PlatformToolset=v141 /p:Platform=x64\
         "  
 
-    Build("Debug/", "VCPP", "Visual Studio 16 2019", ms_v141_d, null_list)
-    Build("Release/", "VCPP", "Visual Studio 16 2019", ms_v141_r, exe_list)       
+    Build("Debug/", "VCPP", vs_ver, ms_v141_d, null_list)
+    Build("Release/", "VCPP", vs_ver, ms_v141_r, exe_list)       
+
+
+def Ask_Visual_Studio_Version(vs_ver):
+    while \
+    (   vs_ver != '1' and vs_ver != '2' and vs_ver != '3' and vs_ver != 'q' \
+    and not("Visual Studio" in vs_ver)
+    ):
+        print("Select Visual Studio Version you have")
+        print('[1]   Visual Studio 15 2017')
+        print('[2]   Visual Studio 16 2019')
+        print('[3]   Visual Studio 17 2022')
+        print('[q]   quit')
+        print('or type it directly')
+        vs_ver=input()
+
+    if vs_ver == '1':
+        vs_ver = "Visual Studio 15 2017"
+    elif vs_ver == '2':
+        vs_ver = "Visual Studio 16 2019"
+    elif vs_ver == '3':
+        vs_ver = "Visual Studio 17 2022"
+    
+    return vs_ver
+
 
 
 def main():
     exe_list = []
 
     if os.name == "nt":
-        NT_platforms(exe_list)
+        vs_ver = Ask_Visual_Studio_Version("" if len(sys.argv) == 1 else sys.argv[1])
+        if vs_ver != 'q':
+            NT_platforms(exe_list, vs_ver)
+
 
     if os.name == "posix":
         Posix_platforms(exe_list)
