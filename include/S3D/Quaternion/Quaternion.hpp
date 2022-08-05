@@ -193,12 +193,13 @@ namespace s3d
 {
 	
 	template<class T>
-	using int_to_float_t = Selective_t< std::is_integral_v<T>, float, T >;
+	using int_to_float_t = Selective_t< std::numeric_limits<T>::is_integer, float, T >;
 
 
 	template
 	<	class T
-	,	class = Enable_if_t< std::is_integral_v<T> || std::is_floating_point_v<T> >
+	,	class 
+		=	Enable_if_t< std::numeric_limits<T>::is_integer || std::numeric_limits<T>::is_iec559 >
 	>
 	Quaternion(T const = 0, T const = 0, T const = 0, T const = 0)
 	->	Quaternion< int_to_float_t<T> >;

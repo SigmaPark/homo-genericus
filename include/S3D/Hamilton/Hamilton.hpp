@@ -12,7 +12,6 @@
 #include "SGM/High_Templar/Countable.hpp"
 #include "SGM/High_Templar/High_Templar.hpp"
 #include "SGM/Mathexpr/Mathexpr.hpp"
-#include <type_traits>
 #include <limits>
 #include <complex>
 #include <cmath>
@@ -487,9 +486,9 @@ namespace s3d
 	template<class T, bool SIGNALING> 
 	T constexpr _NaN_Helper() noexcept
 	{
-		static_assert(!std::is_integral_v<T>);
+		static_assert(!std::numeric_limits<T>::is_integer);
 	
-		if constexpr(std::is_floating_point_v<T>)
+		if constexpr (std::numeric_limits<T>::is_iec559)
 			return 
 			SIGNALING 
 			?	std::numeric_limits<T>::signaling_NaN() 
@@ -539,9 +538,9 @@ namespace s3d
 	template<class T, int DP>  
 	auto Are_almost_same(T t1, T t2)-> bool
 	{
-		if constexpr(std::is_integral_v<T>)
+		if constexpr(std::numeric_limits<T>::is_integer)
 			return t1 == t2;
-		else if constexpr(std::is_floating_point_v<T>)
+		else if constexpr(std::numeric_limits<T>::is_iec559)
 			return 
 			(	std::abs(t1 - t2) 
 			<	sgm::Mathexpr::int_pow<T, 10, DP>() * std::numeric_limits<T>::epsilon()
@@ -1180,7 +1179,7 @@ public:
 	,	class 
 		=	Enable_if_t
 			<	Has_Operator_New< _Vec, ARGS&&...>::value 
-			&&	!std::is_integral_v< First_t<ARGS...> >
+			&&	!std::numeric_limits< First_t<ARGS...> >::is_integer			
 			>
 	>
 	UnitVec(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value) 
@@ -1314,7 +1313,7 @@ public:
 	,	class 
 		=	Enable_if_t
 			<	Has_Operator_New< _Mat, ARGS&&...>::value 
-			&&	!std::is_integral_v< First_t<ARGS...> >
+			&&	!std::numeric_limits< First_t<ARGS...> >::is_integer
 			>
 	>
 	OrthogonalMat(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)

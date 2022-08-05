@@ -6,7 +6,6 @@
 
 #pragma once
 #include <cfloat>
-#include <type_traits>
 #include <cmath>
 #include "SGM/Type_Analysis/Type_Analysis.hpp"
 
@@ -32,7 +31,7 @@ private:
 	template<class T>
 	static auto constexpr _epsilon() noexcept
 	{
-		static_assert(std::is_floating_point_v<T>, "NOT a Real Number.");
+		static_assert(std::numeric_limits<T>::is_iec559, "NOT a Real Number.");
 
 		auto constexpr res 
 		=	sgm::is_Same<T, double>::value ? T(DBL_EPSILON)
@@ -48,9 +47,9 @@ public:
 	{
 		if constexpr( sizeof...(TYPES) > 0 )
 			return calc(Lhs, rhs) && calc(Lhs, args...);
-		else if constexpr(std::is_integral_v<L> || sgm::is_Pointer<L>::value)
+		else if constexpr(std::numeric_limits<L>::is_integer || sgm::is_Pointer<L>::value)
 			return Lhs == rhs;
-		else if constexpr(std::is_floating_point_v<L>)
+		else if constexpr (std::numeric_limits<L>::is_iec559)
 			return std::abs(Lhs - rhs) < static_cast<L>(1e3) * _epsilon<L>();
 		else
 			return sgm::Compile_Fails(); // "no method to compare them."

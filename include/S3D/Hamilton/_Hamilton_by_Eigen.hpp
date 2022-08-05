@@ -318,7 +318,7 @@ public:
 	template
 	<	class Q
 	,	class _E = Decay_t< decltype(Declval<value_type>()/Declval<Q>()) >
-	,	class ELEM = std::conditional_t< std::is_integral_v<_E>, float, _E >
+	,	class ELEM = std::conditional_t< std::numeric_limits<_E>::is_integer, float, _E >
 	>
 	auto operator/(Q const q) const-> _MatrixAdaptor<ELEM, ROWS, COLS, STOR>
 	{
