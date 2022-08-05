@@ -65,6 +65,8 @@ bool wt::Tests(char const* const module_title) noexcept
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+#include "SGM/Specification/Test_Specification.hpp"
+
 #include "SGM/Array/Test_Array.hpp"
 #include "SGM/Abbreviable/Test_Avatar.hpp"
 #include "SGM/Abbreviable/Test_Maybe.hpp"
@@ -107,6 +109,8 @@ bool wt::Tests(char const* const module_title) noexcept
 
 void test() noexcept(false)
 {
+    sgm::spec::Test_Specification::test();
+
     sgm::spec::Test_Array::test();
     sgm::spec::Test_Avatar::test();
     sgm::spec::Test_Maybe::test();

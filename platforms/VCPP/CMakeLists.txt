@@ -24,6 +24,10 @@ add_executable(
     VCPP_Solution
     ../WorldTest.cpp  
     VCPP_main.cpp
+
+    ${SGM_INCLUDE_DIR}/SGM/Specification/Specification.cpp
+    ${SGM_INCLUDE_DIR}/SGM/Specification/Test_Specification.cpp
+
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Avatar.cpp
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Maybe.cpp    
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Pinweight.cpp    

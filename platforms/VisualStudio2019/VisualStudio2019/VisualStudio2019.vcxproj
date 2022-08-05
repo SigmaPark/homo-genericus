@@ -190,6 +190,8 @@
     <ClCompile Include="..\..\..\include\SGM\Operators_of\Test_Operators_of.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Recursion\Test_Recursion.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Span\Test_Span.cpp" />
+    <ClCompile Include="..\..\..\include\SGM\Specification\Specification.cpp" />
+    <ClCompile Include="..\..\..\include\SGM\Specification\Test_Specification.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Type_Analysis\Test_Type_Analysis.cpp" />
     <ClCompile Include="..\..\WorldTest.cpp" />
     <ClCompile Include="VS2019_main.cpp" />
@@ -249,6 +251,7 @@
     <ClInclude Include="..\..\..\include\SGM\Span\Span.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Span\Test_Span.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Specification\Specification.hpp" />
+    <ClInclude Include="..\..\..\include\SGM\Specification\Test_Specification.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Type_Analysis\Test_Type_Analysis.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Type_Analysis\Type_Analysis.hpp" />
     <ClInclude Include="..\..\WorldTest.hpp" />

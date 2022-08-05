@@ -13,6 +13,8 @@
 #include "../iterable/iterable.hpp"
 #include <initializer_list>
 #include <iostream>
+#include <limits>
+#include <string>
 
 
 namespace sgm
@@ -190,6 +192,254 @@ namespace sgm
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+#define _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
+
+#define BEGIN_CODE_BLOCK(TAG) /* nothing */
+#define END_CODE_BLOCK(TAG) /* nothing */
+#define END_CODE_BLOCK_AND_LOAD(TAG)  sgm::spec::mdo << sgm::spec::Load_code_block(#TAG);
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace sgm
+{ 
+    namespace spec
+    {
+
+	    auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
+	    auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
+	    auto Empty_lines(size_t nof_empty_lines = 1)-> std::string;
+        auto Title(std::string const& title, unsigned const level = 1)-> std::string;
+
+	    auto Load_description_file(std::string const& filename) noexcept(false)-> std::string;
+        auto Load_code_block(std::string const code_block_tag) noexcept(false)-> std::string;
+	    
+
+	    class md_guard;
+	    class html_block_guard;
+	    class md_block_guard;
+
+
+	    class _tabless_description;
+	    class _code_description;
+
+	    class _MD_Stream;
+
+
+        template
+        <   class T, class _T = Decay_t<T>
+        ,   int 
+            =   (   is_Same<_T, _tabless_description>::value 
+                ||  is_Same<_T, _code_description>::value
+                ) ? 1
+            :   is_Same<_T, bool>::value ? 2
+            :   is_Convertible<_T, double>::value ? 3
+            :   is_Pointer<_T>::value ? 4
+            :   /* otherwise */ 0
+        >
+        struct _MD_Stream_Helper;
+
+
+        class _Singleton_MD_Streamer;
+	    class _MD_Stream_Guard;
+
+	    auto _Code_writing(std::string const& code, std::string const &lang = "")-> std::string;
+    
+    }
+}
+
+
+auto operator ""_code(char const* str, size_t)-> sgm::spec::_code_description;
+auto operator ""_mdo(char const* str, size_t)-> sgm::spec::_tabless_description;
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+
+class sgm::spec::_tabless_description
+{
+public:
+	_tabless_description(std::string&& s);
+
+private:
+    template<class T, class _T, int>
+	friend struct sgm::spec::_MD_Stream_Helper;
+
+	std::string _str;
+
+	static auto _tabless_string(std::string&& s)-> std::string;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::_code_description
+{
+public:
+	_code_description(std::string&& s);
+
+private:
+    template<class T, class _T, int>
+    friend struct sgm::spec::_MD_Stream_Helper;
+
+	std::string _str;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::_MD_Stream
+{
+public:
+	_MD_Stream(_MD_Stream const&) = delete;
+	auto operator=(_MD_Stream const&)-> _MD_Stream& = delete;
+
+	static auto instance()-> _MD_Stream&;
+
+    void open(std::string const working_filepath);
+    bool is_open() const;
+
+    auto ever_used() const-> bool;
+    auto working_filepath() const-> std::string const&;
+    auto md_filepath() const-> std::string const&;
+    auto md_materials_dir() const-> std::string const&;
+
+	void close();
+	void print_and_close();
+
+	template<class T>
+	auto operator<<(T&& t)-> _MD_Stream&;
+
+
+private:
+	_MD_Stream();
+	~_MD_Stream();
+
+
+	struct _Contents;
+
+	std::string _working_filepath, _md_filepath, _md_materials_dir;
+	_Contents *_pcnts;
+
+	void _push(std::string const& str);
+	void _push(std::string&& str);
+};
+
+
+template<class T>
+auto sgm::spec::_MD_Stream::operator<<(T&& t)-> _MD_Stream&
+{
+    _push(  _MD_Stream_Helper<T>::calc( Forward<T>(t) )  );
+
+	return *this;
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class T, class _T, int>
+struct sgm::spec::_MD_Stream_Helper : Unconstructible
+{
+    template<class Q>
+    static auto calc(Q&& q)-> std::string{  return Forward<Q>(q);  }    
+};
+
+template<class T, class _T>
+struct sgm::spec::_MD_Stream_Helper<T, _T, 1> : Unconstructible
+{
+    template<class Q>
+    static auto calc(Q&& q)-> SGM_DECLTYPE_AUTO(  q._str  )
+};
+
+template<class T, class _T>
+struct sgm::spec::_MD_Stream_Helper<T, _T, 2> : Unconstructible
+{
+    static auto calc(_T const b)-> std::string{  return b ? "true" : "false";  }
+};
+
+template<class T, class _T>
+struct sgm::spec::_MD_Stream_Helper<T, _T, 3> : Unconstructible
+{
+    template<class Q>
+    static auto calc(Q const s)-> std::string{  return std::to_string(s);  }
+};
+
+template<class T, class _T>
+struct sgm::spec::_MD_Stream_Helper<T, _T, 4> : Unconstructible
+{
+    template<class P>
+    static auto calc(P const p)
+    ->  std::string{  return std::to_string( reinterpret_cast<long long>(p) );  }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::_Singleton_MD_Streamer
+{
+public:
+    template<class T>
+    auto operator<<(T&& t) const-> _MD_Stream&{  return _MD_Stream::instance() << Forward<T>(t);  }
+
+    auto operator->() const-> _MD_Stream*{  return &_MD_Stream::instance();  }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace sgm
+{
+    namespace spec
+    {
+
+	    static _Singleton_MD_Streamer const mdo = {};
+
+	    static std::string const newl = "  \n";
+	    static std::string const empty_line = Empty_lines(1);
+
+    }
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::_MD_Stream_Guard
+{
+public:
+	_MD_Stream_Guard(std::string working_filepath);
+	~_MD_Stream_Guard();
+
+	bool is_successful;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::md_guard
+{
+public:
+	md_guard(std::string begin);
+	md_guard(std::string begin, std::string end);
+	~md_guard();
+
+private:
+	std::string _end;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::md_block_guard : public md_guard
+{
+public:
+	md_block_guard(std::string s = "");
+};
+
+
+class sgm::spec::html_block_guard
+{
+public:
+	html_block_guard(std::string const& tags);
+	~html_block_guard();
+
+private:
+	std::string _end = {};
+
+	static auto _bracket(std::string const& s)-> std::string;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 #define SGM_SPECIFICATION_TEST(PREFIX, TITLE, SUFFIX)   \
     struct __##TITLE##_Helper   \
     {   \
@@ -198,21 +448,27 @@ namespace sgm
     \
     void PREFIX##TITLE##SUFFIX::test()  \
     {   \
+        sgm::spec::_MD_Stream_Guard guard( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) );  \
+        \
         try     \
         {   \
+            \
             for(auto _test : __##TITLE##_Helper::test_list)  \
                 _test(); \
             \
+            guard.is_successful = true;    \
             std::cout << #TITLE << " test complete.\n"; \
             \
         }   \
         catch(sgm::Exception const& e)  \
         {   \
             std::cout << '\n' << #TITLE << " test failed.\n\t" << e.what() << std::endl;    \
+            guard.is_successful = false;    \
         }   \
         catch(...)  \
         {   \
             std::cout << '\n' << #TITLE << " test failed.\n\t" << "unexpected error.\n";    \
+            guard.is_successful = false;    \
         }   \
     }   \
     \

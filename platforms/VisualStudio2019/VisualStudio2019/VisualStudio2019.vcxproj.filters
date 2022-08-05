@@ -168,6 +168,12 @@
     <ClCompile Include="..\..\..\include\S3D\Affine\Test_Affine.cpp">
       <Filter>S3D\Affine</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Specification\Specification.cpp">
+      <Filter>SGM\Specification</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Specification\Test_Specification.cpp">
+      <Filter>SGM\Specification</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\WorldTest.hpp">
@@ -340,6 +346,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\SGM\Mathexpr\Test_Mathexpr.hpp">
       <Filter>SGM\Mathexpr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Specification\Test_Specification.hpp">
+      <Filter>SGM\Specification</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

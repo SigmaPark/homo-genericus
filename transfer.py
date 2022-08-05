@@ -193,6 +193,10 @@ def main():
                 ]
             ,   ["Specification"
                 ,   'Specification.hpp'
+                ,   'Specification.cpp'
+                ,   'Test_Specification.hpp'
+                ,   'Test_Specification.cpp'
+                ,   'Test_Specification.md'
                 ]
             ,   ["Type_Analysis"
                 ,   'Type_Analysis.hpp'
