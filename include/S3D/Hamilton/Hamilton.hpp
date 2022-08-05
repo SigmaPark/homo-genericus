@@ -11,6 +11,7 @@
 
 #include "SGM/High_Templar/Countable.hpp"
 #include "SGM/High_Templar/High_Templar.hpp"
+#include "SGM/Mathexpr/Mathexpr.hpp"
 #include <type_traits>
 #include <limits>
 #include <complex>
@@ -178,10 +179,6 @@ namespace s3d
 	>
 	static void _MatCopy(CON&& container, MAT& target_matrix) 
 	noexcept(is_Rvalue_Reference<CON&&>::value);
-
-
-	template<size_t BASE, size_t POWER>  
-	static auto constexpr _CX_POW() noexcept-> size_t;
 
 
 	template<class MAT>  
@@ -547,7 +544,7 @@ namespace s3d
 		else if constexpr(std::is_floating_point_v<T>)
 			return 
 			(	std::abs(t1 - t2) 
-			<	static_cast<T>(_CX_POW<10, DP>()) * std::numeric_limits<T>::epsilon()
+			<	sgm::Mathexpr::int_pow<T, 10, DP>() * std::numeric_limits<T>::epsilon()
 			);
 		else if constexpr(trait::is_complex<T>::value)
 		{
@@ -590,18 +587,6 @@ namespace s3d
 			return mat.rows() == mat.cols() && mat.cols() > 1;
 		else
 			return Compile_Fails();	 // Not a Matrix.
-	}
-	
-	
-	template<size_t BASE, std::size_t POWER>  
-	auto constexpr _CX_POW() noexcept-> std::size_t
-	{
-		if constexpr(POWER == 0)
-			return 1;
-		else if constexpr(BASE == 0)
-			return 0;
-		else
-			return BASE*_CX_POW<BASE, POWER - 1>();
 	}
 
 }
