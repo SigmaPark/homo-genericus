@@ -192,6 +192,10 @@ def main():
                 ,   'Test_Span.cpp'
                 ]
             ,   ["Specification"
+                ,   ["md_materials"
+                    ,   'sample_image.jpg'
+                    ,   'YOLO.txt'
+                    ]
                 ,   'Specification.hpp'
                 ,   'Specification.cpp'
                 ,   'Test_Specification.hpp'

@@ -127,7 +127,7 @@ sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
 		mdo->print_and_close();
 	else
 	{
-		remove(mdo->md_filepath().c_str());
+		std::remove(mdo->md_filepath().c_str());
 		
 		mdo->close();
 	}
