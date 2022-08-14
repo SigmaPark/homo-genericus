@@ -175,6 +175,7 @@ def main():
             ,   ["Mathexpr"
                 ,   'Mathexpr.hpp'
                 ,   'Test_Mathexpr.hpp'
+                ,   'Test_Mathexpr.cpp'
                 ]
             ,   ["Operators_of"
                 ,   'Operators_of.hpp'

@@ -187,6 +187,7 @@
     <ClCompile Include="..\..\..\include\SGM\interface_Traits\Test_interface_Traits.cpp" />
     <ClCompile Include="..\..\..\include\SGM\iterable\Test_iterable.cpp" />
     <ClCompile Include="..\..\..\include\SGM\List\Test_List.cpp" />
+    <ClCompile Include="..\..\..\include\SGM\Mathexpr\Test_Mathexpr.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Operators_of\Test_Operators_of.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Recursion\Test_Recursion.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Span\Test_Span.cpp" />

@@ -40,7 +40,7 @@ int result = 1 + 1;
   
 sgm::spec::is_True(result == 2);  
 ```
-"sgm::spec::is_True" throws an std::exception if the boolean parameter is false, and the exception prevents making Markdown file export. Therefore the code result is correct if the document file is successfully created.
+"sgm::spec::is_True" throws an sgm::Exception if the boolean parameter is false, and the exception prevents making Markdown file export. Therefore the code result is correct if the document file is successfully created.
 
 &nbsp;  
 

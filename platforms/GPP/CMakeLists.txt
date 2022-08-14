@@ -45,6 +45,7 @@ add_executable(
     ${SGM_INCLUDE_DIR}/SGM/interface_Traits/Test_interface_Traits.cpp
     ${SGM_INCLUDE_DIR}/SGM/iterable/Test_iterable.cpp 
     ${SGM_INCLUDE_DIR}/SGM/List/Test_List.cpp
+    ${SGM_INCLUDE_DIR}/SGM/Mathexpr/Test_Mathexpr.cpp
     ${SGM_INCLUDE_DIR}/SGM/Operators_of/Test_Operators_of.cpp
     ${SGM_INCLUDE_DIR}/SGM/Recursion/Test_Recursion.cpp
 	${SGM_INCLUDE_DIR}/SGM/Span/Test_Span.cpp

@@ -74,7 +74,7 @@ BEGIN_CODE_BLOCK(is_true_ex)
 END_CODE_BLOCK_AND_LOAD(is_true_ex)
 
 	sgm::spec::mdo
-	<<	"\"sgm::spec::is_True\" throws an std::exception if the boolean parameter is false, "
+	<<	"\"sgm::spec::is_True\" throws an sgm::Exception if the boolean parameter is false, "
 	<<	"and the exception prevents making Markdown file export. " 
 	<<	"Therefore the code result is correct "
 	<<	"if the document file is successfully created."

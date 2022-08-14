@@ -81,6 +81,7 @@ bool wt::Tests(char const* const module_title) noexcept
 #include "SGM/interface_Traits/Test_interface_Traits.hpp"
 #include "SGM/iterable/Test_iterable.hpp"
 #include "SGM/List/Test_List.hpp"
+#include "SGM/Mathexpr/Test_Mathexpr.hpp"
 #include "SGM/Operators_of/Test_Operators_of.hpp"
 #include "SGM/Recursion/Test_Recursion.hpp"
 #include "SGM/Span/Test_Span.hpp"
@@ -123,6 +124,7 @@ void test() noexcept(false)
     sgm::spec::Test_interface_Traits::test();
     sgm::spec::Test_iterable::test();    
     sgm::spec::Test_List::test();
+    sgm::spec::Test_Mathexpr::test();
     sgm::spec::Test_Operators_of::test();
     sgm::spec::Test_Recursion::test();
 	sgm::spec::Test_Span::test();
