@@ -441,6 +441,9 @@ FodyWeavers.xsd
 # VIM 
 *.swp
 
+# VisualStudio IDE
+[Vv]isual[Ss]tudio*/
+
 # CMake idiom
 [Bb]uild/
 [Oo]ut/

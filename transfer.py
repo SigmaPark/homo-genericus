@@ -252,20 +252,6 @@ def main():
             ,   'CMakeLists.txt'
             ,   'VCPP_main.cpp'
             ]
-        ,   ["VisualStudio2019"
-            ,   ["All_Build"
-                ,   'All_Build.vcxproj'
-                ,   'All_Build.vcxproj.filters'
-                ,   'main.cpp'
-                ]
-            ,   ["VisualStudio2019"
-                ,   'VisualStudio2019.vcxproj'
-                ,   'VisualStudio2019.vcxproj.filters'
-                ,   'VS2019_main.cpp'
-                ,   'postbuild.bat'
-                ]
-            ,   'VisualStudio2019.sln'
-            ]
         ,   'execute.py'
         ,   'generate.py'
         ,   'init.py'
