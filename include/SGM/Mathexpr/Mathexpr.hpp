@@ -22,37 +22,42 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-namespace sgm::_Mathexpr_pow_detail
+namespace sgm
 {
+	namespace _Mathexpr_pow_detail
+	{
 	
-	template
-	<	class BASE, std::int64_t POWER, class RES = decltype(BASE::value)
-	,	int MODE
-		=	POWER == 0 ? 1
-		:	BASE::value == 0 ? 2
-		:	POWER < 0 ? 3
-		:	/* otherwise */ 0
-	>
-	struct Power;
+		template
+		<	class BASE, std::int64_t POWER, class RES = decltype(BASE::value)
+		,	int MODE
+			=	POWER == 0 ? 1
+			:	BASE::value == 0 ? 2
+			:	(POWER < 0) ? 3
+			:	/* otherwise */ 0
+		>
+		struct Power;
 
-	template<class BASE, std::int64_t POWER, class RES>
-	struct Power<BASE, POWER, RES, 0> : Unconstructible
-	{  
-		static RES constexpr value = BASE::value*Power<BASE, POWER-1, RES>::value;  
-	};
+		template<class BASE, std::int64_t POWER, class RES>
+		struct Power<BASE, POWER, RES, 0> : Unconstructible
+		{  
+			static RES constexpr value = BASE::value*Power<BASE, POWER-1, RES>::value;  
+		};
 
-	template<class BASE, std::int64_t POWER, class RES>
-	struct Power<BASE, POWER, RES, 1> : Unconstructible{  static RES constexpr value = 1;  };
+		template<class BASE, std::int64_t POWER, class RES>
+		struct Power<BASE, POWER, RES, 1> 
+		:	Unconstructible{  static RES constexpr value = 1;  };
 
-	template<class BASE, std::int64_t POWER, class RES>
-	struct Power<BASE, POWER, RES, 2> : Unconstructible{  static RES constexpr value = 0;  };
+		template<class BASE, std::int64_t POWER, class RES>
+		struct Power<BASE, POWER, RES, 2> 
+		:	Unconstructible{  static RES constexpr value = 0;  };
 
-	template<class BASE, std::int64_t POWER, class RES>
-	struct Power<BASE, POWER, RES, 3> : Unconstructible
-	{ 
-		static RES constexpr value = RES(1) / Power<BASE, -POWER, RES>::value;  
-	};
+		template<class BASE, std::int64_t POWER, class RES>
+		struct Power<BASE, POWER, RES, 3> : Unconstructible
+		{ 
+			static RES constexpr value = RES(1) / Power<BASE, -POWER, RES>::value;  
+		};
 
+	}
 }
 
 
