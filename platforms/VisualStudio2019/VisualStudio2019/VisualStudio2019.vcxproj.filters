@@ -177,6 +177,9 @@
     <ClCompile Include="..\..\..\include\SGM\Mathexpr\Test_Mathexpr.cpp">
       <Filter>SGM\Mathexpr</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Nullable.cpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\WorldTest.hpp">
@@ -352,6 +355,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\SGM\Specification\Test_Specification.hpp">
       <Filter>SGM\Specification</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Nullable.hpp">
+      <Filter>SGM\Abbreviable</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Nullable.hpp">
+      <Filter>SGM\Abbreviable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

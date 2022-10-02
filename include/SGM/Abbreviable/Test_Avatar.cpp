@@ -15,6 +15,11 @@ using sgm::spec::is_True;
 static void Test01()
 {
 	{
+		sgm::Avatar<int> constexpr avt{};
+
+		is_True(!avt.is_owning());
+	}
+	{
 		Specimen s(2);
 		auto avt = sgm::Refer(s);
 
@@ -62,8 +67,6 @@ static void Test02()
 	//cavt = Avatar<Specimen>();	// Compile Failed.
 
 	static_assert( sgm::is_constAvatar<decltype(cavt)>::value, " cavt is not constant." );
-	
-	is_True(cavt.is_yet());
 }
 
 
@@ -91,10 +94,6 @@ static void Test04()
 	x = 4;
 
 	is_True(avt1 == 4);
-
-	avt1.distruct();
-
-	is_True(avt1.has_gone());
 }
 
 

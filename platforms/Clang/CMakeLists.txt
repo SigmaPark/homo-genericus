@@ -32,6 +32,7 @@ add_executable(
 
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Avatar.cpp
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Maybe.cpp
+    ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Nullable.cpp
     ${SGM_INCLUDE_DIR}/SGM/Abbreviable/Test_Pinweight.cpp  
     ${SGM_INCLUDE_DIR}/SGM/Array/Test_Array.cpp
     ${SGM_INCLUDE_DIR}/SGM/Boomerang/Test_Boomerang.cpp

@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\..\include\S3D\Quaternion\Test_Quaternion.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.cpp" />
+    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Nullable.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Array\Test_Array.cpp" />
     <ClCompile Include="..\..\..\include\SGM\Boomerang\Test_Boomerang.cpp" />
@@ -214,9 +215,11 @@
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Abbreviable.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Avatar.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Maybe.hpp" />
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Nullable.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Pinweight.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.hpp" />
+    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Nullable.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Allocator\Allocator.hpp" />
     <ClInclude Include="..\..\..\include\SGM\Array\Array.hpp" />

@@ -21,7 +21,7 @@ namespace sgm
 class sgm::Exception
 {
 public:
-    Exception(char const* const message = "") : _message(message){}
+    constexpr Exception(char const* const message = "") : _message(message){}
 
     virtual auto what() const-> char const*{  return _message;  }
 

@@ -183,12 +183,11 @@ public:
 	using value_type = T;
 	
 
-	Operators_of() : _p(nullptr){}
+	constexpr Operators_of() : _p(nullptr){}
 	Operators_of(T& t) : _p( _operator_helper_detail::Address_of(t) ){}
 
-	~Operators_of(){  _p = nullptr;  }
-
 	auto operator=(T& t)-> T*{  return _p = _operator_helper_detail::Address_of(t);  }
+	auto operator=(None)-> T*{  return _p = nullptr;  }
 	
 	operator T const&() const{  return *_p;  }
 	operator T&(){  return *_p;  }

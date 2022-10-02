@@ -49,34 +49,25 @@ private:
 
 
 public:
-	Abbreviable_t() : _opof_type(), _state(State::YET){}
+	constexpr Abbreviable_t() : _is_owning(false){}
 
 	template< class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
-	Abbreviable_t(Q& q) : _opof_type(q), _state(State::OWNING){}
+	Abbreviable_t(Q& q) : _opof_type(q), _is_owning(true){}
 
 	Abbreviable_t(T&&) = delete;
 
 	template<  class _M, class = Enable_if_t< is_const_v || !Avatar_t<T, _M>::is_const_v >  >
-	Abbreviable_t(Avatar_t<T, _M> const& avt) : _opof_type(avt.get()), _state( get_state(avt) ){}
-
-
-	~Abbreviable_t(){  distruct();  }
-
-	void distruct() noexcept
-	{  
-		static_cast<_opof_type&>(*this).~Operators_of();
-		
-		_state = State::GONE;  
-	}
+	Abbreviable_t(Avatar_t<T, _M> const& avt) 
+	:	_opof_type(avt.get()), _is_owning(avt.is_owning()){}
 
 
 	auto operator=(Abbreviable_t const& avt)-> Abbreviable_t&
 	{
 		static_assert(!is_const_v, "cannot bind to const Avatar_t");
 
-		assert(is_yet() && !avt.has_gone() || is_owning() && avt.is_owning());
+		assert(is_owning() || avt.is_owning());
 
-		static_cast<T&>(*this) = avt.get(),  _state = avt._state;
+		static_cast<T&>(*this) = avt.get(),  _is_owning = avt._is_owning();
 
 		return *this;
 	}
@@ -99,9 +90,7 @@ public:
 	}
 
 
-	bool is_yet() const{  return _state == State::YET;  }
-	bool is_owning() const{  return _state == State::OWNING;  }
-	bool has_gone() const{  return _state == State::GONE;  }
+	bool is_owning() const{  return _is_owning;  }
 
 	auto get() const-> T const&{  return static_cast<T const&>(*this);  }
 	auto get()-> element_t&{  return static_cast<element_t&>(*this);  }
@@ -115,7 +104,7 @@ public:
 		,	"cannot bind to constAvatar"
 		);
 
-		static_cast<_opof_type&>(*this) = avt.get(),  _state = get_state(avt);
+		static_cast<_opof_type&>(*this) = avt.get(),  _is_owning = avt.is_owning();
 
 		return *this;
 	}
@@ -128,23 +117,14 @@ public:
 		,	"cannot bind to constAvatar"
 		);
 
-		assert(!has_gone() && L"Avatar_t was released already");
-
-		static_cast<_opof_type&>(*this) = q,  _state = State::OWNING;
+		static_cast<_opof_type&>(*this) = q,  _is_owning = true;
 
 		return *this;
 	}
 
 
 private:
-	enum class State{YET, OWNING, GONE} _state;
-
-
-	template<class _M>
-	static auto get_state(Avatar_t<T, _M> avt)-> State
-	{
-		return avt.is_owning() ? State::OWNING : (avt.is_yet() ? State::YET : State::GONE);
-	}
+	bool _is_owning;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
