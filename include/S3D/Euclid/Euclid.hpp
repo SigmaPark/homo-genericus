@@ -11,7 +11,7 @@
 
 #include "../Decomposition/Decomposition.hpp"
 #include "SGM/Array/Array.hpp"
-#include "SGM/Abbreviable/Maybe.hpp"
+#include "SGM/Abbreviable/Nullable.hpp"
 
 
 namespace s3d
@@ -282,14 +282,14 @@ public:
 			&&	trait::Has_Matrix_interface<U2>::value 
 			>
 	>
-	static auto angle(U1 const& u1, U2 const& u2)-> Maybe< trait::value_t<U1> >
+	static auto angle(U1 const& u1, U2 const& u2)-> Nullable< trait::value_t<U1> >
 	{
 		assert( Has_Vector_interface(u1) && Has_Vector_interface(u2) );
 
 		using T = trait::value_t<U1>;
 
-		if( Maybe<T> const nopt = NullMyb;  !is_valid(u1) || !is_valid(u2) )
-			return nopt;
+		if( !is_valid(u1) || !is_valid(u2) )
+			return Null_t{};
 		else
 		{
 			T const den = u1.norm()*u2.norm();
@@ -300,11 +300,10 @@ public:
 					return t < Lb ? Lb : t > hb ? hb : t;  
 				};
 
-
-			return 
-			Are_almost_same<T>(den, 0) 
-			?	nopt
-			:	Maybe<T>(   std::acos(  clamp_f( u1.dot(u2) / den, T(-1), T(1) )  )   );
+			if( Are_almost_same<T>(den, 0) )
+				return Null_t{};
+			else
+				return std::acos(  clamp_f( u1.dot(u2) / den, T(-1), T(1) )  );
 		}
 	}
 };
@@ -337,8 +336,8 @@ namespace s3d
 	
 			return 
 			is_valid(tgt) 
-			?	make_Maybe(  line_t( Projection(src.position(), des), tgt )  )
-			:	NullMyb;
+			?	Nullable<line_t>( Projection(src.position(), des), tgt )
+			:	Nullable<line_t>{};
 		}
 	}
 	
@@ -381,12 +380,12 @@ namespace s3d
 			;	!Are_almost_same< trait::value_t<pos_t>, 2 >(den, 0) 
 			)
 				return 
-				make_Maybe<pos_t>
+				Nullable<pos_t>
 				(	src.position() 
 				+	src.tangent() * des.normal().dot(des.position() - src.position())/den
 				);
 			else
-				return Maybe<pos_t>{};
+				return Nullable<pos_t>{};
 		}
 	}
 

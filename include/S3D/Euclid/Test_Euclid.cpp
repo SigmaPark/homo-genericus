@@ -60,7 +60,7 @@ static void Projection()
 	s3d::Line const L2(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});
 
 	::_identical
-	(	*Projection(L2, P1)
+	(	Projection(L2, P1).get()
 	,	s3d::Line(Vector<float, 3>{1, 0, 0}, UnitVec<float, 3>::Axis<1>()) 
 	);
 }
@@ -83,7 +83,7 @@ static void intersection()
 	s3d::Line const L1(Vector<float, 3>{1, 1, 1}, UnitVec<float, 3>{0, -1, -1});	
 	s3d::Plane const P1(Vector<float, 3>::Zero(), UnitVec<float, 3>::Axis<2>());
 
-	::_identical( *intersection(L1, P1), Vector<float, 3>{1, 0, 0} );
+	::_identical( intersection(L1, P1).get(), Vector<float, 3>{1, 0, 0} );
 }
 
 
@@ -98,8 +98,8 @@ static void Direction()
 	&&	s3d::Direction::are_orthogonal( u1, u2, u1.cross(u2) )
 	);
 
-	::_identical( *s3d::Direction::angle(u1, Vector<float, 3>{1, 1, 0}), ::Pi/4 );
-	::_identical( *s3d::Direction::angle(u1, -u1), ::Pi );
+	::_identical( s3d::Direction::angle(u1, Vector<float, 3>{1, 1, 0}).get(), ::Pi/4 );
+	::_identical( s3d::Direction::angle(u1, -u1).get(), ::Pi );
 }
 
 
