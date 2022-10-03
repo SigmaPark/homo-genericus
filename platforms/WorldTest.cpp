@@ -69,7 +69,6 @@ bool wt::Tests(char const* const module_title) noexcept
 
 #include "SGM/Array/Test_Array.hpp"
 #include "SGM/Abbreviable/Test_Avatar.hpp"
-#include "SGM/Abbreviable/Test_Maybe.hpp"
 #include "SGM/Abbreviable/Test_Nullable.hpp"
 #include "SGM/Abbreviable/Test_Pinweight.hpp"
 #include "SGM/Boomerang/Test_Boomerang.hpp"
@@ -115,7 +114,6 @@ void test() noexcept(false)
 
     sgm::spec::Test_Array::test();
     sgm::spec::Test_Avatar::test();
-    sgm::spec::Test_Maybe::test();
     sgm::spec::Test_Nullable::test();
     sgm::spec::Test_Pinweight::test();
     sgm::spec::Test_Boomerang::test();

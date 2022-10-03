@@ -102,9 +102,6 @@
     <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.cpp">
       <Filter>SGM\Abbreviable</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.cpp">
-      <Filter>SGM\Abbreviable</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.cpp">
       <Filter>SGM\Abbreviable</Filter>
     </ClCompile>
@@ -191,16 +188,10 @@
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Avatar.hpp">
       <Filter>SGM\Abbreviable</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Maybe.hpp">
-      <Filter>SGM\Abbreviable</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Pinweight.hpp">
       <Filter>SGM\Abbreviable</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Avatar.hpp">
-      <Filter>SGM\Abbreviable</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Maybe.hpp">
       <Filter>SGM\Abbreviable</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\SGM\Abbreviable\Test_Pinweight.hpp">
