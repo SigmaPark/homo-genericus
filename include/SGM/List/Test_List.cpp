@@ -39,48 +39,101 @@ static void Construction()
 
 static void Emplacement()
 {
-#if 0
-	sgm::List<Specimen> Li;
-
-	Li.emplace_back( Specimen(1) );
-
-	Li.emplace_back(3);
-
-	Li.emplace_front( Specimen(5) );
-
-	Li.emplace_front(7);
-
 	{
-		auto citr = sgm::Next(Li.begin());
+		sgm::List<Specimen> Li;
 
-		auto itr = Li.emplace( citr, Specimen(9) );
+		Li.emplace_back( Specimen(1) );
 
-		is_True( *itr == Specimen(9) );
+		Li.emplace_back(3);
+
+		Li.emplace_front( Specimen(5) );
+
+		Li.emplace_front(7);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li
+		,	std::initializer_list<Specimen>
+			{	Specimen(7), Specimen(5), Specimen(1), Specimen(3)
+			}
+		);
 	}
+	{
+		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
 
-	sgm::spec::Are_Equivalent
-	(	Li
-	,	std::initializer_list<Specimen>
-		{	Specimen(7), Specimen(5), Specimen(9), Specimen(1), Specimen(3)
-		}
-	);
-#endif
+		auto itr = Li.end();
+
+		auto new_itr = Li.emplace( itr, Specimen(9) );
+
+		is_True( *new_itr == Specimen(9) );
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li
+		,	std::initializer_list<Specimen>
+			{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)
+			}
+		);
+	}
+	{
+		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
+		
+		auto itr = Li.rend();
+
+		auto new_itr = Li.emplace( itr, Specimen(9) );
+
+		is_True( *new_itr == Specimen(9) );
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li
+		,	std::initializer_list<Specimen>
+			{	Specimen(9), Specimen(1), Specimen(3), Specimen(5), Specimen(7)
+			}
+		);
+	}
+	{
+		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
+
+		auto itr = sgm::Next(Li.begin());
+
+		auto new_itr = Li.emplace( itr, Specimen(9) );
+
+		is_True( *new_itr == Specimen(9) );
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li
+		,	std::initializer_list<Specimen>
+			{	Specimen(1), Specimen(3), Specimen(9), Specimen(5), Specimen(7)
+			}
+		);
+	}
+	{
+		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
+		
+		auto itr = Li.rbegin();
+
+		auto new_itr = Li.emplace( itr, Specimen(9) );
+
+		is_True( *new_itr == Specimen(9) );
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li
+		,	std::initializer_list<Specimen>
+			{	Specimen(1), Specimen(3), Specimen(5), Specimen(9), Specimen(7)
+			}
+		);
+	}
 }
 
 
 static void Pop()
 {
-#if 0
 	sgm::List<Specimen> Li
 	{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9), Specimen(11)
 	};
 	
 	{
-		auto itr = Li.pop_back();
+		Li.pop_back();
 
-		is_True(itr == Li.end());
-
-		sgm::spec::Are_Equivalent
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>
 			{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)
@@ -88,11 +141,9 @@ static void Pop()
 		);		
 	}
 	{
-		auto itr = Li.pop_front();
-
-		is_True(itr == Li.begin());
-
-		sgm::spec::Are_Equivalent
+		Li.pop_front();
+	
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>
 			{	Specimen(3), Specimen(5), Specimen(7), Specimen(9)
@@ -102,20 +153,19 @@ static void Pop()
 	{
 		auto citr = sgm::Next(Li.begin());
 
-		is_True( *citr = Specimen(5) );
+		is_True( *citr == Specimen(5) );
 
 		auto itr = Li.pop(citr);
 
 		is_True( *itr == Specimen(7) );
 
-		sgm::spec::Are_Equivalent
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>
-			{	Specimen(3), /*Specimen(5),*/ Specimen(7), Specimen(9)
+			{	Specimen(3), Specimen(7), Specimen(9)
 			}
 		);
 	}
-#endif
 }
 
 
