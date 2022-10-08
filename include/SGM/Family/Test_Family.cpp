@@ -81,6 +81,38 @@ static void Move_Assignment()
 }
 
 
+static void Get_and_Forward()
+{
+	Specimen s1(5);
+
+	sgm::Family<Specimen, Specimen&> fam1( Specimen(2), s1 );
+
+	static_assert
+	(	sgm::Boolean_And
+		<	sgm::is_Same< decltype(fam1.template get<0>()), Specimen& >
+		,	sgm::is_Same< decltype(fam1.template get<1>()), Specimen& >
+		,	sgm::is_Same< decltype( sgm::immut(fam1).template get<0>() ), Specimen const& >
+		,	sgm::is_Same< decltype( sgm::immut(fam1).template get<1>() ), Specimen& >
+		,	sgm::is_Same< decltype( sgm::Move(fam1).template get<0>() ), Specimen&& >
+		,	sgm::is_Same< decltype( sgm::Move(fam1).template get<1>() ), Specimen& >
+		>::	value
+	,	""
+	);
+
+	static_assert
+	(	sgm::Boolean_And
+		<	sgm::is_Same< decltype(fam1.template forward<0>()), Specimen&& >
+		,	sgm::is_Same< decltype(fam1.template forward<1>()), Specimen& >
+		,	sgm::is_Same< decltype( sgm::immut(fam1).template forward<0>() ), Specimen const&& >
+		,	sgm::is_Same< decltype( sgm::immut(fam1).template forward<1>() ), Specimen& >
+		,	sgm::is_Same< decltype( sgm::Move(fam1).template forward<0>() ), Specimen&& >
+		,	sgm::is_Same< decltype( sgm::Move(fam1).template forward<1>() ), Specimen& >
+		>::	value
+	,	""
+	);
+}
+
+
 static void Merge_Family_Test()
 {
 	Specimen s1 = 1, s2 = 3;
@@ -167,6 +199,7 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Family, /**/)
 ,	::Move_Rvalue_Member
 ,	::Assignment
 ,	::Move_Assignment
+,	::Get_and_Forward
 ,	::Merge_Family_Test
 ,	::Harden_Test
 ,	::As_it_is_Test

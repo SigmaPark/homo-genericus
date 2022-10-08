@@ -14,7 +14,7 @@ using sgm::spec::Specimen;
 
 static void Construction()
 {
-#if 0
+#if 1
 	{
 		sgm::List<Specimen> Li;
 
@@ -25,7 +25,7 @@ static void Construction()
 
 		is_True(Li.size() == 3);
 		
-		sgm::spec::Are_Equivalent
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
 		);
@@ -111,7 +111,7 @@ static void Pop()
 		sgm::spec::Are_Equivalent
 		(	Li
 		,	std::initializer_list<Specimen>
-			{	Specimen(3), Specimen(5), Specimen(7), Specimen(9)
+			{	Specimen(3), /*Specimen(5),*/ Specimen(7), Specimen(9)
 			}
 		);
 	}

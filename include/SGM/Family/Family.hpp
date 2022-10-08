@@ -20,8 +20,11 @@ namespace sgm
 	class Family;
 
 
-	template<class T1, class T2>
-	using Duo = Family<T1, T2>;
+	template<class T0, class T1>
+	class Duo;
+
+	template<class T0, class T1, class T2>
+	class Trio;
 
 
 	enum class _As_it_is_t{} constexpr as_it_is{};
@@ -403,6 +406,55 @@ public:
 	bool constexpr operator==(Family) const{  return true;  }
 	bool constexpr operator!=(Family) const{  return false;  }
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+#ifndef _SGM_FAMILY_MEMBER_ACCESS_FUNC
+	#define _SGM_FAMILY_MEMBER_ACCESS_FUNC(TITLE, N)		\
+		auto TITLE() & noexcept-> T##N&{  return _fam_t::template get<N>();  }	\
+		auto TITLE() const& noexcept-> T##N const&{  return _fam_t::template get<N>();  }	\
+		auto TITLE() && noexcept-> T##N&&{  return Move(_fam_t::template get<N>());  }		\
+		auto TITLE() const&& noexcept-> T##N const&&{  return Move(_fam_t::template get<N>());  }
+
+#else
+	#error _SGM_FAMILY_MEMBER_ACCESS_FUNC was already defined somewhere else.
+#endif
+
+
+template<class T0, class T1>
+class sgm::Duo : public Family<T0, T1>
+{
+private:
+	using _fam_t = Family<T0, T1>;
+
+
+public:
+	template<class...ARGS>
+	Duo(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
+
+	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
+	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
+};
+
+
+template<class T0, class T1, class T2>
+class sgm::Trio : public Family<T0, T1, T2>
+{
+private:
+	using _fam_t = Family<T0, T1, T2>;
+
+
+public:
+	template<class...ARGS>
+	Trio(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
+
+	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
+	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
+	_SGM_FAMILY_MEMBER_ACCESS_FUNC(third, 2)
+};
+
+
+#undef _SGM_FAMILY_MEMBER_ACCESS_FUNC
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
