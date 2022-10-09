@@ -33,6 +33,7 @@ namespace sgm
 	class List_iterator;
 
 	struct _List_itr_Helper;
+	struct _List_node_Helper;
 
 	enum class _List_by_Tag{};
 
@@ -61,6 +62,18 @@ struct sgm::_List_itr_Helper : Unconstructible
 	static auto node_ptr(List_iterator<T, IS_MUTABLE, IS_FORWARD> const& itr) noexcept
 	->	List_Node<T>* const&{  return itr._node_ptr;  }
 };
+
+
+struct sgm::_List_node_Helper : Unconstructible
+{
+	template<bool IS_PLUS, bool IS_FORWARD, class T>
+	static auto shift(List_Node<T>& node) noexcept
+	->	Enable_if_t< IS_PLUS == IS_FORWARD, List_Node<T>*& >{  return node.back_ptr;  }
+	
+	template<bool IS_PLUS, bool IS_FORWARD, class T>
+	static auto shift(List_Node<T>& node) noexcept
+	->	Enable_if_t< IS_PLUS != IS_FORWARD, List_Node<T>*& >{  return node.front_ptr;  }
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -80,11 +93,11 @@ public:
 	static bool constexpr is_mutable_v = IS_MUTABLE, is_forward_v = IS_FORWARD;
 
 
-	List_iterator(_node_t* node_ptr = nullptr) : _node_ptr(node_ptr){}
+	List_iterator(_node_t* const node_ptr = nullptr) : _node_ptr(node_ptr){}
 
 	List_iterator(_itr_t const&) = default;
 
-	List_iterator(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const itr) 
+	List_iterator(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const& itr) 
 	:	_node_ptr( _List_itr_Helper::node_ptr(itr) )
 	{
 		static_assert(!IS_MUTABLE, "cannot assign immutable iterator to mutable one .");
@@ -110,7 +123,7 @@ public:
 
 	auto operator++()-> _itr_t&
 	{
-		_update_node<true>(_node_ptr);
+		_node_ptr = _List_node_Helper::shift<true, IS_FORWARD>(*_node_ptr);
 
 		return *this;
 	}
@@ -118,7 +131,7 @@ public:
 
 	auto operator--()-> _itr_t&
 	{
-		_update_node<false>(_node_ptr);
+		_node_ptr = _List_node_Helper::shift<false, IS_FORWARD>(*_node_ptr);
 
 		return *this;
 	}
@@ -153,15 +166,6 @@ public:
 
 private:
 	_node_t* _node_ptr;
-
-
-	template<bool IS_PLUS>
-	static auto _update_node(_node_t*& node_ptr)
-	->	Enable_if_t<IS_PLUS == IS_FORWARD>{  node_ptr = node_ptr->back_ptr;  }
-
-	template<bool IS_PLUS>
-	static auto _update_node(_node_t*& node_ptr)
-	->	Enable_if_t<IS_PLUS != IS_FORWARD>{  node_ptr = node_ptr->front_ptr;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -188,6 +192,8 @@ class sgm::List
 {
 private: 
 	using _node_t = List_Node<T>;
+	using _node_hp = _List_node_Helper;
+	using _itr_hp = _List_itr_Helper;
 
 public:
 	using value_type = Decay_t<T>;
@@ -328,40 +334,13 @@ public:
 
 
 	template<class...ARGS>
-	auto emplace_back(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> List&
-	{
-		_node_t& new_node = *_alloc( nullptr, nullptr, Forward<ARGS>(args)... );
-
-		if(is_empty())
-			_pnode_begin = _pnode_rbegin = &new_node;
-		else
-		{
-			_node_t &cur_node = *_pnode_rbegin;
-
-			new_node.front_ptr = &cur_node;
-			_pnode_rbegin = cur_node.back_ptr = &new_node;
-		}
-
-		return *this;
-	}
+	auto emplace_back(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+	->	List&{  return _emplace_end<true>( *this, Forward<ARGS>(args)... );  }
 
 	template<class...ARGS>
-	auto emplace_front(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> List&
-	{
-		_node_t& new_node = *_alloc( nullptr, nullptr, Forward<ARGS>(args)... );
+	auto emplace_front(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+	->	List&{  return _emplace_end<false>( *this, Forward<ARGS>(args)... );  }
 
-		if(is_empty())
-			_pnode_rbegin = _pnode_begin = &new_node;
-		else
-		{
-			_node_t& cur_node = *_pnode_begin;
-
-			new_node.back_ptr = &cur_node;
-			_pnode_begin = cur_node.front_ptr = &new_node;
-		}
-
-		return *this;
-	}
 
 	template<class ITR, class...ARGS>
 	auto emplace(ITR const itr, ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> ITR
@@ -373,54 +352,39 @@ public:
 		,	""
 		);
 
-		bool constexpr is_forward_v = Decay_t<ITR>::is_forward_v;
 
-		if( _List_itr_Helper::node_ptr(itr) == nullptr )
-			return _emplace_next<is_forward_v>( *this, Forward<ARGS>(args)... );
+		if( _itr_hp::node_ptr(itr) == nullptr )
+		{
+			bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
+			
+			_emplace_end<is_fwd_v>( *this, Forward<ARGS>(args)... );
+
+			return _begin_node_ptr<false, is_fwd_v>(*this);
+		}
 		else
 		{
 			ITR const 
 				behind_itr = Next(itr),
 				new_itr(  _alloc( nullptr, nullptr, Forward<ARGS>(args)... )  );
 
-			_link<is_forward_v>(itr, new_itr, behind_itr);
+			_link(itr, new_itr, behind_itr);
 
 			return new_itr;
 		}
 	}
 
 
-	auto pop_back()-> List&
-	{
-		if(!is_empty())
-		{
-			auto p = _pnode_rbegin->front_ptr;
-
-			_destroy(_pnode_rbegin);
-
-			( p == nullptr ? _pnode_begin : (_pnode_rbegin = p)->back_ptr ) = nullptr;
-		}
-	
-		return *this;
-	}
-	
-	auto pop_front()-> List&
-	{
-		if(!is_empty())
-		{
-			auto p = _pnode_begin->back_ptr;
-
-			_destroy(_pnode_begin);
-
-			( p == nullptr ? _pnode_rbegin : (_pnode_begin = p)->front_ptr ) = nullptr;
-		}
-		
-		return *this;
-	}
+	auto pop_back()-> List&{  return _pop_end<true>(*this);  }
+	auto pop_front()-> List&{  return _pop_end<false>(*this);  }
 
 
 	template<class ITR>
-	auto pop(ITR itr)-> ITR
+	auto pop(ITR const itr)
+	->	ITR{  return _itr_hp::node_ptr(itr) != nullptr ? pop( itr, Next(itr) ) : itr;  }
+
+
+	template<class ITR>
+	auto pop(ITR bi, ITR const ei)-> ITR
 	{
 		static_assert
 		(	(	is_Convertible<ITR, const_iterator>::value 
@@ -429,27 +393,25 @@ public:
 		,	""
 		);
 
-		List_Node<T>*& cur_ptr = _List_itr_Helper::node_ptr(itr);
+		if(bi != ei)
+		{
+			_unlink_range(bi, ei);
 
-		if(cur_ptr == nullptr)
-			return itr;
+			do
+			{
+				auto itr = bi++;
 
-		List_Node<T> *front_ptr = cur_ptr->front_ptr, *back_ptr = cur_ptr->back_ptr;
+				_node_t*& cur_node_ptr = _itr_hp::node_ptr(itr);
 
-		if(front_ptr != nullptr)
-			front_ptr->back_ptr = back_ptr,  cur_ptr->front_ptr = nullptr;
+				cur_node_ptr->front_ptr = cur_node_ptr->back_ptr = nullptr;
+				
+				_destroy(cur_node_ptr);
+			}
+			while(bi != ei);
+		}
 
-		if(back_ptr != nullptr)
-			back_ptr->front_ptr = front_ptr,  cur_ptr->back_ptr = nullptr;
-
-		_destroy(cur_ptr);
-
-		bool constexpr is_forward_v = Decay_t<ITR>::is_forward_v;
-
-		return _next_pop<is_forward_v>(front_ptr, back_ptr);
+		return ei;
 	}
-
-	auto pop(const_iterator bi, const_iterator ei)-> iterator;
 	
 
 	template
@@ -469,20 +431,20 @@ private:
 
 
 	template<class...ARGS>
-	auto _alloc(ARGS&&...args)-> List_Node<T>*
+	auto _alloc(ARGS&&...args)-> _node_t*
 	{
-		List_Node<T>* pres = _allocator.allocate( sizeof(List_Node<T>) );
+		_node_t* const pres = _allocator.allocate( sizeof(_node_t) );
 
-		_allocator.construct( pres, List_Node<T>{Forward<ARGS>(args)...} );
+		_allocator.construct( pres, _node_t{Forward<ARGS>(args)...} );
 
 		return pres;
 	}
 
-	void _destroy(List_Node<T>*& p)
+	void _destroy(_node_t*& p)
 	{
 		_allocator.destroy(p);
 
-		_allocator.deallocate( p, sizeof(List_Node<T>) );
+		_allocator.deallocate( p, sizeof(_node_t) );
 
 		p = nullptr;
 	}
@@ -491,7 +453,8 @@ private:
 	template<bool WANT_MOVE, class ITR>
 	void _try_move_from_iterators(ITR bi, ITR const ei) noexcept(WANT_MOVE)
 	{
-		for(  ;  bi != ei;  emplace_back( Move_if<WANT_MOVE>(*bi++) )  );
+		while(bi != ei)
+			emplace_back( Move_if<WANT_MOVE>(*bi++) );
 	}
 
 
@@ -538,93 +501,136 @@ private:
 	}
 
 
-	template<bool IS_FORWARD>
-	static auto _link
-	(	const_iterator const prev_itr
-	,	const_iterator const cur_itr
-	,	const_iterator const next_itr
-	)->	Enable_if_t<IS_FORWARD>
+	template<class ITR>
+	static void _link(ITR const prev_itr, ITR const cur_itr, ITR const next_itr)
 	{
-		List_Node<T>
-			&cur_node = *_List_itr_Helper::node_ptr(cur_itr),
-			*front_ptr = _List_itr_Helper::node_ptr(prev_itr),
-			*back_ptr = _List_itr_Helper::node_ptr(next_itr);
+		_node_t
+			&cur_node = *_itr_hp::node_ptr(cur_itr),
+			*const prev_node_ptr = _itr_hp::node_ptr(prev_itr),
+			*const next_node_ptr = _itr_hp::node_ptr(next_itr);		
 
-		cur_node.back_ptr = back_ptr;
-		cur_node.front_ptr = front_ptr;
+		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
 
-		if(front_ptr != nullptr)
-			front_ptr->back_ptr = &cur_node;
+		_node_hp::shift<true, is_fwd_v>(cur_node) = next_node_ptr;
+		_node_hp::shift<false, is_fwd_v>(cur_node) = prev_node_ptr;
 
-		if(back_ptr != nullptr)
-			back_ptr->front_ptr = &cur_node;
+		if(prev_node_ptr != nullptr)
+			_node_hp::shift<true, is_fwd_v>(*prev_node_ptr) = &cur_node;
+
+		if(next_node_ptr != nullptr)
+			_node_hp::shift<false, is_fwd_v>(*next_node_ptr) = &cur_node;
 	}
 
-	template<bool IS_FORWARD>
-	static auto _link
-	(	const_reverse_iterator const prev_itr
-	,	const_reverse_iterator const cur_itr
-	,	const_reverse_iterator const next_itr
-	)->	Enable_if_t<!IS_FORWARD>
+
+	template<class ITR>
+	static void _unlink_range(ITR const bi, ITR const ei)
 	{
-		List_Node<T>
-			&cur_node = *_List_itr_Helper::node_ptr(cur_itr),
-			*back_ptr = _List_itr_Helper::node_ptr(prev_itr),
-			*front_ptr = _List_itr_Helper::node_ptr(next_itr);
+		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
 
-		cur_node.back_ptr = back_ptr;
-		cur_node.front_ptr = front_ptr;
+		_node_t
+			&bnode = *_itr_hp::node_ptr(bi),
+			*const bfr_bnode_ptr = _node_hp::shift<false, is_fwd_v>(bnode),
+			*const enode_ptr = _itr_hp::node_ptr(ei);
 
-		if(front_ptr != nullptr)
-			front_ptr->back_ptr = &cur_node;
+		if(bfr_bnode_ptr != nullptr)
+			_node_hp::shift<true, is_fwd_v>(*bfr_bnode_ptr) = enode_ptr;
 
-		if(back_ptr != nullptr)
-			back_ptr->front_ptr = &cur_node;
+		_node_hp::shift<false, is_fwd_v>(*enode_ptr) = bfr_bnode_ptr;		
 	}
 
 
 	template<bool IS_FORWARD, class ME, class...ARGS>
-	static auto _emplace_next(ME& me, ARGS&&...args)-> Enable_if_t<IS_FORWARD, iterator>
+	static auto _emplace_end(ME& me, ARGS&&...args)-> ME&
 	{
-		me.emplace_back( Forward<ARGS>(args)... );
+		_node_t& new_node = *me._alloc( nullptr, nullptr, Forward<ARGS>(args)... );
 
-		return me._pnode_rbegin;
+		if(me.is_empty())
+			me._pnode_rbegin = me._pnode_begin = &new_node;
+		else
+		{
+			_node_t
+				*&last_node_ptr = _begin_node_ptr<false, IS_FORWARD>(me),
+				&cur_node = *last_node_ptr;
+
+			_node_hp::shift<false, IS_FORWARD>(new_node) = &cur_node;
+
+			last_node_ptr = _node_hp::shift<true, IS_FORWARD>(cur_node) = &new_node;
+		}
+
+		return me;
 	}
 
-	template<bool IS_FORWARD, class ME, class...ARGS>
-	static auto _emplace_next(ME& me, ARGS&&...args)-> Enable_if_t<!IS_FORWARD, reverse_iterator>
-	{
-		me.emplace_front( Forward<ARGS>(args)... );  
 
-		return me._pnode_begin;
+	template<bool IS_FORWARD, class ME>
+	static auto _pop_end(ME& me)-> ME&
+	{
+		if(!me.is_empty())
+		{
+			_node_t
+				*&last_node_ptr = _begin_node_ptr<false, IS_FORWARD>(me),
+				*const p = _node_hp::shift<false, IS_FORWARD>(*last_node_ptr);
+
+			me._destroy(last_node_ptr);
+
+			(	p == nullptr 
+			?	_begin_node_ptr<true, IS_FORWARD>(me) 
+			:	_node_hp::shift<true, IS_FORWARD>( *(last_node_ptr = p) )
+			) =	nullptr;
+		}
+		
+		return me;
 	}
 
 
-	template<bool IS_FORWARD>
-	static auto _next_pop(_node_t*&, _node_t*& back) noexcept
-	->	Enable_if_t<IS_FORWARD, _node_t*&>{  return back;  }
+	template<bool WANT_BEGIN, bool IS_FORWARD, class ME>
+	static auto _begin_node_ptr(ME& me) noexcept
+	->	Enable_if_t< WANT_BEGIN == IS_FORWARD, Qualify_Like_t<ME&, _node_t*> >
+	{
+		return me._pnode_begin;  
+	}
 
-	template<bool IS_FORWARD>
-	static auto _next_pop(_node_t*& front, _node_t*&) noexcept
-	->	Enable_if_t<!IS_FORWARD, _node_t*&>{  return front;  }
+	template<bool WANT_BEGIN, bool IS_FORWARD, class ME>
+	static auto _begin_node_ptr(ME& me) noexcept
+	->	Enable_if_t< WANT_BEGIN != IS_FORWARD, Qualify_Like_t<ME&, _node_t*> >
+	{
+		return me._pnode_rbegin;  
+	}
 
 
 	friend class sgm::List<value_type>;
 
-	template<class A>
-	List(_List_by_Tag, A&& alc);
-	
-	template<class A>
-	List(_List_by_Tag, A&& alc, List const&);
 
 	template<class A>
-	List(_List_by_Tag, A&& alc, List&&) noexcept;
+	List(_List_by_Tag, A&& alc) 
+	:	_pnode_begin(nullptr), _pnode_rbegin(nullptr), _allocator( Forward<A>(alc) ){}
+
+	template<  class A, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
+	List(_List_by_Tag tag, A&& alc, ITR bi, ITR const ei)
+	:	List( tag, Forward<A>(alc) ){  _try_move_from_iterators<false>(bi, ei);  }
 
 	template<class A>
-	List(_List_by_Tag, A&& alc, std::initializer_list<T>&& iL) noexcept;
+	List(_List_by_Tag tag, A&& alc, List const& Li)
+	:	List( tag, Forward<A>(alc), Li.cbegin(), Li.cend() ){}
+
+	template<class A>
+	List(_List_by_Tag tag, A&& alc, List&& Li) noexcept : List( tag, Forward<A>(alc) )
+	{
+		_pnode_begin = Li._pnode_begin;
+		_pnode_rbegin = Li._pnode_rbegin;
+
+		Li._pnode_begin = Li._pnode_rbegin = nullptr;		
+	}
+
+	template<class A>
+	List(_List_by_Tag tag, A&& alc, std::initializer_list<T>&& iL) noexcept
+	:	List( tag, Forward<A>(alc) ){  _try_move_from_iterators<true>(iL.begin(), iL.end());  }
 
 	template<  class RG, class A, class = Enable_if_t< is_iterable<RG>::value >  >
-	List(_List_by_Tag, A&& alc, RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value);
+	List(_List_by_Tag tag, A&& alc, RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)
+	:	List( tag, Forward<A>(alc) )
+	{
+		_try_move_from_iterators< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg) );
+	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

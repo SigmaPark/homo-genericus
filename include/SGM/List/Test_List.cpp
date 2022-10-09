@@ -14,7 +14,6 @@ using sgm::spec::Specimen;
 
 static void Construction()
 {
-#if 1
 	{
 		sgm::List<Specimen> Li;
 
@@ -30,10 +29,6 @@ static void Construction()
 		,	std::initializer_list<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
 		);
 	}
-	{
-		
-	}
-#endif
 }
 
 
@@ -171,7 +166,6 @@ static void Pop()
 
 static void Pop_Range()
 {
-#if 0
 	{
 		sgm::List<Specimen> Li
 		{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9), Specimen(11)
@@ -185,7 +179,7 @@ static void Pop_Range()
 
 		is_True(itr == last);
 
-		sgm::spec::Are_Equivalent
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>{Specimen(1), Specimen(9), Specimen(11)}
 		);
@@ -203,14 +197,13 @@ static void Pop_Range()
 
 		is_True(itr == last);
 
-		sgm::spec::Are_Equivalent
+		sgm::spec::Are_Equivalent_Ranges
 		(	Li
 		,	sgm::List<Specimen>
 			{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9), Specimen(11)
 			}
 		);
 	}
-#endif
 }
 
 
@@ -218,36 +211,42 @@ namespace sgm
 {
 	namespace _Test_List_Allocator_detail
 	{
-	#if 0
 		template<class T>
 		class Test_Allocator : public Allocator< sgm::List_Node<T> >
 		{
 		private:
 			using _base_t = Allocator< sgm::List_Node<T> >;
 
+
 		public:
 			Test_Allocator(sgm::List_Node<T>* node_arr) : _node_arr(node_arr), _idx(0){}
 
+			auto allocate(size_t)-> sgm::List_Node<T>*{  return _node_arr + _idx;  }
+
+			void deallocate(sgm::List_Node<T>*, size_t){}
 
 			template<class Q, class...ARGS>
-			void construct(Q*, ARGS&&...args)
+			void construct(Q* p, ARGS&&...args)
 			{
-				_base_t::construct( _node_arr+_idx, Forward<ARGS&&>(args)... );
+				_base_t::construct( p, Forward<ARGS&&>(args)... );
+
+				++_idx;
 			}
+
+			template<class Q>
+			void destroy(Q* p){  p->~Q();  }
 
 
 		private:
 			sgm::List_Node<T>* _node_arr;
 			size_t _idx;
 		};
-	#endif
 	}
 }
 
 
 static void Allocator()
 {
-#if 0
 	size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 	size_t constexpr max_nof_node_in_buffer_v = 10;
 
@@ -262,31 +261,30 @@ static void Allocator()
 
 	Li.emplace_back(1);
 
-	is_True( node_arr[0].value() == Specimen(1) );
+	is_True( node_arr[0].value == Specimen(1) );
 
 	Li.emplace_back(3);
 
-	is_True( node_arr[1].value() == Specimen(3) );
+	is_True( node_arr[1].value == Specimen(3) );
 
 	Li.emplace_front(5);
 
-	is_True( node_arr[2].value() == Specimen(5) );
+	is_True( node_arr[2].value == Specimen(5) );
 
 	Li.emplace_front(7);
 
-	is_True( node_arr[3].value() == Specimen(7) );
+	is_True( node_arr[3].value == Specimen(7) );
 
 	Li.emplace( sgm::Next(Li.begin()), Specimen(9) );
 
-	is_True( node_arr[4].value() == Specimen(9) );
+	is_True( node_arr[4].value == Specimen(9) );
 
-	sgm::spec::Are_Equivalent
+	sgm::spec::Are_Equivalent_Ranges
 	(	Li
 	,	std::initializer_list<Specimen>
 		{	Specimen(7), Specimen(5), Specimen(9), Specimen(1), Specimen(3)
 		}
 	);
-#endif
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
