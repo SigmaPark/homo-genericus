@@ -19,6 +19,7 @@
 	-	SGM/High_Templar
 	-	SGM/interface_Traits
 	-	SGM/iterable
+	-	SGM/List
 	-	SGM/Mathexpr
 	-	SGM/Operator_of
 	-	SGM/Span
