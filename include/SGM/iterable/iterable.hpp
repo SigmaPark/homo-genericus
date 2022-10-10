@@ -345,6 +345,63 @@ private:
 namespace sgm
 {
 	
+	template<class ITR>
+	class Move_iterator : public ITR
+	{
+	public:
+		template<class...ARGS>
+		Move_iterator(ARGS&&...args) : ITR( Forward<ARGS>(args)... ){}
+
+		auto base() const noexcept-> ITR{  return *this;  }
+
+		auto operator*() const noexcept-> SGM_DECLTYPE_AUTO(  Move(*base())  )
+
+		auto operator[](ptrdiff_t const diff) const noexcept
+		->	SGM_DECLTYPE_AUTO(  Move(base()[diff])  )
+	};
+
+
+	SGM_USER_DEFINED_TYPE_CHECK
+	(	class ITR
+	,	Move_iterator, <ITR>
+	);
+
+	
+	template
+	<	class ITR
+	,	class = Enable_if_t< is_iterator<ITR>::value && !is_Move_iterator<ITR>::value >
+	>
+	static auto To_Move_iterator(ITR&& itr) noexcept
+	->	Move_iterator<ITR>{  return Forward<ITR>(itr);  }
+
+	template<class ITR>
+	static auto To_Move_iterator(Move_iterator<ITR> itr) noexcept
+	->	Move_iterator<ITR>{  return itr;  }
+
+
+	template<class RG>
+	static auto mBegin(RG&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  Begin( Forward<RG>(rg) )  )   )
+
+	template<class RG>
+	static auto mEnd(RG&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  End( Forward<RG>(rg) )  )   )
+
+	template<class RG>
+	static auto mrBegin(RG&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  rBegin( Forward<RG>(rg) )  )   )
+
+	template<class RG>
+	static auto mrEnd(RG&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  rEnd( Forward<RG>(rg) )  )   )
+
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+namespace sgm
+{
+	
 	template<class RG, class T = void>
 	struct is_iterable;
 
