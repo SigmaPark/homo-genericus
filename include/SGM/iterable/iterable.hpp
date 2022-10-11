@@ -395,6 +395,31 @@ namespace sgm
 	static auto mrEnd(RG&& rg) noexcept
 	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  rEnd( Forward<RG>(rg) )  )   )
 
+
+	template<class RG>
+	static auto fBegin(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  Begin(rg)  )
+	
+	template<class RG>
+	static auto fBegin(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mBegin(rg)  )
+
+	template<class RG>
+	static auto fEnd(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  End(rg)  )
+	
+	template<class RG>
+	static auto fEnd(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mEnd(rg)  )
+
+	template<class RG>
+	static auto frBegin(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  rBegin(rg)  )
+	
+	template<class RG>
+	static auto frBegin(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mrBegin(rg)  )
+
+	template<class RG>
+	static auto frEnd(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  rEnd(rg)  )
+	
+	template<class RG>
+	static auto frEnd(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mrEnd(rg)  )
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
