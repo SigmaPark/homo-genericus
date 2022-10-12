@@ -182,21 +182,11 @@ public:
 	auto rbegin() const-> Reverse_iterator<ITR>{  return {Prev(end())};  }
 	auto rend() const-> Reverse_iterator<ITR>{  return {Prev(begin())};  }
 
-	auto front() const-> _deref_t const{  return *begin();  }
-	auto front()-> _deref_t{  return *begin();  }
-
-	auto back() const-> _deref_t const{  return *rbegin();  }
-	auto back()-> _deref_t{  return *rbegin();  }
+	auto front() const-> _deref_t{  return *begin();  }
+	auto back() const-> _deref_t{  return *rbegin();  }
 
 
-	auto operator[](size_t const idx) const-> _deref_t const
-	{
-		static_assert(is_random_access_iterator<ITR>::value, "");
-
-		return begin()[idx];  
-	}
-
-	auto operator[](size_t const idx)-> _deref_t
+	auto operator[](size_t const idx) const-> _deref_t
 	{
 		static_assert(is_random_access_iterator<ITR>::value, "");
 
@@ -222,8 +212,7 @@ public:
 	auto end() const-> ITR{  return _end;  }
 	auto rbegin() const-> Reverse_iterator<ITR>{  return {Prev(end())};  }
 
-	auto back() const-> typename _base_t::_deref_t const{  return *rbegin();  }
-	auto back()-> typename _base_t::_deref_t{  return *rbegin();  }
+	auto back() const-> typename _base_t::_deref_t{  return *rbegin();  }
 
 
 private:
