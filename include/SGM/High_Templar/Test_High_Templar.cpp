@@ -170,9 +170,10 @@ static void Function_Sequence_Test()
 static void Filter_Test()
 {
 	auto is_odd_f = [](Specimen s)-> bool{  return s.value() % 2 == 1;  };
-	
-	sgm::Array<Specimen> const inputs 
-	=	sgm::Morph( sgm::Countable<int>(10), [](int x)-> Specimen{  return x;  } );
+	auto make_spec_f = [](int x)-> Specimen{  return x;  };
+
+	sgm::Array<Specimen> const inputs
+	=	sgm::Morph( sgm::Countable<int>(10), make_spec_f );
 
 	std::initializer_list<Specimen> const answer
 	{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)

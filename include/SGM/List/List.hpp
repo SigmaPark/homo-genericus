@@ -209,7 +209,7 @@ public:
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	List(ITR begin_itr, ITR const end_itr) 
-	:	List(){  _try_move_from_iterators<false>(begin_itr, end_itr);  }
+	:	List(){  _construct_from_iterators(begin_itr, end_itr);  }
 
 	List(List const& Li) : List(Li.cbegin(), Li.cend()){}
 
@@ -223,19 +223,19 @@ public:
 
 
 	List(std::initializer_list<T>&& Li) noexcept 
-	:	List(){  _try_move_from_iterators<true>(Li.begin(), Li.end());  }
+	:	List(){  _construct_from_iterators(Li.begin(), Li.end());  }
 
 	template<  class RG, class = Enable_if_t< is_iterable<RG>::value >  >
 	List(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value) : List()
 	{
-		_try_move_from_iterators< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg) );
+		_construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );
 	}
 
 
 	~List(){  clear();  }
 
 
-	auto operator=(List const& Li)-> List&{  return _clone<false>(Li.cbegin(), Li.cend());  }
+	auto operator=(List const& Li)-> List&{  return _clone(Li.cbegin(), Li.cend());  }
 	
 	auto operator=(List&& Li) noexcept-> List&
 	{
@@ -251,7 +251,7 @@ public:
 	
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
 	auto operator=(std::initializer_list<Q>&& initLi) noexcept
-	->	List&{  return _clone<true>(initLi.begin(), initLi.end());  }
+	->	List&{  return _clone(initLi.begin(), initLi.end());  }
 
 
 	template
@@ -260,7 +260,7 @@ public:
 		=	Enable_if_t<  is_iterable<RG>::value && !is_Same< Decay_t<RG>, List >::value  >
 	>
 	auto operator=(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)
-	->	List&{  return _clone< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg) );  }
+	->	List&{  return _clone( fBegin<RG>(rg), fEnd<RG>(rg) );  }
 
 
 	template
@@ -450,20 +450,21 @@ private:
 	}
 
 
-	template<bool WANT_MOVE, class ITR>
-	void _try_move_from_iterators(ITR bi, ITR const ei) noexcept(WANT_MOVE)
+	template<class ITR>
+	void _construct_from_iterators(ITR bi, ITR const ei) noexcept(is_Move_iterator<ITR>::value)
 	{
 		while(bi != ei)
-			emplace_back( Move_if<WANT_MOVE>(*bi++) );
+			emplace_back(*bi++);
 	}
 
 
 	template
-	<	bool TEMP_HOST = false
-	,	class ITR, class = Enable_if_t< is_iterator<ITR>::value >
+	<	class ITR, class = Enable_if_t< is_iterator<ITR>::value >
 	,	bool IS_ASSIGNABLE_ELEM
 		=	(	Has_Operator_Copy_Assignment<value_type>::value
-			||	(TEMP_HOST && Has_Operator_Move_Assignment<value_type>::value)
+			||	(	is_Move_iterator<ITR>::value 
+				&&	Has_Operator_Move_Assignment<value_type>::value
+				)
 			)
 	>
 	auto _clone(ITR bi, ITR const ei)-> Enable_if_t<IS_ASSIGNABLE_ELEM, List&>
@@ -471,23 +472,24 @@ private:
 		auto itr = begin();
 
 		while(itr != end() && bi != ei)
-			*itr++ = Move_if<TEMP_HOST>(*bi++);
+			*itr++ = *bi++;
 
 		if(itr != end())
 			pop(itr, end());
 		else
 			while(bi != ei)
-				emplace_back( Move_if<TEMP_HOST>(*bi++) );
+				emplace_back(*bi++);
 
 		return *this;
 	}
 
 	template
-	<	bool TEMP_HOST = false
-	,	class ITR, class = Enable_if_t< is_iterator<ITR>::value >
+	<	class ITR, class = Enable_if_t< is_iterator<ITR>::value >
 	,	bool IS_ASSIGNABLE_ELEM
 		=	(	Has_Operator_Copy_Assignment<value_type>::value
-			||	(TEMP_HOST && Has_Operator_Move_Assignment<value_type>::value)
+			||	(	is_Move_iterator<ITR>::value 
+				&&	Has_Operator_Move_Assignment<value_type>::value
+				)
 			)
 	>
 	auto _clone(ITR bi, ITR const ei)-> Enable_if_t<!IS_ASSIGNABLE_ELEM, List&>
@@ -495,7 +497,7 @@ private:
 		clear();
 
 		while(bi != ei)
-			emplace_back( Move_if<TEMP_HOST>(*bi++) );
+			emplace_back(*bi++);
 
 		return *this;
 	}
@@ -606,7 +608,7 @@ private:
 
 	template<  class A, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	List(_List_by_Tag tag, A&& alc, ITR bi, ITR const ei)
-	:	List( tag, Forward<A>(alc) ){  _try_move_from_iterators<false>(bi, ei);  }
+	:	List( tag, Forward<A>(alc) ){  _construct_from_iterators(bi, ei);  }
 
 	template<class A>
 	List(_List_by_Tag tag, A&& alc, List const& Li)
@@ -623,13 +625,13 @@ private:
 
 	template<class A>
 	List(_List_by_Tag tag, A&& alc, std::initializer_list<T>&& iL) noexcept
-	:	List( tag, Forward<A>(alc) ){  _try_move_from_iterators<true>(iL.begin(), iL.end());  }
+	:	List( tag, Forward<A>(alc) ){  _construct_from_iterators(iL.begin(), iL.end());  }
 
 	template<  class RG, class A, class = Enable_if_t< is_iterable<RG>::value >  >
 	List(_List_by_Tag tag, A&& alc, RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)
 	:	List( tag, Forward<A>(alc) )
 	{
-		_try_move_from_iterators< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg) );
+		_construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

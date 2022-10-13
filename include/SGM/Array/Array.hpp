@@ -287,18 +287,19 @@ class sgm::Array
 {
 protected:
 	template
-	<	bool TEMP_HOST = false, class ITR, class RG
+	<	class ITR, class RG
 	,	class RES_ITR = decltype( Begin(Declval<RG>()) )
 	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<RG>::value >
 	>
-	static auto _copy_AMAP(ITR bi, ITR const ei, RG&& rg)-> Dual_iterator<ITR, RES_ITR>
+	static auto _copy_AMAP(ITR bi, ITR const ei, RG& rg) noexcept(is_Move_iterator<ITR>::value)
+	->	Dual_iterator<ITR, RES_ITR>
 	{
 		RES_ITR itr = Begin(rg);
 
 		for
 		(	auto const rg_end = End(rg)
 		;	bi != ei && itr != rg_end
-		;	*itr++ = Move_if<TEMP_HOST>(*bi++) 
+		;	*itr++ = *bi++
 		);
 
 		return {bi, itr};
@@ -405,7 +406,7 @@ public:
 	>
 	auto operator=(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)-> Array&
 	{
-		_copy_AMAP< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg), *this );
+		_copy_AMAP( fBegin<RG>(rg), fEnd<RG>(rg), *this );
 
 		return *this;
 	}
@@ -417,7 +418,7 @@ public:
 	>
 	auto operator=(std::initializer_list<Q>&& iL) noexcept-> Array&
 	{
-		_copy_AMAP<true>(iL.begin(), iL.end(), *this);
+		_copy_AMAP(iL.begin(), iL.end(), *this);
 
 		return *this;
 	}
@@ -472,40 +473,43 @@ private:
 
 
 	template
-	<	bool TEMP_HOST = false
-	,	class ME, class ITR, class = Enable_if_t< is_iterator<ITR>::value >
+	<	class ME, class ITR, class = Enable_if_t< is_iterator<ITR>::value >
 	,	bool IS_ASSIGNABLE_ELEM 
-		=	Has_Operator_Copy_Assignment< typename Decay_t<ME>::value_type >::value
+		=	(	Has_Operator_Copy_Assignment< typename Decay_t<ME>::value_type >::value
+			||	(	is_Move_iterator<ITR>::value 
+				&&	Has_Operator_Move_Assignment< typename Decay_t<ME>::value_type >::value
+				)
+			)
 	>
 	static auto _cloning(ITR const bi, ITR const ei, size_t const len, ME& me)
-	->	Enable_if_t<IS_ASSIGNABLE_ELEM, Array&>
+	noexcept(is_Move_iterator<ITR>::value)-> Enable_if_t<IS_ASSIGNABLE_ELEM, Array&>
 	{
 		if(me.capacity() < len)
 			me.~Array(),  me._alloc(len);
 
-		auto const itrs = me._base().template _copy_AMAP<TEMP_HOST>(bi, ei, me);
+		auto const itrs = me._base()._copy_AMAP(bi, ei, me);
 
-		return 
-		itrs._1 != ei  
-		?	me.template merge_back<TEMP_HOST>(itrs._1, ei)  
-		:	me.pop_back_from(itrs._2);
+		return itrs._1 != ei ? me.merge_back(itrs._1, ei) : me.pop_back_from(itrs._2);
 	}
 
 	template
-	<	bool TEMP_HOST = false
-	,	class ME, class ITR, class = Enable_if_t< is_iterator<ITR>::value >
+	<	class ME, class ITR, class = Enable_if_t< is_iterator<ITR>::value >
 	,	bool IS_ASSIGNABLE_ELEM 
-		=	Has_Operator_Copy_Assignment< typename Decay_t<ME>::value_type >::value 
+		=	(	Has_Operator_Copy_Assignment< typename Decay_t<ME>::value_type >::value
+			||	(	is_Move_iterator<ITR>::value 
+				&&	Has_Operator_Move_Assignment< typename Decay_t<ME>::value_type >::value
+				)
+			)
 	>
 	static auto _cloning(ITR const bi, ITR const ei, size_t const len, ME& me)
-	->	Enable_if_t<!IS_ASSIGNABLE_ELEM, Array&>
+	noexcept(is_Move_iterator<ITR>::value)-> Enable_if_t<!IS_ASSIGNABLE_ELEM, Array&>
 	{
 		if(me.capacity() < len)
 			me.~Array(),  me._alloc(len);
 		else
 			me.clear();
 
-		return me.template merge_back<TEMP_HOST>(bi, ei);
+		return me.merge_back(bi, ei);
 	}
 
 
@@ -538,20 +542,20 @@ public:
 	Array(RG&& rg) : Array()
 	{
 		_alloc( Size(rg) );
-		_cloning< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg), capacity(), *this );
+		_cloning( fBegin<RG>(rg), fEnd<RG>(rg), capacity(), *this );
 	}
 
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
 	Array(std::initializer_list<Q>&& iL) : Array()
 	{
 		_alloc(iL.size());
-		_cloning<true>(iL.begin(), iL.end(), capacity(), *this);
+		_cloning(iL.begin(), iL.end(), capacity(), *this);
 	}
 
 	Array(Array const& arr) : _base_t{nullptr}, _capacity(0), _size(0), _alc(arr._alc)
 	{
 		_alloc( Size(arr) );
-		_cloning<false>(arr.cbegin(), arr.cend(), capacity(), *this);
+		_cloning(arr.cbegin(), arr.cend(), capacity(), *this);
 	}
 
 	Array(Array&& arr) noexcept
@@ -593,14 +597,13 @@ public:
 	>
 	auto operator=(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)-> Array&
 	{	
-		return 
-		_cloning< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg), Size(rg), *this );
+		return _cloning( fBegin<RG>(rg), fEnd<RG>(rg), Size(rg), *this );
 	}
 
 	template<  class Q, class = Enable_if_t< is_Convertible<Q, T>::value >  >
 	auto operator=(std::initializer_list<Q>&& iL) noexcept-> Array&
 	{
-		return _cloning<true>(iL.begin(), iL.end(), iL.size(), *this);
+		return _cloning(iL.begin(), iL.end(), iL.size(), *this);
 	}
 
 
@@ -627,10 +630,8 @@ public:
 	->	Array&{  return emplace_back( Forward<Q>(q) );  }
 
 
-	template
-	<	bool TEMP_HOST = false, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  
-	>
-	auto merge_back(ITR bi, ITR const ei)-> Array&
+	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
+	auto merge_back(ITR bi, ITR const ei) noexcept(is_Move_iterator<ITR>::value)-> Array&
 	{
 		assert
 		(	size() + Difference(bi, ei) <= capacity() 
@@ -638,7 +639,7 @@ public:
 		);
 
 		while(bi != ei)
-			*this >> Move_if<TEMP_HOST>(*bi++);
+			*this >> *bi++;
 
 		return *this;
 	}
@@ -735,7 +736,7 @@ private:
 	Array(_Array_by_Tag tag, A&& alc, RG&& rg) : Array( tag, Forward<A>(alc) )
 	{
 		_alloc( Size(rg) );
-		_cloning< is_Rvalue_Reference<RG&&>::value >( Begin(rg), End(rg), capacity(), *this );
+		_cloning( fBegin<RG>(rg), fEnd<RG>(rg), capacity(), *this );
 	}
 
 	template<  class Q, class A, class = Enable_if_t< is_Convertible<Q, T>::value >  >
@@ -743,7 +744,7 @@ private:
 	:	Array( tag, Forward<A>(alc) )
 	{
 		_alloc(iL.size()),
-		_cloning<true>(iL.begin(), iL.end(), capacity(), *this);
+		_cloning(iL.begin(), iL.end(), capacity(), *this);
 	}
 
 	template<class A>

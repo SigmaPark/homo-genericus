@@ -159,7 +159,7 @@ struct sgm::ht::_Array_Evaluation<_D, sgm::ht::_Evaluation_Mode::SEQUANCIAL> : U
 	static auto calc(RG&& rg, ALC&& allocator = {})
 	->	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
 	{
-		return Array<ELEM>::by( Forward<ALC>(allocator), Begin(rg), End(rg) );
+		return Array<ELEM>::by( Forward<ALC>(allocator), fBegin<RG>(rg), fEnd<RG>(rg) );
 	}
 };
 
@@ -187,7 +187,7 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 		,	[&rg, &allocator, pdata](size_t begin_idx, size_t const end_idx, unsigned const)
 			{	
 				for
-				(	auto itr = Next( Begin(rg), begin_idx )
+				(	auto itr = Next( fBegin<RG>(rg), begin_idx )
 				;	begin_idx < end_idx
 				;	allocator.construct(pdata + begin_idx, *itr),  begin_idx++,  itr++
 				);
@@ -339,7 +339,7 @@ public:
 	using reverse_iterator = Morph_iterator<_rxitr_t, _func_t>;
 	using const_reverse_iterator = Morph_iterator<_crxitr_t, _func_t const>;
 
-	using value_type = Decay_t<decltype(*Declval<iterator>())>;
+	using value_type = Decay_t< decltype(*Declval<iterator>()) >;
 
 
 	template<class RG_, class FUNC_>
@@ -480,7 +480,7 @@ public:
 	using reverse_iterator = Filter_iterator< _rxitr_t, _filter_itr_func_t<_rxitr_t> >;
 	using const_reverse_iterator = Filter_iterator< _crxitr_t, _filter_itr_func_t<_crxitr_t> >;
 
-	using value_type = Decay_t<decltype(*Declval<_xitr_t>())>;
+	using value_type = Decay_t< decltype(*Declval<_xitr_t>()) >;
 
 
 	template<class RG_, class FUNC_>
@@ -558,10 +558,10 @@ namespace sgm
 		struct Direction_Dependent<true> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG& rg)-> SGM_DECLTYPE_AUTO(  Begin(rg)  )
+			static auto begin(RG&& rg)-> SGM_DECLTYPE_AUTO(  fBegin<RG>(rg)  )
 
 			template<class RG> 
-			static auto end(RG& rg)-> SGM_DECLTYPE_AUTO(  End(rg)  )
+			static auto end(RG&& rg)-> SGM_DECLTYPE_AUTO(  fEnd<RG>(rg)  )
 
 
 			template<class FUNC, class L, class FOLDED>
@@ -573,10 +573,10 @@ namespace sgm
 		struct Direction_Dependent<false> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG& rg)-> SGM_DECLTYPE_AUTO(  rBegin(rg)  )
+			static auto begin(RG&& rg)-> SGM_DECLTYPE_AUTO(  frBegin<RG>(rg)  )
 			
 			template<class RG> 
-			static auto end(RG& rg)-> SGM_DECLTYPE_AUTO(  rEnd(rg)  )
+			static auto end(RG&& rg)-> SGM_DECLTYPE_AUTO(  frEnd<RG>(rg)  )
 
 
 			template<class FUNC, class L, class FOLDED>
@@ -598,8 +598,8 @@ struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode
 	{
 		return
 		_ht_Fold_impl_helper::Accumulate
-		(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
-		,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg)
+		(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin( Forward<RG>(rg) )
+		,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end( Forward<RG>(rg) )
 		,	Forward<FUNC>(func), Forward<RES>(res)
 		);
 	}
@@ -615,8 +615,8 @@ struct sgm::ht::_Fold_impl<false, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mod
 	->	Decay_t< decltype( *_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg) ) >
 	{
 		auto const 
-			bi = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg), 
-			ei = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg);
+			bi = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin( Forward<RG>(rg) ), 
+			ei = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end( Forward<RG>(rg) );
 
 		assert(bi != ei && L"the container has nothing to fold .\n");
 
@@ -664,7 +664,7 @@ public:
 				)
 				{	
 					auto const 
-						bi = Next( Begin(rg), begin_idx ), bi_next = Next(bi), 
+						bi = Next( fBegin<RG>(rg), begin_idx ), bi_next = Next(bi), 
 						ei = Next(bi, end_idx - begin_idx);
 					 
 					allocator.construct

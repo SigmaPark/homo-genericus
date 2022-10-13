@@ -7,6 +7,7 @@
 #pragma once
 #include <cfloat>
 #include <cmath>
+#include <limits>
 #include "SGM/Type_Analysis/Type_Analysis.hpp"
 
 

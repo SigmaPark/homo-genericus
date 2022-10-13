@@ -352,12 +352,34 @@ namespace sgm
 		template<class...ARGS>
 		Move_iterator(ARGS&&...args) : ITR( Forward<ARGS>(args)... ){}
 
-		auto base() const noexcept-> ITR{  return *this;  }
 
-		auto operator*() const noexcept-> SGM_DECLTYPE_AUTO(  Move(*base())  )
+		auto base() const noexcept-> ITR const&{  return static_cast<ITR const&>(*this);  }
+		auto base() noexcept-> ITR&{  return static_cast<ITR&>(*this);  }
+
+
+		auto operator++() noexcept-> Move_iterator&{  return ++base(),  *this;  }
+		auto operator--() noexcept-> Move_iterator&{  return --base(),  *this;  }
+		
+		auto operator++(int) noexcept-> Move_iterator{  return {base()++};  }
+		auto operator--(int) noexcept-> Move_iterator{  return {base()--};  }
+
+		auto operator+(ptrdiff_t const diff) const-> Move_iterator{  return {base() + diff};  }
+		auto operator-(ptrdiff_t const diff) const-> Move_iterator{  return {base() - diff};  }
+
+		auto operator-(ITR const itr) const-> ptrdiff_t{  return base() - itr;  }
+
+		auto operator+=(ptrdiff_t const diff)
+		->	Move_iterator&{  return base() += diff,  *this;  }
+		
+		auto operator-=(ptrdiff_t const diff)
+		->	Move_iterator&{  return base() -= diff,  *this;  }
+
+
+		auto operator*() const noexcept
+		->	Decay_t< decltype(*base()) >{  return Move(*base());  }
 
 		auto operator[](ptrdiff_t const diff) const noexcept
-		->	SGM_DECLTYPE_AUTO(  Move(base()[diff])  )
+		->	Decay_t< decltype(*base()) >{  return Move(base()[diff]);  }
 	};
 
 
@@ -371,8 +393,8 @@ namespace sgm
 	<	class ITR
 	,	class = Enable_if_t< is_iterator<ITR>::value && !is_Move_iterator<ITR>::value >
 	>
-	static auto To_Move_iterator(ITR&& itr) noexcept
-	->	Move_iterator<ITR>{  return Forward<ITR>(itr);  }
+	static auto To_Move_iterator(ITR itr) noexcept
+	->	Move_iterator<ITR>{  return itr;  }
 
 	template<class ITR>
 	static auto To_Move_iterator(Move_iterator<ITR> itr) noexcept
@@ -381,44 +403,64 @@ namespace sgm
 
 	template<class RG>
 	static auto mBegin(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  Begin( Forward<RG>(rg) )  )   )
+	->	SGM_DECLTYPE_AUTO(  To_Move_iterator( Begin(rg) )  )
 
 	template<class RG>
 	static auto mEnd(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  End( Forward<RG>(rg) )  )   )
+	->	SGM_DECLTYPE_AUTO(  To_Move_iterator( End(rg) )  )
 
 	template<class RG>
 	static auto mrBegin(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  rBegin( Forward<RG>(rg) )  )   )
+	->	SGM_DECLTYPE_AUTO(  To_Move_iterator( rBegin(rg) )  )
 
 	template<class RG>
 	static auto mrEnd(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(   To_Move_iterator(  rEnd( Forward<RG>(rg) )  )   )
+	->	SGM_DECLTYPE_AUTO(  To_Move_iterator( rEnd(rg) )  )
 
 
-	template<class RG>
-	static auto fBegin(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  Begin(rg)  )
+	template<  class RG, class ITR = Decay_t< decltype( Begin(Declval<RG>()) ) >  >
+	static auto fBegin(Referenceless_t<RG>& rg) noexcept
+	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
+	{
+		return Begin(rg);
+	}
 	
 	template<class RG>
-	static auto fBegin(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mBegin(rg)  )
+	static auto fBegin(Referenceless_t<RG>&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(  mBegin( Move(rg) )  )
 
-	template<class RG>
-	static auto fEnd(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  End(rg)  )
+	template<  class RG, class ITR = Decay_t< decltype( End(Declval<RG>()) ) >  >
+	static auto fEnd(Referenceless_t<RG>& rg) noexcept
+	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
+	{
+		return End(rg);
+	}
 	
 	template<class RG>
-	static auto fEnd(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mEnd(rg)  )
+	static auto fEnd(Referenceless_t<RG>&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(  mEnd( Move(rg) )  )
 
-	template<class RG>
-	static auto frBegin(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  rBegin(rg)  )
+	template<  class RG, class ITR = Decay_t< decltype( rBegin(Declval<RG>()) ) >  >
+	static auto frBegin(Referenceless_t<RG>& rg) noexcept
+	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
+	{
+		return rBegin(rg);
+	}
 	
 	template<class RG>
-	static auto frBegin(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mrBegin(rg)  )
+	static auto frBegin(Referenceless_t<RG>&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(  mrBegin( Move(rg) )  )
 
-	template<class RG>
-	static auto frEnd(Referenceless_t<RG>& rg) noexcept-> SGM_DECLTYPE_AUTO(  rEnd(rg)  )
+	template<  class RG, class ITR = Decay_t< decltype( rEnd(Declval<RG>()) ) >  >
+	static auto frEnd(Referenceless_t<RG>& rg) noexcept
+	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
+	{
+		return rEnd(rg);
+	}
 	
 	template<class RG>
-	static auto frEnd(Referenceless_t<RG>&& rg) noexcept-> SGM_DECLTYPE_AUTO(  mrEnd(rg)  )
+	static auto frEnd(Referenceless_t<RG>&& rg) noexcept
+	->	SGM_DECLTYPE_AUTO(  mrEnd( Move(rg) )  )
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
