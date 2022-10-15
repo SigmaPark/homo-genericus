@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.32228.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VisualStudio2019", "VisualStudio2019\VisualStudio2019.vcxproj", "{601100F0-AB15-4E38-B06D-1CC87858F4A7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "All_Build", "All_Build\All_Build.vcxproj", "{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Genenric_Foundation", "Genenric_Foundation", "{CE6E517C-8A6D-4C60-A341-48937DA3ED95}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.gitignore = ..\..\.gitignore
@@ -60,16 +58,6 @@ Global
 		{601100F0-AB15-4E38-B06D-1CC87858F4A7}.Release|x64.Build.0 = Release|x64
 		{601100F0-AB15-4E38-B06D-1CC87858F4A7}.Release|x86.ActiveCfg = Release|Win32
 		{601100F0-AB15-4E38-B06D-1CC87858F4A7}.Release|x86.Build.0 = Release|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Debug|x64.ActiveCfg = Debug|x64
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Debug|x64.Build.0 = Debug|x64
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Debug|x86.ActiveCfg = Debug|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Debug|x86.Build.0 = Debug|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Release|Any CPU.ActiveCfg = Release|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Release|x64.ActiveCfg = Release|x64
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Release|x64.Build.0 = Release|x64
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Release|x86.ActiveCfg = Release|Win32
-		{1939137D-B7AB-4F4D-A0CA-4967027D8AEA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

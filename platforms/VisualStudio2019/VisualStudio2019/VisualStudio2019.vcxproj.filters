@@ -354,9 +354,4 @@
       <Filter>SGM\Abbreviable</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="postbuild.bat">
-      <Filter>소스 파일</Filter>
-    </None>
-  </ItemGroup>
 </Project>
