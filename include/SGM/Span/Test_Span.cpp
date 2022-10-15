@@ -17,6 +17,47 @@ using sgm::Array;
 using sgm::List;
 
 
+static void Span_is_iterable()
+{
+    {
+        Array<Specimen, 3> sarr{};
+        Array<Specimen> darr{};
+        List<Specimen> Li{};
+
+
+        static_assert
+        (   sgm::Boolean_And
+            <   sgm::is_iterable< decltype( sgm::Span(sarr) ) >
+            ,   sgm::is_iterable< decltype( sgm::Span(darr) ) >
+            ,   sgm::is_iterable< decltype( sgm::Span(Li) ) >
+            >:: value
+        ,   ""
+        );
+    }
+    {
+        Array<Specimen, 3> const sarr{};
+        Array<Specimen> const darr{};
+        List<Specimen> const Li{};
+
+        auto ss = sgm::Span(sarr);
+        auto ds = sgm::Span(darr);
+        auto Ls = sgm::Span(Li);
+
+        static_assert
+        (   sgm::Boolean_And
+            <   sgm::is_iterable< decltype(ss) >
+            ,   sgm::is_iterable< decltype(ds) >
+            ,   sgm::is_iterable< decltype(Ls) >
+            ,   sgm::is_immutable< decltype(*ss.begin()) >
+            ,   sgm::is_immutable< decltype(*ds.begin()) >
+            ,   sgm::is_immutable< decltype(*Ls.begin()) >
+            >:: value
+        ,   ""
+        );
+    }
+}
+
+
 static void Static_Size_Array()
 {
     Array<Specimen, 3> arr{Specimen(2), Specimen(4), Specimen(6)};
@@ -233,7 +274,8 @@ static void Linked_List()
 
 
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Span, /**/)
-{   ::Static_Size_Array
+{   ::Span_is_iterable
+,   ::Static_Size_Array
 ,   ::Dynamic_Size_Array
 ,   ::Linked_List
 };

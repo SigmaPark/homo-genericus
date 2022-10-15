@@ -226,10 +226,8 @@ public:
 	:	List(){  _construct_from_iterators(Li.begin(), Li.end());  }
 
 	template<  class RG, class = Enable_if_t< is_iterable<RG>::value >  >
-	List(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value) : List()
-	{
-		_construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );
-	}
+	List(RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value) 
+	:	List(){  _construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );  }
 
 
 	~List(){  clear();  }
