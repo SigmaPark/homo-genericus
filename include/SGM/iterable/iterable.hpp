@@ -282,54 +282,54 @@ public:
 
 	Reverse_iterator(ITR const itr) : _itr(itr){}
 
-	auto operator[](difference_type const diff) const-> _deref_t{  return _itr[diff];  }
-	auto operator*() const-> _deref_t{  return (*this)[0];  }
-	
-	auto operator->() const-> pointer const{  return &**this;  }
-	auto operator->()-> pointer{  return &**this;  }
+	auto operator*() const noexcept-> _deref_t{  return *_itr;  }
+
+	auto operator->() const noexcept-> pointer{  return &**this;  }
+
+	auto operator++()-> _itr_t&{  return --_itr,  *this;  }
+	auto operator--()-> _itr_t&{  return ++_itr,  *this;  }
+
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+
+	auto operator--(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		--*this;
+
+		return res;
+	}
+
+
+	auto operator[](difference_type const diff) const-> _deref_t{  return *(*this + diff);  }
 
 	auto operator+(difference_type const diff) const-> _itr_t{  return {_itr - diff};  }
 	auto operator-(difference_type const diff) const-> _itr_t{  return {_itr + diff};  }
 	auto operator-(_itr_t const itr) const-> difference_type{  return itr._itr - _itr;  }
 
-	auto operator+=(difference_type const diff)-> _itr_t&
-	{
-		_itr += -diff;
+	auto operator+=(difference_type const diff)
+	->	_itr_t&{  return _itr -= diff,  *this;  }
 
-		return *this;
-	}
 
-	auto operator-=(difference_type const diff)-> _itr_t&{  return *this += -diff;  }
+	auto operator-=(difference_type const diff)
+	->	_itr_t&{  return _itr += diff,  *this;  }
 
-	auto operator++()-> _itr_t&{  return *this += 1;  }
-	auto operator--()-> _itr_t&{  return *this -= 1;  }
 
-	auto operator++(int)-> _itr_t
-	{
-		auto const itr = *this;
+	auto operator==(_itr_t const itr) const noexcept-> bool{  return _itr == itr._itr;  }
+	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
 
-		_itr--;
+	auto operator<(_itr_t const itr) const noexcept-> bool{  return _itr > itr._itr;  }
+	auto operator>(_itr_t const itr) const noexcept-> bool{  return _itr < itr._itr;  }
 
-		return itr;
-	}
-
-	auto operator--(int)-> _itr_t
-	{
-		auto const itr = *this;
-
-		_itr++;
-
-		return itr;
-	}
-
-	auto operator==(_itr_t const itr) const-> bool{  return _itr == itr._itr;  }
-	auto operator!=(_itr_t const itr) const-> bool{  return !(*this == itr);  }
-
-	auto operator<(_itr_t const itr) const-> bool{  return _itr > itr._itr;  }
-	auto operator>(_itr_t const itr) const-> bool{  return _itr < itr._itr;  }
-
-	auto operator<=(_itr_t const itr) const-> bool{  return !(*this > itr);  }
-	auto operator>=(_itr_t const itr) const-> bool{  return !(*this < itr);  }
+	auto operator<=(_itr_t const itr) const noexcept-> bool{  return !(*this > itr);  }
+	auto operator>=(_itr_t const itr) const noexcept-> bool{  return !(*this < itr);  }
 
 
 private:
