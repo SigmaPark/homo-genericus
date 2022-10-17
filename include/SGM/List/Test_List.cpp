@@ -286,6 +286,25 @@ static void Allocator()
 		}
 	);
 }
+
+
+static void End_iterator()
+{
+#if 0
+	sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5)};
+	
+	{
+		auto itr = Li.end();
+
+		is_True( &*Li.rbegin() == &*sgm::Prev(itr) );
+	}
+	{
+		auto itr = Li.rend();
+
+		is_True( &*Li.begin() == &*sgm::Prev(itr) );
+	}
+#endif
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -295,4 +314,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::Pop
 ,	::Pop_Range
 ,	::Allocator
+,	::End_iterator
 };
