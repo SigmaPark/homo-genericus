@@ -55,7 +55,7 @@ static void Emplacement()
 	{
 		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
 
-		auto itr = Li.end();
+		auto itr = --Li.end();
 
 		auto new_itr = Li.emplace( itr, Specimen(9) );
 
@@ -71,7 +71,7 @@ static void Emplacement()
 	{
 		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
 		
-		auto itr = Li.rend();
+		auto itr = --Li.rend();
 
 		auto new_itr = Li.emplace( itr, Specimen(9) );
 
@@ -290,7 +290,6 @@ static void Allocator()
 
 static void End_iterator()
 {
-#if 0
 	sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5)};
 	
 	{
@@ -303,7 +302,6 @@ static void End_iterator()
 
 		is_True( &*Li.begin() == &*sgm::Prev(itr) );
 	}
-#endif
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
