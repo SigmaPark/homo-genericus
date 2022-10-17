@@ -346,15 +346,15 @@ public:
 
 	template<class...ARGS>
 	auto emplace_back(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	->	List&{  return emplace( Prev(end()), Forward<ARGS>(args)... ),  *this;  }
+	->	List&{  return emplace_next( Prev(end()), Forward<ARGS>(args)... ),  *this;  }
 
 	template<class...ARGS>
 	auto emplace_front(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	->	List&{  return emplace( Prev(rend()), Forward<ARGS>(args)... ),  *this;  }
+	->	List&{  return emplace_next( Prev(rend()), Forward<ARGS>(args)... ),  *this;  }
 
 
 	template<class ITR, class...ARGS>
-	auto emplace(ITR const itr, ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> ITR
+	auto emplace_next(ITR const itr, ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> ITR
 	{
 		static_assert
 		(	(	is_Convertible<ITR, const_iterator>::value 
@@ -370,6 +370,25 @@ public:
 			new_itr(  _alloc( nullptr, nullptr, Forward<ARGS>(args)... )  );
 
 		_link(itr, new_itr, behind_itr);
+
+		return new_itr;
+	}
+
+	template<class ITR, class...ARGS>
+	auto emplace_prev(ITR const itr, ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> ITR
+	{
+		static_assert
+		(	(	is_Convertible<ITR, const_iterator>::value 
+			||	is_Convertible<ITR, const_reverse_iterator>::value
+			)
+		,	""
+		);
+
+		ITR const 
+			prior_itr = Prev(itr),
+			new_itr(  _alloc( nullptr, nullptr, Forward<ARGS>(args)... )  );
+
+		_link(prior_itr, new_itr, itr);
 
 		return new_itr;
 	}
@@ -545,7 +564,6 @@ private:
 			*const enode_ptr = _itr_hp::node_ptr(ei);
 
 		_node_hp::shift<true, is_fwd_v>(bfr_bnode_ptr) = enode_ptr;
-
 		_node_hp::shift<false, is_fwd_v>(enode_ptr) = bfr_bnode_ptr;		
 	}
 
