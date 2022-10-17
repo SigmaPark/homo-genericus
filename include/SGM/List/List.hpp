@@ -417,22 +417,17 @@ public:
 		,	""
 		);
 
+		_unlink_range(bi, ei);
 
-		if(bi != ei)
+		while(bi != ei)
 		{
-			_unlink_range(bi, ei);
+			auto itr = bi++;
 
-			do
-			{
-				auto itr = bi++;
+			_node_t* cur_node_ptr = _itr_hp::node_ptr(itr);
 
-				_node_t*& cur_node_ptr = _itr_hp::node_ptr(itr);
-
-				cur_node_ptr->front_ptr = cur_node_ptr->back_ptr = nullptr;
-				
-				_destroy(cur_node_ptr);
-			}
-			while(bi != ei);
+			cur_node_ptr->front_ptr = cur_node_ptr->back_ptr = nullptr;
+			
+			_destroy(cur_node_ptr);
 		}
 
 		return ei;
@@ -472,13 +467,11 @@ private:
 		return pres;
 	}
 
-	void _destroy(_node_t*& p)
+	void _destroy(_node_t* p)
 	{
 		_allocator.destroy(p);
 
 		_allocator.deallocate( p, sizeof(_node_t) );
-
-		p = nullptr;
 	}
 
 
@@ -556,6 +549,9 @@ private:
 	template<class ITR>
 	static void _unlink_range(ITR const bi, ITR const ei)
 	{
+		if(bi == ei)
+			return;
+
 		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
 
 		_node_t
