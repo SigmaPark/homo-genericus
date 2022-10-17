@@ -342,6 +342,12 @@ static void Swap()
 		);
 	}
 }
+
+
+static void Size_of_List()
+{
+	//static_assert( sizeof(sgm::List<Specimen>) <= 3*sizeof(std::uint64_t*), "" );
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -353,4 +359,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::Allocator
 ,	::End_iterator
 ,	::Swap
+,	::Size_of_List
 };
