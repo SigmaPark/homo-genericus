@@ -57,7 +57,7 @@ static void Emplacement()
 
 		auto itr = Li.end();
 
-		auto new_itr = Li.emplace( itr, Specimen(9) );
+		auto new_itr = Li.emplace_prev( itr, Specimen(9) );
 
 		is_True( *new_itr == Specimen(9) );
 
@@ -73,7 +73,7 @@ static void Emplacement()
 		
 		auto itr = Li.rend();
 
-		auto new_itr = Li.emplace( itr, Specimen(9) );
+		auto new_itr = Li.emplace_prev( itr, Specimen(9) );
 
 		is_True( *new_itr == Specimen(9) );
 
@@ -89,7 +89,7 @@ static void Emplacement()
 
 		auto itr = sgm::Next(Li.begin());
 
-		auto new_itr = Li.emplace( itr, Specimen(9) );
+		auto new_itr = Li.emplace_next( itr, Specimen(9) );
 
 		is_True( *new_itr == Specimen(9) );
 
@@ -105,7 +105,7 @@ static void Emplacement()
 		
 		auto itr = Li.rbegin();
 
-		auto new_itr = Li.emplace( itr, Specimen(9) );
+		auto new_itr = Li.emplace_next( itr, Specimen(9) );
 
 		is_True( *new_itr == Specimen(9) );
 
@@ -275,7 +275,7 @@ static void Allocator()
 
 	is_True( node_arr[3].value == Specimen(7) );
 
-	Li.emplace( sgm::Next(Li.begin()), Specimen(9) );
+	Li.emplace_next( sgm::Next(Li.begin()), Specimen(9) );
 
 	is_True( node_arr[4].value == Specimen(9) );
 
@@ -286,6 +286,62 @@ static void Allocator()
 		}
 	);
 }
+
+
+static void End_iterator()
+{
+	sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5)};
+	
+	{
+		auto itr = Li.end();
+
+		is_True( &*Li.rbegin() == &*sgm::Prev(itr) );
+	}
+	{
+		auto itr = Li.rend();
+
+		is_True( &*Li.begin() == &*sgm::Prev(itr) );
+	}
+}
+
+
+static void Swap()
+{
+	{
+		sgm::List<Specimen> 
+			Li0{Specimen(1), Specimen(3), Specimen(5)},
+			Li1{Specimen(7), Specimen(9)};
+
+		Li0.swap(Li1);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li0
+		,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
+		);
+		
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li1
+		,	sgm::List<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+		);
+	}
+	{
+		sgm::List<Specimen> 
+			Li0{Specimen(1), Specimen(3), Specimen(5)},
+			Li1{Specimen(7), Specimen(9)};
+
+		std::swap(Li0, Li1);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li0
+		,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
+		);
+		
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li1
+		,	sgm::List<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+		);
+	}
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -295,4 +351,6 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::Pop
 ,	::Pop_Range
 ,	::Allocator
+,	::End_iterator
+,	::Swap
 };
