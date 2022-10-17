@@ -22,8 +22,14 @@ namespace sgm
 	template<class T>
 	struct List_Node;
 
+	template<class T, bool IS_FORWARD>
+	struct _List_Boundary_Node;
+
 	template<class T>
-	struct _List_Empty_Node;
+	using _List_End_Node = _List_Boundary_Node<T, true>;
+
+	template<class T>
+	using _List_rEnd_Node = _List_Boundary_Node<T, false>;
 
 
 	template<class T>
@@ -55,8 +61,8 @@ struct sgm::List_Node
 };
 
 
-template<class T>
-struct sgm::_List_Empty_Node
+template<class T, bool IS_FORWARD>
+struct sgm::_List_Boundary_Node
 {
 	using value_type = T;
 
@@ -228,11 +234,7 @@ public:
 	using const_reverse_iterator = List_iterator<T, false, false>;
 
 
-	List() : _rend_node(), _end_node(), _allocator()
-	{
-		_rend_node.back_ptr = _end_nptr();
-		_end_node.front_ptr = _rend_nptr();
-	}
+	List() : _bnd_node{}, _allocator(){  _link_nodes(_rend_nptr(), _end_nptr());  }
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	List(ITR begin_itr, ITR const end_itr) 
@@ -242,11 +244,12 @@ public:
 
 	List(List&& Li) noexcept : List()
 	{
-		_rend_node.back_ptr = Li._rend_node.back_ptr;
-		_end_node.front_ptr = Li._end_node.front_ptr;
+		_link_nodes(_rend_nptr(), Li._bnd_node.rend.back_ptr);
+		_link_nodes(Li._bnd_node.end.front_ptr, _end_nptr());
 
-		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_node.front_ptr = Li._rend_nptr();
+		_allocator = Move(Li._allocator);
+
+		_link_nodes(Li._rend_nptr(), Li._end_nptr());
 	}
 
 
@@ -267,11 +270,12 @@ public:
 	{
 		clear();
 
-		_rend_node.back_ptr = Li._rend_node.back_ptr;
-		_end_node.front_ptr = Li._end_node.front_ptr;
+		_link_nodes(_rend_nptr(), Li._bnd_node.rend.back_ptr);
+		_link_nodes(Li._bnd_node.end.front_ptr, _end_nptr());
 
-		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_nptr().front_ptr = Li._rend_nptr();
+		_allocator = Move(Li._allocator);
+
+		_link_nodes(Li._rend_nptr(), Li._end_nptr());
 
 		return *this;
 	}
@@ -300,10 +304,10 @@ public:
 	{
 		{
 			_node_t
-				*const my_first = _rend_node.back_ptr,
-				*const my_last = _end_node.front_ptr,
-				*const its_first = Li._rend_node.back_ptr,
-				*const its_last = Li._end_node.front_ptr;
+				*const my_first = _bnd_node.rend.back_ptr,
+				*const my_last = _bnd_node.end.front_ptr,
+				*const its_first = Li._bnd_node.rend.back_ptr,
+				*const its_last = Li._bnd_node.end.front_ptr;
 
 			_link_nodes(_rend_nptr(), its_first);
 			_link_nodes(Li._rend_nptr(), my_first);
@@ -320,17 +324,17 @@ public:
 	}
 
 
-	auto cbegin() const-> const_iterator{  return _rend_node.back_ptr;  }
+	auto cbegin() const-> const_iterator{  return _bnd_node.rend.back_ptr;  }
 	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> iterator{  return _rend_node.back_ptr;  };
+	auto begin()-> iterator{  return _bnd_node.rend.back_ptr;  };
 
 	auto cend() const-> const_iterator{  return _end_nptr();  }
 	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
 	auto end()-> iterator{  return _end_nptr();  }
 
-	auto crbegin() const-> const_reverse_iterator{  return _end_node.front_ptr;  }
+	auto crbegin() const-> const_reverse_iterator{  return _bnd_node.end.front_ptr;  }
 	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
-	auto rbegin()-> reverse_iterator{  return _end_node.front_ptr;  }
+	auto rbegin()-> reverse_iterator{  return _bnd_node.end.front_ptr;  }
 
 	auto crend() const-> const_reverse_iterator{  return _rend_nptr();  }
 	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
@@ -367,11 +371,11 @@ public:
 
 	template<class...ARGS>
 	auto emplace_back(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	->	List&{  return emplace_next( Prev(end()), Forward<ARGS>(args)... ),  *this;  }
+	->	List&{  return emplace_prev( end(), Forward<ARGS>(args)... ),  *this;  }
 
 	template<class...ARGS>
 	auto emplace_front(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	->	List&{  return emplace_next( Prev(rend()), Forward<ARGS>(args)... ),  *this;  }
+	->	List&{  return emplace_prev( rend(), Forward<ARGS>(args)... ),  *this;  }
 
 
 	template<class ITR, class...ARGS>
@@ -390,7 +394,8 @@ public:
 			behind_itr = Next(itr),
 			new_itr(  _alloc( nullptr, nullptr, Forward<ARGS>(args)... )  );
 
-		_link(itr, new_itr, behind_itr);
+		_link_itrs(itr, new_itr);
+		_link_itrs(new_itr, behind_itr);
 
 		return new_itr;
 	}
@@ -409,7 +414,8 @@ public:
 			prior_itr = Prev(itr),
 			new_itr(  _alloc( nullptr, nullptr, Forward<ARGS>(args)... )  );
 
-		_link(prior_itr, new_itr, itr);
+		_link_itrs(prior_itr, new_itr);
+		_link_itrs(new_itr, itr);
 
 		return new_itr;
 	}
@@ -444,11 +450,7 @@ public:
 		{
 			auto itr = bi++;
 
-			_node_t* cur_node_ptr = _itr_hp::node_ptr(itr);
-
-			cur_node_ptr->front_ptr = cur_node_ptr->back_ptr = nullptr;
-			
-			_destroy(cur_node_ptr);
+			_destroy( _itr_hp::node_ptr(itr) );
 		}
 
 		return ei;
@@ -467,15 +469,24 @@ public:
 
 
 private:
-	_List_Empty_Node<T> _rend_node, _end_node;
+	union
+	{	
+		_List_rEnd_Node<T> rend;
+		_List_End_Node<T> end;
+	}	_bnd_node;
+
 	allocator_t _allocator;
 
 
-	auto _rend_nptr() const noexcept
-	->	_node_t*{  return const_cast<_node_t*>( reinterpret_cast<_node_t const*>(&_rend_node) );  }
+	auto _rend_nptr() const noexcept-> _node_t*
+	{
+		return const_cast<_node_t*>( reinterpret_cast<_node_t const*>(&_bnd_node) );  
+	}
 
-	auto _end_nptr() const noexcept
-	->	_node_t*{  return const_cast<_node_t*>( reinterpret_cast<_node_t const*>(&_end_node) );  }
+	auto _end_nptr() const noexcept-> _node_t*
+	{
+		return const_cast<_node_t*>( reinterpret_cast<_node_t const*>(&_bnd_node) );  
+	}
 
 
 	template<class...ARGS>
@@ -491,6 +502,8 @@ private:
 	void _destroy(_node_t* p)
 	{
 		_allocator.destroy(p);
+
+		p->front_ptr = p->back_ptr = nullptr;
 
 		_allocator.deallocate( p, sizeof(_node_t) );
 	}
@@ -550,38 +563,24 @@ private:
 
 
 	template<class ITR>
-	static void _link(ITR const prev_itr, ITR const cur_itr, ITR const next_itr)
+	static void _link_itrs(ITR const itr0, ITR const itr1)
 	{
-		_node_t
-			&cur_node = *_itr_hp::node_ptr(cur_itr),
-			*const prev_node_ptr = _itr_hp::node_ptr(prev_itr),
-			*const next_node_ptr = _itr_hp::node_ptr(next_itr);		
+		_node_t 
+			*const _nptr0 = _itr_hp::node_ptr(itr0),  
+			*const _nptr1 = _itr_hp::node_ptr(itr1);
 
-		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
-
-		_node_hp::shift<true, is_fwd_v>(&cur_node) = next_node_ptr;
-		_node_hp::shift<false, is_fwd_v>(&cur_node) = prev_node_ptr;
-
-		_node_hp::shift<true, is_fwd_v>(prev_node_ptr) = &cur_node;
-		_node_hp::shift<false, is_fwd_v>(next_node_ptr) = &cur_node;
+		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;	
+		
+		_node_hp::shift<true, is_fwd_v>(_nptr0) = _nptr1;
+		_node_hp::shift<false, is_fwd_v>(_nptr1) = _nptr0;
 	}
 
 
 	template<class ITR>
 	static void _unlink_range(ITR const bi, ITR const ei)
 	{
-		if(bi == ei)
-			return;
-
-		bool constexpr is_fwd_v = Decay_t<ITR>::is_forward_v;
-
-		_node_t
-			&bnode = *_itr_hp::node_ptr(bi),
-			*const bfr_bnode_ptr = _node_hp::shift<false, is_fwd_v>(&bnode),
-			*const enode_ptr = _itr_hp::node_ptr(ei);
-
-		_node_hp::shift<true, is_fwd_v>(bfr_bnode_ptr) = enode_ptr;
-		_node_hp::shift<false, is_fwd_v>(enode_ptr) = bfr_bnode_ptr;		
+		if(bi != ei)
+			_link_itrs( Prev(bi), ei );
 	}
 
 
@@ -597,10 +596,9 @@ private:
 
 
 	template<class A>
-	List(_List_by_Tag, A&& alc) : _rend_node(), _end_node(), _allocator( Forward<A>(alc) )
+	List(_List_by_Tag, A&& alc) : _bnd_node{}, _allocator( Forward<A>(alc) )
 	{
-		_rend_node.back_ptr = _end_nptr();
-		_end_node.front_ptr = _rend_nptr();		
+		_link_nodes(_rend_nptr(), _end_nptr());
 	}
 
 	template<  class A, class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
@@ -614,11 +612,12 @@ private:
 	template<class A>
 	List(_List_by_Tag tag, A&& alc, List&& Li) noexcept : List( tag, Forward<A>(alc) )
 	{
-		_rend_node.back_ptr = Li._rend_node.back_ptr;
-		_end_node.front_ptr = Li._end_node.front_ptr;
+		_link_nodes(_rend_nptr(), Li._bnd_node.rend.back_ptr);
+		_link_nodes(Li._bnd_node.end.front_ptr, _end_nptr());
 
-		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_node.front_ptr = Li._rend_nptr();
+		_allocator = Move(Li._allocator);
+
+		_link_nodes(Li._rend_nptr(), Li._end_nptr());
 	}
 
 	template<class A>

@@ -346,7 +346,7 @@ static void Swap()
 
 static void Size_of_List()
 {
-	//static_assert( sizeof(sgm::List<Specimen>) <= 3*sizeof(std::uint64_t*), "" );
+	static_assert( sizeof(sgm::List<Specimen>) <= 3*sizeof(std::uint64_t*), "" );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
