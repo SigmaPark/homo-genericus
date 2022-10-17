@@ -303,6 +303,45 @@ static void End_iterator()
 		is_True( &*Li.begin() == &*sgm::Prev(itr) );
 	}
 }
+
+
+static void Swap()
+{
+	{
+		sgm::List<Specimen> 
+			Li0{Specimen(1), Specimen(3), Specimen(5)},
+			Li1{Specimen(7), Specimen(9)};
+
+		Li0.swap(Li1);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li0
+		,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
+		);
+		
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li1
+		,	sgm::List<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+		);
+	}
+	{
+		sgm::List<Specimen> 
+			Li0{Specimen(1), Specimen(3), Specimen(5)},
+			Li1{Specimen(7), Specimen(9)};
+
+		std::swap(Li0, Li1);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li0
+		,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
+		);
+		
+		sgm::spec::Are_Equivalent_Ranges
+		(	Li1
+		,	sgm::List<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+		);
+	}
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -313,4 +352,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::Pop_Range
 ,	::Allocator
 ,	::End_iterator
+,	::Swap
 };

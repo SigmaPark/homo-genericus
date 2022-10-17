@@ -50,7 +50,7 @@ struct sgm::List_Node
 {
 	using value_type = T;
 
-	List_Node *front_ptr, *back_ptr;
+	List_Node *front_ptr = nullptr, *back_ptr = nullptr;
 	T value;
 };
 
@@ -60,7 +60,7 @@ struct sgm::_List_Empty_Node
 {
 	using value_type = T;
 
-	List_Node<T> *front_ptr, *back_ptr;
+	List_Node<T> *front_ptr = nullptr, *back_ptr = nullptr;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -228,7 +228,7 @@ public:
 	using const_reverse_iterator = List_iterator<T, false, false>;
 
 
-	List() : _rend_node{nullptr, nullptr}, _end_node{nullptr, nullptr}, _allocator{}
+	List() : _rend_node(), _end_node(), _allocator()
 	{
 		_rend_node.back_ptr = _end_nptr();
 		_end_node.front_ptr = _rend_nptr();
@@ -282,7 +282,6 @@ public:
 	auto operator=(std::initializer_list<Q>&& initLi) noexcept
 	->	List&{  return _clone(initLi.begin(), initLi.end());  }
 
-
 	template
 	<	class RG
 	,	class
@@ -297,6 +296,30 @@ public:
 	,	class = Enable_if_t<  is_iterable<RG>::value && !is_Same< Decay_t<RG>, List >::value  >
 	> 
 	operator RG() const{  return Decay_t<RG>(cbegin(), cend());  }
+
+
+	void swap(List& Li) noexcept
+	{
+		{
+			_node_t
+				*const my_first = _rend_node.back_ptr,
+				*const my_last = _end_node.front_ptr,
+				*const its_first = Li._rend_node.back_ptr,
+				*const its_last = Li._end_node.front_ptr;
+
+			_link_nodes(_rend_nptr(), its_first);
+			_link_nodes(Li._rend_nptr(), my_first);
+	
+			_link_nodes(its_last, _end_nptr());
+			_link_nodes(my_last, Li._end_nptr());
+		}
+		{
+			auto temp = Move(_allocator);
+
+			_allocator = Move(Li._allocator);
+			Li._allocator = Move(temp);
+		}
+	}
 
 
 	auto cbegin() const-> const_iterator{  return _rend_node.back_ptr;  }
@@ -564,12 +587,19 @@ private:
 	}
 
 
+	static void _link_nodes(_node_t* nptr0, _node_t* nptr1)
+	{
+		assert(nptr0 != nullptr && nptr1 != nullptr);
+
+		nptr0->back_ptr = nptr1,  nptr1->front_ptr = nptr0;
+	}
+
+
 	friend class sgm::List<value_type>;
 
 
 	template<class A>
-	List(_List_by_Tag, A&& alc) 
-	:	_rend_node{nullptr, nullptr}, _end_node{nullptr, nullptr}, _allocator( Forward<A>(alc) )
+	List(_List_by_Tag, A&& alc) : _rend_node(), _end_node(), _allocator( Forward<A>(alc) )
 	{
 		_rend_node.back_ptr = _end_nptr();
 		_end_node.front_ptr = _rend_nptr();		
@@ -599,11 +629,19 @@ private:
 
 	template<  class RG, class A, class = Enable_if_t< is_iterable<RG>::value >  >
 	List(_List_by_Tag tag, A&& alc, RG&& rg) noexcept(is_Rvalue_Reference<RG&&>::value)
-	:	List( tag, Forward<A>(alc) )
-	{
-		_construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );
-	}
+	:	List( tag, Forward<A>(alc) ){  _construct_from_iterators( fBegin<RG>(rg), fEnd<RG>(rg) );  }
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace std
+{
+
+	template<class T>
+	static void swap(sgm::List<T>& L0, sgm::List<T>& L1) noexcept{  L0.swap(L1);  }
+
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 #endif // end of #ifndef _SGM_LIST_
