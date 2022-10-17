@@ -246,7 +246,7 @@ public:
 		_end_node.front_ptr = Li._end_node.front_ptr;
 
 		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_nptr.front_ptr = Li._rend_nptr();
+		Li._end_node.front_ptr = Li._rend_nptr();
 	}
 
 
@@ -273,7 +273,7 @@ public:
 		_end_node.front_ptr = Li._end_node.front_ptr;
 
 		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_nptr.front_ptr = Li._rend_nptr();
+		Li._end_nptr().front_ptr = Li._rend_nptr();
 
 		return *this;
 	}
@@ -620,7 +620,7 @@ private:
 		_end_node.front_ptr = Li._end_node.front_ptr;
 
 		Li._rend_node.back_ptr = Li._end_nptr();
-		Li._end_nptr.front_ptr = Li._rend_nptr();		
+		Li._end_node.front_ptr = Li._rend_nptr();
 	}
 
 	template<class A>
