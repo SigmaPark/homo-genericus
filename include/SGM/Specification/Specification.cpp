@@ -59,7 +59,13 @@ void sgm::spec::_MD_Stream::open(std::string const working_filepath)
 		
 			str.erase(str.begin() + last_dot, str.end());
 
-			return str + ".md";
+			auto const last_slash = str.find_last_of('/');
+			
+			std::string const 
+				direc(str.begin(), str.begin() + last_slash+1),
+				name(str.begin() + last_slash + 1, str.end());
+			
+			return direc + "[guide]_" + name + ".md";
 		}(working_filepath);
 }
 

@@ -453,5 +453,8 @@ _private_*.*
 _debug_*.*
 _test_*.*
 
+# prefix convention
+\[*\]_*.*
+
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,cmake
