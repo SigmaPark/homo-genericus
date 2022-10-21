@@ -22,7 +22,7 @@ static void is_iterable_Test()
 		&&	sgm::is_iterable< std::list<int> >::value
 		&&	sgm::is_iterable< std::forward_list<int> >::value
 		&&	sgm::is_iterable< std::initializer_list<int> >::value
-		&&	!sgm::is_iterable< int[10] >::value
+		&&	sgm::is_iterable< int[10] >::value
 		)
 	,	""
 	);

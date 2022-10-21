@@ -58,6 +58,36 @@ static void Span_is_iterable()
 }
 
 
+static void Primitive_Array()
+{
+    Specimen arr[] = { Specimen(2), Specimen(4), Specimen(6) };
+
+    {
+        auto spn = sgm::Span<3>(arr);
+
+        Are_Equivalent_Ranges(spn, arr);
+
+        spn[0] = -1;
+        spn[1] = -3;
+
+        Are_Equivalent_Ranges(arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)});
+    }
+    {
+        auto cspn = sgm::Span<3>( sgm::immut(arr) );
+
+        Are_Equivalent_Ranges(cspn, arr);
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(cspn[0])>::value
+            &&  sgm::is_immutable<decltype(cspn[1])>::value
+            &&  sgm::is_immutable<decltype(cspn[2])>::value
+            )
+        ,   ""
+        );
+    }
+}
+
+
 static void Static_Size_Array()
 {
     Array<Specimen, 3> arr{Specimen(2), Specimen(4), Specimen(6)};
@@ -96,7 +126,7 @@ static void Static_Size_Array()
         );
     }
 	{
-        auto cspn = sgm::Span<3>( immut(arr) );
+        auto cspn = sgm::Span<3>( sgm::immut(arr) );
 
         Are_Equivalent_Ranges(cspn, arr); 
 
@@ -275,6 +305,7 @@ static void Linked_List()
 
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Span, /**/)
 {   ::Span_is_iterable
+,   ::Primitive_Array
 ,   ::Static_Size_Array
 ,   ::Dynamic_Size_Array
 ,   ::Linked_List

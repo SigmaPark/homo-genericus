@@ -498,14 +498,14 @@ private:
 	template<class Q>  /* Declaration Only */
 	static auto _begin(int)-> SFINAE_t< decltype( static_cast<T>(*Declval<Q>().begin()) ) >;
 
-	template<class...>  /* Declaration Only */
-	static auto _begin(...)-> False_t;
+	template<class Q>  /* Declaration Only */
+	static auto _begin(...)-> is_Bounded_Array< Referenceless_t<Q> >;
 
 	template<class Q>  /* Declaration Only */
 	static auto _end(int)-> SFINAE_t< decltype( static_cast<T>(*Declval<Q>().end()) ) >;
 
-	template<class...>  /* Declaration Only */
-	static auto _end(...)-> False_t;
+	template<class Q>  /* Declaration Only */
+	static auto _end(...)-> is_Bounded_Array< Referenceless_t<Q> >;
 
 public:
 	static bool constexpr value
