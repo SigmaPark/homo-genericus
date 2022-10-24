@@ -138,14 +138,22 @@ namespace sgm
 namespace sgm
 {
 
-	template<class ITR>
+	template
+	<	class ITR
+	,	int 
+		=	is_random_access_iterator<ITR>::value ? 3
+		:	is_bidirectional_iterator<ITR>::value ? 2
+		:	is_iterator<ITR>::value ? 1
+		:	/* otherwise */ 0
+	>
 	class Reverse_iterator;
+
 
 	template<class ITR>
 	static auto Reversing(ITR const itr)-> Reverse_iterator<ITR>{  return {itr};  }
 
 	template<class ITR>
-	static auto Reversing(Reverse_iterator<ITR> const ritr)-> ITR{  return ritr._itr;  }
+	static auto Reversing(Reverse_iterator<ITR> const ritr)-> ITR{  return ritr.base();  }
 
 
 	SGM_HAS_MEMFUNC(rbegin);
@@ -266,28 +274,40 @@ namespace sgm
 #endif
 
 
-template<class ITR>
+template<class ITR, int ITR_TRAITS>
 class sgm::Reverse_iterator
 {
-private: 
+public:
+	static_assert(ITR_TRAITS != 0, "sgm::Reverse_iterator expects ITR to be an iterator type.");
+};
+
+
+template<class ITR>
+class sgm::Reverse_iterator<ITR, 1>
+{
+private:
 	using _itr_t = Reverse_iterator;
-	using _deref_t = decltype(*Declval<ITR>());
+	using _deref_t = decltype(*Declval<ITR>());	
 
 public:
 	using value_type = _detail::value_type_or_t< ITR, Decay_t<_deref_t> >;
 	using difference_type = _detail::difference_type_or_t<ITR, ptrdiff_t>;
 	using pointer = _detail::pointer_or_t< ITR, Referenceless_t<_deref_t>* >;
-	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;
-
+	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;	
 
 	Reverse_iterator(ITR const itr) : _itr(itr){}
 
-	auto operator*() const noexcept-> _deref_t{  return *_itr;  }
+	auto base() const noexcept-> ITR const&{  return _itr;  }
+	auto base() noexcept-> ITR&{  return _itr;  }
 
-	auto operator->() const noexcept-> pointer{  return &**this;  }
+	auto operator*() const noexcept-> _deref_t{  return *base();  }
 
-	auto operator++()-> _itr_t&{  return --_itr,  *this;  }
-	auto operator--()-> _itr_t&{  return ++_itr,  *this;  }
+	auto operator->() const noexcept-> pointer{  return &**this;  }	
+
+	auto operator==(_itr_t const itr) const noexcept-> bool{  return base() == itr.base();  }
+	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
+
+	auto operator++()-> _itr_t&{  return --base(),  *this;  }
 
 	auto operator++(int)-> _itr_t
 	{
@@ -297,6 +317,81 @@ public:
 
 		return res;
 	}
+
+
+private:
+	ITR _itr;
+};
+
+
+template<class ITR>
+class sgm::Reverse_iterator<ITR, 2> : public Reverse_iterator<ITR, 1>
+{
+private:
+	using _top_t = Reverse_iterator<ITR, 1>;
+	using _itr_t = Reverse_iterator;
+
+
+public:
+	template<class...ARGS>
+	Reverse_iterator(ARGS&&...args) : _top_t( Forward<ARGS>(args)... ){}
+
+
+	auto operator--()-> _itr_t&{  return ++_top_t::base(),  *this;  }
+
+	auto operator--(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		--*this;
+
+		return res;
+	}
+
+	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+};
+
+
+template<class ITR>
+class sgm::Reverse_iterator<ITR, 3> : public Reverse_iterator<ITR, 2>
+{
+private: 
+	using _top_t = Reverse_iterator<ITR, 1>;
+	using _itr_t = Reverse_iterator;
+
+	using typename _top_t::_deref_t;
+
+
+public:
+	using typename _top_t::difference_type;
+
+
+	template<class...ARGS>
+	Reverse_iterator(ARGS&&...args) : Reverse_iterator<ITR, 2>( Forward<ARGS>(args)... ){}
+
+
+	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+
+
+	auto operator--()-> _itr_t&{  return _top_t::operator--(),  *this;  }
 
 	auto operator--(int)-> _itr_t
 	{
@@ -310,78 +405,180 @@ public:
 
 	auto operator[](difference_type const diff) const-> _deref_t{  return *(*this + diff);  }
 
-	auto operator+(difference_type const diff) const-> _itr_t{  return {_itr - diff};  }
-	auto operator-(difference_type const diff) const-> _itr_t{  return {_itr + diff};  }
-	auto operator-(_itr_t const itr) const-> difference_type{  return itr._itr - _itr;  }
+	auto operator+(difference_type const diff) const
+	->	_itr_t{  return {_top_t::base() - diff};  }
+	
+	auto operator-(difference_type const diff) const
+	->	_itr_t{  return { _top_t::base() + diff};  }
+	
+	auto operator-(_itr_t const itr) const
+	->	difference_type{  return itr.base() - _top_t::base();  }
 
 	auto operator+=(difference_type const diff)
-	->	_itr_t&{  return _itr -= diff,  *this;  }
-
+	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
 
 	auto operator-=(difference_type const diff)
-	->	_itr_t&{  return _itr += diff,  *this;  }
+	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
 
 
-	auto operator==(_itr_t const itr) const noexcept-> bool{  return _itr == itr._itr;  }
-	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
+	auto operator<(_itr_t const itr) const noexcept
+	->	bool{  return _top_t::base() > itr.base();  }
+	
+	auto operator>(_itr_t const itr) const noexcept
+	->	bool{  return _top_t::base() < itr.base();  }
 
-	auto operator<(_itr_t const itr) const noexcept-> bool{  return _itr > itr._itr;  }
-	auto operator>(_itr_t const itr) const noexcept-> bool{  return _itr < itr._itr;  }
+	auto operator<=(_itr_t const itr) const noexcept
+	->	bool{  return !(*this > itr);  }
 
-	auto operator<=(_itr_t const itr) const noexcept-> bool{  return !(*this > itr);  }
-	auto operator>=(_itr_t const itr) const noexcept-> bool{  return !(*this < itr);  }
-
-
-private:
-	template<class _ITR>
-	friend auto sgm::Reversing(Reverse_iterator<_ITR> const ritr)-> _ITR;
-
-
-	ITR _itr;
+	auto operator>=(_itr_t const itr) const noexcept
+	->	bool{  return !(*this < itr);  }
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 namespace sgm
 {
-	
-	template<class ITR>
-	class Move_iterator : public ITR
+
+	template
+	<	class ITR
+	,	int 
+		=	is_random_access_iterator<ITR>::value ? 3
+		:	is_bidirectional_iterator<ITR>::value ? 2
+		:	is_iterator<ITR>::value ? 1
+		:	/* otherwise */ 0
+	>
+	class Move_iterator;
+
+}
+
+
+template<class ITR, int ITR_TRAITS>
+class sgm::Move_iterator 
+{
+public:
+	static_assert(ITR_TRAITS != 0, "sgm:Move_iterator expects ITR to be an iterator type ");
+};
+
+
+template<class ITR>
+class sgm::Move_iterator<ITR, 1> 
+{
+private:
+	using _itr_t = Move_iterator;
+	using _deref_t = decltype(*Declval<ITR>());	
+
+public:
+	using value_type = _detail::value_type_or_t< ITR, Decay_t<_deref_t> >;
+	using difference_type = _detail::difference_type_or_t<ITR, ptrdiff_t>;
+	using pointer = _detail::pointer_or_t< ITR, Referenceless_t<_deref_t>* >;
+	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;
+
+
+	Move_iterator(ITR const itr) : _itr(itr){}
+
+	auto base() const noexcept-> ITR const&{  return _itr;  }
+	auto base() noexcept-> ITR&{  return _itr;  }
+
+	auto operator*() const noexcept-> value_type{  return Move(*base());  }
+
+	auto operator->() const noexcept-> pointer{  return &*base();  }	
+
+	auto operator==(_itr_t const itr) const noexcept-> bool{  return base() == itr.base();  }
+	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
+
+	auto operator++()-> _itr_t&{  return ++base(),  *this;  }
+
+	auto operator++(int)-> _itr_t
 	{
-	public:
-		template<class...ARGS>
-		Move_iterator(ARGS&&...args) : ITR( Forward<ARGS>(args)... ){}
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
 
 
-		auto base() const noexcept-> ITR const&{  return static_cast<ITR const&>(*this);  }
-		auto base() noexcept-> ITR&{  return static_cast<ITR&>(*this);  }
+private:
+	ITR _itr;
+};
 
 
-		auto operator++() noexcept-> Move_iterator&{  return ++base(),  *this;  }
-		auto operator--() noexcept-> Move_iterator&{  return --base(),  *this;  }
-		
-		auto operator++(int) noexcept-> Move_iterator{  return {base()++};  }
-		auto operator--(int) noexcept-> Move_iterator{  return {base()--};  }
+template<class ITR>
+class sgm::Move_iterator<ITR, 2> : public Move_iterator<ITR, 1> 
+{
+private:
+	using _top_t = Move_iterator<ITR, 1>;
+	using _itr_t = Move_iterator;
 
-		auto operator+(ptrdiff_t const diff) const-> Move_iterator{  return {base() + diff};  }
-		auto operator-(ptrdiff_t const diff) const-> Move_iterator{  return {base() - diff};  }
-
-		auto operator-(ITR const itr) const-> ptrdiff_t{  return base() - itr;  }
-
-		auto operator+=(ptrdiff_t const diff)
-		->	Move_iterator&{  return base() += diff,  *this;  }
-		
-		auto operator-=(ptrdiff_t const diff)
-		->	Move_iterator&{  return base() -= diff,  *this;  }
+public:
+	template<class...ARGS>
+	Move_iterator(ARGS&&...args) : _top_t( Forward<ARGS>(args)... ){}
 
 
-		auto operator*() const noexcept
-		->	Decay_t< decltype(*base()) >{  return Move(*base());  }
+	auto operator--()-> _itr_t&{  return --_top_t::base(),  *this;  }
 
-		auto operator[](ptrdiff_t const diff) const noexcept
-		->	Decay_t< decltype(*base()) >{  return Move(base()[diff]);  }
-	};
+	auto operator--(int)-> _itr_t
+	{
+		auto const res = *this;
 
+		--*this;
+
+		return res;
+	}
+
+	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+};
+
+	
+template<class ITR>
+class sgm::Move_iterator<ITR, 3> : public Move_iterator<ITR, 2>
+{
+private:
+	using _top_t = Move_iterator<ITR, 1>;
+	using _itr_t = Move_iterator;
+
+public:
+	template<class...ARGS>
+	Move_iterator(ARGS&&...args) : Move_iterator<ITR, 2>( Forward<ARGS>(args)... ){}
+
+
+	auto operator+(ptrdiff_t const diff) const
+	->	_itr_t{  return {_top_t::base() + diff};  }
+	
+	auto operator-(ptrdiff_t const diff) const
+	->	_itr_t{  return {_top_t::base() - diff};  }
+
+
+	auto operator-(_itr_t const itr) const
+	->	ptrdiff_t{  return _top_t::base() - itr.base();  }
+
+	auto operator-(ITR const itr) const
+	->	ptrdiff_t{  return _top_t::base() - itr;  }
+
+
+	auto operator+=(ptrdiff_t const diff)
+	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
+	
+	auto operator-=(ptrdiff_t const diff)
+	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
+
+
+	auto operator[](ptrdiff_t const diff) const noexcept
+	->	typename _top_t::value_type{  return Move(_top_t::base()[diff]);  }
+};
+
+
+namespace sgm
+{
 
 	SGM_USER_DEFINED_TYPE_CHECK
 	(	class ITR

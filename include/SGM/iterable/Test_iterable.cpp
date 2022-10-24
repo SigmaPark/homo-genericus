@@ -109,7 +109,7 @@ static void iterator_Wrapper_Test()
 	,	""
 	);
 
-#if 0
+
 	using reverse_fLitr_t = sgm::Reverse_iterator<fLitr_t>;
 	using reverse_bLitr_t = sgm::Reverse_iterator<bLitr_t>;
 
@@ -136,7 +136,6 @@ static void iterator_Wrapper_Test()
 		)
 	,	""
 	);
-#endif
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
