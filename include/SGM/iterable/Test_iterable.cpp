@@ -92,6 +92,52 @@ static void Size_Test()
 	,	""
 	);
 }
+
+
+static void iterator_Wrapper_Test()
+{
+	using fLitr_t = std::forward_list<int>::iterator;
+	using bLitr_t = std::list<int>::iterator;
+
+	static_assert
+	(	(	!sgm::is_random_access_iterator<bLitr_t>::value
+		&&	sgm::is_bidirectional_iterator<bLitr_t>::value
+		&&	!sgm::is_random_access_iterator<fLitr_t>::value
+		&&	!sgm::is_bidirectional_iterator<fLitr_t>::value
+		&&	sgm::is_iterator<fLitr_t>::value
+		)
+	,	""
+	);
+
+#if 0
+	using reverse_fLitr_t = sgm::Reverse_iterator<fLitr_t>;
+	using reverse_bLitr_t = sgm::Reverse_iterator<bLitr_t>;
+
+	static_assert
+	(	(	!sgm::is_random_access_iterator<reverse_bLitr_t>::value
+		&&	sgm::is_bidirectional_iterator<reverse_bLitr_t>::value
+		&&	!sgm::is_random_access_iterator<reverse_fLitr_t>::value
+		&&	!sgm::is_bidirectional_iterator<reverse_fLitr_t>::value
+		&&	sgm::is_iterator<reverse_fLitr_t>::value
+		)
+	,	""
+	);
+
+
+	using move_fLitr_t = sgm::Move_iterator<fLitr_t>;
+	using move_bLitr_t = sgm::Move_iterator<bLitr_t>;
+
+	static_assert
+	(	(	!sgm::is_random_access_iterator<move_bLitr_t>::value
+		&&	sgm::is_bidirectional_iterator<move_bLitr_t>::value
+		&&	!sgm::is_random_access_iterator<move_fLitr_t>::value
+		&&	!sgm::is_bidirectional_iterator<move_fLitr_t>::value
+		&&	sgm::is_iterator<move_fLitr_t>::value
+		)
+	,	""
+	);
+#endif
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -100,4 +146,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, iterable, /**/)
 ,	::is_iterator_Test
 ,	::Reverse_iterator_Test
 ,	::Size_Test
+,	::iterator_Wrapper_Test
 };
