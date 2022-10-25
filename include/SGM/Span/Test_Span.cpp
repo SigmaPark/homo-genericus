@@ -60,19 +60,39 @@ static void Span_is_iterable()
 
 static void Primitive_Array()
 {
-    Specimen arr[] = { Specimen(2), Specimen(4), Specimen(6) };
-
     {
-        auto spn = sgm::Span<3>(arr);
+        Specimen arr[] = { Specimen(2), Specimen(4), Specimen(6) };
+
+        auto spn = sgm::Span(arr);
 
         Are_Equivalent_Ranges(spn, arr);
 
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges(arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)});
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
+        Specimen arr[] = { Specimen(2), Specimen(4), Specimen(6) };
+
+        auto spn = sgm::Span<2>(arr);
+
+        Are_Equivalent_Ranges( spn, Array<Specimen, 2>{Specimen(2), Specimen(4)} );
+
+        spn[0] = -1;
+        spn[1] = -3;
+
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
+    }
+    {
+        Specimen arr[] = { Specimen(2), Specimen(4), Specimen(6) };
+
         auto cspn = sgm::Span<3>( sgm::immut(arr) );
 
         Are_Equivalent_Ranges(cspn, arr);
@@ -100,7 +120,10 @@ static void Static_Size_Array()
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges( arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
         auto spn = sgm::Span<3>(arr); 
@@ -110,7 +133,10 @@ static void Static_Size_Array()
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges( arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
 	{
         auto cspn = sgm::Span<3>(arr.cdata()); 
@@ -153,7 +179,10 @@ static void Dynamic_Size_Array()
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges( arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
         auto spn = sgm::Span(arr.begin(), arr.end());
@@ -163,7 +192,10 @@ static void Dynamic_Size_Array()
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges( arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
         auto spn = sgm::Span(arr.begin(), 3); 
@@ -173,7 +205,10 @@ static void Dynamic_Size_Array()
         spn[0] = -1;
         spn[1] = -3;
 
-        Are_Equivalent_Ranges( arr, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
 	{
         auto cspn = sgm::Span( sgm::immut(arr) ); 
@@ -233,7 +268,10 @@ static void Linked_List()
             *itr = -3;
         }
 
-        Are_Equivalent_Ranges( Li, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   Li
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
         auto spn = sgm::Span(Li.begin(), Li.end());
@@ -247,7 +285,10 @@ static void Linked_List()
             *itr = -3;
         }
 
-        Are_Equivalent_Ranges( Li, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   Li
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
     {
         auto spn = sgm::Span(Li.begin(), 3);
@@ -261,7 +302,10 @@ static void Linked_List()
             *itr = -3;
         }
 
-        Are_Equivalent_Ranges( Li, Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} );
+        Are_Equivalent_Ranges
+        (   Li
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
     }
 	{
         auto cspn = sgm::Span( sgm::immut(Li) );

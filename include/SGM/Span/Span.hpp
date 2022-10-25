@@ -34,7 +34,8 @@ namespace sgm
 	,	int
 		=	is_iterator<T1>::value && is_iterator<T2>::value ? 1
 		:	is_iterator<T1>::value && is_Convertible<T2, size_t>::value ? 2
-		:	is_iterable<T1>::value && is_None<T2>::value ? 3 
+		:	is_Bounded_Array< Decay_t<T1> >::value && is_None<T2>::value ? 3
+		:	is_iterable<T1>::value && is_None<T2>::value ? 4 
 		:	/* otherwise */ 0		
 	>
 	struct _Dynamic_Span_Helper;
@@ -43,8 +44,9 @@ namespace sgm
 	template
 	<	class Q, size_t S
 	,	int
-		=	is_iterator<Q>::value ? 1
-		:	is_iterable<Q>::value ? 2
+		=	is_Bounded_Array< Decay_t<Q> >::value ? 1
+		:	is_iterator<Q>::value ? 2
+		:	is_iterable<Q>::value ? 3
 		:	/* otherwise */ 0
 	>
 	struct _Static_Span_Helper;
@@ -96,13 +98,31 @@ struct sgm::_Static_Span_Helper
 template<class Q, std::size_t S>
 struct sgm::_Static_Span_Helper<Q, S, 1> : Unconstructible
 {
+private:
+	template<class A, std::size_t N>  /* Declaration Only */
+	static auto constexpr _try_arr_size( A(&)[N] ) 
+	->	As_value_itself< std::size_t, (N <= S ? N : S) >;
+
+	static std::size_t constexpr size_v = decltype( _try_arr_size(Declval<Q>()) )::value;
+
+
+public:
+	using res_t = Span_t< size_v, decltype(&Declval<Q>()[0]) >;
+
+	template<class ARR>
+	static auto calc(ARR arr, None = {})-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
+};
+
+template<class Q, std::size_t S>
+struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
+{
 	using res_t = Span_t<S, Q>;
 
 	static auto calc(Q bi, None = {})-> SGM_DECLTYPE_AUTO(  res_t(bi)  )
 };
 
 template<class Q, std::size_t S>
-struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
+struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 {
 	using res_t = Span_t< S, decltype( Begin(Declval<Q>()) ) >;
 	
@@ -136,7 +156,24 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 2> : Unconstructible
 };
 
 template<class T1, class T2>
-struct sgm::_Dynamic_Span_Helper<T1, T2, 3> : Unconstructible
+struct sgm::_Dynamic_Span_Helper<T1, T2, 3> :	Unconstructible
+{
+private:
+	template<class A, std::size_t N>  /* Declaration Only */
+	static auto constexpr _arr_size( A(&)[N] )-> As_value_itself<std::size_t, N>;
+
+	static std::size_t constexpr size_v = decltype( _arr_size(Declval<T1>()) )::value;
+
+
+public:
+	using res_t = Span_t< size_v, decltype(&Declval<T1>()[0]) >;
+
+	template<class ARR>
+	static auto calc(ARR arr, T2)-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
+};
+
+template<class T1, class T2>
+struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 {
 	using res_t = Span_t< SpanSize::DYNAMIC, decltype( Begin(Declval<T1>()) ) >;
 
