@@ -1009,6 +1009,35 @@ public:
 };
 
 
+template<bool TM>
+struct sgm::is_bidirectional_iterator< sgm::ht::Plait_iterator<sgm::Family<>, TM> > : True_t{};
+
+template<class T, class...TYPES, bool TM>
+struct sgm::is_bidirectional_iterator
+<	sgm::ht::Plait_iterator< sgm::Family<T, TYPES...>, TM >  
+>
+:	Boolean_And
+	<	is_bidirectional_iterator<T>
+	,	is_bidirectional_iterator<  ht::Plait_iterator< Family<TYPES...>, TM >  >
+	>
+{};
+
+
+template<bool TM>
+struct sgm::is_random_access_iterator< sgm::ht::Plait_iterator<sgm::Family<>, TM> > : True_t{};
+
+template<class T, class...TYPES, bool TM>
+struct sgm::is_random_access_iterator
+<	sgm::ht::Plait_iterator< sgm::Family<T, TYPES...>, TM >  
+>
+:	Boolean_And
+	<	is_random_access_iterator<T>
+	,	is_random_access_iterator<  ht::Plait_iterator< Family<TYPES...>, TM >  >
+	>
+{};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<class...RGS>  
 class sgm::ht::cPlait_Range
 {
