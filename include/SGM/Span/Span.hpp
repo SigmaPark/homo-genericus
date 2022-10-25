@@ -129,6 +129,7 @@ struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 	template<class RG>
 	static auto calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T1, class T2, int ZERO>
@@ -156,21 +157,8 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 2> : Unconstructible
 };
 
 template<class T1, class T2>
-struct sgm::_Dynamic_Span_Helper<T1, T2, 3> :	Unconstructible
-{
-private:
-	template<class A, std::size_t N>  /* Declaration Only */
-	static auto constexpr _arr_size( A(&)[N] )-> As_value_itself<std::size_t, N>;
-
-	static std::size_t constexpr size_v = decltype( _arr_size(Declval<T1>()) )::value;
-
-
-public:
-	using res_t = Span_t< size_v, decltype(&Declval<T1>()[0]) >;
-
-	template<class ARR>
-	static auto calc(ARR arr, T2)-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
-};
+struct sgm::_Dynamic_Span_Helper<T1, T2, 3>
+:	_Static_Span_Helper< T1, std::numeric_limits<std::size_t>::max(), 1 >{};
 
 template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
