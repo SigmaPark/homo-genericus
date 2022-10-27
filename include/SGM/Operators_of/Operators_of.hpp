@@ -149,24 +149,6 @@ namespace sgm
 		_SGM_OPERATOR_HELPER(<<=, LShiftAssign);
 		_SGM_OPERATOR_HELPER(>>=, RShiftAssign);
 
-
-		template<class T>
-		static auto Address_of(T& t)
-		->	Enable_if_t< Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
-		{
-			return 
-			reinterpret_cast<T*>
-			(	&const_cast<char&>( reinterpret_cast<char const volatile&>(t) )
-			);
-		}
-
-		template<class T>
-		static auto Address_of(T& t)
-		->	Enable_if_t< !Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
-		{
-			return &t;
-		}
-
 	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -184,9 +166,9 @@ public:
 	
 
 	constexpr Operators_of() : _p(nullptr){}
-	Operators_of(T& t) : _p( _operator_helper_detail::Address_of(t) ){}
+	Operators_of(T& t) : _p( Address_of(t) ){}
 
-	auto operator=(T& t)-> T*{  return _p = _operator_helper_detail::Address_of(t);  }
+	auto operator=(T& t)-> T*{  return _p = Address_of(t);  }
 	auto operator=(None)-> T*{  return _p = nullptr;  }
 	
 	operator T const&() const{  return *_p;  }

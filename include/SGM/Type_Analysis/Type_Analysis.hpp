@@ -371,6 +371,24 @@ namespace sgm
     static auto Decay(T&& t)-> Decay_t<T>{  return t;  }
 
 
+	template<class T>
+	static auto Address_of(T& t)
+	->	Enable_if_t< Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
+	{
+		return 
+		reinterpret_cast<T*>
+		(	&const_cast<char&>( reinterpret_cast<char const volatile&>(t) )
+		);
+	}
+
+	template<class T>
+	static auto Address_of(T& t)
+	->	Enable_if_t< !Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
+	{
+		return &t;
+	}
+
+
     template<class SRC, class TGT>
     struct Qualify_Like
     {

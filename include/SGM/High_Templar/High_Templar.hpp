@@ -31,8 +31,20 @@ namespace sgm
 	namespace ht
 	{
 
-		template<class ITR, class FUNC>
+		template<class REF, bool = is_Lvalue_Reference<REF>::value>
+		class _Pointer_Proxy;
+
+
+		template
+		<	class ITR, class FUNC
+		,	int 
+			=	is_random_access_iterator<ITR>::value ? 3
+			:	is_bidirectional_iterator<ITR>::value ? 2
+			:	is_iterator<ITR>::value ? 1
+			:	/* otherwise */ 0
+		>
 		class Morph_iterator;
+
 
 		template<class RG, class FUNC, bool TRY_MUTABLE>
 		class Morph_Range;
@@ -72,6 +84,7 @@ namespace sgm
 
 		template<class...RGS>
 		class Plait_Range;
+
 
 		template<class FAM, bool TRY_MUTABLE>
 		class Plait_iterator;
@@ -234,13 +247,59 @@ namespace sgm
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class ITR, class FUNC>
-class sgm::ht::Morph_iterator
+template<class REF>
+class sgm::ht::_Pointer_Proxy<REF, true>
+{
+public:
+	using type = Referenceless_t<REF>*;
+
+	_Pointer_Proxy(REF& t) : _ptr( Address_of(t) ){}
+
+	operator type() const{  return _ptr;  }
+
+
+private:
+	type _ptr;
+};
+
+
+template<class REF>
+class sgm::ht::_Pointer_Proxy<REF, false>
 {
 private:
-	using _deref_t = decltype( Declval<FUNC>()(*Declval<ITR>()) );
-	using _self_t = Morph_iterator;
+	using _elem_t = Referenceless_t<REF>;
 
+public:
+	using type = _Pointer_Proxy;
+
+	_Pointer_Proxy(REF&& t) : _t( Move(t) ){}
+
+	auto operator->() const-> _elem_t const*{  return Address_of(_t);  }
+	auto operator->()-> _elem_t*{  return Address_of(_t);  }
+
+
+private:
+	_elem_t _t;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template<class ITR, class FUNC, int ITR_TRAIT>
+class sgm::ht::Morph_iterator 
+{
+public:
+	static_assert(ITR_TRAIT != 0, "sgm::ht::Morph_iterator expects ITR to be an iterator type ");
+};
+
+
+template<class ITR, class FUNC>
+class sgm::ht::Morph_iterator<ITR, FUNC, 1>
+{
+protected:
+	using _deref_t = decltype( Declval<FUNC>()(*Declval<ITR>()) );
+	
+private:
+	using _self_t = Morph_iterator;
 
 public:
 	template<  class ITR2, class = Enable_if_t< is_Convertible<ITR2, ITR>::value >  >
@@ -252,7 +311,7 @@ public:
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
 	Morph_iterator(Morph_iterator<ITR2, FUNC> const mitr) 
-	:	_xitr(mitr._xitr), _pfunc(mitr._pfunc){}
+	:	_xitr(mitr._xitr), _pfunc(mitr._pfunc){}	
 
 
 	template
@@ -266,34 +325,16 @@ public:
 //	temporary return value
 #pragma warning(disable : 4172)
 	auto operator*() const-> _deref_t{  return (*_pfunc)(*_xitr);  }
-	auto operator*()-> _deref_t{  return (*_pfunc)(*_xitr);  }
 #pragma warning(pop)
+
+	auto operator->() const
+	->	typename _Pointer_Proxy<_deref_t>::type{  return _Pointer_Proxy<_deref_t>(**this);  }
+
+	auto operator==(_self_t const itr) const noexcept-> bool{  return _xitr == itr._xitr;  }
+	auto operator!=(_self_t const itr) const noexcept-> bool{  return !(*this == itr);  }
 
 	auto operator++()-> _self_t&{  return ++_xitr,  *this;  }
 	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
-
-	bool operator==(_self_t const itr) const{  return _xitr == itr._xitr;  }
-	bool operator!=(_self_t const itr) const{  return !(*this == itr);  }
-
-
-	auto operator--()-> _self_t&{  return --_xitr,  *this;  }
-	auto operator--(int)-> _self_t{  _self_t const itr = *this;  return --*this,  itr;  }
-
-
-	auto operator[](ptrdiff_t const d) const-> _deref_t{  return (*_pfunc)( *(_xitr + d) );  }
-	auto operator[](ptrdiff_t const d)-> _deref_t{  return (*_pfunc)( *(_xitr + d) );  }
-
-	auto operator+(ptrdiff_t const d) const-> _self_t{  return{_xitr + d, *_pfunc};  }
-	auto operator-(ptrdiff_t const d) const-> _self_t{  return{_xitr - d, *_pfunc};  }
-	auto operator+=(ptrdiff_t const d)-> _self_t&{  return _xitr += d,  *this;  }
-	auto operator-=(ptrdiff_t const d)-> _self_t&{  return _xitr -= d,  *this;  }
-
-	auto operator-(_self_t const itr) const-> ptrdiff_t{  return _xitr - itr._xitr;  }
-
-	bool operator<(_self_t const itr) const{  return _xitr < itr._xitr;  }
-	bool operator>(_self_t const itr) const{  return _xitr > itr._xitr;  }
-	bool operator<=(_self_t const itr) const{  return !(*this > itr);  }
-	bool operator>=(_self_t const itr) const{  return !(*this < itr);  }
 
 
 	ITR _xitr;
@@ -301,13 +342,91 @@ public:
 };
 
 
-template<class ITR, class...ARGS>
-struct sgm::is_random_access_iterator< sgm::ht::Morph_iterator<ITR, ARGS...> >
+template<class ITR, class FUNC>
+class sgm::ht::Morph_iterator<ITR, FUNC, 2> : public Morph_iterator<ITR, FUNC, 1>
+{
+private:
+	using _top_t = Morph_iterator<ITR, FUNC, 1>;
+	using _self_t = Morph_iterator;
+
+public:
+	template<class...ARGS>
+	Morph_iterator(ARGS&&...args) : _top_t( Forward<ARGS>(args)... ){}
+
+
+	template
+	<	class ITR2
+	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
+	>
+	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
+	->	_self_t&{  return _top_t::operator=(mitr),  *this;  }
+
+
+	auto operator++()-> _self_t&{  return _top_t::operator++(),  *this;  }
+	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+
+	auto operator--()-> _self_t&{  return --_top_t::_xitr,  *this;  }
+	auto operator--(int)-> _self_t{  _self_t const itr = *this;  return --*this,  itr;  }
+};
+
+
+template<class ITR, class FUNC>
+class sgm::ht::Morph_iterator<ITR, FUNC, 3> : public Morph_iterator<ITR, FUNC, 2>
+{
+private:
+	using _top_t = Morph_iterator<ITR, FUNC, 1>;
+	using _middle_t = Morph_iterator<ITR, FUNC, 2>;
+	using _self_t = Morph_iterator;
+	using typename _top_t::_deref_t;
+
+public:
+	template<class...ARGS>
+	Morph_iterator(ARGS&&...args) : _middle_t( Forward<ARGS>(args)... ){}
+
+
+	template
+	<	class ITR2
+	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
+	>
+	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
+	->	_self_t&{  return _top_t::operator=(mitr),  *this;  }
+
+
+	auto operator++()-> _self_t&{  return _middle_t::operator++(),  *this;  }
+	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+
+	auto operator--()-> _self_t&{  return _middle_t::operator--(),  *this;  }
+	auto operator--(int)-> _self_t{  _self_t const itr = *this;  return --*this,  itr;  }
+
+
+	auto operator[](ptrdiff_t const d) const-> _deref_t{  return *(*this + d);  }
+	auto operator[](ptrdiff_t const d)-> _deref_t{  return *(*this + d);  }
+
+	auto operator+(ptrdiff_t const d) const
+	->	_self_t{  return{_top_t::_xitr + d, *_top_t::_pfunc};  }
+	
+	auto operator-(ptrdiff_t const d) const
+	->	_self_t{  return{_top_t::_xitr - d, *_top_t::_pfunc};  }
+
+	auto operator+=(ptrdiff_t const d)-> _self_t&{  return _top_t::_xitr += d,  *this;  }
+	auto operator-=(ptrdiff_t const d)-> _self_t&{  return _top_t::_xitr -= d,  *this;  }
+
+	auto operator-(_self_t const itr) const-> ptrdiff_t{  return _top_t::_xitr - itr._xitr;  }
+
+	auto operator<(_self_t const itr) const noexcept{  return _top_t::_xitr < itr._xitr;  }
+	auto operator>(_self_t const itr) const noexcept{  return _top_t::_xitr > itr._xitr;  }
+	auto operator<=(_self_t const itr) const noexcept{  return !(*this > itr);  }
+	auto operator>=(_self_t const itr) const noexcept{  return !(*this < itr);  }
+};
+
+
+template<class ITR, class FUNC>
+struct sgm::is_random_access_iterator< sgm::ht::Morph_iterator<ITR, FUNC> >
 :	is_random_access_iterator<ITR>{};
 
 
-template<class ITR, class...ARGS>
-struct sgm::is_bidirectional_iterator< sgm::ht::Morph_iterator<ITR, ARGS...> >
+template<class ITR, class FUNC>
+struct sgm::is_bidirectional_iterator< sgm::ht::Morph_iterator<ITR, FUNC> >
 :	is_bidirectional_iterator<ITR>{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -431,13 +550,16 @@ public:
 
 
 	auto operator*() const-> _deref_t{  return *_xitr;  }
-	auto operator*()-> _deref_t{  return *_xitr;  }
+
+	auto operator->() const
+	->	typename _Pointer_Proxy<_deref_t>::type{  return _Pointer_Proxy<_deref_t>(**this);  }
+
 
 	auto operator++()-> _self_t&{  return ++_xitr,  _shift_until_valid(),  *this;  }
 	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
 
-	bool operator==(_self_t const fitr) const{  return _xitr == fitr._xitr;  }
-	bool operator!=(_self_t const fitr) const{  return !(*this == fitr);  }
+	bool operator==(_self_t const fitr) const noexcept{  return _xitr == fitr._xitr;  }
+	bool operator!=(_self_t const fitr) const noexcept{  return !(*this == fitr);  }
 
 
 	ITR _xitr;
@@ -925,10 +1047,18 @@ public:
 
 	Plait_iterator(FAM fam) : _itr_fam(fam){}
 
+
 	auto operator*() const-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
 	{
 		return _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::calc(*this);
 	}
+
+
+	auto operator!=(Plait_iterator const zi) const noexcept
+	->	bool{  return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  }
+
+	auto operator==(Plait_iterator const zi) const noexcept-> bool{  return !(*this != zi);  }
+
 
 	auto operator++()-> Plait_iterator&
 	{  
@@ -941,12 +1071,6 @@ public:
 		
 		return ++*this,  clone;  
 	}
-
-
-	auto operator!=(Plait_iterator const zi) const
-	->	bool{  return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  }
-
-	auto operator==(Plait_iterator const zi) const-> bool{  return !(*this != zi);  }
 
 
 	auto operator--()-> Plait_iterator&
@@ -991,18 +1115,18 @@ public:
 
 
 	template<class _ITR_FAM, bool M>
-	auto operator<(Plait_iterator<_ITR_FAM, M> const itr) const
+	auto operator<(Plait_iterator<_ITR_FAM, M> const itr) const noexcept
 	->	bool{  return *this - itr < 0;  }
 
 	template<class _ITR_FAM, bool M>
-	auto operator>(Plait_iterator<_ITR_FAM, M> const itr) const
+	auto operator>(Plait_iterator<_ITR_FAM, M> const itr) const noexcept
 	->	bool{  return *this - itr > 0;  }
 
 	template<class Q>
-	auto operator<=(Q const& q) const-> bool{  return !(*this > q);  }
+	auto operator<=(Q const& q) const noexcept-> bool{  return !(*this > q);  }
 
 	template<class Q>
-	auto operator>=(Q const& q) const-> bool{  return !(*this < q);  }
+	auto operator>=(Q const& q) const noexcept-> bool{  return !(*this < q);  }
 
 
 	FAM _itr_fam;
