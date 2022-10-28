@@ -72,8 +72,8 @@ namespace sgm
 		template
 		<	bool HAS_INIT_VAL, bool IS_FORWARD, class EVAL_FLAG = None
 		,	_Evaluation_Mode
-			=	is_Fork_and_Join_Flag<EVAL_FLAG>::value  ?  _Evaluation_Mode::FORK_AND_JOIN
-			:	is_None<EVAL_FLAG>::value  ?  _Evaluation_Mode::SEQUANCIAL
+			=	is_Fork_and_Join_Flag<EVAL_FLAG>::value ? _Evaluation_Mode::FORK_AND_JOIN
+			:	is_None<EVAL_FLAG>::value ? _Evaluation_Mode::SEQUANCIAL
 			:	/* otherwise */ _Evaluation_Mode::UNDEFINED
 		>
 		struct _Fold_impl;
@@ -86,6 +86,9 @@ namespace sgm
 		class Plait_Range;
 
 
+		template< template<class...> class ITR_TRAIT_TAG, class T >
+		struct _Plait_iterator_Trait;
+
 		template<class FAM, bool TRY_MUTABLE>
 		class Plait_iterator;
 
@@ -93,8 +96,8 @@ namespace sgm
 		template
 		<	class EVAL_FLAG = None
 		,	_Evaluation_Mode
-			=	is_Fork_and_Join_Flag<EVAL_FLAG>::value  ?  _Evaluation_Mode::FORK_AND_JOIN
-			:	is_None<EVAL_FLAG>::value  ?  _Evaluation_Mode::SEQUANCIAL
+			=	is_Fork_and_Join_Flag<EVAL_FLAG>::value ? _Evaluation_Mode::FORK_AND_JOIN
+			:	is_None<EVAL_FLAG>::value ? _Evaluation_Mode::SEQUANCIAL
 			:	/* otherwise */ _Evaluation_Mode::UNDEFINED
 		>
 		struct _Array_Evaluation;
@@ -1027,29 +1030,30 @@ namespace sgm
 			}
 		};
 
-
-		template< template<class...> class ITR_TRAIT_TAG, class ITR_FAM >
-		struct _Plait_iterator_Trait 
-		:	Selective_t
-			<	is_Same< ITR_FAM, Decay_t<ITR_FAM> >::value 
-			,	False_t
-			,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Decay_t<ITR_FAM> >
-			>
-		{};
-
-		template< template<class...> class ITR_TRAIT_TAG >
-		struct _Plait_iterator_Trait< ITR_TRAIT_TAG, Family<> > : True_t{};
-
-		template< template<class...> class ITR_TRAIT_TAG, class T, class...TYPES >
-		struct _Plait_iterator_Trait< ITR_TRAIT_TAG, Family<T, TYPES...> > 
-		:	Boolean_And
-			<	ITR_TRAIT_TAG<T>
-			,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Family<TYPES...> > 
-			>
-		{};
-
 	}
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+template< template<class...> class ITR_TRAIT_TAG, class T >
+struct sgm::ht::_Plait_iterator_Trait 
+:	Selective_t
+	<	is_Same< T, Decay_t<T> >::value 
+	,	False_t
+	,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Decay_t<T> >
+	>
+{};
+
+template< template<class...> class ITR_TRAIT_TAG >
+struct sgm::ht::_Plait_iterator_Trait< ITR_TRAIT_TAG, sgm::Family<> > : True_t{};
+
+template< template<class...> class ITR_TRAIT_TAG, class T, class...TYPES >
+struct sgm::ht::_Plait_iterator_Trait< ITR_TRAIT_TAG, sgm::Family<T, TYPES...> >
+:	Boolean_And
+	<	ITR_TRAIT_TAG<T>
+	,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Family<TYPES...> > 
+	>
+{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -1151,42 +1155,13 @@ public:
 };
 
 
-#if 1
 template<bool TM, class...ITRS>
 struct sgm::is_bidirectional_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITRS...>, TM >  >
-:	_ht_Plait_detail::_Plait_iterator_Trait< is_bidirectional_iterator, Family<ITRS...> >{};
+:	ht::_Plait_iterator_Trait< is_bidirectional_iterator, Family<ITRS...> >{};
 
 template<bool TM, class...ITRS>
 struct sgm::is_random_access_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITRS...>, TM >  >
-:	_ht_Plait_detail::_Plait_iterator_Trait< is_random_access_iterator, Family<ITRS...> >{};
-#else
-template<bool TM>
-struct sgm::is_bidirectional_iterator< sgm::ht::Plait_iterator<sgm::Family<>, TM> > : True_t{};
-
-template<class T, class...TYPES, bool TM>
-struct sgm::is_bidirectional_iterator
-<	sgm::ht::Plait_iterator< sgm::Family<T, TYPES...>, TM >  
->
-:	Boolean_And
-	<	is_bidirectional_iterator<T>
-	,	is_bidirectional_iterator<  ht::Plait_iterator< Family<TYPES...>, TM >  >
-	>
-{};
-
-
-template<bool TM>
-struct sgm::is_random_access_iterator< sgm::ht::Plait_iterator<sgm::Family<>, TM> > : True_t{};
-
-template<class T, class...TYPES, bool TM>
-struct sgm::is_random_access_iterator
-<	sgm::ht::Plait_iterator< sgm::Family<T, TYPES...>, TM >  
->
-:	Boolean_And
-	<	is_random_access_iterator<T>
-	,	is_random_access_iterator<  ht::Plait_iterator< Family<TYPES...>, TM >  >
-	>
-{};
-#endif
+:	ht::_Plait_iterator_Trait< is_random_access_iterator, Family<ITRS...> >{};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
