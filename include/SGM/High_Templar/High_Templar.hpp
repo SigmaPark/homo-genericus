@@ -321,11 +321,8 @@ public:
 	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
 	->	_self_t&{  return _xitr = mitr._xitr,  _pfunc = mitr._pfunc,  *this;  }
 
-#pragma warning(push)
-//	temporary return value
-#pragma warning(disable : 4172)
+
 	auto operator*() const-> _deref_t{  return (*_pfunc)(*_xitr);  }
-#pragma warning(pop)
 
 	auto operator->() const
 	->	typename _Pointer_Proxy<_deref_t>::type{  return _Pointer_Proxy<_deref_t>(**this);  }

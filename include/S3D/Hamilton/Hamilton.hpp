@@ -1476,7 +1476,7 @@ struct s3d::_VecSpace_Helper
 {
 	_VecSpace_Helper(MAT& m) : _p(&m){}
 
-	decltype(auto) operator()(size_t const idx)
+	decltype(auto) operator()(size_t const idx) const
 	{
 		if constexpr(DIREC == 1)
 			return _p->col(idx);
