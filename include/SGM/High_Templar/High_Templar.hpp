@@ -1027,6 +1027,27 @@ namespace sgm
 			}
 		};
 
+
+		template< template<class...> class ITR_TRAIT_TAG, class ITR_FAM >
+		struct _Plait_iterator_Trait 
+		:	Selective_t
+			<	is_Same< ITR_FAM, Decay_t<ITR_FAM> >::value 
+			,	False_t
+			,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Decay_t<ITR_FAM> >
+			>
+		{};
+
+		template< template<class...> class ITR_TRAIT_TAG >
+		struct _Plait_iterator_Trait< ITR_TRAIT_TAG, Family<> > : True_t{};
+
+		template< template<class...> class ITR_TRAIT_TAG, class T, class...TYPES >
+		struct _Plait_iterator_Trait< ITR_TRAIT_TAG, Family<T, TYPES...> > 
+		:	Boolean_And
+			<	ITR_TRAIT_TAG<T>
+			,	_Plait_iterator_Trait< ITR_TRAIT_TAG, Family<TYPES...> > 
+			>
+		{};
+
 	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -1130,6 +1151,15 @@ public:
 };
 
 
+#if 1
+template<bool TM, class...ITRS>
+struct sgm::is_bidirectional_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITRS...>, TM >  >
+:	_ht_Plait_detail::_Plait_iterator_Trait< is_bidirectional_iterator, Family<ITRS...> >{};
+
+template<bool TM, class...ITRS>
+struct sgm::is_random_access_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITRS...>, TM >  >
+:	_ht_Plait_detail::_Plait_iterator_Trait< is_random_access_iterator, Family<ITRS...> >{};
+#else
 template<bool TM>
 struct sgm::is_bidirectional_iterator< sgm::ht::Plait_iterator<sgm::Family<>, TM> > : True_t{};
 
@@ -1156,6 +1186,7 @@ struct sgm::is_random_access_iterator
 	,	is_random_access_iterator<  ht::Plait_iterator< Family<TYPES...>, TM >  >
 	>
 {};
+#endif
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
