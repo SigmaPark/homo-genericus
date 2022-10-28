@@ -89,7 +89,15 @@ namespace sgm
 		template< template<class...> class ITR_TRAIT_TAG, class T >
 		struct _Plait_iterator_Trait;
 
-		template<class FAM, bool TRY_MUTABLE>
+
+		template
+		<	class FAM, bool TRY_MUTABLE
+		,	int
+			=	_Plait_iterator_Trait<is_random_access_iterator, FAM>::value ? 3
+			:	_Plait_iterator_Trait<is_bidirectional_iterator, FAM>::value ? 2
+			:	_Plait_iterator_Trait<is_iterator, FAM>::value ? 1
+			:	/* otherwise */ 0
+		>
 		class Plait_iterator;
 
 
@@ -418,6 +426,7 @@ public:
 	auto operator<=(_self_t const itr) const noexcept{  return !(*this > itr);  }
 	auto operator>=(_self_t const itr) const noexcept{  return !(*this < itr);  }
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class ITR, class FUNC>
@@ -1057,17 +1066,30 @@ struct sgm::ht::_Plait_iterator_Trait< ITR_TRAIT_TAG, sgm::Family<T, TYPES...> >
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class FAM, bool TRY_MUTABLE>  
+template<class FAM, bool TM, int ITR_TRAIT>
 class sgm::ht::Plait_iterator
 {
 public:
-	static size_t constexpr NUMBER_OF_ITERATORS = std::tuple_size<FAM>::value;
+	static_assert(ITR_TRAIT != 0, "sgm::ht::Plait_iterator expects a family of iterator types");
+};
+
+
+template<class FAM, bool TRY_MUTABLE>
+class sgm::ht::Plait_iterator<FAM, TRY_MUTABLE, 1>
+{
+private:
+	using _self_t = Plait_iterator;
+
+
+public:
+	static size_t constexpr NUMBER_OF_ITERATORS = std::tuple_size<FAM>::value;	
 
 	static_assert(is_Family<FAM>::value,	"FAM should be sgm::Family type.");
 	static_assert(NUMBER_OF_ITERATORS != 0, "the number of iterators should be greater than 0");
 
 
-	Plait_iterator(FAM fam) : _itr_fam(fam){}
+	Plait_iterator(FAM const& fam) : _itr_fam(fam){}
+	Plait_iterator(FAM&& fam) : _itr_fam( Move(fam) ){}
 
 
 	auto operator*() const-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
@@ -1076,18 +1098,16 @@ public:
 	}
 
 
-	auto operator!=(Plait_iterator const zi) const noexcept
+	auto operator!=(_self_t const zi) const noexcept
 	->	bool{  return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  }
 
-	auto operator==(Plait_iterator const zi) const noexcept-> bool{  return !(*this != zi);  }
+	auto operator==(_self_t const zi) const noexcept-> bool{  return !(*this != zi);  }
 
 
-	auto operator++()-> Plait_iterator&
-	{  
-		return _ht_Plait_detail::Step<NUMBER_OF_ITERATORS, true>(*this);  
-	}
+	auto operator++()
+	->	_self_t&{  return _ht_Plait_detail::Step<NUMBER_OF_ITERATORS, true>(*this);  }
 
-	auto operator++(int)-> Plait_iterator
+	auto operator++(int)-> _self_t
 	{
 		auto const clone = *this;  
 		
@@ -1095,45 +1115,94 @@ public:
 	}
 
 
-	auto operator--()-> Plait_iterator&
+	FAM _itr_fam;
+};
+
+
+template<class FAM, bool TRY_MUTABLE>
+class sgm::ht::Plait_iterator<FAM, TRY_MUTABLE, 2> : public Plait_iterator<FAM, TRY_MUTABLE, 1>
+{
+private:
+	using _Lv1_t = Plait_iterator<FAM, TRY_MUTABLE, 1>;
+	using _self_t = Plait_iterator;
+
+
+public:
+	template<class...ARGS>
+	Plait_iterator(ARGS&&...args) : _Lv1_t( Forward<ARGS>(args)... ){}
+
+
+	auto operator++()-> _self_t&{  return _Lv1_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _self_t
 	{
-		return _ht_Plait_detail::Step<NUMBER_OF_ITERATORS, false>(*this);  
+		auto const clone = *this;  
+		
+		return ++*this,  clone;  
 	}
 
-	auto operator--(int)-> Plait_iterator
+
+	auto operator--()
+	->	_self_t&{  return _ht_Plait_detail::Step<_Lv1_t::NUMBER_OF_ITERATORS, false>(*this);  }
+
+	auto operator--(int)-> _self_t
+	{
+		auto const clone = *this;  
+		
+		return --*this,  clone;  
+	}
+};
+
+
+template<class FAM, bool TRY_MUTABLE>
+class sgm::ht::Plait_iterator<FAM, TRY_MUTABLE, 3> : public Plait_iterator<FAM, TRY_MUTABLE, 2>
+{
+private:
+	using _Lv1_t = Plait_iterator<FAM, TRY_MUTABLE, 1>;
+	using _Lv2_t = Plait_iterator<FAM, TRY_MUTABLE, 2>;
+	using _self_t = Plait_iterator;	
+
+
+public:
+	template<class...ARGS>
+	Plait_iterator(ARGS&&...args) : _Lv2_t( Forward<ARGS>(args)... ){}
+
+
+	auto operator++()-> _self_t&{  return _Lv2_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _self_t
+	{
+		auto const clone = *this;  
+		
+		return ++*this,  clone;  
+	}
+
+
+	auto operator--()-> _self_t&{  return _Lv2_t::operator--(),  *this;  }
+
+	auto operator--(int)-> _self_t
 	{
 		auto const clone = *this;  
 		
 		return --*this,  clone;  
 	}
 
-	
-	auto operator+(ptrdiff_t const d) const-> Plait_iterator
-	{
-		return _ht_Plait_detail::Next_Diff<NUMBER_OF_ITERATORS>(*this, d);  
-	}
 
-	auto operator-(ptrdiff_t const d) const-> Plait_iterator{  return *this + -d;  }
-	auto operator+=(ptrdiff_t const d)-> Plait_iterator&{  return *this = *this + d;  }
-	auto operator-=(ptrdiff_t const d)-> Plait_iterator&{  return *this = *this - d;  }
+	auto operator+(ptrdiff_t const d) const
+	->	_self_t{  return _ht_Plait_detail::Next_Diff<_Lv1_t::NUMBER_OF_ITERATORS>(*this, d);  }
+
+	auto operator-(ptrdiff_t const d) const-> _self_t{  return *this + -d;  }
+
+	auto operator+=(ptrdiff_t const d)-> _self_t&{  return *this = *this + d;  }
+	auto operator-=(ptrdiff_t const d)-> _self_t&{  return *this = *this - d;  }
 
 	auto operator[](ptrdiff_t const d) const
 	->	typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t{  return *(*this + d);  }
 
 
 	template<class _ITR_FAM, bool M>
-	auto operator-(Plait_iterator<_ITR_FAM, M> const itr) const-> ptrdiff_t
-	{
-		static_assert
-		(	Boolean_And
-			<	is_random_access_iterator<Plait_iterator>
-			,	is_random_access_iterator< Plait_iterator<_ITR_FAM, M> >
-			>::	value
-		,	"random_access_iterators are required."
-		);
-
-		return std::get<0>(_itr_fam) - std::get<0>(itr._itr_fam);
-	}
+	auto operator-(Plait_iterator<_ITR_FAM, M, 3> const itr) const
+	->	ptrdiff_t{  return std::get<0>(_Lv1_t::_itr_fam) - std::get<0>(itr._itr_fam);  }
 
 
 	template<class _ITR_FAM, bool M>
@@ -1149,10 +1218,8 @@ public:
 
 	template<class Q>
 	auto operator>=(Q const& q) const noexcept-> bool{  return !(*this < q);  }
-
-
-	FAM _itr_fam;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<bool TM, class...ITRS>

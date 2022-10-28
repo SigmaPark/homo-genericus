@@ -360,8 +360,7 @@ class sgm::Reverse_iterator<ITR, 3> : public Reverse_iterator<ITR, 2>
 private: 
 	using _top_t = Reverse_iterator<ITR, 1>;
 	using _itr_t = Reverse_iterator;
-
-	using typename _top_t::_deref_t;
+	using _deref_t = decltype(*Declval<_top_t>());
 
 
 public:
