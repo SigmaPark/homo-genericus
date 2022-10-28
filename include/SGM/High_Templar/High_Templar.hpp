@@ -1089,7 +1089,7 @@ public:
 
 
 	Plait_iterator(FAM const& fam) : _itr_fam(fam){}
-	Plait_iterator(FAM&& fam) : _itr_fam( Move(fam) ){}
+	Plait_iterator(FAM&& fam) noexcept : _itr_fam( Move(fam) ){}
 
 
 	auto operator*() const-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
@@ -1129,7 +1129,8 @@ private:
 
 public:
 	template<class...ARGS>
-	Plait_iterator(ARGS&&...args) : _Lv1_t( Forward<ARGS>(args)... ){}
+	Plait_iterator(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+	:	_Lv1_t( Forward<ARGS>(args)... ){}
 
 
 	auto operator++()-> _self_t&{  return _Lv1_t::operator++(),  *this;  }
@@ -1165,7 +1166,8 @@ private:
 
 public:
 	template<class...ARGS>
-	Plait_iterator(ARGS&&...args) : _Lv2_t( Forward<ARGS>(args)... ){}
+	Plait_iterator(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
+	:	_Lv2_t( Forward<ARGS>(args)... ){}
 
 
 	auto operator++()-> _self_t&{  return _Lv2_t::operator++(),  *this;  }
@@ -1262,7 +1264,7 @@ public:
 
 
 	template<class...RGS_>
-	cPlait_Range(RGS_&&...rgs) 
+	cPlait_Range(RGS_&&...rgs) noexcept(Aleph_Check<RGS_&&...>::value)
 	:	_rg_fam( Forward<RGS_>(rgs)... )
 	,	_size
 		(	_ht_Plait_detail::Range_Size
@@ -1330,7 +1332,8 @@ public:
 
 
 	template<class...RGS_>
-	Plait_Range(RGS_&&...rgs) : _cplt_rg_t( Forward<RGS_>(rgs)... ){}
+	Plait_Range(RGS_&&...rgs) noexcept(Aleph_Check<RGS_&&...>::value)
+	:	_cplt_rg_t( Forward<RGS_>(rgs)... ){}
 
 
 	auto begin() const-> SGM_DECLTYPE_AUTO(  _cplt_rg_t::begin()  )
