@@ -350,7 +350,15 @@ public:
 
 
 	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
-	auto operator++(int)-> _itr_t{  return _top_t::operator++(0);  }
+	
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
 };
 
 
@@ -372,9 +380,26 @@ public:
 
 
 	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
-	auto operator++(int)-> _itr_t{  return _top_t::operator++(0);  }
+	
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+
 	auto operator--()-> _itr_t&{  return _top_t::operator--(),  *this;  }
-	auto operator--(int)-> _itr_t{  return _top_t::operator--(0);  }
+
+	auto operator--(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		--*this;
+
+		return res;
+	}
 
 
 	auto operator[](difference_type const diff) const-> _deref_t{  return *(*this + diff);  }
@@ -454,11 +479,11 @@ public:
 	auto base() noexcept-> ITR&{  return _itr;  }
 
 	auto operator*() const noexcept-> value_type{  return Move(*base());  }
-
 	auto operator->() const noexcept-> pointer{  return &*base();  }	
 
 	auto operator==(_itr_t const itr) const noexcept-> bool{  return base() == itr.base();  }
 	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
+
 
 	auto operator++()-> _itr_t&{  return ++base(),  *this;  }
 
@@ -501,7 +526,15 @@ public:
 	}
 
 	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
-	auto operator++(int)-> _itr_t{  return _top_t::operator++(0);  }
+	
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
 };
 
 	
@@ -510,17 +543,36 @@ class sgm::Move_iterator<ITR, 3> : public Move_iterator<ITR, 2>
 {
 private:
 	using _top_t = Move_iterator<ITR, 1>;
+	using _middle_t = Move_iterator<ITR, 2>;
 	using _itr_t = Move_iterator;
 
 public:
 	template<class...ARGS>
-	Move_iterator(ARGS&&...args) : Move_iterator<ITR, 2>( Forward<ARGS>(args)... ){}
+	Move_iterator(ARGS&&...args) : _middle_t( Forward<ARGS>(args)... ){}
 
 
-	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
-	auto operator++(int)-> _itr_t{  return _top_t::operator++(0);  }
-	auto operator--()-> _itr_t&{  return _top_t::operator--(),  *this;  }
-	auto operator--(int)-> _itr_t{  return _top_t::operator--(0);  }
+	auto operator++()-> _itr_t&{  return _middle_t::operator++(),  *this;  }
+
+	auto operator++(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+
+	auto operator--()-> _itr_t&{  return _middle_t::operator--(),  *this;  }
+
+	auto operator--(int)-> _itr_t
+	{
+		auto const res = *this;
+
+		--*this;
+
+		return res;
+	}
+
 
 	auto operator+(ptrdiff_t const diff) const
 	->	_itr_t{  return {_top_t::base() + diff};  }
