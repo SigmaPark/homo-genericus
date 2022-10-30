@@ -1066,6 +1066,53 @@ struct sgm::ht::_Plait_iterator_Trait< ITR_TRAIT_TAG, sgm::Family<T, TYPES...> >
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+namespace sgm
+{
+	namespace _ht_debug
+	{
+
+		template<class FAM, class...ARGS>
+		static auto _Have_same_sizes(FAM const&, ARGS const&...args)
+		->	Enable_if_t< std::tuple_size<FAM>::value == sizeof...(ARGS), bool >
+		{
+			auto const sizes = { Size(args)... };
+			auto itr0 = sizes.begin();
+			auto itr1 = itr0+1;
+
+			while(itr1 != sizes.end())
+				if(*itr0++ != *itr1++)
+					return false;
+
+			return true;
+		}
+
+		template<class FAM, class...ARGS>
+		static auto _Have_same_sizes(FAM const& fam, ARGS const&...args)
+		->	Enable_if_t< std::tuple_size<FAM>::value != sizeof...(ARGS), bool >
+		{
+			return _Have_same_sizes( fam, args..., std::get<sizeof...(ARGS)>(fam) );
+		}
+
+
+		template<size_t IDX = 0, class FAM>
+		static auto _Have_different_itrs(FAM const&, FAM const&)
+		->	Enable_if_t< IDX == std::tuple_size<FAM>::value, bool >{  return true;  }
+
+		template<size_t IDX = 0, class FAM>
+		static auto _Have_different_itrs(FAM const& fam0, FAM const& fam1)
+		->	Enable_if_t< IDX != std::tuple_size<FAM>::value, bool >
+		{
+			return 
+			(	std::get<IDX>(fam0) != std::get<IDX>(fam1)
+			&&	_Have_different_itrs<IDX+1>(fam0, fam1)
+			);
+		}
+
+	}
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<class FAM, bool TM, int ITR_TRAIT>
 class sgm::ht::Plait_iterator
 {
@@ -1098,8 +1145,12 @@ public:
 	}
 
 
-	auto operator!=(_self_t const zi) const noexcept
-	->	bool{  return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  }
+	auto operator!=(_self_t const zi) const noexcept-> bool
+	{
+		//assert( sgm::_ht_debug::_Have_different_itrs(this->_itr_fam, zi._itr_fam) );
+
+		return std::get<0>(this->_itr_fam) != std::get<0>(zi._itr_fam);  
+	}
 
 	auto operator==(_self_t const zi) const noexcept-> bool{  return !(*this != zi);  }
 
@@ -1260,21 +1311,7 @@ public:
 	cPlait_Range(RGS_&&...rgs) noexcept(Aleph_Check<RGS_&&...>::value)
 	:	_rg_fam( Forward<RGS_>(rgs)... )
 	{
-		assert
-		(	sizeof...(RGS_) < 2
-		||	[&rgs...]
-			{
-				auto const sizes = { Size(rgs)... };
-				auto itr0 = sizes.begin();
-				auto itr1 = itr0+1;
-
-				while(itr1 != sizes.end())
-					if(*itr0++ != *itr1++)
-						return false;
-
-				return true;
-			}()
-		);
+		assert( sizeof...(RGS_) < 2 || sgm::_ht_debug::_Have_same_sizes(_rg_fam) );
 	}
 
 
