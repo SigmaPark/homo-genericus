@@ -1237,14 +1237,7 @@ struct sgm::is_random_access_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITR
 template<class...RGS>  
 class sgm::ht::cPlait_Range
 {
-protected:
-	Family<RGS...> _rg_fam;
-
-
 private:
-	size_t _size;
-
-
 	template<class RG>
 	struct _is_random_access_range
 	:	is_random_access_iterator< decltype( Begin(Declval<RG>()) ) >{};
@@ -1266,15 +1259,31 @@ public:
 	template<class...RGS_>
 	cPlait_Range(RGS_&&...rgs) noexcept(Aleph_Check<RGS_&&...>::value)
 	:	_rg_fam( Forward<RGS_>(rgs)... )
-	,	_size
-		(	_ht_Plait_detail::Range_Size
-			<	typename Satisfying_Among<_is_random_access_range, RGS_...>::type
-			>(_rg_fam)
-		)
-	{}
+	{
+		assert
+		(	sizeof...(RGS_) < 2
+		||	[&rgs...]
+			{
+				auto const sizes = { Size(rgs)... };
+				auto itr0 = sizes.begin();
+				auto itr1 = itr0+1;
+
+				while(itr1 != sizes.end())
+					if(*itr0++ != *itr1++)
+						return false;
+
+				return true;
+			}()
+		);
+	}
 
 
-	auto size() const{  return _size;  }
+	auto size() const
+	{
+		using ran_acc_rg_t = typename Satisfying_Among<_is_random_access_range, RGS...>::type;
+
+		return _ht_Plait_detail::Range_Size<ran_acc_rg_t>(_rg_fam);
+	}
 
 
 	auto cbegin() const-> const_iterator
@@ -1309,6 +1318,10 @@ public:
 	->	Array<value_type>{  return _Array_Evaluation<FNJ_FLAG>::calc(*this);  }
 
 	operator Array<value_type>() const{  return eval();  }
+
+
+protected:
+	Family<RGS...> _rg_fam;
 };
 
 
