@@ -84,7 +84,7 @@ void Test::Composition()
 	}
 	{
 		sgm::Array<Specimen> arr{Specimen(1), Specimen(2), Specimen(3)};
-		auto const func = SGM_LAMBDA(2 * _0) * SGM_LAMBDA(_0.value());
+		sgm::fp::Functor func = SGM_LAMBDA(2 * _0) * SGM_LAMBDA(_0.value());
 
 		auto const res = sgm::fp::Morph_f(arr, func);
 
@@ -93,14 +93,13 @@ void Test::Composition()
 		,	sgm::Array<int, 3>{2, 4, 6}
 		);
 	}
-#if 0
 	{
 		sgm::Array<Specimen> arr{Specimen(1), Specimen(2), Specimen(3)};
 
 		auto const res
 		=	sgm::fp::Morph_f
 			(	arr
-			,	SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value())
+			,	SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value()) * sgm::fp::Functor{}
 			);
 
 		sgm::spec::Are_Equivalent_Ranges
@@ -108,7 +107,6 @@ void Test::Composition()
 		,	sgm::Array<int, 3>{2, 4, 6}
 		);
 	}
-#endif
 }
 
 
