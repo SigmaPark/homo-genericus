@@ -57,18 +57,6 @@ class sgm::fp::Param_Pack : public Family<TYPES...>
 public:
 	using fam_t = Family<TYPES...>;
 
-	//Param_Pack() = default;
-
-	//template
-	//<	class T, class...TYPES_
-	//,	class 
-	//	=	Enable_if_t
-	//		<	!is_Same< Decay_t<T>, _Construction_by_Family_Tag >::value
-	//		&&	!is_Same< Decay_t<T>, Param_Pack >::value
-	//		> 
-	//>
-	//Param_Pack(T&& t, TYPES_&&...types) : fam_t( Forward<T>(t), Forward<TYPES_>(types)... ){}
-
 	Param_Pack(TYPES...types) : fam_t( static_cast<TYPES&&>(types)... ){}
 
 	Param_Pack(_Construction_by_Family_Tag, fam_t& fam) : fam_t(fam){}
