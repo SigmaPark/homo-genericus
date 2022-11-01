@@ -75,11 +75,40 @@ void Test::Blank()
 
 void Test::Composition()
 {
-	sgm::fp::Functor ftr1 = SGM_LAMBDA(10*_0 + _1);
-	sgm::fp::Functor ftr2 = SGM_LAMBDA(-10*_0);
-	auto composed_ftr = ftr2*ftr1;
+	{
+		sgm::fp::Functor ftr1 = SGM_LAMBDA(10*_0 + _1);
+		sgm::fp::Functor ftr2 = SGM_LAMBDA(-10*_0);
+		auto composed_ftr = ftr2*ftr1;
 
-	is_True( composed_ftr(4, 2) == -10*(10*4 + 2) );
+		is_True( composed_ftr(4, 2) == -10*(10*4 + 2) );
+	}
+	{
+		sgm::Array<Specimen> arr{Specimen(1), Specimen(2), Specimen(3)};
+		auto const func = SGM_LAMBDA(2 * _0) * SGM_LAMBDA(_0.value());
+
+		auto const res = sgm::fp::Morph_f(arr, func);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	res
+		,	sgm::Array<int, 3>{2, 4, 6}
+		);
+	}
+#if 0
+	{
+		sgm::Array<Specimen> arr{Specimen(1), Specimen(2), Specimen(3)};
+
+		auto const res
+		=	sgm::fp::Morph_f
+			(	arr
+			,	SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value())
+			);
+
+		sgm::spec::Are_Equivalent_Ranges
+		(	res
+		,	sgm::Array<int, 3>{2, 4, 6}
+		);
+	}
+#endif
 }
 
 
