@@ -169,9 +169,9 @@ static void Static_Size_Array()
 
 static void Dynamic_Size_Array()
 {
-    Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
-
     {
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(arr);
 
         Are_Equivalent_Ranges(spn, arr);
@@ -185,6 +185,8 @@ static void Dynamic_Size_Array()
         );
     }
     {
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(arr.begin(), arr.end());
 
         Are_Equivalent_Ranges(spn, arr);
@@ -198,6 +200,8 @@ static void Dynamic_Size_Array()
         );
     }
     {
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(arr.begin(), 3); 
 
         Are_Equivalent_Ranges(spn, arr);
@@ -211,6 +215,8 @@ static void Dynamic_Size_Array()
         );
     }
 	{
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto cspn = sgm::Span( sgm::immut(arr) ); 
 
         Are_Equivalent_Ranges(cspn, arr); 
@@ -223,7 +229,9 @@ static void Dynamic_Size_Array()
         ,   ""
         );
     }
-	{
+	{  
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto cspn = sgm::Span(arr.cbegin(), arr.cend()); 
 
         Are_Equivalent_Ranges(cspn, arr); 
@@ -237,6 +245,8 @@ static void Dynamic_Size_Array()
         );
     }
 	{
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
         auto cspn = sgm::Span(arr.cbegin(), 3); 
 
         Are_Equivalent_Ranges(cspn, arr); 
@@ -344,6 +354,56 @@ static void Linked_List()
         );
     }
 }
+
+
+static void Pointer_and_Size()
+{
+    {
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto spn = sgm::Span(arr.data(), arr.size());
+
+        Are_Equivalent_Ranges(spn, arr);
+
+        spn[0] = -1;
+        spn[1] = -3;
+
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
+    }
+	{
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto cspn = sgm::Span(arr.cdata(), arr.size()); 
+
+        Are_Equivalent_Ranges(cspn, arr); 
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(cspn[0])>::value
+            &&  sgm::is_immutable<decltype(cspn[1])>::value
+            &&  sgm::is_immutable<decltype(cspn[2])>::value
+            )
+        ,   ""
+        );
+    }
+	{
+        Array<Specimen> const arr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto cspn = sgm::Span(arr.data(), arr.size()); 
+
+        Are_Equivalent_Ranges(cspn, arr); 
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(cspn[0])>::value
+            &&  sgm::is_immutable<decltype(cspn[1])>::value
+            &&  sgm::is_immutable<decltype(cspn[2])>::value
+            )
+        ,   ""
+        );
+    }
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -353,4 +413,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Span, /**/)
 ,   ::Static_Size_Array
 ,   ::Dynamic_Size_Array
 ,   ::Linked_List
+,   ::Pointer_and_Size
 };

@@ -32,10 +32,10 @@ namespace sgm
 	template
 	<	class T1, class T2
 	,	int
-		=	is_iterator<T1>::value && is_iterator<T2>::value ? 1
-		:	is_iterator<T1>::value && is_Convertible<T2, size_t>::value ? 2
+		=	is_iterator< Decay_t<T1> >::value && is_iterator< Decay_t<T2> >::value ? 1
+		:	is_iterator< Decay_t<T1> >::value && is_Convertible<T2, size_t>::value ? 2
 		:	is_Bounded_Array< Decay_t<T1> >::value && is_None<T2>::value ? 3
-		:	is_iterable<T1>::value && is_None<T2>::value ? 4 
+		:	is_iterable< Decay_t<T1> >::value && is_None<T2>::value ? 4 
 		:	/* otherwise */ 0		
 	>
 	struct _Dynamic_Span_Helper;
@@ -45,8 +45,8 @@ namespace sgm
 	<	class Q, size_t S
 	,	int
 		=	is_Bounded_Array< Decay_t<Q> >::value ? 1
-		:	is_iterator<Q>::value ? 2
-		:	is_iterable<Q>::value ? 3
+		:	is_iterator< Decay_t<Q> >::value ? 2
+		:	is_iterable< Decay_t<Q> >::value ? 3
 		:	/* otherwise */ 0
 	>
 	struct _Static_Span_Helper;
@@ -79,7 +79,9 @@ public:
 
 
 template<class ITR>
-struct sgm::_Span_value_type_Helper::_value_type<ITR, true> : public ITR, Unconstructible{};
+struct sgm::_Span_value_type_Helper::_value_type<ITR, true> 
+:	public Decay_t<ITR>, Unconstructible{};
+
 
 template<class ITR>
 struct sgm::_Span_value_type_Helper::_value_type<ITR, false> 
@@ -107,7 +109,7 @@ private:
 
 
 public:
-	using res_t = Span_t< size_v, decltype(&Declval<Q>()[0]) >;
+	using res_t = Span_t<  size_v, Decay_t< decltype( Address_of(Declval<Q>()[0]) ) >  >;
 
 	template<class ARR>
 	static auto calc(ARR arr, None = {})-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
@@ -116,15 +118,16 @@ public:
 template<class Q, std::size_t S>
 struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
 {
-	using res_t = Span_t<S, Q>;
+	using res_t = Span_t< S, Decay_t<Q> >;
 
-	static auto calc(Q bi, None = {})-> SGM_DECLTYPE_AUTO(  res_t(bi)  )
+	template<class ITR>
+	static auto calc(ITR const bi, None = {})-> SGM_DECLTYPE_AUTO(  res_t(bi)  )
 };
 
 template<class Q, std::size_t S>
 struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 {
-	using res_t = Span_t< S, decltype( Begin(Declval<Q>()) ) >;
+	using res_t = Span_t<  S, Decay_t< decltype( Begin(Declval<Q>()) ) >  >;
 	
 	template<class RG>
 	static auto calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
@@ -143,30 +146,35 @@ struct sgm::_Dynamic_Span_Helper
 template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 1> : Unconstructible
 {
-	using res_t = Span_t<SpanSize::DYNAMIC, T1>;
+	using res_t = Span_t< SpanSize::DYNAMIC, Decay_t<T1> >;
 
-	static auto calc(T1 bi, T2 ei)-> SGM_DECLTYPE_AUTO(  res_t(bi, ei)  )
+	template<class ITR>
+	static auto calc(ITR const bi, ITR const ei)-> SGM_DECLTYPE_AUTO(  res_t(bi, ei)  )
 };
 
 template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 2> : Unconstructible
 {
-	using res_t = Span_t<SpanSize::DYNAMIC, T1>;
+	using res_t = Span_t< SpanSize::DYNAMIC, Decay_t<T1> >;
 
-	static auto calc(T1 bi, T2 s)-> SGM_DECLTYPE_AUTO(  res_t( bi, Next(bi, s) )  )
+	template<class ITR, class S>
+	static auto calc(ITR const bi, S const s)
+	->	SGM_DECLTYPE_AUTO(  res_t( bi, Next(bi, s) )  )
 };
 
 template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 3>
 :	_Static_Span_Helper< T1, std::numeric_limits<std::size_t>::max(), 1 >{};
 
+
 template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 {
-	using res_t = Span_t< SpanSize::DYNAMIC, decltype( Begin(Declval<T1>()) ) >;
+	using res_t 
+	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( Begin(Declval<T1>()) ) >  >;
 
-	template<class RG>
-	static auto calc(RG&& rg, T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
+	template<class RG, class _T2>
+	static auto calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
