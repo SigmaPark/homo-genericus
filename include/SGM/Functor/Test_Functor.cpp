@@ -99,7 +99,7 @@ void Test::Composition()
 		auto const res
 		=	sgm::fp::Morph_f
 			(	arr
-			,	SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value()) * sgm::fp::Functor{}
+			,	( SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value()) ).eval()
 			);
 
 		sgm::spec::Are_Equivalent_Ranges
@@ -130,19 +130,18 @@ void Test::Basel_Problem()
 	using namespace sgm::fp;
 
 	std::size_t constexpr N = 10000;
-	
-	auto sqr_f = SGM_LAMBDA(_0*_0);
+
+	auto ftr
+	=	(	Fold_f( _, SGM_LAMBDA(_0 + _1) )
+		*	Morph_f(  _, ( SGM_LAMBDA(1.0/_0) * SGM_LAMBDA(_0*_0) ).eval()  )
+		*	integers
+		) .	eval();
+
+	auto const res = ftr(N, 1);
 
 	double const 
 		pi = std::acos(0)*2,
-		answer = sqr_f(pi)/6;
-
-	auto ftr
-	=	Fold_f( _, SGM_LAMBDA(_0 + _1) )
-	*	Morph_f(  _, SGM_LAMBDA( 1.0/sqr_f(_0) )  )
-	*	integers;
-
-	auto const res = ftr(N, 1);
+		answer = pi*pi/6;
 
 	is_True( std::abs(res - answer) < 1e-4 );
 }

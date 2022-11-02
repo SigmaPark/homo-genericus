@@ -298,16 +298,6 @@ decltype(auto) operator*(FUNC&& func, sgm::fp::Param_Pack<TYPES...>&& ppk) noexc
 	,	sgm::Move(ppk) 
 	);
 }
-
-
-template<class C, class F, unsigned D>
-auto operator*
-(	sgm::fp::_FuncExpr<C, F, D>&& fxp
-,	sgm::fp::Functor<typename sgm::fp::_identity_Functor_detail::identical_FuncExpr_t>&& 
-)
-{
-	return sgm::fp::Functor( sgm::Move(fxp) );
-}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -461,18 +451,18 @@ public:
 
 	template
 	<	class FUNC
-	,	class 
-		=	Enable_if_t
-			<	!is_Same< Decay_t<FUNC>, _identity_Functor_detail::Tag >::value  
-			&&	!is_Same
-				<	Decay_t<FUNC>
-				,	Functor<typename _identity_Functor_detail::identical_FuncExpr_t>
-				>::	value  
-			>  
+	,	class = Enable_if_t<  !is_Same< Decay_t<FUNC>, _identity_Functor_detail::Tag >::value  >  
 	>
-	decltype(auto) operator*(FUNC&& func) && noexcept
+	decltype(auto) operator*([[maybe_unused]] FUNC&& func) && noexcept
 	{
-		return _composite( Move(*this), Forward<FUNC>(func) );
+		if constexpr
+		(	is_Same
+			<	FUNC&&, Functor<typename _identity_Functor_detail::identical_FuncExpr_t>&& 
+			>::	value
+		)
+			return Functor( Move(*this) );
+		else
+			return _composite( Move(*this), Forward<FUNC>(func) );
 	}
 
 	template
