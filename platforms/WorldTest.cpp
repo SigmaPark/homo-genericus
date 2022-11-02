@@ -83,6 +83,7 @@ bool wt::Tests(char const* const module_title) noexcept
 #include "SGM/List/Test_List.hpp"
 #include "SGM/Mathexpr/Test_Mathexpr.hpp"
 #include "SGM/Operators_of/Test_Operators_of.hpp"
+#include "SGM/Queue/Test_Queue.hpp"
 #include "SGM/Recursion/Test_Recursion.hpp"
 #include "SGM/Span/Test_Span.hpp"
 #include "SGM/Type_Analysis/Test_Type_Analysis.hpp"
@@ -126,6 +127,7 @@ void test() noexcept(false)
     sgm::spec::Test_List::test();
     sgm::spec::Test_Mathexpr::test();
     sgm::spec::Test_Operators_of::test();
+    sgm::spec::Test_Queue::test();
     sgm::spec::Test_Recursion::test();
 	sgm::spec::Test_Span::test();
     sgm::spec::Test_Type_Analysis::test();
