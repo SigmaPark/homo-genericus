@@ -11,7 +11,17 @@
 using sgm::spec::Specimen;
 
 
-static void Constructions()
+struct Queue_Contents : sgm::Unconstructible
+{
+	static void Constructions();
+	static void Push_and_Pop();
+	static void Clear();
+	static void Construction_by_Allocator();
+	static void Push_and_Pop_by_Allocator();
+};
+
+
+void Queue_Contents::Constructions()
 {
 	{
 		sgm::Queue<Specimen> qu;
@@ -21,7 +31,7 @@ static void Constructions()
 }
 
 
-static void Push_and_Pop()
+void Queue_Contents::Push_and_Pop()
 {
 	{
 		sgm::Queue<Specimen> qu;
@@ -46,7 +56,7 @@ static void Push_and_Pop()
 }
 
 
-static void Clear()
+void Queue_Contents::Clear()
 {
 	{
 		sgm::Queue<Specimen> qu;
@@ -104,7 +114,7 @@ namespace sgm
 }
 
 
-static void Construction_by_Allocator()
+void Queue_Contents::Construction_by_Allocator()
 {
 	{
 		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
@@ -123,7 +133,7 @@ static void Construction_by_Allocator()
 }
 
 
-static void Push_and_Pop_by_Allocator()
+void Queue_Contents::Push_and_Pop_by_Allocator()
 {
 	{
 		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
@@ -175,9 +185,9 @@ static void Push_and_Pop_by_Allocator()
 
 
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Queue, /**/)
-{	::Constructions
-,	::Push_and_Pop
-,	::Clear
-,	::Construction_by_Allocator
-,	::Push_and_Pop_by_Allocator
+{	::Queue_Contents::Constructions
+,	::Queue_Contents::Push_and_Pop
+,	::Queue_Contents::Clear
+,	::Queue_Contents::Construction_by_Allocator
+,	::Queue_Contents::Push_and_Pop_by_Allocator
 };
