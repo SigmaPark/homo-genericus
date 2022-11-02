@@ -36,8 +36,10 @@ public:
 
 	auto is_empty() const noexcept-> bool{  return _list.is_empty();  }
 
+	auto clear()-> Queue&{  return _list.clear(),  *this;  }
 
-	template<class A>
+
+	template<  class A, class = Guaranteed_t< is_Allocator<A>::value >  >
 	static auto by(A&& allocator)
 	->	Queue< T, Decay_t<A> >{  return { _List_by_Tag{}, Forward<A>(allocator) };  }
 

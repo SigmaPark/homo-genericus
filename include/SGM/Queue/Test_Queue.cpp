@@ -16,7 +16,7 @@ static void Constructions()
 	{
 		sgm::Queue<Specimen> qu;
 
-		sgm::spec::is_True( qu.is_empty() );
+		sgm::spec::is_True(qu.is_empty());
 	}
 }
 
@@ -42,6 +42,24 @@ static void Push_and_Pop()
 		qu.pop();
 
 		sgm::spec::is_True(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
+	}
+}
+
+
+static void Clear()
+{
+	{
+		sgm::Queue<Specimen> qu;
+
+		qu.push( Specimen(1) );
+		qu.push( Specimen(3) );
+		qu.push( Specimen(5) );
+
+		sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+
+		qu.clear();
+
+		sgm::spec::is_True(qu.is_empty());
 	}
 }
 
@@ -100,7 +118,7 @@ static void Construction_by_Allocator()
 			(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr) 
 			);
 
-		sgm::spec::is_True( qu.is_empty() );
+		sgm::spec::is_True(qu.is_empty());
 	}
 }
 
@@ -159,6 +177,7 @@ static void Push_and_Pop_by_Allocator()
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Queue, /**/)
 {	::Constructions
 ,	::Push_and_Pop
+,	::Clear
 ,	::Construction_by_Allocator
 ,	::Push_and_Pop_by_Allocator
 };
