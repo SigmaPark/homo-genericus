@@ -44,6 +44,7 @@ add_executable(
     ${SGM_INCLUDE_DIR}/SGM/List/Test_List.cpp
     ${SGM_INCLUDE_DIR}/SGM/Mathexpr/Test_Mathexpr.cpp
     ${SGM_INCLUDE_DIR}/SGM/Operators_of/Test_Operators_of.cpp
+    ${SGM_INCLUDE_DIR}/SGM/Queue/Test_Queue.cpp
     ${SGM_INCLUDE_DIR}/SGM/Recursion/Test_Recursion.cpp
 	${SGM_INCLUDE_DIR}/SGM/Span/Test_Span.cpp
 	${SGM_INCLUDE_DIR}/SGM/Type_Analysis/Test_Type_Analysis.cpp
