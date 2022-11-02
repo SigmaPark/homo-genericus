@@ -10,21 +10,23 @@
 namespace sgm
 {
 
-	template<class T>
+	template<class T, class = _Default_List_Allocator_t<T> >
 	class Queue;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-template<class T>
+template<class T, class ALLOC>
 class sgm::Queue
 {
 public:
-	auto size() const-> size_t{  return _list.size();  }
+	Queue() = default;
 
-	auto front() const-> T const&{  return _list.front();  }
-	auto back() const-> T const&{  return _list.back();  }
+	auto size() const noexcept-> size_t{  return _list.size();  }
+
+	auto front() const noexcept-> T const&{  return _list.front();  }
+	auto back() const noexcept-> T const&{  return _list.back();  }
 
 	template<class...ARGS>
 	auto push(ARGS&&...args)
@@ -35,6 +37,17 @@ public:
 	auto is_empty() const noexcept-> bool{  return _list.is_empty();  }
 
 
+	template<class A>
+	static auto by(A&& allocator)
+	->	Queue< T, Decay_t<A> >{  return { _List_by_Tag{}, Forward<A>(allocator) };  }
+
+
 private:
-	List<T> _list;
+	List<T, ALLOC> _list;
+
+
+	friend class sgm::Queue< T, _Default_List_Allocator_t<T> >;
+
+	template<class A>
+	Queue(_List_by_Tag, A&& allocator) : _list(  List<T>::by( Forward<A>(allocator) )  ){}
 };
