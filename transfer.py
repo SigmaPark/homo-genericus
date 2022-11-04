@@ -182,6 +182,11 @@ def main():
                 ,   'Test_Operators_of.hpp'
                 ,   'Test_Operators_of.cpp'
                 ]
+            ,   ["Queue"
+                ,   'Queue.hpp'
+                ,   'Test_Queue.hpp'
+                ,   'Test_Queue.cpp'
+                ]
             ,   ["Recursion"
                 ,   'Recursion.hpp'
                 ,   'Test_Recursion.hpp'

@@ -22,6 +22,7 @@
 	-	SGM/List
 	-	SGM/Mathexpr
 	-	SGM/Operator_of
+	-	SGM/Queue
 	-	SGM/Span
 	-	SGM/Specification
 	-	SGM/Type_Analysis
