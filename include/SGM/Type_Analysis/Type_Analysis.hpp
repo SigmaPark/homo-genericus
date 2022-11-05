@@ -358,6 +358,16 @@ namespace sgm
 
 
     template<class T>
+    static void Swap(T& a, T& b) noexcept
+    {
+        T temp = Move(a);
+
+        a = Move(b);
+        b = Move(temp);
+    }
+
+
+    template<class T>
     static auto immut(T& t) noexcept-> T const&{  return t;  }
 
     template<class T>

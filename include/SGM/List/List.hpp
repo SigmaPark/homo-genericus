@@ -315,12 +315,8 @@ public:
 			_link_nodes(its_last, _end_nptr());
 			_link_nodes(my_last, Li._end_nptr());
 		}
-		{
-			auto temp = Move(_allocator);
 
-			_allocator = Move(Li._allocator);
-			Li._allocator = Move(temp);
-		}
+		Swap(_allocator, Li._allocator);
 	}
 
 
@@ -636,6 +632,15 @@ namespace std
 
 	template<class T>
 	static void swap(sgm::List<T>& L0, sgm::List<T>& L1) noexcept{  L0.swap(L1);  }
+
+}
+
+
+namespace sgm
+{
+	
+	template<class T>
+	static void Swap(List<T>& L0, List<T>& L1) noexcept{  L0.swap(L1);  }
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

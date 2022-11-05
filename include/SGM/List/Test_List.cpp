@@ -329,7 +329,7 @@ static void Swap()
 			Li0{Specimen(1), Specimen(3), Specimen(5)},
 			Li1{Specimen(7), Specimen(9)};
 
-		std::swap(Li0, Li1);
+		sgm::Swap(Li0, Li1);
 
 		sgm::spec::Are_Equivalent_Ranges
 		(	Li0

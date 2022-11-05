@@ -761,6 +761,15 @@ private:
 			_alc.construct( _core + _size++, Forward<ARGS>(args)... );
 	}
 };
+
+
+namespace sgm
+{
+
+	template<class T>
+	static void Swap(Array<T>& arr0, Array<T>& arr1) noexcept{  arr0.swap(arr1);  }
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
