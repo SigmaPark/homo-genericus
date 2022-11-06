@@ -13,7 +13,7 @@ using sgm::spec::Specimen;
 
 struct Queue_Contents : sgm::Unconstructible
 {
-	static void Constructions();
+	static void Construction();
 	static void Push_and_Pop();
 	static void Clear();
 	static void Construction_by_Allocator();
@@ -21,56 +21,50 @@ struct Queue_Contents : sgm::Unconstructible
 };
 
 
-void Queue_Contents::Constructions()
+void Queue_Contents::Construction()
 {
-	{
-		sgm::Queue<Specimen> qu;
+	sgm::Queue<Specimen> qu;
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
 void Queue_Contents::Push_and_Pop()
 {
-	{
-		sgm::Queue<Specimen> qu;
+	sgm::Queue<Specimen> qu;
 
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
 
-		sgm::spec::is_True(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
+	sgm::spec::is_True(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
 
-		qu.push( Specimen(5) );
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
+	sgm::spec::is_True(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
-	}
+	sgm::spec::is_True(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
 }
 
 
 void Queue_Contents::Clear()
 {
-	{
-		sgm::Queue<Specimen> qu;
+	sgm::Queue<Specimen> qu;
 
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
-		qu.push( Specimen(5) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
-		qu.clear();
+	qu.clear();
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
@@ -116,117 +110,135 @@ namespace sgm
 
 void Queue_Contents::Construction_by_Allocator()
 {
-	{
-		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
-		std::size_t constexpr max_nof_node_in_buffer_v = 10;
+	std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
+	std::size_t constexpr max_nof_node_in_buffer_v = 10;
 
-		unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
-		auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
-		
-		auto qu 
-		=	sgm::Queue<Specimen>::by
-			(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr) 
-			);
+	unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
+	auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
+	
+	auto qu 
+	=	sgm::Queue<Specimen>::by
+		(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr) 
+		);
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
 void Queue_Contents::Push_and_Pop_by_Allocator()
 {
-	{
-		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
-		std::size_t constexpr max_nof_node_in_buffer_v = 10;
+	std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
+	std::size_t constexpr max_nof_node_in_buffer_v = 10;
 
-		unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
-		auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
+	unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
+	auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
 
-		auto qu 
-		=	sgm::Queue<Specimen>::by
-			(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr) 
-			);
-
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
-
-		sgm::spec::is_True
-		(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
-		&&	node_arr[0].value == 1 && node_arr[1].value == 3
+	auto qu 
+	=	sgm::Queue<Specimen>::by
+		(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr) 
 		);
 
-		qu.push( Specimen(5) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
 
-		sgm::spec::is_True
-		(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
-		&&	node_arr[0].value == 1 && node_arr[1].value == 3 && node_arr[2].value == 5
-		);
+	sgm::spec::is_True
+	(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
+	&&	node_arr[0].value == 1 && node_arr[1].value == 3
+	);
 
-		qu.pop();
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True
-		(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
-		&&	node_arr[0].value == Specimen::State::DESTRUCTION 
-		&&	node_arr[1].value == 3
-		&&	node_arr[2].value == 5
-		);
+	sgm::spec::is_True
+	(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
+	&&	node_arr[0].value == 1 && node_arr[1].value == 3 && node_arr[2].value == 5
+	);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True
-		(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
-		&&	node_arr[0].value == Specimen::State::DESTRUCTION 
-		&&	node_arr[1].value == Specimen::State::DESTRUCTION
-		&&	node_arr[2].value == 5
-		);
-	}
+	sgm::spec::is_True
+	(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
+	&&	node_arr[0].value == Specimen::State::DESTRUCTION 
+	&&	node_arr[1].value == 3
+	&&	node_arr[2].value == 5
+	);
+
+	qu.pop();
+
+	sgm::spec::is_True
+	(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
+	&&	node_arr[0].value == Specimen::State::DESTRUCTION 
+	&&	node_arr[1].value == Specimen::State::DESTRUCTION
+	&&	node_arr[2].value == 5
+	);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 struct Circular_Queue_Contents : sgm::Unconstructible
 {
-	static void Constructions();
+	static void Construction();
 	static void Push_and_Pop();
+	static void Push_and_Pop2();
 	static void Copy_Construction();
+	static void Move_Construction();
+	static void Copy_Assignment();
+	static void Move_Assignment();
 	static void Clear();
 	static void Construction_by_Allocator();
 	static void Push_and_Pop_by_Allocator();
 };
 
 
-void Circular_Queue_Contents::Constructions()
+void Circular_Queue_Contents::Construction()
 {
-	{
-		sgm::Circular_Queue<Specimen> qu(5);
+	sgm::Circular_Queue<Specimen> qu(5);
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
 void Circular_Queue_Contents::Push_and_Pop()
 {
-	{
-		sgm::Circular_Queue<Specimen> qu(5);
+	sgm::Circular_Queue<Specimen> qu(5);
 
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
 
-		sgm::spec::is_True(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
+	sgm::spec::is_True(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
 
-		qu.push( Specimen(5) );
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	sgm::spec::is_True(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
+	sgm::spec::is_True(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
-	}
+	sgm::spec::is_True(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
+}
+
+
+void Circular_Queue_Contents::Push_and_Pop2()
+{
+	sgm::Circular_Queue<Specimen> qu(3);
+	
+	qu.push(1).push(3).push(5);
+
+	sgm::spec::is_True(qu.size() == 3 && qu.is_full());
+
+	qu.pop().pop();
+
+	sgm::spec::is_True(qu.size() == 1 && qu.front() == 5);
+
+	qu.push(7).push(9);
+
+	sgm::spec::is_True(qu.size() == 3 && qu.is_full() && qu.front() == 5 && qu.back() == 9);
+
+	qu.pop();
+
+	sgm::spec::is_True(qu.size() == 2 && qu.front() == 7 && qu.back() == 9);
 }
 
 
@@ -260,27 +272,109 @@ void Circular_Queue_Contents::Copy_Construction()
 }
 
 
+void Circular_Queue_Contents::Move_Construction()
+{
+	sgm::Circular_Queue<Specimen> qu(5);
+
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
+	qu.push( Specimen(5) );
+	qu.pop();	
+
+	sgm::Circular_Queue<Specimen> qu2 = sgm::Move(qu);
+
+	sgm::spec::is_True(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	sgm::spec::is_True(qu2.front() == 3);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.size() == 3 - 2);
+	sgm::spec::is_True(qu2.front() == 5);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.is_empty());
+	
+	sgm::spec::is_True(qu.is_empty() && qu.max_size() == 0);
+}
+
+
+void Circular_Queue_Contents::Copy_Assignment()
+{
+	sgm::Circular_Queue<Specimen> qu(5), qu2(1);
+
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
+	qu.push( Specimen(5) );
+	qu.pop();	
+
+	qu2 = qu;
+
+	sgm::spec::is_True(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	sgm::spec::is_True(qu2.front() == 3);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.size() == 3 - 2);
+	sgm::spec::is_True(qu2.front() == 5);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.is_empty());
+	
+	sgm::spec::is_True
+	(	qu.size() == 3 - 1
+	&&	qu.front() == 3 && qu.back() == 5
+	);	
+}
+
+
+void Circular_Queue_Contents::Move_Assignment()
+{
+	sgm::Circular_Queue<Specimen> qu(5), qu2(1);
+
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
+	qu.push( Specimen(5) );
+	qu.pop();	
+
+	qu2 = sgm::Move(qu);
+
+	sgm::spec::is_True(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	sgm::spec::is_True(qu2.front() == 3);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.size() == 3 - 2);
+	sgm::spec::is_True(qu2.front() == 5);
+
+	qu2.pop();
+
+	sgm::spec::is_True(qu2.is_empty());
+	
+	sgm::spec::is_True(qu.is_empty() && qu.max_size() == 0);
+}
+
+
 void Circular_Queue_Contents::Clear()
 {
-	{
-		sgm::Circular_Queue<Specimen> qu(3);
+	sgm::Circular_Queue<Specimen> qu(3);
 
-		sgm::spec::is_True(qu.max_size() == 3);
+	sgm::spec::is_True(qu.max_size() == 3);
 
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
-		qu.push( Specimen(5) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True
-		(	qu.size() == 3
-		&&	qu.front() == 1 && qu.back() == 5
-		&&	qu.is_full()
-		);
+	sgm::spec::is_True
+	(	qu.size() == 3
+	&&	qu.front() == 1 && qu.back() == 5
+	&&	qu.is_full()
+	);
 
-		qu.clear();
+	qu.clear();
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
@@ -326,87 +420,87 @@ namespace sgm
 
 void Circular_Queue_Contents::Construction_by_Allocator()
 {
-	{
-		std::size_t constexpr byte_size_v = sizeof(Specimen);
-		std::size_t constexpr max_nof_buffer_v = 10;
+	std::size_t constexpr byte_size_v = sizeof(Specimen);
+	std::size_t constexpr max_nof_buffer_v = 10;
 
-		unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
-		auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
-		
-		auto qu 
-		=	sgm::Circular_Queue<Specimen>::by
-			(	sgm::_Test_Circular_Queue_Allocator_detail::Test_Allocator<Specimen>(buffer_arr)
-			,	5
-			);
+	unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
+	auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
+	
+	auto qu 
+	=	sgm::Circular_Queue<Specimen>::by
+		(	sgm::_Test_Circular_Queue_Allocator_detail::Test_Allocator<Specimen>(buffer_arr)
+		,	5
+		);
 
-		sgm::spec::is_True(qu.is_empty());
-	}
+	sgm::spec::is_True(qu.is_empty());
 }
 
 
 void Circular_Queue_Contents::Push_and_Pop_by_Allocator()
 {
-	{
-		std::size_t constexpr byte_size_v = sizeof(Specimen);
-		std::size_t constexpr max_nof_buffer_v = 10;
+	std::size_t constexpr byte_size_v = sizeof(Specimen);
+	std::size_t constexpr max_nof_buffer_v = 10;
 
-		unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
-		auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
-		
-		auto qu 
-		=	sgm::Circular_Queue<Specimen>::by
-			(	sgm::_Test_Circular_Queue_Allocator_detail::Test_Allocator<Specimen>(buffer_arr)
-			,	5
-			);
-
-		qu.push( Specimen(1) );
-		qu.push( Specimen(3) );
-
-		sgm::spec::is_True
-		(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
-		&&	buffer_arr[0] == 1 && buffer_arr[1] == 3
+	unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
+	auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
+	
+	auto qu 
+	=	sgm::Circular_Queue<Specimen>::by
+		(	sgm::_Test_Circular_Queue_Allocator_detail::Test_Allocator<Specimen>(buffer_arr)
+		,	5
 		);
 
-		qu.push( Specimen(5) );
+	qu.push( Specimen(1) );
+	qu.push( Specimen(3) );
 
-		sgm::spec::is_True
-		(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
-		&&	buffer_arr[0] == 1 
-		&&	buffer_arr[1] == 3 
-		&&	buffer_arr[2] == 5
-		);
+	sgm::spec::is_True
+	(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
+	&&	buffer_arr[0] == 1 && buffer_arr[1] == 3
+	);
 
-		qu.pop();
+	qu.push( Specimen(5) );
 
-		sgm::spec::is_True
-		(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
-		&&	buffer_arr[0] == Specimen::State::DESTRUCTION 
-		&&	buffer_arr[1] == 3
-		&&	buffer_arr[2] == 5
-		);
+	sgm::spec::is_True
+	(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
+	&&	buffer_arr[0] == 1 
+	&&	buffer_arr[1] == 3 
+	&&	buffer_arr[2] == 5
+	);
 
-		qu.pop();
+	qu.pop();
 
-		sgm::spec::is_True
-		(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
-		&&	buffer_arr[0] == Specimen::State::DESTRUCTION 
-		&&	buffer_arr[1] == Specimen::State::DESTRUCTION
-		&&	buffer_arr[2] == 5
-		);
-	}
+	sgm::spec::is_True
+	(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
+	&&	buffer_arr[0] == Specimen::State::DESTRUCTION 
+	&&	buffer_arr[1] == 3
+	&&	buffer_arr[2] == 5
+	);
+
+	qu.pop();
+
+	sgm::spec::is_True
+	(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
+	&&	buffer_arr[0] == Specimen::State::DESTRUCTION 
+	&&	buffer_arr[1] == Specimen::State::DESTRUCTION
+	&&	buffer_arr[2] == 5
+	);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Queue, /**/)
-{	::Queue_Contents::Constructions
+{	::Queue_Contents::Construction
 ,	::Queue_Contents::Push_and_Pop
 ,	::Queue_Contents::Clear
 ,	::Queue_Contents::Construction_by_Allocator
 ,	::Queue_Contents::Push_and_Pop_by_Allocator
-,	::Circular_Queue_Contents::Constructions
+,	::Circular_Queue_Contents::Construction
 ,	::Circular_Queue_Contents::Push_and_Pop
+,	::Circular_Queue_Contents::Push_and_Pop2
 ,	::Circular_Queue_Contents::Copy_Construction
+,	::Circular_Queue_Contents::Move_Construction
+,	::Circular_Queue_Contents::Copy_Assignment
+,	::Circular_Queue_Contents::Move_Assignment
 ,	::Circular_Queue_Contents::Clear
 ,	::Circular_Queue_Contents::Construction_by_Allocator
 ,	::Circular_Queue_Contents::Push_and_Pop_by_Allocator

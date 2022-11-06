@@ -137,16 +137,19 @@ public:
 	{
 		auto const d = Difference(_optr, _iptr);
 
-		return d >= 0 ? d : max_size() - (d+1);
+		return d >= 0 ? d : max_size() + (d+1);
 	}
 
-	auto max_size() const noexcept-> size_t{  return Difference(_begin, _end) - 1;  }
+	auto max_size() const noexcept-> size_t
+	{
+		return _begin == nullptr ? 0 : Difference(_begin, _end) - 1;
+	}
 
 
 	auto front() noexcept-> T&{  return *_optr;  }
 	auto front() const noexcept-> T const&{  return *_optr;  }
 
-	auto back() const noexcept-> T const&{  return *Prev(_iptr);  }
+	auto back() const noexcept-> T const&{  return *_prev(_iptr);  }
 
 
 	template<class...ARGS>
@@ -215,6 +218,11 @@ private:
 		auto const last = Prev(_end);
 
 		return p == last ? _begin : p+1;
+	}
+
+	auto _prev(T* const p) const noexcept-> T*
+	{
+		return Prev(p == _begin ? _end : p);
 	}
 
 
