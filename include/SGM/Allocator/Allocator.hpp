@@ -11,6 +11,7 @@
 
 #include <new>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include "../Type_Analysis/Type_Analysis.hpp"
 
@@ -47,7 +48,10 @@ public:
 	auto allocate(size_type n)
 	->	pointer{  return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  }
 
-	void deallocate(pointer p, size_type){  ::operator delete(p);  }
+	void deallocate(pointer p, size_type) noexcept{  ::operator delete(p);  }
+
+	auto reallocate(pointer p, size_type n)
+	->	pointer{  return static_cast<pointer>( std::realloc(p, n) );  }
 
 	auto max_size() const noexcept
 	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
@@ -56,7 +60,7 @@ public:
 	void construct(Q* p, ARGS&&...args){  new(p) Q( Forward<ARGS>(args)... );  }
 
 	template<class Q>
-	void destroy(Q* p){  p->~Q();  }
+	void destroy(Q* p) noexcept{  p->~Q();  }
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 
