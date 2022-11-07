@@ -13,27 +13,110 @@
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
-#include "../Type_Analysis/Type_Analysis.hpp"
+#include "../interface_Traits/interface_Traits.hpp"
 
 
 namespace sgm
 {
 	
+	template<class ALLOC>
+	class Allocator_interface;
+
+	template<class T>
+	struct is_Allocator;
+
 	template<class T>
 	class Allocator;
-
-
-	SGM_USER_DEFINED_TYPE_CHECK
-	(	class T
-	,	Allocator, <T>
-	);
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+template<class ALLOC>
+class sgm::Allocator_interface
+{
+private:
+	SGM_HAS_NESTED_TYPE(value_type);
+	SGM_HAS_NESTED_TYPE(size_type);
+	SGM_HAS_NESTED_TYPE(pointer);
+
+
+	enum class _Abstract{};
+
+
+public:
+	template<class...>
+	_Abstract allocate(...) = delete;
+
+	template<class...>
+	_Abstract deallocate(...) = delete;
+
+	template<class...>
+	_Abstract construct(...) = delete;
+
+	template<class...>
+	_Abstract destroy(...) = delete;
+
+
+	void constexpr type_interface_check()
+	{
+		static_assert
+		(	Boolean_And
+			<	Has_NestedType_value_type<ALLOC>
+			,	Has_NestedType_size_type<ALLOC>
+			,	Has_NestedType_pointer<ALLOC>
+			>::	value
+		,	"sgm::Allocator_interface::_type_interface_check Failed ."
+		);
+	}
+
+
+	template<class SIZE, class PTR>
+	void constexpr overriding_interface_check()
+	{
+		static_assert
+		(	Boolean_And
+			<	is_Same
+				<	decltype( Declval<ALLOC>().allocate(SIZE{}) )
+				,	PTR
+				>
+			,	is_Void< decltype( Declval<ALLOC>().deallocate(PTR{}, SIZE{}) ) >
+			,	is_Void< decltype( Declval<ALLOC>().construct(PTR{}, "Any Types") ) >
+			,	is_Void< decltype( Declval<ALLOC>().destroy(PTR{}) ) >
+			>::	value
+		,	"sgm::Allocator_interface::_overriding_interface_check Failed ."
+		);
+	}
+
+
+	constexpr Allocator_interface()
+	{
+		type_interface_check(),
+		overriding_interface_check<typename ALLOC::size_type, typename ALLOC::pointer>();
+	}
+};
+
+
 template<class T>
-class sgm::Allocator
+struct sgm::is_Allocator : Unconstructible
+{
+private:
+	template<class...> /* Declaration Only */ 
+	static auto _calc(...) noexcept-> False_t;
+
+	template<class Q> /* Declaration Only */ 
+	static auto _calc(Allocator_interface<Q>) noexcept-> True_t;
+
+
+public:
+	using type = decltype( _calc(Declval<T>()) );
+	
+	static bool constexpr value = type::value;
+};
+
+
+template<class T>
+class sgm::Allocator : public Allocator_interface< Allocator<T> >
 {
 public:
 	using value_type = T;
