@@ -22,8 +22,10 @@ namespace sgm
 	template<class ALLOC>
 	class Allocator_interface;
 
+
 	template<class T>
 	struct is_Allocator;
+
 
 	template<class T>
 	class Allocator;
@@ -33,7 +35,7 @@ namespace sgm
 
 
 template<class ALLOC>
-class sgm::Allocator_interface
+class sgm::Allocator_interface : public CRTP_of< Allocator_interface<ALLOC> >
 {
 private:
 	SGM_HAS_NESTED_TYPE(value_type);
@@ -41,24 +43,44 @@ private:
 	SGM_HAS_NESTED_TYPE(pointer);
 
 
-	enum class _Abstract{};
-
-
 public:
-	template<class...>
-	_Abstract allocate(...) = delete;
-
-	template<class...>
-	_Abstract deallocate(...) = delete;
-
-	template<class...>
-	_Abstract construct(...) = delete;
-
-	template<class...>
-	_Abstract destroy(...) = delete;
+	template<class S>
+	SGM_CRTP_INTERFACE
+	(	allocate
+	,	(	is_Same<S, typename ALLOC::size_type>::value
+		&&	decltype
+			(	check_return_type_of_allocate<typename ALLOC::pointer, S>(this->call()) 
+			)::	value
+		)
+	);
 
 
-	void constexpr type_interface_check()
+	template<class P, class S>
+	SGM_CRTP_INTERFACE
+	(	deallocate
+	,	(	is_Same<P, typename ALLOC::pointer>::value
+		&&	is_Same<S, typename ALLOC::size_type>::value
+		)
+	);
+
+
+	template<class Q, class...ARGS>
+	SGM_CRTP_INTERFACE
+	(	construct
+	,	(	Has_Operator_New<Q, ARGS...>::value
+		)
+	);
+
+
+	template<class Q>
+	SGM_CRTP_INTERFACE
+	(	destroy
+	,	(	Has_Operator_Delete<Q>::value
+		)
+	);
+
+
+	void constexpr check_type_definitions()
 	{
 		static_assert
 		(	Boolean_And
@@ -66,36 +88,32 @@ public:
 			,	Has_NestedType_size_type<ALLOC>
 			,	Has_NestedType_pointer<ALLOC>
 			>::	value
-		,	"sgm::Allocator_interface::_type_interface_check Failed ."
+		,	"sgm::Allocator_interface::check_type_definitions Failed ."
 		);
 	}
 
 
 	template<class SIZE, class PTR>
-	void constexpr overriding_interface_check()
+	void constexpr check_nontemplate_overridings()
 	{
 		static_assert
 		(	Boolean_And
-			<	is_Same
-				<	decltype( Declval<ALLOC>().allocate(SIZE{}) )
-				,	PTR
-				>
+			<	is_Same< decltype( Declval<ALLOC>().allocate(SIZE{}) ), PTR >
 			,	is_Void< decltype( Declval<ALLOC>().deallocate(PTR{}, SIZE{}) ) >
-			,	is_Void< decltype( Declval<ALLOC>().construct(PTR{}, "Any Types") ) >
 			,	is_Void< decltype( Declval<ALLOC>().destroy(PTR{}) ) >
 			>::	value
-		,	"sgm::Allocator_interface::_overriding_interface_check Failed ."
+		,	"sgm::Allocator_interface::check_nontemplate_overridings Failed ."
 		);
 	}
 
 
 	constexpr Allocator_interface()
 	{
-		type_interface_check(),
-		overriding_interface_check<typename ALLOC::size_type, typename ALLOC::pointer>();
+		check_type_definitions(),
+		check_nontemplate_overridings<typename ALLOC::size_type, typename ALLOC::pointer>();
 	}
 };
-
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 template<class T>
 struct sgm::is_Allocator : Unconstructible
@@ -113,6 +131,7 @@ public:
 	
 	static bool constexpr value = type::value;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T>
@@ -128,10 +147,36 @@ public:
 	using difference_type = std::ptrdiff_t;
 
 
-	auto allocate(size_type n)
-	->	pointer{  return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  }
+	auto allocate(size_type n)-> pointer
+	{
+		this->override_allocate<size_type>();
 
-	void deallocate(pointer p, size_type) noexcept{  ::operator delete(p);  }
+		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
+	}
+
+	void deallocate(pointer p, size_type) noexcept
+	{
+		this->override_deallocate<pointer, size_type>();
+
+		::operator delete(p);  
+	}
+
+	template<class Q, class...ARGS>
+	void construct(Q* p, ARGS&&...args)
+	{
+		this->override_construct<Q, ARGS&&...>();
+
+		new(p) Q( Forward<ARGS>(args)... );  
+	}
+
+	template<class Q>
+	void destroy(Q* p) noexcept
+	{
+		this->override_destroy<Q>();
+
+		p->~Q();  
+	}
+
 
 	auto reallocate(pointer p, size_type n)
 	->	pointer{  return static_cast<pointer>( std::realloc(p, n) );  }
@@ -139,11 +184,6 @@ public:
 	auto max_size() const noexcept
 	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
 
-	template<class Q, class...ARGS>
-	void construct(Q* p, ARGS&&...args){  new(p) Q( Forward<ARGS>(args)... );  }
-
-	template<class Q>
-	void destroy(Q* p) noexcept{  p->~Q();  }
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 

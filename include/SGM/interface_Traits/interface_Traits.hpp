@@ -209,4 +209,48 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+namespace sgm
+{
+
+	template<class F>
+	class CRTP_of;
+	
+}
+
+
+template< template<class> class TC, class T >
+class sgm::CRTP_of< TC<T> >
+{
+private:
+	class _CRTP : public T{  friend class TC<T>;  };
+
+
+protected:
+	auto call() const-> _CRTP const&{  return static_cast<_CRTP const&>(*this);  }
+	auto call()-> _CRTP&{  return static_cast<_CRTP&>(*this);  }
+};
+
+
+#define SGM_CRTP_INTERFACE(TITLE, ...)	\
+	void constexpr override_##TITLE()	\
+	{	\
+		static_assert	\
+		(	(__VA_ARGS__)	\
+		,	"overriding crtp method doesn't satisfy type requirements ."	\
+		);	\
+	}	\
+	\
+	template<bool B = false>	\
+	void constexpr TITLE(...){  static_assert(B, "You must override crtp interface .");  }	\
+	\
+	template<class RES, class...ARGS, class HOST>	\
+	auto constexpr check_return_type_of_##TITLE(HOST&&)	\
+	->	sgm::is_Same	\
+		<	decltype	\
+			(	sgm::Declval< sgm::Decay_t<HOST> >().TITLE(sgm::Declval<ARGS>()...) \
+			)	\
+		,	RES	\
+		>
+
+
 #endif // end of #ifndef _SGM_INTERFACE_TRAITS_
