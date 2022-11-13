@@ -49,7 +49,7 @@ public:
 	(	allocate
 	,	(	is_Same<S, typename ALLOC::size_type>::value
 		&&	decltype
-			(	check_return_type_of_allocate<typename ALLOC::pointer, S>(this->call()) 
+			(	check_return_type_of_allocate<typename ALLOC::pointer, S>(this->crtp()) 
 			)::	value
 		)
 	);
@@ -149,14 +149,14 @@ public:
 
 	auto allocate(size_type n)-> pointer
 	{
-		this->override_allocate<size_type>();
+		SGM_CRTP_OVERRIDE(allocate, <size_type>);
 
 		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
 	}
 
 	void deallocate(pointer p, size_type) noexcept
 	{
-		this->override_deallocate<pointer, size_type>();
+		SGM_CRTP_OVERRIDE(deallocate, <pointer, size_type>);
 
 		::operator delete(p);  
 	}
@@ -164,7 +164,7 @@ public:
 	template<class Q, class...ARGS>
 	void construct(Q* p, ARGS&&...args)
 	{
-		this->override_construct<Q, ARGS&&...>();
+		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
 
 		new(p) Q( Forward<ARGS>(args)... );  
 	}
@@ -172,7 +172,7 @@ public:
 	template<class Q>
 	void destroy(Q* p) noexcept
 	{
-		this->override_destroy<Q>();
+		SGM_CRTP_OVERRIDE(destroy, <Q>);
 
 		p->~Q();  
 	}

@@ -214,7 +214,7 @@ namespace sgm
 
 	template<class F>
 	class CRTP_of;
-	
+
 }
 
 
@@ -226,22 +226,25 @@ private:
 
 
 protected:
-	auto call() const-> _CRTP const&{  return static_cast<_CRTP const&>(*this);  }
-	auto call()-> _CRTP&{  return static_cast<_CRTP&>(*this);  }
+	auto crtp() const-> _CRTP const&{  return static_cast<_CRTP const&>(*this);  }
+	auto crtp()-> _CRTP&{  return static_cast<_CRTP&>(*this);  }
 };
 
 
 #define SGM_CRTP_INTERFACE(TITLE, ...)	\
-	void constexpr override_##TITLE()	\
+	void constexpr crtp_override_##TITLE()	\
 	{	\
 		static_assert	\
 		(	(__VA_ARGS__)	\
-		,	"overriding crtp method doesn't satisfy type requirements ."	\
+		,	"crtp method \"" #TITLE "\" doesn't satisfy type requirements ."	\
 		);	\
 	}	\
 	\
 	template<bool B = false>	\
-	void constexpr TITLE(...){  static_assert(B, "You must override crtp interface .");  }	\
+	void constexpr TITLE(...)	\
+	{	\
+		static_assert(B, "crtp method \"" #TITLE "\" is not overriden .");  \
+	}	\
 	\
 	template<class RES, class...ARGS, class HOST>	\
 	auto constexpr check_return_type_of_##TITLE(HOST&&)	\
@@ -251,6 +254,9 @@ protected:
 			)	\
 		,	RES	\
 		>
+
+
+#define SGM_CRTP_OVERRIDE(TITLE, ...) this->template crtp_override_##TITLE __VA_ARGS__ ()
 
 
 #endif // end of #ifndef _SGM_INTERFACE_TRAITS_
