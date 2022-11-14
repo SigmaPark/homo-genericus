@@ -90,7 +90,7 @@ def Ask_Visual_Studio_Version(vs_ver):
         vs_ver=input()
 
     if vs_ver == '1':
-        vs_ver = "Visual Studio 15 2017"
+        vs_ver = "Visual Studio 15 2017 Win64"
     elif vs_ver == '2':
         vs_ver = "Visual Studio 16 2019"
     elif vs_ver == '3':

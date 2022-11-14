@@ -42,41 +42,20 @@ private:
 	SGM_HAS_NESTED_TYPE(size_type);
 	SGM_HAS_NESTED_TYPE(pointer);
 
+	SGM_HAS_MEMFUNC(allocate);
+	SGM_HAS_MEMFUNC(deallocate);
+
 
 public:
-	template<class S>
-	SGM_CRTP_INTERFACE
-	(	allocate
-	,	(	is_Same<S, typename ALLOC::size_type>::value
-		&&	decltype
-			(	check_return_type_of_allocate<typename ALLOC::pointer, S>(this->crtp()) 
-			)::	value
-		)
-	);
-
-
-	template<class P, class S>
-	SGM_CRTP_INTERFACE
-	(	deallocate
-	,	(	is_Same<P, typename ALLOC::pointer>::value
-		&&	is_Same<S, typename ALLOC::size_type>::value
-		)
-	);
-
-
 	template<class Q, class...ARGS>
-	SGM_CRTP_INTERFACE
-	(	construct
-	,	(	Has_Operator_New<Q, ARGS...>::value
-		)
+	SGM_CRTP_TEMPLATE_INTERFACE
+	(	construct, (Has_Operator_New<Q, ARGS...>::value)
 	);
 
 
 	template<class Q>
-	SGM_CRTP_INTERFACE
-	(	destroy
-	,	(	Has_Operator_Delete<Q>::value
-		)
+	SGM_CRTP_TEMPLATE_INTERFACE
+	(	destroy, (Has_Operator_Delete<Q>::value)
 	);
 
 
@@ -98,9 +77,8 @@ public:
 	{
 		static_assert
 		(	Boolean_And
-			<	is_Same< decltype( Declval<ALLOC>().allocate(SIZE{}) ), PTR >
-			,	is_Void< decltype( Declval<ALLOC>().deallocate(PTR{}, SIZE{}) ) >
-			,	is_Void< decltype( Declval<ALLOC>().destroy(PTR{}) ) >
+			<	Has_MemFunc_allocate_Returning<PTR, ALLOC, SIZE>
+			,	Has_MemFunc_deallocate<ALLOC, PTR, SIZE>
 			>::	value
 		,	"sgm::Allocator_interface::check_nontemplate_overridings Failed ."
 		);
@@ -149,15 +127,11 @@ public:
 
 	auto allocate(size_type n)-> pointer
 	{
-		SGM_CRTP_OVERRIDE(allocate, <size_type>);
-
 		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
 	}
 
 	void deallocate(pointer p, size_type) noexcept
 	{
-		SGM_CRTP_OVERRIDE(deallocate, <pointer, size_type>);
-
 		::operator delete(p);  
 	}
 

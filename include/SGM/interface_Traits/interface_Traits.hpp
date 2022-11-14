@@ -169,7 +169,28 @@ namespace sgm
 		(	class..._ARGUMENTS	\
 		,	Has_MemFunc_##MEMFUNC		\
 		,	sgm::Declval<_CLASS>().MEMFUNC(sgm::Declval<_ARGUMENTS>()...) \
-		)
+		);	\
+		\
+		template<class R, class C, class...TYPES>	\
+		struct Has_MemFunc_##MEMFUNC##_Returning : sgm::Unconstructible	\
+		{	\
+		private:	\
+			template<class _Q, class..._TYPES>	\
+			static auto _calc(int)	\
+			->	sgm::SFINAE_t	\
+				<	decltype( sgm::Declval<_Q>().MEMFUNC(sgm::Declval<_TYPES>()...) )	\
+				,	decltype( sgm::Declval<_Q>().MEMFUNC(sgm::Declval<_TYPES>()...) )	\
+				>;	\
+			\
+			template<class...>	\
+			static auto _calc(...)-> sgm::None;	\
+			\
+		public:	\
+			static bool constexpr value	\
+			=	sgm::is_Same< decltype( _calc<C, TYPES...>(0) ), R >::value;	\
+			\
+			using type = sgm::Boolean<value>;	\
+		}
 
 #else
 	#error SGM_HAS_MEMFUNC was already defined somewhere else.
@@ -226,12 +247,12 @@ private:
 
 
 protected:
-	auto crtp() const-> _CRTP const&{  return static_cast<_CRTP const&>(*this);  }
-	auto crtp()-> _CRTP&{  return static_cast<_CRTP&>(*this);  }
+	auto crtp() const-> _CRTP const&{  return *static_cast<_CRTP const*>(this);  }
+	auto crtp()-> _CRTP&{  return *static_cast<_CRTP*>(this);  }
 };
 
 
-#define SGM_CRTP_INTERFACE(TITLE, ...)	\
+#define SGM_CRTP_TEMPLATE_INTERFACE(TITLE, ...)	\
 	void constexpr crtp_override_##TITLE()	\
 	{	\
 		static_assert	\
@@ -250,7 +271,7 @@ protected:
 	auto constexpr check_return_type_of_##TITLE(HOST&&)	\
 	->	sgm::is_Same	\
 		<	decltype	\
-			(	sgm::Declval< sgm::Decay_t<HOST> >().TITLE(sgm::Declval<ARGS>()...) \
+			(	sgm::Declval<HOST>().TITLE(sgm::Declval<ARGS>()...) \
 			)	\
 		,	RES	\
 		>
