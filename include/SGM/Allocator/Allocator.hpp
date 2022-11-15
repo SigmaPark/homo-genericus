@@ -127,12 +127,14 @@ public:
 
 	auto allocate(size_type n)-> pointer
 	{
-		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
+		return static_cast<pointer>(  std::malloc( sizeof(value_type) * n )  );
+		//return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
 	}
 
 	void deallocate(pointer p, size_type) noexcept
 	{
-		::operator delete(p);  
+		std::free(p);
+		//::operator delete(p);  
 	}
 
 	template<class Q, class...ARGS>

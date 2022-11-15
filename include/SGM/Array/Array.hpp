@@ -34,7 +34,7 @@ namespace sgm
 	class Array;
 
 
-	template<class T, bool IS_MUTABLE, bool IS_FORWARD>
+	template<class T, bool IS_MUTABLE, bool IS_FORWARD, class CORE>
 	class Array_iterator;
 
 
@@ -58,18 +58,38 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+template<class Q, std::size_t _S>
+struct sgm::_Array_Core
+{
+	using type = Q[_S];  
+
+	type data;	
+};
+
+template<class Q>
+struct sgm::_Array_Core<Q, sgm::arrSize::INTERFACE>
+{
+	using type = Q*; 
+	
+	type data = nullptr;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 class sgm::_arr_itr_Helper : Unconstructible
 {
 private:
-	template<class, bool, bool>
+	template<class, bool, bool, class>
 	friend class sgm::Array_iterator;
 
 
-	template<class T, bool M, bool FWD>
-	static auto arr(Array_iterator<T, M, FWD> itr)-> SGM_DECLTYPE_AUTO(  itr._arr  )
+	template<class T, bool M, bool FWD, class CORE>
+	static auto core_ptr(Array_iterator<T, M, FWD, CORE> itr)
+	->	SGM_DECLTYPE_AUTO(  itr._core_ptr  )
 
-	template<class T, bool M, bool FWD>
-	static auto idx(Array_iterator<T, M, FWD> itr)-> SGM_DECLTYPE_AUTO(  itr._idx  )
+
+	template<class T, bool M, bool FWD, class CORE>
+	static auto idx(Array_iterator<T, M, FWD, CORE> itr)-> SGM_DECLTYPE_AUTO(  itr._idx  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -77,7 +97,7 @@ private:
 class sgm::_arr_itr_operation_Helper : Unconstructible
 {
 private:
-	template<class, bool, bool>
+	template<class, bool, bool, class>
 	friend class sgm::Array_iterator;
 
 
@@ -101,7 +121,7 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T, bool IS_MUTABLE, bool IS_FORWARD>
+template<class T, bool IS_MUTABLE, bool IS_FORWARD, class CORE>
 class sgm::Array_iterator
 {
 private:
@@ -110,25 +130,28 @@ private:
 	friend class sgm::_arr_itr_Helper;
 
 	using _itr_t = Array_iterator;
+	using _core_t = Selective_t<IS_MUTABLE, CORE, CORE const>;
 	using _elem_t = Selective_t<IS_MUTABLE, T, T const>;
 
 public:
 	using value_type = Decay_t<_elem_t>;
 
-	Array_iterator(_elem_t* const arr, size_t const idx) : _arr(arr), _idx(idx){}
 
-	Array_iterator(Array_iterator<T, !IS_MUTABLE, IS_FORWARD> const itr)
-	:	_arr( _arr_itr_Helper::arr(itr) ), _idx( _arr_itr_Helper::idx(itr) )
+	Array_iterator(_core_t& core, size_t const idx) : _core_ptr(&core), _idx(idx){}
+
+
+	Array_iterator(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr)
+	:	_core_ptr( _arr_itr_Helper::core_ptr(itr) ), _idx( _arr_itr_Helper::idx(itr) )
 	{
 		static_assert(!IS_MUTABLE, "cannot assign immutable iterator to mutable one.");
 	}
 
 
-	auto operator=(Array_iterator<T, !IS_MUTABLE, IS_FORWARD> const itr)-> _itr_t&
+	auto operator=(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr)-> _itr_t&
 	{
 		static_assert(!IS_MUTABLE, "cannot assign immutable iterator to mutable one.");
 
-		_arr = _arr_itr_Helper::arr(itr);
+		_core_ptr = _arr_itr_Helper::core_ptr(itr);
 		_idx = _arr_itr_Helper::idx(itr);
 
 		return *this;
@@ -136,7 +159,7 @@ public:
 
 
 	auto operator[](ptrdiff_t const diff) const
-	->	_elem_t&{  return *( _arr + _shifted(_idx, true, diff) - (IS_FORWARD ? 0 : 1) );  }
+	->	_elem_t&{  return *( _arr() + _shifted(_idx, true, diff) - (IS_FORWARD ? 0 : 1) );  }
 
 	auto operator*() const-> _elem_t&{  return (*this)[0];  }
 
@@ -162,7 +185,7 @@ public:
 
 	
 	auto operator+(ptrdiff_t const diff) const 
-	->	_itr_t{  return _itr_t( _arr, _shifted(_idx, true, diff) );  }
+	->	_itr_t{  return _itr_t( *_core_ptr, _shifted(_idx, true, diff) );  }
 
 	auto operator-(ptrdiff_t const diff) const-> _itr_t{  return *this + -diff;  }
 
@@ -197,7 +220,7 @@ public:
 
 
 	template<bool M>
-	auto operator==(Array_iterator<T, M, IS_FORWARD> const itr) const
+	auto operator==(Array_iterator<T, M, IS_FORWARD, CORE> const itr) const
 	->	bool{  return _idx == _arr_itr_Helper::idx(itr);  }
 
 	template<class Q>
@@ -207,16 +230,16 @@ public:
 	auto operator<(_itr_t const itr) const-> bool{  return _Less(*this, itr);  }
 	auto operator>(_itr_t const itr) const-> bool{  return _Less(itr, *this);  }
 
-	auto operator<(Array_iterator<T, !IS_MUTABLE, IS_FORWARD> const itr) const-> bool
+	auto operator<(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const-> bool
 	{
-		using _citr_t = Array_iterator<T, false, IS_FORWARD>;
+		using _citr_t = Array_iterator<T, false, IS_FORWARD, CORE>;
 
 		return static_cast<_citr_t>(*this) < static_cast<_citr_t>(itr);
 	}
 
-	auto operator>(Array_iterator<T, !IS_MUTABLE, IS_FORWARD> const itr) const-> bool
+	auto operator>(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const-> bool
 	{
-		using _citr_t = Array_iterator<T, false, IS_FORWARD>;
+		using _citr_t = Array_iterator<T, false, IS_FORWARD, CORE>;
 
 		return static_cast<_citr_t>(*this) > static_cast<_citr_t>(itr);
 	}
@@ -230,8 +253,11 @@ public:
 
 
 private:
-	_elem_t* _arr;
+	_core_t* _core_ptr;
 	size_t _idx;
+
+
+	auto _arr() const-> _elem_t*{  return _core_ptr->data;  }
 
 
 	static auto _shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff = 1)
@@ -274,14 +300,6 @@ struct sgm::Dual_iterator
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class Q, std::size_t _S>
-struct sgm::_Array_Core : Unconstructible{  using type = Q[_S];  };
-
-template<class Q>
-struct sgm::_Array_Core<Q, sgm::arrSize::INTERFACE> : Unconstructible{  using type = Q*;  };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 template<class T, std::size_t N, class>
 class sgm::Array
 {
@@ -318,13 +336,15 @@ protected:
 
 public:
 	static size_t constexpr size_v = N;
-	using core_t = typename _Array_Core<T, N>::type;
+	using core_t = _Array_Core<T, N>;
+	using data_t = typename core_t::type;
+
 
 	core_t _core;
 
 
-	auto operator+() const-> core_t&{  return _core;  }
-	auto operator+()-> core_t&{  return _core;  }
+	auto operator+() const-> data_t const&{  return _core.data;  }
+	auto operator+()-> data_t&{  return _core.data;  }
 
 
 	Array() = default;
@@ -344,22 +364,23 @@ public:
 	}
 
 
-	auto cdata() const-> T const*{  return _core;  }
+	auto cdata() const-> T const*{  return _core.data;  }
 	auto data() const-> SGM_DECLTYPE_AUTO(  cdata()  )
-	auto data()-> T*{  return _core;  }
+	auto data()-> T*{  return _core.data;  }
 
 	auto operator[](size_t const idx) const
-	->	T const&{  return _core[static_cast<ptrdiff_t>(idx)];  }
+	->	T const&{  return _core.data[static_cast<ptrdiff_t>(idx)];  }
 
-	auto operator[](size_t const idx)-> T&{  return _core[static_cast<ptrdiff_t>(idx)];  }
+	auto operator[](size_t const idx)
+	->	T&{  return _core.data[static_cast<ptrdiff_t>(idx)];  }
 
 	auto constexpr size() const-> size_t{  return size_v;  }
 
 
-	using iterator = Array_iterator<T, true, true>;
-	using const_iterator = Array_iterator<T, false, true>;
-	using reverse_iterator = Array_iterator<T, true, false>;
-	using const_reverse_iterator = Array_iterator<T, false, false>;
+	using iterator = Array_iterator<T, true, true, core_t>;
+	using const_iterator = Array_iterator<T, false, true, core_t>;
+	using reverse_iterator = Array_iterator<T, true, false, core_t>;
+	using const_reverse_iterator = Array_iterator<T, false, false, core_t>;
 
 	auto cbegin() const-> const_iterator{  return {_core, 0};  }
 	auto begin() const-> const_iterator{  return cbegin();  }
@@ -466,7 +487,7 @@ private:
 
 	void _alloc(size_t const capa)
 	{
-		_core = capa != 0  ?  _alc.allocate(capa)  :  (value_type*)nullptr;
+		_core.data = capa != 0  ?  _alc.allocate(capa)  :  (value_type*)nullptr;
 
 		_capacity = capa,  _size = 0;
 	}
@@ -514,7 +535,7 @@ private:
 
 
 public:
-	Array() : _base_t{nullptr}, _capacity(0), _size(0), _alc(){}
+	Array() : _base_t{}, _capacity(0), _size(0), _alc(){}
 
 	explicit Array(size_t const capa) : Array(){  _alloc(capa);  }
 
@@ -524,7 +545,7 @@ public:
 		_alloc(s);
 
 		while(_size < s)
-			_alc.construct( _core + _size++, Forward<ARGS>(args)... );
+			_alc.construct( _core.data + _size++, Forward<ARGS>(args)... );
 	}
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
@@ -552,7 +573,7 @@ public:
 		_cloning(iL.begin(), iL.end(), capacity(), *this);
 	}
 
-	Array(Array const& arr) : _base_t{nullptr}, _capacity(0), _size(0), _alc(arr._alc)
+	Array(Array const& arr) : _base_t{}, _capacity(0), _size(0), _alc(arr._alc)
 	{
 		_alloc( Size(arr) );
 		_cloning(arr.cbegin(), arr.cend(), capacity(), *this);
@@ -562,16 +583,16 @@ public:
 	:	_base_t{arr._core}, _capacity(arr.capacity()), _size(arr.size()), _alc( Move(arr._alc) )
 	{
 		arr._capacity = arr._size = 0;
-		arr._core = nullptr;
+		arr._core.data = nullptr;
 	}
 
 
 	~Array()
 	{  
 		clear();  
-		_alc.deallocate(_core, capacity());
+		_alc.deallocate(_core.data, capacity());
 
-		_core = nullptr,  _capacity = 0;  
+		_core.data = nullptr,  _capacity = 0;  
 	}
 
 
@@ -611,14 +632,26 @@ public:
 	bool is_empty() const{  return size() == 0;  }
 
 
+#if 0
 	auto reserve(size_t const capa) noexcept-> bool
 	{
-		auto backup = _core;
+		assert(capa != 0);
 
-		_core = _alc.reallocate(_core, capa);
+		if(capacity() >= capa)
+			return true;
+		else if(is_null())
+			return _alloc(capa),  true;
 
-		return _core == nullptr ? (_core = backup,  false) : true;
+		auto backup = _core.data;
+
+		_core.data = _alc.reallocate(_core.data, capa);
+
+		return 
+		_core.data == nullptr 
+		?	(_core.data = backup,  false) 
+		:	(_capacity = capa,  true);
 	}
+#endif
 
 
 	template<class...ARGS>
@@ -626,7 +659,7 @@ public:
 	{
 		assert(size() < capacity() && L"Array::emplace_back Error : out of index.\n");
 
-		_alc.construct( _core + _size++, Forward<ARGS>(args)... );
+		_alc.construct( _core.data + _size++, Forward<ARGS>(args)... );
 
 		return *this;
 	}
@@ -655,7 +688,7 @@ public:
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	auto pop_back_from(ITR const itr)-> Array&
 	{
-		for(auto d = end() - itr;  d-->0;  _core[--_size].~value_type());
+		for(auto d = end() - itr;  d-->0;  _core.data[--_size].~value_type());
 
 		return *this;
 	}
@@ -766,7 +799,7 @@ private:
 		_alloc(s);
 
 		while(_size < s)
-			_alc.construct( _core + _size++, Forward<ARGS>(args)... );
+			_alc.construct( _core.data + _size++, Forward<ARGS>(args)... );
 	}
 };
 
@@ -790,7 +823,7 @@ struct sgm::Unsafe_Construction_for_Array : Unconstructible
 	{
 		Array< T, arrSize::DYNAMIC, Decay_t<ALC> > res;
 	
-		res._core = data_arr;
+		res._core.data = data_arr;
 		res._capacity = capacity;
 		res._size = size;
 		res._alc = Forward<ALC>(allocator);
@@ -804,8 +837,8 @@ struct sgm::Unsafe_Construction_for_Array : Unconstructible
 namespace std
 {
 
-	template<class T, bool M, bool F>
-	struct iterator_traits< sgm::Array_iterator<T, M, F> >
+	template<class T, bool M, bool F, class CORE>
+	struct iterator_traits< sgm::Array_iterator<T, M, F, CORE> >
 	{
 		using iterator_category = random_access_iterator_tag;
 		using value_type = T;
