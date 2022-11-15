@@ -580,12 +580,9 @@ public:
 
 	auto operator=(Array&& arr) noexcept-> Array&
 	{
-		this->~Array();
+		auto temp = Move(arr);
 
-		_capacity = arr.capacity();  _size = arr.size();  
-		_core = arr._core;  _alc = Move(arr._alc);
-
-		arr._capacity = arr._size = 0;  arr._core = nullptr;
+		swap(temp);
 
 		return *this;
 	}
@@ -612,6 +609,16 @@ public:
 
 	bool is_null() const{  return _base().cdata() == nullptr;  }
 	bool is_empty() const{  return size() == 0;  }
+
+
+	auto reserve(size_t const capa) noexcept-> bool
+	{
+		auto backup = _core;
+
+		_core = _alc.reallocate(_core, capa);
+
+		return _core == nullptr ? (_core = backup,  false) : true;
+	}
 
 
 	template<class...ARGS>
@@ -670,6 +677,7 @@ public:
 		_base_t::_swap(_capacity, arr._capacity);
 		_base_t::_swap(_size, arr._size);
 		_base_t::_swap(_core, arr._core);
+		_base_t::_swap(_alc, arr._alc);
 
 		return *this;
 	}
