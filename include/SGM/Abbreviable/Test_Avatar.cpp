@@ -17,7 +17,7 @@ static void Test01()
 	{
 		sgm::Avatar<int> constexpr avt{};
 
-		is_True(!avt.is_owning());
+		is_True(!avt.is_valid());
 	}
 	{
 		Specimen s(2);

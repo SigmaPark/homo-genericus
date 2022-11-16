@@ -49,25 +49,24 @@ private:
 
 
 public:
-	constexpr Abbreviable_t() : _is_owning(false){}
+	constexpr Abbreviable_t() : _opof_type(){}
 
 	template< class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
-	Abbreviable_t(Q& q) : _opof_type(q), _is_owning(true){}
+	Abbreviable_t(Q& q) : _opof_type(q){}
 
-	Abbreviable_t(T&&) = delete;
+	Abbreviable_t(T const&&) = delete;
 
 	template<  class _M, class = Enable_if_t< is_const_v || !Avatar_t<T, _M>::is_const_v >  >
-	Abbreviable_t(Avatar_t<T, _M> const& avt) 
-	:	_opof_type(avt.get()), _is_owning(avt.is_owning()){}
+	Abbreviable_t(Avatar_t<T, _M> const& avt) : _opof_type( static_cast<T const&>(avt) ){}
 
 
 	auto operator=(Abbreviable_t const& avt)-> Abbreviable_t&
 	{
 		static_assert(!is_const_v, "cannot bind to const Avatar_t");
 
-		assert(is_owning() || avt.is_owning());
+		assert(is_valid() || avt.is_valid());
 
-		static_cast<T&>(*this) = avt.get(),  _is_owning = avt._is_owning();
+		static_cast<T&>(*this) = avt.get();
 
 		return *this;
 	}
@@ -80,9 +79,9 @@ public:
 			<	!is_const_v && !is_Avatar<Q>::value && is_Convertible<Q, T>::value 
 			>  
 	>
-	auto operator=(Q&& q)-> Abbreviable_t&
+	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)-> Abbreviable_t&
 	{
-		assert(is_owning() && L"Avatar_t has nothing");
+		assert(is_valid() && L"Avatar_t has nothing");
 
 		static_cast<T&>(*this) = Forward<Q>(q);
 
@@ -90,10 +89,22 @@ public:
 	}
 
 
-	bool is_owning() const{  return _is_owning;  }
+	bool is_valid() const{  return this->_p != nullptr;  }
 
-	auto get() const-> T const&{  return static_cast<T const&>(*this);  }
-	auto get()-> element_t&{  return static_cast<element_t&>(*this);  }
+
+	auto get() const-> T const&
+	{
+		assert(is_valid());
+
+		return static_cast<T const&>(*this);  
+	}
+
+	auto get()-> element_t&
+	{
+		assert(is_valid());
+
+		return static_cast<element_t&>(*this);  
+	}
 	
 
 	template<class _M>
@@ -104,7 +115,7 @@ public:
 		,	"cannot bind to constAvatar"
 		);
 
-		static_cast<_opof_type&>(*this) = avt.get(),  _is_owning = avt.is_owning();
+		static_cast<_opof_type&>(*this) = avt.get();
 
 		return *this;
 	}
@@ -117,14 +128,13 @@ public:
 		,	"cannot bind to constAvatar"
 		);
 
-		static_cast<_opof_type&>(*this) = q,  _is_owning = true;
+		static_cast<_opof_type&>(*this) = q;
 
 		return *this;
 	}
 
-
-private:
-	bool _is_owning;
+	template< class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	auto reset(Q const&&)-> Abbreviable_t = delete;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
