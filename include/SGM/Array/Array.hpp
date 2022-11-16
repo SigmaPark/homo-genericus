@@ -324,16 +324,6 @@ protected:
 	}
 
 
-	template<class T1, class T2>
-	static void _swap(T1& t1, T2& t2) noexcept
-	{
-		auto temp = Move(t1);
-
-		t1 = Move(t2);
-		t2 = Move(temp);
-	}
-
-
 public:
 	static size_t constexpr size_v = N;
 	using core_t = _Array_Core<T, N>;
@@ -450,7 +440,7 @@ public:
 		for
 		(	auto desitr = begin(),  srcitr = arr.begin()
 		;	desitr != end()
-		;	_swap(*desitr++, *srcitr++)
+		;	Swap(*desitr++, *srcitr++)
 		);
 
 		return *this;
@@ -632,28 +622,6 @@ public:
 	bool is_empty() const{  return size() == 0;  }
 
 
-#if 0
-	auto reserve(size_t const capa) noexcept-> bool
-	{
-		assert(capa != 0);
-
-		if(capacity() >= capa)
-			return true;
-		else if(is_null())
-			return _alloc(capa),  true;
-
-		auto backup = _core.data;
-
-		_core.data = _alc.reallocate(_core.data, capa);
-
-		return 
-		_core.data == nullptr 
-		?	(_core.data = backup,  false) 
-		:	(_capacity = capa,  true);
-	}
-#endif
-
-
 	template<class...ARGS>
 	auto emplace_back(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> Array&
 	{
@@ -707,10 +675,10 @@ public:
 
 	auto swap(Array& arr) noexcept-> Array&
 	{
-		_base_t::_swap(_capacity, arr._capacity);
-		_base_t::_swap(_size, arr._size);
-		_base_t::_swap(_core, arr._core);
-		_base_t::_swap(_alc, arr._alc);
+		Swap(_capacity, arr._capacity);
+		Swap(_size, arr._size);
+		Swap(_core, arr._core);
+		Swap(_alc, arr._alc);
 
 		return *this;
 	}

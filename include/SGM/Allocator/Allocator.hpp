@@ -10,8 +10,6 @@
 
 
 #include <new>
-#include <cstddef>
-#include <cstdlib>
 #include <limits>
 #include "../interface_Traits/interface_Traits.hpp"
 
@@ -127,14 +125,12 @@ public:
 
 	auto allocate(size_type n)-> pointer
 	{
-		return static_cast<pointer>(  std::malloc( sizeof(value_type) * n )  );
-		//return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
+		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
 	}
 
 	void deallocate(pointer p, size_type) noexcept
 	{
-		std::free(p);
-		//::operator delete(p);  
+		::operator delete(p);  
 	}
 
 	template<class Q, class...ARGS>
@@ -153,9 +149,6 @@ public:
 		p->~Q();  
 	}
 
-
-	auto reallocate(pointer p, size_type n)
-	->	pointer{  return static_cast<pointer>( std::realloc(p, n) );  }
 
 	auto max_size() const noexcept
 	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }

@@ -31,7 +31,6 @@ struct Static : sgm::Unconstructible
 struct Dynamic : sgm::Unconstructible
 {
 	static void Construction();
-	static void Reserve();
 	static void Copy_Construction();
 	static void Move_Construction();
 	static void Construction_from_immutable_elements();
@@ -240,38 +239,6 @@ void Dynamic::Construction()
 	Are_Equivalent_Ranges
 	(	arr6, std::initializer_list<Specimen>{Specimen(6), Specimen(4), Specimen(2)} 
 	);
-}
-
-
-void Dynamic::Reserve()
-{
-#if 0
-	sgm::Array<Specimen> arr;
-
-	is_True(arr.is_empty() && arr.is_null());
-
-	if( arr.reserve(4) )
-		is_True(arr.is_empty() && !arr.is_null() && arr.capacity() == 4);
-	else
-		return;
-
-	arr >> Specimen(2) >> Specimen(4) >> Specimen(6);
-
-	is_True
-	(	arr.size() == 3 && arr.capacity() == 4 
-	&&	arr[0] == 2 && arr[1] == 4 && arr[2] == 6
-	);
-
-	if( arr.reserve(8) )
-		is_True(arr.capacity() == 8);
-	else
-		return;
-
-	is_True
-	(	arr.size() == 3 && arr.capacity() == 8 
-	&&	arr[0] == 2 && arr[1] == 4 && arr[2] == 6
-	);
-#endif
 }
 
 
@@ -625,7 +592,6 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Array, /**/)
 ,	Static::Swap
 ,	Static::Type_Conversion_into_iterable
 ,	Dynamic::Construction
-,	Dynamic::Reserve
 ,	Dynamic::Copy_Construction
 ,	Dynamic::Move_Construction
 ,	Dynamic::Construction_from_immutable_elements
