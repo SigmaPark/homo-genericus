@@ -14,11 +14,11 @@ using sgm::spec::is_True;
 
 static void Test01()
 {
-	{
-		sgm::Avatar<int> constexpr avt{};
+	//{
+	//	sgm::Avatar<int> constexpr avt{};
 
-		is_True(!avt.is_valid());
-	}
+	//	is_True(!avt.is_valid());
+	//}
 	{
 		Specimen s(2);
 		auto avt = sgm::Refer(s);
@@ -36,14 +36,6 @@ static void Test01()
 		//cavt = 44;	// Compile Ban
 
 		is_True(cavt == cs);
-
-		cavt.reset(s);
-
-		is_True(cavt == 2);
-
-		s = 66;
-
-		is_True(cavt == 66);
 	}
 	{
 		Specimen s(2);
@@ -62,7 +54,8 @@ static void Test01()
 
 static void Test02()
 {
-	sgm::constAvatar<Specimen> cavt = sgm::Avatar<Specimen>();
+	Specimen s(2);
+	sgm::constAvatar<Specimen> cavt = sgm::Avatar<Specimen>(s);
 
 	//cavt = Avatar<Specimen>();	// Compile Failed.
 
@@ -85,11 +78,8 @@ static void Test03()
 
 static void Test04()
 {
-	sgm::constAvatar<Specimen> avt1;
-
 	Specimen x(2);
-
-	avt1.reset(x);
+	sgm::constAvatar<Specimen> avt1(x);
 
 	x = 4;
 
@@ -159,6 +149,22 @@ static void Test07()
 		is_True(t1 == 2 && t2 == 4 && t3 == 6 && t4 == 8 && t5 == 10);
 	}( s1, s2, s3, sgm::Move(s4), sgm::Move(s5) );
 }
+
+
+static void Test08()
+{
+	Specimen s(2);
+
+	auto avt = sgm::Refer(s);
+
+	static_assert( sgm::is_Same<decltype(&s), decltype(&avt)>::value, "" );
+
+	is_True(&s == &avt);
+
+	Specimen s2 = sgm::Move(avt);
+
+	is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -170,4 +176,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Avatar, /**/)
 ,	::Test05
 ,	::Test06
 ,	::Test07
+,	::Test08
 };
