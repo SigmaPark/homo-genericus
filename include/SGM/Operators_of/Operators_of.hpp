@@ -18,12 +18,20 @@ namespace sgm
 	template<class T>
 	class Operators_of;
 
+
+	SGM_USER_DEFINED_TYPE_CHECK
+	(	class T
+	,	Operators_of, <T>
+	);
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 #if	!defined(_SGM_OPERATOR_HELPER) && !defined(_SGM_GENERIC_OPERATOR) &&	\
-	!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_MULTIPARAM_OPERATOR)
+	!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_MULTIPARAM_OPERATOR) && \
+	!defined(_SGM_GLOBAL_BINARY_OPERATOR)
+
 
 	#define _SGM_OPERATOR_HELPER(SYM, TITLE)	\
 		template<class Q, class...ARGS>	/* Declaration Only */	\
@@ -99,6 +107,18 @@ namespace sgm
 		_SGM_GENERIC_OPERATOR(/**/, /**/, SYM, TITLE, /**/, /**/)
 
 
+	#define _SGM_GLOBAL_BINARY_OPERATOR(SYM)	\
+		template	\
+		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
+		>	\
+		static auto operator SYM(Q&& q, sgm::Operators_of<T>& opr)	\
+		->	SGM_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.get()  )	\
+		\
+		template	\
+		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
+		>	\
+		static auto operator SYM(Q&& q, sgm::Operators_of<T> const& opr)		\
+		->	SGM_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.get()  )
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -166,13 +186,15 @@ public:
 	
 
 	constexpr Operators_of() : _p(nullptr){}
-	Operators_of(T& t) : _p( Address_of(t) ){}
+	Operators_of(T& t) noexcept : _p( Address_of(t) ){}
 
-	auto operator=(T& t)-> T*{  return _p = Address_of(t);  }
-	auto operator=(None)-> T*{  return _p = nullptr;  }
+	auto operator=(T& t) noexcept-> T*{  return _p = Address_of(t);  }
+	auto operator=(None) noexcept-> T*{  return _p = nullptr;  }
 	
-	operator T const&() const{  return *_p;  }
-	operator T&(){  return *_p;  }
+	operator T const&() const noexcept{  return *_p;  }
+	operator T&() noexcept{  return *_p;  }
+	explicit operator T const&&() const noexcept{  return static_cast<T const&&>(*_p);  }
+	explicit operator T&&() noexcept{  return static_cast<T&&>(*_p);  }
 
 
 	_SGM_GENERIC_OPERATOR
@@ -223,9 +245,42 @@ public:
 	_SGM_MULTIPARAM_OPERATOR(>>=, RShiftAssign)
 
 };
+
+
+_SGM_GLOBAL_BINARY_OPERATOR(+)
+_SGM_GLOBAL_BINARY_OPERATOR(-)
+_SGM_GLOBAL_BINARY_OPERATOR(*)
+_SGM_GLOBAL_BINARY_OPERATOR(/)
+_SGM_GLOBAL_BINARY_OPERATOR(%)
+_SGM_GLOBAL_BINARY_OPERATOR(==)
+_SGM_GLOBAL_BINARY_OPERATOR(!=)
+_SGM_GLOBAL_BINARY_OPERATOR(<)
+_SGM_GLOBAL_BINARY_OPERATOR(>)
+_SGM_GLOBAL_BINARY_OPERATOR(<=)
+_SGM_GLOBAL_BINARY_OPERATOR(>=)
+_SGM_GLOBAL_BINARY_OPERATOR(&&)
+_SGM_GLOBAL_BINARY_OPERATOR(||)
+_SGM_GLOBAL_BINARY_OPERATOR(|)
+_SGM_GLOBAL_BINARY_OPERATOR(&)
+_SGM_GLOBAL_BINARY_OPERATOR(^)
+_SGM_GLOBAL_BINARY_OPERATOR(<<)
+_SGM_GLOBAL_BINARY_OPERATOR(>>)
+_SGM_GLOBAL_BINARY_OPERATOR(->*)
+
+_SGM_GLOBAL_BINARY_OPERATOR(+=)
+_SGM_GLOBAL_BINARY_OPERATOR(-=)
+_SGM_GLOBAL_BINARY_OPERATOR(*=)
+_SGM_GLOBAL_BINARY_OPERATOR(/=)
+_SGM_GLOBAL_BINARY_OPERATOR(%=)
+_SGM_GLOBAL_BINARY_OPERATOR(&=)
+_SGM_GLOBAL_BINARY_OPERATOR(|=)
+_SGM_GLOBAL_BINARY_OPERATOR(^=)
+_SGM_GLOBAL_BINARY_OPERATOR(<<=)
+_SGM_GLOBAL_BINARY_OPERATOR(>>=)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+	#undef _SGM_GLOBAL_BINARY_OPERATOR
 	#undef _SGM_UNARY_OPERATOR
 	#undef _SGM_MULTIPARAM_OPERATOR
 	#undef _SGM_GENERIC_OPERATOR

@@ -160,10 +160,29 @@ static void Test08()
 	static_assert( sgm::is_Same<decltype(&s), decltype(&avt)>::value, "" );
 
 	is_True(&s == &avt);
+}
 
-	Specimen s2 = sgm::Move(avt);
 
-	is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+static void Test09()
+{
+	{
+		Specimen s(2);
+
+		auto avt = sgm::Refer(s);
+
+		Specimen s2 = sgm::Move(avt);
+
+		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+	}
+	{
+		Specimen s(2);
+
+		auto avt = sgm::Refer(s);
+
+		Specimen s2 = static_cast<Specimen&&>(avt);
+
+		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -177,4 +196,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Avatar, /**/)
 ,	::Test06
 ,	::Test07
 ,	::Test08
+,	::Test09
 };
