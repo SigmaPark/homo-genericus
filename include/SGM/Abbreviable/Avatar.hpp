@@ -77,14 +77,15 @@ public:
 	Abbreviable_t(T const&&) = delete;
 
 	template<  class _M, class = Enable_if_t< is_const_v || !Avatar_t<T, _M>::is_const_v >  >
-	Abbreviable_t(Avatar_t<T, _M> const& avt) : _base_t(avt.get()){}
+	Abbreviable_t(Avatar_t<T, _M> const& avt) : _base_t(avt.v()){}
+
 
 	template<  class _M, class = Enable_if_t< !is_Same<M, _M>::value >  >
 	auto operator=(Avatar_t<T, _M> avt)-> Abbreviable_t&
 	{
 		static_assert(!is_const_v, "cannot bind to const Avatar_t");
 
-		get() = avt.get();
+		_base_t::v() = avt.v();
 
 		return *this;
 	}	
@@ -93,11 +94,10 @@ public:
 	{
 		static_assert(!is_const_v, "cannot bind to const Avatar_t");
 
-		get() = avt.get();
+		_base_t::v() = avt.v();
 
 		return *this;
 	}
-
 
 	template
 	<	class Q
@@ -108,26 +108,17 @@ public:
 	>
 	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)-> Abbreviable_t&
 	{
-		get() = Forward<Q>(q);
+		_base_t::v() = Forward<Q>(q);
 
 		return *this;
 	}
-	
-
-	auto cget() const noexcept
-	->	element_t const&{  return *static_cast<element_t const*>(this->_p);  }
-
-	auto get() const noexcept-> SGM_DECLTYPE_AUTO(  cget()  )
-
-	auto get() noexcept
-	->	element_t&{  return *static_cast<element_t*>(this->_p);  }
 
 
 	auto operator&() const
-	->	typename _Avatar_Ref_Op_Helper<element_t const>::type{  return &get();  }
+	->	typename _Avatar_Ref_Op_Helper<element_t const>::type{  return &_base_t::v();  }
 
 	auto operator&() 
-	->	typename _Avatar_Ref_Op_Helper<element_t>::type{  return &get();  }
+	->	typename _Avatar_Ref_Op_Helper<element_t>::type{  return &_base_t::v();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -147,7 +138,7 @@ namespace sgm
 
 	template<class T, class M>
 	static auto Move(Avatar_t<T, M> avt) noexcept
-	->	typename Avatar_t<T, M>::element_t&&{  return Move(avt.get());  }
+	->	typename Avatar_t<T, M>::element_t&&{  return Move(avt.v());  }
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

@@ -218,15 +218,15 @@ static void Substitutions()
 static void Get()
 {
 	{
-		//	sgm::Null_t{}.get();	// compile error : deleted function
+		//	sgm::Null_t{}.v();	// compile error : deleted function
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{}, nb2( Specimen(2) );
 
 		is_True
 		(	!nb1.has_value()
-		//&&	nb1.get()		// fragment error in run time
-		&&	nb2.has_value() && nb2 == nb2.get() && nb2.get() == Specimen(2)
+		//&&	nb1.v()		// fragment error in run time
+		&&	nb2.has_value() && nb2 == nb2.v() && nb2.v() == Specimen(2)
 		);
 	}
 }
@@ -240,7 +240,7 @@ static void Get_or()
 
 		try
 		{
-			null.get_or();
+			null.v_or();
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -256,7 +256,7 @@ static void Get_or()
 
 		try
 		{
-			s = null.get_or( Specimen(4) );
+			s = null.v_or( Specimen(4) );
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -271,7 +271,7 @@ static void Get_or()
 
 		try
 		{
-			nb.get_or();
+			nb.v_or();
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -287,7 +287,7 @@ static void Get_or()
 
 		try
 		{
-			s = nb.get_or( Specimen(4) );
+			s = nb.v_or( Specimen(4) );
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -302,7 +302,7 @@ static void Get_or()
 
 		try
 		{
-			nb.get_or();
+			nb.v_or();
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -318,7 +318,7 @@ static void Get_or()
 
 		try
 		{
-			s = nb.get_or( Specimen(4) );
+			s = nb.v_or( Specimen(4) );
 		}
 		catch(sgm::Bad_Access_to_Nullable const&)
 		{
@@ -359,7 +359,7 @@ static void Operations()
 
 		*nb = Specimen(4);
 
-		is_True( *nb == Specimen(4) && nb.get().get_spec() == *nb );
+		is_True( *nb == Specimen(4) && nb.v().get_spec() == *nb );
 	}
 	{
 		sgm::constNullable<AA> nb(  AA( Specimen(2) )  );
@@ -381,7 +381,7 @@ static void invoked()
 
 		invoke_f(nb);
 
-		is_True( nb.get() == Specimen(4) );
+		is_True( nb.v() == Specimen(4) );
 	}
 	{
 		sgm::constNullable<Specimen> cnb( Specimen(2) );
@@ -404,8 +404,8 @@ static void Abbreviable_Nullable()
 	sgm::Nullable<  sgm::constNullable< sgm::Nullable<Specimen> >  > ncnnb;
 
 	static_assert
-	(	(	sgm::is_Same<decltype(nnb.get()), Specimen&>::value
-		&&	sgm::is_Same<decltype(ncnnb.get()), Specimen const&>::value
+	(	(	sgm::is_Same<decltype(nnb.v()), Specimen&>::value
+		&&	sgm::is_Same<decltype(ncnnb.v()), Specimen const&>::value
 		)
 	,	""
 	);

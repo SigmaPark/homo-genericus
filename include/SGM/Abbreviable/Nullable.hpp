@@ -68,11 +68,11 @@ public:
 
 	auto constexpr has_value() const noexcept-> bool{  return false;  }
 
-	void get() const noexcept = delete;
-	auto get_or() const noexcept(false)-> Omni_Convertible{  throw Bad_Access_to_Nullable{};  }
+	void v() const noexcept = delete;
+	auto v_or() const noexcept(false)-> Omni_Convertible{  throw Bad_Access_to_Nullable{};  }
 
 	template<class T>
-	auto get_or(T&& t) const noexcept-> SGM_DECLTYPE_AUTO(  Forward<T>(t)  )
+	auto v_or(T&& t) const noexcept-> SGM_DECLTYPE_AUTO(  Forward<T>(t)  )
 };
 
 
@@ -164,7 +164,7 @@ public:
 		if(!has_value())
 			_alloc( Forward<Q>(q) );
 		else
-			get() = Forward<Q>(q);
+			v() = Forward<Q>(q);
 
 		return *this;
 	}
@@ -173,7 +173,7 @@ public:
 	{
 		if(has_value())
 			_core.~_core_t(),
-			static_cast<_opof_t&>(*this) = None{};
+			_opof_t::_p = nullptr;
 
 		return *this;
 	}
@@ -182,38 +182,38 @@ public:
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
 	>
 	auto operator=(_Base_Nullable<Q> const& nb)
-	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.get() : *this = Null_t{};  }
+	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
 
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
 	>
 	auto operator=(_Base_Nullable<Q>&& nb)
-	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).get() : *this = Null_t{};  }
+	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
 
 	auto operator=(_Base_Nullable const& nb)
-	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.get() : *this = Null_t{};  }
+	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
 
 	auto operator=(_Base_Nullable&& nb)
-	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).get() : *this = Null_t{};  }
+	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
 
 
 	auto has_value() const noexcept-> bool{  return _opof_t::_p != nullptr;  }
 
-	auto get() & noexcept-> T&{  return _core.value;  }
-	auto get() const& noexcept-> T const&{  return _core.value;  }
-	auto get() && noexcept-> T&&{  return Move(_core.value);  }
-	auto get() const&& noexcept-> T const&&{  return Move(_core.value);  }
+	auto v() & noexcept-> T&{  return _core.value;  }
+	auto v() const& noexcept-> T const&{  return _core.value;  }
+	auto v() && noexcept-> T&&{  return Move(_core.value);  }
+	auto v() const&& noexcept-> T const&&{  return Move(_core.value);  }
 
-	auto get_or() & noexcept(false)-> T&{  return _get_or(*this);  }
-	auto get_or() const& noexcept(false)-> T const&{  return _get_or(*this);  }
-	auto get_or() && noexcept(false)-> T&&{  return _get_or( Move(*this) );  }
-	auto get_or() const&& noexcept(false)-> T const&&{  return _get_or( Move(*this) );  }
+	auto v_or() & noexcept(false)-> T&{  return _get_or(*this);  }
+	auto v_or() const& noexcept(false)-> T const&{  return _get_or(*this);  }
+	auto v_or() && noexcept(false)-> T&&{  return _get_or( Move(*this) );  }
+	auto v_or() const&& noexcept(false)-> T const&&{  return _get_or( Move(*this) );  }
 	
-	auto get_or(T& t) & noexcept-> T&{  return _get_or(*this, t);  }
-	auto get_or(T const& t) const& noexcept-> T const&{  return _get_or(*this, t);  }
-	auto get_or(T&& t) && noexcept-> T&&{  return _get_or( Move(*this), Move(t) );  }
+	auto v_or(T& t) & noexcept-> T&{  return _get_or(*this, t);  }
+	auto v_or(T const& t) const& noexcept-> T const&{  return _get_or(*this, t);  }
+	auto v_or(T&& t) && noexcept-> T&&{  return _get_or( Move(*this), Move(t) );  }
 	
-	auto get_or(T const&& t) const&& noexcept
+	auto v_or(T const&& t) const&& noexcept
 	->	T const&&{  return _get_or( Move(*this), Move(t) );  }
 
 
@@ -231,7 +231,7 @@ private:
 	void _try_alloc(NB&& nb) noexcept(is_Rvalue_Reference<NB&&>::value)
 	{
 		if(nb.has_value())
-			_alloc( Forward<NB>(nb).get() );
+			_alloc( Forward<NB>(nb).v() );
 		else
 			*this = Null_t{};
 	}
@@ -242,7 +242,7 @@ private:
 	->	Enable_if_t< sizeof...(ARGS) == 0, Qualify_Like_t<ME&&, T> >
 	{
 		if(me.has_value())
-			return Forward<ME>(me).get();
+			return Forward<ME>(me).v();
 		else
 			throw Bad_Access_to_Nullable{};
 	}
@@ -252,7 +252,7 @@ private:
 	->	Enable_if_t< sizeof...(ARGS) == 1, Qualify_Like_t<ME&&, T> >
 	{
 		if(me.has_value())
-			return Forward<ME>(me).get();
+			return Forward<ME>(me).v();
 		else
 			return Nth_Param<0>( Forward<ARGS>(args)... );
 	}
@@ -284,9 +284,9 @@ public:
 
 	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
 
-	auto get() const noexcept-> T const&{  return _base_t::get();  }
-	auto get_or() const noexcept(false)-> T const&{  return _base_t::get_or();  }
-	auto get_or(T const& t) const noexcept-> T const&{  return _base_t::get_or(t);  }
+	auto v() const noexcept-> T const&{  return _base_t::v();  }
+	auto v_or() const noexcept(false)-> T const&{  return _base_t::v_or();  }
+	auto v_or(T const& t) const noexcept-> T const&{  return _base_t::v_or(t);  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

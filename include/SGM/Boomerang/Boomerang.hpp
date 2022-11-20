@@ -34,10 +34,10 @@ public:
 
 
 	Boomerang(Boomerang const&) = delete;
-	~Boomerang(){  _feedback( Move(*this).ref() );  }
+	~Boomerang(){  _feedback( Move(*this).v() );  }
 
-	auto ref() &&-> T&{  return *this;  }
-	auto eval() const-> T{  return *this;  }
+
+	auto v() &&-> T&{  return *this;  }
 
 	
 	template
@@ -48,10 +48,10 @@ public:
 			>	
 	>
 	auto operator=(Q&& q) &&
-	->	Boomerang&&{  return Move(*this).ref() = Forward<Q>(q),  Move(*this);  }
+	->	Boomerang&&{  return Move(*this).v() = Forward<Q>(q),  Move(*this);  }
 
 	auto operator=(Boomerang&& bmr) && 
-	->	Boomerang&&{  return Move(*this).ref() = bmr.eval(),  Move(*this);  }
+	->	Boomerang&&{  return Move(*this).v() = Move(bmr).v(),  Move(*this);  }
 
 	template<class Q>
 	auto operator=(Q&&) &-> Boomerang& = delete;
@@ -87,10 +87,10 @@ public:
 
 
 	Boomerang(Boomerang const&) = delete;
-	~Boomerang(){  _feedback( Move(*this).ref() );  }
+	~Boomerang(){  _feedback( Move(*this).v() );  }
 
-	auto ref() &&-> T&{  return _t;  }
-	auto eval() const-> T{  return _t;  }
+
+	auto v() &&-> T&{  return _t;  }
 
 	
 	template
@@ -101,10 +101,10 @@ public:
 			>	
 	>
 	auto operator=(Q&& q) &&
-	->	Boomerang&&{  return Move(*this).ref() = Forward<Q>(q),  Move(*this);  }
+	->	Boomerang&&{  return Move(*this).v() = Forward<Q>(q),  Move(*this);  }
 
 	auto operator=(Boomerang&& bmr) && 
-	->	Boomerang&&{  return Move(*this).ref() = bmr.eval(),  Move(*this);  }
+	->	Boomerang&&{  return Move(*this).v() = Move(bmr).v(),  Move(*this);  }
 
 	template<class Q>
 	auto operator=(Q&&) &-> Boomerang& = delete;
@@ -115,6 +115,7 @@ public:
 private:
 	T _t;
 	FDB _feedback;
+
 
 	template<class _T, class _FDB>
 	friend auto throw_Boomerang(_T&& t, _FDB&& feedback)
@@ -130,7 +131,7 @@ private:
 	>
 	Boomerang(Q&& q, FDB feedback) : _t( Forward<Q>(q) ), _feedback(feedback)
 	{
-		static_cast< Operators_of<T>& >(*this) = _t;
+		Operators_of<T>::_p = Address_of(_t);
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -153,7 +154,7 @@ namespace std
 {
 
 	template<class T, class FDB, class B>
-	auto ref(sgm::Boomerang<T, FDB, B>&& bmr)-> T&{  return sgm::Move(bmr).ref();  } 
+	auto ref(sgm::Boomerang<T, FDB, B>&& bmr)-> T&{  return sgm::Move(bmr).v();  } 
 
 }
 

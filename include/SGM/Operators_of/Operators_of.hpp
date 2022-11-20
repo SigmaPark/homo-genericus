@@ -188,13 +188,15 @@ public:
 	constexpr Operators_of() : _p(nullptr){}
 	Operators_of(T& t) noexcept : _p( Address_of(t) ){}
 
-	auto operator=(T& t) noexcept-> T*{  return _p = Address_of(t);  }
-	auto operator=(None) noexcept-> T*{  return _p = nullptr;  }
+
+	auto v() const noexcept-> T const&{  return *_p;  }
+	auto v() noexcept-> T&{  return *_p;  }
+
 	
-	operator T const&() const noexcept{  return *_p;  }
-	operator T&() noexcept{  return *_p;  }
-	explicit operator T const&&() const noexcept{  return static_cast<T const&&>(*_p);  }
-	explicit operator T&&() noexcept{  return static_cast<T&&>(*_p);  }
+	operator T const&() const noexcept{  return v();  }
+	operator T&() noexcept{  return v();  }
+	explicit operator T const&&() const noexcept{  return static_cast<T const&&>(v());  }
+	explicit operator T&&() noexcept{  return static_cast<T&&>(v());  }
 
 
 	_SGM_GENERIC_OPERATOR

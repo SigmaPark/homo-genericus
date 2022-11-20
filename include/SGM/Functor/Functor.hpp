@@ -556,7 +556,7 @@ public:
 	Functor(_FuncExpr<CLSR, NVK, D>&& fxp) noexcept
 	:	_hfxp(  _FXP_Harden::calc( Move(fxp) )  )
 	{  
-		static_cast< Operators_of<hFXP>& >(*this) = _hfxp;  
+		Operators_of<hFXP>::_p = Address_of(_hfxp);
 	}
 
 	template
@@ -570,10 +570,10 @@ public:
 	:	Functor( Forward<FUNC>(func) * _identity_Functor_detail::Tag{} ){}
 
 	Functor(Functor const &rhs) 
-	:	_hfxp(rhs._hfxp){  static_cast< Operators_of<hFXP>& >(*this) = _hfxp;  }
+	:	_hfxp(rhs._hfxp){  Operators_of<hFXP>::_p = Address_of(_hfxp);  }
 
 	Functor(Functor&& rhs) noexcept 
-	:	_hfxp( Move(rhs._hfxp) ){  static_cast< Operators_of<hFXP>& >(*this) = _hfxp;  }
+	:	_hfxp( Move(rhs._hfxp) ){  Operators_of<hFXP>::_p = Address_of(_hfxp);  }
 
 
 	auto operator=(Functor const&)-> Functor& = delete;

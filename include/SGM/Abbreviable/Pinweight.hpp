@@ -152,7 +152,7 @@ public:
 	}
 
 
-	auto get() const-> T const&{  return _pdata->_val;  }
+	auto v() const noexcept-> T const&{  return Operators_of<T const>::v();  }
 
 	bool share_with(_Base_Pinweight const& pw) const{  return _pdata == pw._pdata;  }
 	size_t share_count() const{  return _pdata->_count;  }
@@ -162,7 +162,7 @@ private:
 	_data_t* _pdata;
 
 
-	void _update_val(){  static_cast< Operators_of<T const>& >(*this) = _pdata->_val;  }
+	void _update_val(){  Operators_of<T const>::_p = &_pdata->_val;  }
 
 	void _update(_data_t* pdata)
 	{
@@ -266,7 +266,7 @@ public:
 	auto mut()-> typename _base_t::value_type&
 	{
 		if(_base_t::share_count() > 1)
-			*this = Abbreviable_t(_base_t::get());
+			*this = Abbreviable_t(_base_t::v());
 			
 		return _base_t::_mut_ref();
 	}

@@ -68,7 +68,7 @@ static void Test05()
 {
 	sgm::constPinweight<Specimen> cpw1(3);
 
-	is_True(cpw1.get().value() == 3);
+	is_True(cpw1.v().value() == 3);
 }
 
 
@@ -77,7 +77,7 @@ struct _constPinweight_Test_Helper
 {
 private:
 	template<class _CPW>
-	static auto _calc(int)-> sgm::SFINAE_t< decltype(sgm::Declval<_CPW>().get() = 7) >;
+	static auto _calc(int)-> sgm::SFINAE_t< decltype(sgm::Declval<_CPW>().v() = 7) >;
 
 	template<class...>
 	static auto _calc(...)-> sgm::False_t;
@@ -95,8 +95,8 @@ static void Test06()
 
 
 	static_assert
-	(	(	sgm::is_Same< decltype(ppw.get()), Specimen const& >::value
-		&&	sgm::is_Same< decltype(cpw.get()), Specimen const& >::value
+	(	(	sgm::is_Same< decltype(ppw.v()), Specimen const& >::value
+		&&	sgm::is_Same< decltype(cpw.v()), Specimen const& >::value
 		&&	::_constPinweight_Test_Helper
 			<	sgm::constPinweight<Specimen> 
 			>::	cannot_assign_to_constPinweight_value
@@ -139,8 +139,8 @@ static void Test07()
 
 	is_True
 	(	!pw1.share_with(pw2) 
-	&&	pw1.get().value() == 3
-	&&	pw3.get().value() == 1
+	&&	pw1.v().value() == 3
+	&&	pw3.v().value() == 1
 	);
 }
 
@@ -190,8 +190,8 @@ static void Test09()
 
 		is_True
 		(	pw1 == i && pw2 == i
-		&&	&pw1.get() == reinterpret_cast<Specimen const*>(&buf[0])
-		&&	&pw2.get() == reinterpret_cast<Specimen const*>(&buf[1])
+		&&	&pw1.v() == reinterpret_cast<Specimen const*>(&buf[0])
+		&&	&pw2.v() == reinterpret_cast<Specimen const*>(&buf[1])
 		);
 	}
 

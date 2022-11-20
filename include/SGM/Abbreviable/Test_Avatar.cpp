@@ -44,7 +44,7 @@ static void Test01()
 
 		static_assert
 		(	(	sgm::is_constAvatar<decltype(cavt)>::value
-			&&	sgm::is_Same<decltype(cavt.get()), Specimen const&>::value
+			&&	sgm::is_Same<decltype(cavt.v()), Specimen const&>::value
 			)
 		,	""
 		);
@@ -111,7 +111,7 @@ static void Test05()
 
 	is_True(avt1 == 2 && avt2 == 2);
 
-	static_assert( sgm::is_Same<decltype(avt2.get()), Specimen const&>::value, "" );
+	static_assert( sgm::is_Same<decltype(avt2.v()), Specimen const&>::value, "" );
 }
 
 
@@ -135,7 +135,7 @@ static void Test06()
 	,	""
 	);
 
-	is_True(y1 == 2+4 && y2 == 4-2 && b == false && avts.get().value() == 6);
+	is_True(y1 == 2+4 && y2 == 4-2 && b == false && avts.v().value() == 6);
 }
 
 
