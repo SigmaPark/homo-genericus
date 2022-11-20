@@ -19,72 +19,49 @@ namespace sgm
 	
 	SGM_ABBREVIABLE_WIZARD(Avatar);
 
-
-	template<class T>
-	struct _Avatar_Ref_Op_Helper;
-
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 template<class T>
-struct sgm::_Avatar_Ref_Op_Helper
-{
-private:
-	template<class Q>
-	static auto _calc(int)
-	->	SFINAE_t< decltype(Declval<Q>().operator&()), decltype(Declval<Q>().operator&()) >;
-
-	template<class Q>
-	static auto _calc(...)-> T*;
-
-
-public:
-	using type = decltype( _calc<T>(0) );
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<class T, class M>
 class sgm::Abbreviable_t
 <	sgm::Avatar_tag
-,	T, M, sgm::Avatar_Pedigree<T, M, false, false> 
->
-:	public 
-	Operators_of
-	<	Selective_t
-		<	is_constAvatar
-			<	Avatar_t< T, M, sgm::Avatar_Pedigree<T, M, false, false> >
-			>::	value
-		,	T const
-		,	T
-		>
-	>
+,	T, sgm::Variable_t, sgm::Avatar_Pedigree<T, sgm::Variable_t, false, false>
+> :	public Operators_of<T>
 {
 public:
-	static bool constexpr is_const_v = is_constAvatar<Abbreviable_t>::value;
-
-	using element_t = Selective_t<is_const_v, T const, T>;
+	using element_t = T;
 
 
 private:
 	using _base_t = Operators_of<element_t>;
 
+
 public:
-	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
-	Abbreviable_t(Q& q) noexcept: _base_t(q){}
+	template
+	<	class Q, class = Enable_if_t< !is_Avatar<Q>::value && !is_immutable<Q&>::value >  
+	>
+	Abbreviable_t(Q& q) noexcept : _base_t(q){}
+
+	template
+	<	class Q
+	,	class 
+		=	Enable_if_t
+			<	is_Avatar<Q>::value 
+			&&	!is_constAvatar<Q>::value 
+			&&	!is_Const< Referenceless_t<Q> >::value
+			>
+	>
+	Abbreviable_t(Q&& avt) noexcept : _base_t(avt.v()){}
+
+	template<  class Q, class = Enable_if_t< is_constAvatar<Q>::value >  >
+	Abbreviable_t(Q const&) = delete;
 
 	Abbreviable_t(T const&&) = delete;
 
-	template<  class _M, class = Enable_if_t< is_const_v || !Avatar_t<T, _M>::is_const_v >  >
-	Abbreviable_t(Avatar_t<T, _M> const& avt) : _base_t(avt.v()){}
 
-
-	template<  class _M, class = Enable_if_t< !is_Same<M, _M>::value >  >
-	auto operator=(Avatar_t<T, _M> avt)-> Abbreviable_t&
+	auto operator=(constAvatar<T> const& avt)-> Abbreviable_t&
 	{
-		static_assert(!is_const_v, "cannot bind to const Avatar_t");
-
 		_base_t::v() = avt.v();
 
 		return *this;
@@ -92,19 +69,13 @@ public:
 
 	auto operator=(Abbreviable_t const& avt)-> Abbreviable_t&
 	{
-		static_assert(!is_const_v, "cannot bind to const Avatar_t");
-
-		_base_t::v() = avt.v();
-
-		return *this;
+		return *this = constAvatar<T>(avt);
 	}
 
 	template
 	<	class Q
 	,	class 
-		=	Enable_if_t
-			<	!is_const_v && !is_Avatar<Q>::value && is_Convertible<Q, T>::value 
-			>  
+		=	Enable_if_t< !is_Avatar<Q>::value && is_Convertible<Q, T>::value >  
 	>
 	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)-> Abbreviable_t&
 	{
@@ -114,11 +85,41 @@ public:
 	}
 
 
-	auto operator&() const
-	->	typename _Avatar_Ref_Op_Helper<element_t const>::type{  return &_base_t::v();  }
+	auto operator&() const-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+	auto operator&()-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
-	auto operator&() 
-	->	typename _Avatar_Ref_Op_Helper<element_t>::type{  return &_base_t::v();  }
+
+template<class T>
+class sgm::Abbreviable_t
+<	sgm::Avatar_tag
+,	T, sgm::invariable_t, sgm::Avatar_Pedigree<T, sgm::invariable_t, false, false>
+> :	public Operators_of<T const>
+{
+public:
+	using element_t = T const;
+
+
+private:
+	using _base_t = Operators_of<element_t>;
+
+
+public:
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	Abbreviable_t(Q& q) noexcept: _base_t(q){}
+
+	template<  class Q, class = Enable_if_t< is_Avatar<Q>::value >  >
+	Abbreviable_t(Q const& avt) noexcept : _base_t(avt.v()){}
+
+	Abbreviable_t(T const&&) = delete;
+
+
+	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
+	auto operator=(T const&)-> Abbreviable_t& = delete;
+
+	auto operator&() const-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+	auto operator&()-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
