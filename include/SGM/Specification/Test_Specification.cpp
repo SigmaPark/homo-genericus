@@ -60,12 +60,23 @@ END_CODE_BLOCK(code_block_example_show)
 }
 
 
-static void Assertion()
+static void Assertions()
 {
 	sgm::spec::mdo
-	<<	sgm::spec::Title("sgm::spec::is_True")
-	<<	"You can not only show codes but also assert the result from the code is correct using "
-	<<	"\"sgm::spec::is_True\"" << sgm::spec::newl;
+	<<	sgm::spec::Title("Helper Functions for Assertion")
+	<<	"You can not only show codes but also assert the result from the code is correct "
+	<<	"using assertion helper functions. They check if the code works fine. When the code "
+	<<	"fails the assertion, sgm::Exception is thrown, log message will be shown, and "
+	<<	"Markdown document file won't be exported "
+	<<	"(if there was an old document already, it will be eliminated) . " 
+	<<	"Therefore it is guaranteed the code result is correct "
+	<<	"if the document file is successfully created."
+	<<	sgm::spec::empty_line;
+
+
+	sgm::spec::mdo
+	<<	sgm::spec::Title("sgm::spec::is_True", 2)
+	<<	"\"sgm::spec::is_True\" checks an boolean expression is true." << sgm::spec::newl;
 
 BEGIN_CODE_BLOCK(is_true_ex)
 	int result = 1 + 1;
@@ -73,12 +84,99 @@ BEGIN_CODE_BLOCK(is_true_ex)
 	sgm::spec::is_True(result == 2);
 END_CODE_BLOCK_AND_LOAD(is_true_ex)
 
+	sgm::spec::mdo << sgm::spec::empty_line;
+
+
+	sgm::spec::mdo 
+	<<	sgm::spec::Title("sgm::spec::Are_All_True / sgm::spec::Are_N_True", 2)
+	<<	"\"sgm::spec::Are_All_True\" checks whether all elements in a range on 1st parameter "
+	<<	"satisfy a condition function given as 2nd parameter. " 
+	<<	"\"sgm::spec::Are_N_True\" do the same thing on partial range from an iterator ." 
+	<<	sgm::spec::newl;
+
+BEGIN_CODE_BLOCK(are_all_true_ex)
+	{
+		std::initializer_list<int> range{2, 4, 6, 8, 10, 12};
+
+		auto are_even_f = [](int n)-> bool{  return n % 2 == 0;  };
+		auto are_less_than_10_f = [](int n)-> bool{  return n < 10;  };
+
+		sgm::spec::Are_All_True(range, are_even_f);
+		sgm::spec::Are_N_True(range.begin(), 4, are_less_than_10_f);
+	}
+END_CODE_BLOCK_AND_LOAD(are_all_true_ex)
+
+	sgm::spec::mdo << sgm::spec::empty_line;
+
+
+	sgm::spec::mdo 
+	<<	sgm::spec::Title("sgm::spec::Are_All_Equivalent_to / sgm::spec::Are_N_Equivalent_to", 2)
+	<<	"\"sgm::spec::Are_All_Equivalent_to\" checks whether all elements in a range on 1st "
+	<<	"parameter are equivalent to 2nd parameter. You can specify the function that determines "
+	<<	"whether they are equivalent on 3rd parameter ( operator== as default ) . "
+	<<	"\"sgm::spec::Are_N_Equivalent_to\" do the same thing on partial range "
+	<<	"from an iterator . " << sgm::spec::newl;
+
+BEGIN_CODE_BLOCK(are_all_equivalent_ex)
+	{
+		std::initializer_list<int> range{7, 7, 7, 7};
+
+		sgm::spec::Are_All_Equivalent_to(range, 7);
+	}
+	{
+		std::initializer_list<int> 
+			range0{7, 7, 7, -7, -7},
+			range1{3, 5, 7, 7, 7, -7, -7, -5, -3};
+
+		auto abs_value_are_same_f 
+		=	[](int n0, int n1)-> bool
+			{
+				int abs_n0 = n0 >= 0 ? n0 : -n0;
+				int abs_n1 = n1 >= 0 ? n1 : -n1;
+
+				return abs_n0 == abs_n1;
+			};
+
+		sgm::spec::Are_All_Equivalent_to(range0, 7, abs_value_are_same_f);
+
+		sgm::spec::Are_N_Equivalent_to(range0.begin(), 3, 7);
+		sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 3, 7);
+		sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 5, 7, abs_value_are_same_f);
+	}
+END_CODE_BLOCK_AND_LOAD(are_all_equivalent_ex)
+
+	sgm::spec::mdo << sgm::spec::empty_line;
+
+
 	sgm::spec::mdo
-	<<	"\"sgm::spec::is_True\" throws an sgm::Exception if the boolean parameter is false, "
-	<<	"and the exception prevents making Markdown file export. " 
-	<<	"Therefore the code result is correct "
-	<<	"if the document file is successfully created."
-	<<	sgm::spec::empty_line;
+	<<	sgm::spec::Title("sgm::spec::Are_Equivalent_Ranges", 2)
+	<<	"\"sgm::spec::Are_Equivalent_Ranges\" checks whether two ranges given as 1st and 2nd "
+	<<	"parameters are the same (the number of elements are same and have the same elements "
+	<<	"in the same order) . You can specify the function that determines whether the elements "
+	<<	"are same each others ( operator== as default ) . " << sgm::spec::newl;
+
+BEGIN_CODE_BLOCK(are_equivalent_ranges_ex)
+	{
+		std::initializer_list<int> 
+			range0{2, 4, 6, 8}, 
+			range1{2, 4, 6, 8},
+			range2{2, -4, 6, -8};
+
+		auto abs_value_are_same_f 
+		=	[](int n0, int n1)-> bool
+			{
+				int abs_n0 = n0 >= 0 ? n0 : -n0;
+				int abs_n1 = n1 >= 0 ? n1 : -n1;
+
+				return abs_n0 == abs_n1;
+			};	
+
+		sgm::spec::Are_Equivalent_Ranges(range0, range1);
+		sgm::spec::Are_Equivalent_Ranges(range1, range2, abs_value_are_same_f);
+	}
+END_CODE_BLOCK_AND_LOAD(are_equivalent_ranges_ex)
+
+	sgm::spec::mdo << sgm::spec::empty_line;	
 }
 
 
@@ -236,7 +334,7 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Specification, /**/)
 {	::intro
 ,	::Math_Expression
 ,	::Code_Block
-,	::Assertion
+,	::Assertions
 ,	::External_Resources
 ,	::Guards
 ,	::Literal_Suffixes
