@@ -99,7 +99,7 @@ template<class T>
 class sgm::_Base_Nullable : public Operators_of<T>
 {
 private:
-	using _core_t = _Nullable_Core<T>;
+	using _core_t = _Nullable_Core< Decay_t<T> >;
 	using _opof_t = Operators_of<T>;
 
 
