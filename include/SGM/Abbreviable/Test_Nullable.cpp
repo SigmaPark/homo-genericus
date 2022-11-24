@@ -86,6 +86,64 @@ static void Constructions()
 }
 
 
+static void Conversions()
+{	
+	{
+		sgm::Nullable<Specimen> nb{2};
+		
+		Specimen s = nb;
+		Specimen const cs = nb;
+
+		is_True( s == Specimen(2) && cs == Specimen(2) );
+	}
+	{
+		sgm::constNullable<Specimen> nb{2};
+		
+		Specimen s = nb;
+		Specimen const cs = nb;
+
+		is_True( s == Specimen(2) && cs == Specimen(2) );
+	}
+	{
+		sgm::Nullable<double> nb{0.25};
+		
+		double d = nb,  &rd = nb;
+		double const cd = nb, &crd = nb;
+
+		is_True(d == 0.25 && cd == 0.25 && rd == 0.25 && crd == 0.25);
+	}
+	{
+		sgm::constNullable<double> nb{0.25};
+		
+		double d = nb;
+		double const cd = nb, &crd = nb;
+
+		is_True(d == 0.25 && cd == 0.25 && crd == 0.25);
+	}
+	{
+		sgm::Nullable<Specimen> nb{2};
+		
+		Specimen s = nb.move();
+
+		is_True( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+	}
+	{
+		sgm::Nullable<Specimen> nb{2};
+		
+		Specimen const s = nb.move();
+
+		is_True( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+	}
+	{
+		sgm::constNullable<Specimen> nb{2};
+		
+		Specimen s = nb.move();
+
+		is_True( s == Specimen(2) && nb.v() != Specimen::State::MOVE_AWAY );
+	}
+}
+
+
 static void Substitutions()
 {
 	{
@@ -423,6 +481,7 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Nullable, /**/)
 {	::intro
 ,	::Null_type
 ,	::Constructions
+,	::Conversions
 ,	::Substitutions
 ,	::Get
 ,	::Get_or

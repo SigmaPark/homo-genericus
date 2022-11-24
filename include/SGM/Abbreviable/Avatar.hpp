@@ -141,6 +141,14 @@ namespace sgm
 	static auto Move(Avatar_t<T, M> avt) noexcept
 	->	typename Avatar_t<T, M>::element_t&&{  return Move(avt.v());  }
 
+	template<class, class T>
+	static auto Forward(constAvatar<T> avt) noexcept
+	->	typename constAvatar<T>::element_t&{  return avt.v();  }
+
+	template<class, class T>
+	static auto Forward(Avatar<T> avt) noexcept
+	->	typename Avatar<T>::element_t&{  return avt.v();  }
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

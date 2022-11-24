@@ -27,14 +27,6 @@ namespace sgm
 
 
 	template<class T>
-	static auto make_Nullable(T&& t) noexcept(is_Rvalue_Reference<T&&>::value)
-	->	Selective_t
-		<	is_immutable<T>::value
-		,	constNullable< Decay_t<T> >, Nullable< Decay_t<T> >
-		>;
-
-
-	template<class T>
 	class _Base_Nullable;
 
 	template< class T, bool = is_Class_or_Union<T>::value >
@@ -287,6 +279,8 @@ public:
 	auto v() const noexcept-> T const&{  return _base_t::v();  }
 	auto v_or() const noexcept(false)-> T const&{  return _base_t::v_or();  }
 	auto v_or(T const& t) const noexcept-> T const&{  return _base_t::v_or(t);  }
+
+	auto move() noexcept-> T const&&{  return Move(v());  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -319,19 +313,30 @@ public:
 
 	auto operator=(Abbreviable_t&& abrv) noexcept
 	->	Abbreviable_t&{  return _base_t::operator=( Move(abrv) ),  *this;  }
+
+
+	auto move() noexcept-> T&&{  return Move(_base_t::v());  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template<class T>
-auto sgm::make_Nullable(T&& t) noexcept(is_Rvalue_Reference<T&&>::value)
-->	Selective_t
-	<	is_immutable<T>::value
-	,	constNullable< Decay_t<T> >, Nullable< Decay_t<T> >
-	>
+namespace sgm
 {
-	return Forward<T>(t);
+
+	template<class T>
+	static auto make_Nullable(T&& t) noexcept(is_Rvalue_Reference<T&&>::value)
+	->	Selective_t
+		<	is_immutable<T>::value
+		,	constNullable< Decay_t<T> >, Nullable< Decay_t<T> >
+		>
+	{
+		return Forward<T>(t);
+	}	
+
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 
 
 #endif // end of #ifndef _SGM_NULLABLE_

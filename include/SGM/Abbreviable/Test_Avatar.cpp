@@ -179,7 +179,7 @@ static void Test09()
 
 		auto avt = sgm::Refer(s);
 
-		Specimen s2 = static_cast<Specimen&&>(avt);
+		Specimen s2 = sgm::Move(avt);
 
 		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
 	}

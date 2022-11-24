@@ -192,11 +192,8 @@ public:
 	auto v() const noexcept-> T const&{  return *_p;  }
 	auto v() noexcept-> T&{  return *_p;  }
 
-	
 	operator T const&() const noexcept{  return v();  }
 	operator T&() noexcept{  return v();  }
-	explicit operator T const&&() const noexcept{  return static_cast<T const&&>(v());  }
-	explicit operator T&&() noexcept{  return static_cast<T&&>(v());  }
 
 
 	_SGM_GENERIC_OPERATOR
