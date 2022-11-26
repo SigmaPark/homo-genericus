@@ -23,10 +23,23 @@ namespace sgm
     {
 
         class Specimen;
+        class Specimen_Logger;
+        class Specimen_Log_Guard;
 
     }
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+class sgm::spec::Specimen_Logger
+{
+public:
+    Specimen_Logger() = default;
+    virtual ~Specimen_Logger() = default;
+
+    virtual void log(std::string const& log_message) = 0;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 class sgm::spec::Specimen
@@ -44,19 +57,41 @@ public:
     };
 
 
-    Specimen() : _state(State::DEFAULT_CONSTRUCTION), _value(0){}
-    Specimen(int val) : _state(State::MANUAL_CONSTRUCTION), _value(val){}
-    Specimen(Specimen const& s) : _state(State::COPY_CONSTRUCTION), _value(s.value()){}
+    Specimen() : _state(State::DEFAULT_CONSTRUCTION), _value(0)
+    {
+        _Log("default_construction");
+    }
     
-    Specimen(Specimen&& s) noexcept 
-    :   _state(State::MOVE_CONSTRUCTION), _value(s.value()){  s._state = State::MOVE_AWAY;  }
+    Specimen(int val) : _state(State::MANUAL_CONSTRUCTION), _value(val)
+    {
+        _Log("manual_construction");
+    }
+    
+    Specimen(Specimen const& s) : _state(State::COPY_CONSTRUCTION), _value(s.value())
+    {
+        _Log("copy_construction");
+    }
+    
+    Specimen(Specimen&& s) noexcept : _state(State::MOVE_CONSTRUCTION), _value(s.value())
+    {
+        s._state = State::MOVE_AWAY;  
 
-    ~Specimen(){  value() = -1,  _state = State::DESTRUCTION;  }
+        _Log("move_construction");
+    }
+
+    ~Specimen()
+    {
+        value() = -1,  _state = State::DESTRUCTION; 
+        
+        _Log("destruction");
+    }
 
 
     auto operator=(Specimen const& s)-> Specimen&
     {
         _state = State::COPY_ASSIGNMENT,  value() = s.value();
+
+        _Log("copy_assignment");
 
         return *this;        
     }
@@ -66,6 +101,8 @@ public:
         _state = State::MOVE_ASSIGNMENT,  value() = s.value();
 
         s._state = State::MOVE_AWAY;
+
+        _Log("move_assignment");
 
         return *this;
     }
@@ -83,9 +120,37 @@ public:
     auto operator!=(T t) const-> bool{  return !(*this == t);  }
 
 
+    static void Begin_log(Specimen_Logger& logger){  _Logger_ptr() = Address_of(logger);  }
+    static void End_log(){  _Logger_ptr() = nullptr;  }
+
+
 private:
     State _state;
     int _value;
+
+
+    static auto _Logger_ptr()-> Specimen_Logger*&
+    {
+        static Specimen_Logger* ptr = nullptr;
+
+        return ptr;
+    }
+
+
+    static void _Log(std::string const& log_str)
+    {
+        if(_Logger_ptr() != nullptr)
+            _Logger_ptr()->log(log_str);
+    }
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+class sgm::spec::Specimen_Log_Guard
+{
+public:
+    Specimen_Log_Guard(Specimen_Logger& logger){  Specimen::Begin_log(logger);  }
+    ~Specimen_Log_Guard(){  Specimen::End_log();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
