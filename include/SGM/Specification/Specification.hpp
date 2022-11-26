@@ -111,20 +111,20 @@ public:
     }
 
 
-    auto state() const-> State{  return _state;  }
+    auto state() const noexcept-> State{  return _state;  }
 
-    auto value() const-> int{  return _value;  }
-    auto value()-> int&{  return _value;  }
+    auto value() const noexcept-> int{  return _value;  }
+    auto value() noexcept-> int&{  return _value;  }
 
-    auto operator==(Specimen const& s) const-> bool{  return value() == s.value();  }
-    auto operator==(State const t) const-> bool{  return state() == t;  }
+    auto operator==(Specimen const& s) const noexcept-> bool{  return value() == s.value();  }
+    auto operator==(State const t) const noexcept-> bool{  return state() == t;  }
 
     template<class T>
-    auto operator!=(T t) const-> bool{  return !(*this == t);  }
+    auto operator!=(T t) const noexcept-> bool{  return !(*this == t);  }
 
 
-    static void Begin_log(Specimen_Logger& logger){  _Logger_ptr() = Address_of(logger);  }
-    static void End_log(){  _Logger_ptr() = nullptr;  }
+    static void Begin_log(Specimen_Logger& logger) noexcept{  _Logger_ptr() = Address_of(logger);  }
+    static void End_log() noexcept{  _Logger_ptr() = nullptr;  }
 
 
 private:
@@ -132,7 +132,7 @@ private:
     int _value;
 
 
-    static auto _Logger_ptr()-> Specimen_Logger*&
+    static auto _Logger_ptr() noexcept-> Specimen_Logger*&
     {
         static Specimen_Logger* ptr = nullptr;
 
