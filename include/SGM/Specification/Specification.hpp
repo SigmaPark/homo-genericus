@@ -81,6 +81,9 @@ public:
 
     ~Specimen()
     {
+        if(_state == State::DESTRUCTION)
+            return;
+
         value() = -1,  _state = State::DESTRUCTION; 
         
         _Log("destruction");
