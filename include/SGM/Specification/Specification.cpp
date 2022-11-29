@@ -62,7 +62,7 @@ void sgm::spec::_MD_Stream::open(std::string const working_filepath)
 			auto const last_slash = str.find_last_of('/');
 			
 			std::string const 
-				direc(str.begin(), str.begin() + last_slash+1),
+				direc(str.begin(), str.begin() + last_slash + 1),
 				name(str.begin() + last_slash + 1, str.end());
 			
 			return direc + "[guide]_" + name + ".md";
@@ -344,10 +344,12 @@ auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false
 				return s;
 			
 			auto fitr = s.cbegin();
+			auto bitr = Prev(s.cend());
 
 			for(;  *fitr == ' ' || *fitr == '\t';  ++fitr);
+			for(;  *bitr == ' ' || *bitr == '\t';  --bitr);
 
-			return {fitr, s.cend()};
+			return {fitr, ++bitr};
 		};
 
 	auto are_same_str_f

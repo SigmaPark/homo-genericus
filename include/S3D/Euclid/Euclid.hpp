@@ -312,15 +312,6 @@ public:
 
 namespace s3d
 {
-
-	template<class T>  
-	auto _Pi()-> T const&
-	{
-		static T const pi = 2*std::acos( T(0) );
-	
-		return pi;
-	}
-	
 	
 	template<class S, class D>
 	auto Projection(S&& src, D&& des)

@@ -906,12 +906,53 @@ private:
 
 	static auto _from_OrthogonalMat(_OrthoMat_t const& m)-> _UQtn_t
 	{
-		T const _2w = std::sqrt( T(1) + m(0, 0) + m(1, 1) + m(2, 2) );
-		
-		Vector<T, 3> const _2v 
-		=	Vector<T, 3>{m(2, 1) - m(1, 2), m(0, 2) - m(2, 0), m(1, 0) - m(0, 1)} / _2w;
+		auto sqrt_plus1_f 
+		=	[](T const t)-> T{  return static_cast<T>(  std::sqrt( t + T(1) )  );  };
 
-		return {_2w, _2v}; // will be normalized.
+		if( T const tr = m(0, 0) + m(1, 1) + m(2, 2);  tr > std::numeric_limits<T>::epsilon() )
+		{
+			auto const s = sqrt_plus1_f(tr);
+
+			return
+			{	s
+			,	( m(2, 1) - m(1, 2) ) / s
+			,	( m(0, 2) - m(2, 0) ) / s
+			,	( m(1, 0) - m(0, 1) ) / s
+			};
+		}
+		else if( m(0, 0) > m(1, 1) && m(0, 0) > m(2, 2) )
+		{
+			auto const s = sqrt_plus1_f( m(0, 0) - m(1, 1) - m(2, 2) );
+
+			return
+			{	( m(2, 1) - m(1, 2) ) / s
+			,	s
+			,	( m(0, 1) + m(1, 0) ) / s
+			,	( m(2, 0) + m(0, 2) ) / s
+			};
+		}
+		else if( m(1, 1) > m(2, 2) )
+		{
+			auto const s = sqrt_plus1_f( m(1, 1) - m(0, 0) - m(2, 2) );
+
+			return
+			{	( m(0, 2) - m(2, 0) ) / s
+			,	( m(0, 1) + m(1, 0) ) / s
+			,	s
+			,	( m(1, 2) + m(2, 1) ) / s
+			};
+		}
+		else
+		{
+			auto const s = sqrt_plus1_f( m(2, 2) - m(0, 0) - m(1, 1) );
+
+			return
+			{	( m(1, 0) - m(0, 1) ) / s
+			,	( m(2, 0) + m(0, 2) ) / s
+			,	( m(1, 2) + m(2, 1) ) / s
+			,	s
+			};
+		}
 	}
 
 	static auto _to_OrthogonamMat(_UQtn_t const& q)-> _OrthoMat_t
