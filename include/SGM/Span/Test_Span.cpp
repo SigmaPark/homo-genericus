@@ -138,7 +138,7 @@ static void Static_Size_Array()
     <<  "sgm::Span can be static-sized iterable by setting constexpr size_t as a template "
     <<  "parameter explicitly." << empty_line;
 
-    mdo << Title("by a Starting pointer", 2) << newl;
+    mdo << Title("by a Starting Pointer", 2) << newl;
 
 BEGIN_CODE_BLOCK(static_size_array_by_starting_pointer_ex)
     {
@@ -301,7 +301,7 @@ END_CODE_BLOCK_AND_LOAD(dynamic_size_array_by_2_iterators_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by an iterator and size", 2) << newl;
+    mdo << Title("by an iterator and Size", 2) << newl;
 
 BEGIN_CODE_BLOCK(dynamic_size_array_by_iterator_and_size)
     {
@@ -342,6 +342,16 @@ END_CODE_BLOCK_AND_LOAD(dynamic_size_array_by_iterator_and_size)
 
 static void Pointer_and_Size()
 {
+    using namespace sgm::spec;
+
+    mdo
+    <<  Title("Span refering to Contiguous Memories")
+    <<  "A contiguous memory range also can be refered by sgm::Span." 
+    <<  empty_line;
+
+    mdo << Title("by a Pointer and Size", 2) << newl;
+    
+BEGIN_CODE_BLOCK(contiguous_memory_by_pointer_and_size_ex)
     {
         Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
 
@@ -387,14 +397,85 @@ static void Pointer_and_Size()
         ,   ""
         );
     }
+END_CODE_BLOCK_AND_LOAD(contiguous_memory_by_pointer_and_size_ex)
+
+    mdo << empty_line;
+
+
+    mdo << Title("by 2 Pointers", 2) << newl;
+
+BEGIN_CODE_BLOCK(contiguous_memory_by_2_pointer_ex)
+    {
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto begin_ptr = arr.data(), end_ptr = arr.data() + arr.size();
+        auto spn = sgm::Span(begin_ptr, end_ptr);
+
+        Are_Equivalent_Ranges(spn, arr);
+
+        spn[0] = -1;
+        spn[1] = -3;
+
+        Are_Equivalent_Ranges
+        (   arr
+        ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
+        );
+    }
+	{
+        Array<Specimen> arr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto begin_cptr = arr.cdata(), end_cptr = arr.cdata() + arr.size();
+        auto cspn = sgm::Span(begin_cptr, end_cptr);
+
+        Are_Equivalent_Ranges(cspn, arr); 
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(cspn[0])>::value
+            &&  sgm::is_immutable<decltype(cspn[1])>::value
+            &&  sgm::is_immutable<decltype(cspn[2])>::value
+            )
+        ,   ""
+        );
+    }
+	{
+        Array<Specimen> const carr{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto begin_ptr = carr.data(), end_ptr = carr.data() + carr.size();
+        auto cspn = sgm::Span(begin_ptr, end_ptr);
+
+        Are_Equivalent_Ranges(cspn, carr); 
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(cspn[0])>::value
+            &&  sgm::is_immutable<decltype(cspn[1])>::value
+            &&  sgm::is_immutable<decltype(cspn[2])>::value
+            )
+        ,   ""
+        );
+    }
+END_CODE_BLOCK_AND_LOAD(contiguous_memory_by_2_pointer_ex)
+
+    mdo << empty_line;
 }
 
 
 static void Linked_List()
 {
-    List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+    using namespace sgm::spec;
 
+    mdo
+    <<  Title("Linked List (Non-contiguous Memories)")
+    <<  "sgm::Span doesn't care whether a refered range is on conteguous memories or not. "
+    <<  "Here's are exmples with non-contiguous memory ranges by linked list containers." 
+    <<  empty_line;
+
+
+    mdo << Title("by an iterable", 2) << newl;
+
+BEGIN_CODE_BLOCK(linked_list_by_iterable_ex)
     {
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(Li);
 
         Are_Equivalent_Ranges(spn, Li);
@@ -411,7 +492,31 @@ static void Linked_List()
         ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
         );
     }
+	{
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto cspn = sgm::Span( sgm::immut(Li) );
+
+        Are_Equivalent_Ranges(cspn, Li);
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
+            &&  sgm::is_immutable<decltype(*cspn.end())>::value
+            )
+        ,   ""
+        );
+    }
+END_CODE_BLOCK_AND_LOAD(linked_list_by_iterable_ex)
+
+    mdo << empty_line;
+
+
+    mdo << Title("by 2 iterators", 2) << newl;
+
+BEGIN_CODE_BLOCK(linked_list_by_2_iterators_ex)
     {
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(Li.begin(), Li.end());
 
         Are_Equivalent_Ranges(spn, Li);
@@ -428,7 +533,31 @@ static void Linked_List()
         ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
         );
     }
+	{
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+
+        auto cspn = sgm::Span(Li.cbegin(), Li.cend());
+
+        Are_Equivalent_Ranges(cspn, Li);
+
+        static_assert
+        (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
+            &&  sgm::is_immutable<decltype(*cspn.end())>::value
+            )
+        ,   ""
+        );
+    }
+END_CODE_BLOCK_AND_LOAD(linked_list_by_2_iterators_ex)
+
+    mdo << empty_line;
+
+
+    mdo << Title("by an iterator and Size", 2) << newl;
+
+BEGIN_CODE_BLOCK(linked_list_by_iterator_and_size_ex)
     {
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
+
         auto spn = sgm::Span(Li.begin(), 3);
 
         Are_Equivalent_Ranges(spn, Li);
@@ -446,30 +575,8 @@ static void Linked_List()
         );
     }
 	{
-        auto cspn = sgm::Span( sgm::immut(Li) );
+        List<Specimen> Li{Specimen(2), Specimen(4), Specimen(6)};
 
-        Are_Equivalent_Ranges(cspn, Li);
-
-        static_assert
-        (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
-            &&  sgm::is_immutable<decltype(*cspn.end())>::value
-            )
-        ,   ""
-        );
-    }
-	{
-        auto cspn = sgm::Span(Li.cbegin(), Li.cend());
-
-        Are_Equivalent_Ranges(cspn, Li);
-
-        static_assert
-        (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
-            &&  sgm::is_immutable<decltype(*cspn.end())>::value
-            )
-        ,   ""
-        );
-    }
-	{
         auto cspn = sgm::Span(Li.cbegin(), 3);
 
         Are_Equivalent_Ranges(cspn, Li);
@@ -481,6 +588,9 @@ static void Linked_List()
         ,   ""
         );
     }
+END_CODE_BLOCK_AND_LOAD(linked_list_by_iterator_and_size_ex)
+
+    mdo << empty_line;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
