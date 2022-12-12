@@ -247,6 +247,31 @@ static void invocation_Result_Test()
 	,	""
 	);
 }
+
+
+static void Member_Function_Test()
+{
+	struct Foo
+	{
+		int x;
+
+		auto get_x()-> int{  return x;  }
+	};
+
+	Foo foo{5};
+
+	auto const foo_xf = sgm::Memfunc(foo, &Foo::get_x);
+
+	static_assert
+	(	sgm::is_Same
+		<	sgm::invocation_Result_t<decltype(foo_xf)>
+		,	int
+		>::	value
+	,	""
+	);
+
+	sgm::spec::is_True(foo_xf() == 5);
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -260,4 +285,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Type_Analysis, /**/)
 ,	::Type_Check_Test
 ,	::Omni_Convertible_Test
 ,	::invocation_Result_Test
+,	::Member_Function_Test
 };

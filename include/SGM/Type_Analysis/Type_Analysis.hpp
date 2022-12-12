@@ -560,6 +560,56 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+namespace sgm
+{
+
+    template<class MEMFN_PTR, class HOST_PTR>
+    struct _Member_Function
+    {
+    private:
+        template<class...ARGS>
+        struct _Helper
+        :   As_type_itself
+            <   decltype( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) )
+            >
+        ,   As_value_itself
+            <   bool
+            ,   noexcept( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) )
+            >
+        {};
+
+        //{
+        //    static bool constexpr is_nx_v
+        //    =   noexcept( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) );
+
+        //    using result_type
+        //    =   decltype( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) );
+        //};
+
+
+    public:
+        HOST_PTR host_ptr;
+        MEMFN_PTR memfn_ptr;
+
+
+        template<class...ARGS>
+        auto operator()(ARGS&&...args) const noexcept(_Helper<ARGS...>::value)
+        ->  typename _Helper<ARGS...>::type
+        {   
+            return (host_ptr->*memfn_ptr)( Forward<ARGS>(args)... );
+        }
+    };
+
+    template<class MEMFN_PTR, class HOST>
+    static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) noexcept
+    ->  SGM_DECLTYPE_AUTO
+        (   _Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >{Address_of(host), memfn_ptr} 
+        )
+
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 #ifndef SGM_USER_DEFINED_TYPE_CHECK
     #define SGM_USER_DEFINED_TYPE_CHECK(TEM_DECL, TITLE, ...)   \
         template<class Q_CLASS> \
