@@ -577,15 +577,7 @@ namespace sgm
             ,   noexcept( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) )
             >
         {};
-
-        //{
-        //    static bool constexpr is_nx_v
-        //    =   noexcept( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) );
-
-        //    using result_type
-        //    =   decltype( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) );
-        //};
-
+        
 
     public:
         HOST_PTR host_ptr;
