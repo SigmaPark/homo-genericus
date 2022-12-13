@@ -564,7 +564,7 @@ namespace sgm
 {
 
     template<class MEMFN_PTR, class HOST_PTR>
-    struct _Member_Function
+    class Member_Function
     {
     private:
         template<class...ARGS>
@@ -580,22 +580,28 @@ namespace sgm
         
 
     public:
-        HOST_PTR host_ptr;
-        MEMFN_PTR memfn_ptr;
+        Member_Function(HOST_PTR const host_ptr, MEMFN_PTR const memfn_ptr)
+        :   _host_ptr(host_ptr), _memfn_ptr(memfn_ptr){}
 
 
         template<class...ARGS>
         auto operator()(ARGS&&...args) const noexcept(_Helper<ARGS...>::value)
         ->  typename _Helper<ARGS...>::type
         {   
-            return (host_ptr->*memfn_ptr)( Forward<ARGS>(args)... );
+            return (_host_ptr->*_memfn_ptr)( Forward<ARGS>(args)... );
         }
+
+
+    private:
+        HOST_PTR _host_ptr;
+        MEMFN_PTR _memfn_ptr;
     };
+
 
     template<class MEMFN_PTR, class HOST>
     static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) noexcept
     ->  SGM_DECLTYPE_AUTO
-        (   _Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >{Address_of(host), memfn_ptr} 
+        (   Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >( Address_of(host), memfn_ptr )
         )
 
 }

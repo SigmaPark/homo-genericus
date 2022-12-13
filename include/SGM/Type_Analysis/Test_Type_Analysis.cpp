@@ -255,22 +255,22 @@ static void Member_Function_Test()
 	{
 		int x;
 
-		auto get_x()-> int{  return x;  }
+		auto get_x() noexcept(false)-> int{  return x;  }
+		auto nx_get_x() noexcept-> int{  return x;  }
 	};
+
 
 	Foo foo{5};
 
 	auto const foo_xf = sgm::Memfunc(foo, &Foo::get_x);
+	auto const foo_nx_xf = sgm::Memfunc(foo, &Foo::nx_get_x);
+
+	sgm::spec::is_True(foo_xf() == 5 && foo_nx_xf() == 5);
 
 	static_assert
-	(	sgm::is_Same
-		<	sgm::invocation_Result_t<decltype(foo_xf)>
-		,	int
-		>::	value
+	(	!noexcept(foo_xf()) && noexcept(foo_nx_xf())
 	,	""
 	);
-
-	sgm::spec::is_True(foo_xf() == 5);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
