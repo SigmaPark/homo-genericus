@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_definitions(-D_VCPP_SOLUTION_)
 
-add_compile_options(/bigobj)
+add_compile_options(/bigobj /Zc:__cplusplus)
 
 set(SGM_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../../include)
 set(EIGEN_DIR $ENV{EIGEN_DIR})

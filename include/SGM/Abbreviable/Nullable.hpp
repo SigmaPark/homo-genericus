@@ -81,6 +81,9 @@ union sgm::_Nullable_Core<T, false>
 {
 	Null_t n = {};
 	T value;
+
+
+	void clear() noexcept{}
 };
 
 template<class T>
@@ -89,8 +92,11 @@ union sgm::_Nullable_Core<T, true>
 	Null_t n;
 	T value;
 
+
 	_Nullable_Core() : n(){}
-	~_Nullable_Core(){  value.~T();  }
+	~_Nullable_Core(){}
+
+	void clear() noexcept{  value.~T();  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -142,6 +148,8 @@ public:
 	>
 	_Base_Nullable(_Base_Nullable<Q>&& nb){  _try_alloc( Move(nb) );  }
 
+	~_Base_Nullable(){  *this = Null_t{};  }
+
 
 	template
 	<	class Q
@@ -164,7 +172,7 @@ public:
 	auto operator=(Null_t const)-> _Base_Nullable&
 	{
 		if(has_value())
-			_core.~_core_t(),
+			_core.clear(),
 			_opof_t::_p = nullptr;
 
 		return *this;

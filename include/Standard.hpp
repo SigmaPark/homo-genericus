@@ -18,7 +18,7 @@
 		#elif __cplusplus >= 201100L
 		#define SGM_CXX_STANDARD 2011
 		#else
-		#define SGM_CXX_STANDARD 0
+		#define SGM_CXX_STANDARD 1
 		#endif
 
 	#endif

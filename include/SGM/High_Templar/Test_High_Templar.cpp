@@ -121,6 +121,20 @@ static void Morph_Test()
 
 		sgm::spec::Are_Equivalent_Ranges(arr, answer);
 	}
+#if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
+	{
+		auto arr 
+		=	sgm::Morph( sgm::Countable<int>(5), triple_f )
+			.	eval<std::execution::parallel_policy>();
+
+		static_assert
+		(	sgm::is_Same< decltype(arr), sgm::Array<Specimen, sgm::arrSize::DYNAMIC> >::value
+		,	""
+		);
+
+		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+	}
+#endif
 }
 
 

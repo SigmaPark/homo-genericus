@@ -13,6 +13,12 @@
 #include "../Family/Family.hpp"
 #include "../Concurrency/Concurrency.hpp"
 
+#if SGM_CXX_STANDARD >= 2017
+#include <execution>
+#include <algorithm>
+#include "Countable.hpp"
+#endif
+
 
 namespace sgm
 {
@@ -104,7 +110,13 @@ namespace sgm
 		template
 		<	class EVAL_FLAG = None
 		,	_Evaluation_Mode
+		#if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
+			=	(	is_Fork_and_Join_Flag<EVAL_FLAG>::value
+				||	std::is_execution_policy<EVAL_FLAG>::value
+				) ?	_Evaluation_Mode::FORK_AND_JOIN
+		#else
 			=	is_Fork_and_Join_Flag<EVAL_FLAG>::value ? _Evaluation_Mode::FORK_AND_JOIN
+		#endif
 			:	is_None<EVAL_FLAG>::value ? _Evaluation_Mode::SEQUANCIAL
 			:	/* otherwise */ _Evaluation_Mode::UNDEFINED
 		>
@@ -197,7 +209,10 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
 	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
-	->	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
+	->	Enable_if_t
+		<	is_Fork_and_Join_Flag<FNJ_FLAG>::value
+		,	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
+		>
 	{
 		size_t const nof_elem = Size(rg);
 
@@ -223,6 +238,41 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 		(	pdata, nof_elem, nof_elem, Forward<ALC>(allocator) 
 		);
 	}
+
+#if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
+	template
+	<	class RG, class ELEM = Decay_t< decltype( *Begin(Declval<RG>()) ) >  
+	,	class ALC = _Default_Array_Allocator_t<ELEM>
+	>
+	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
+	->	Enable_if_t
+		<	std::is_execution_policy<FNJ_FLAG>::value
+		,	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
+		>
+	{
+		size_t const nof_elem = Size(rg);
+
+		if(nof_elem == 0)
+			return Array<ELEM>::by( Forward<ALC>(allocator) );
+
+		ELEM* pdata = allocator.allocate(nof_elem);
+		Countable<size_t> const indices(nof_elem);
+
+		std::for_each
+		(	FNJ_FLAG{}
+		,	indices.cbegin(), indices.cend()
+		,	[&rg, &allocator, pdata](size_t const idx) noexcept
+			{	
+				allocator.construct(  pdata + idx, *Next( fBegin<RG>(rg), idx )  );
+			}
+		);
+
+		return 
+		Unsafe_Construction_for_Array::create
+		(	pdata, nof_elem, nof_elem, Forward<ALC>(allocator) 
+		);
+	}
+#endif
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -285,8 +335,8 @@ public:
 
 	_Pointer_Proxy(REF&& t) : _t( Move(t) ){}
 
-	auto operator->() const-> _elem_t const*{  return Address_of(_t);  }
-	auto operator->()-> _elem_t*{  return Address_of(_t);  }
+	auto operator->() const noexcept-> _elem_t const*{  return Address_of(_t);  }
+	auto operator->() noexcept-> _elem_t*{  return Address_of(_t);  }
 
 
 private:

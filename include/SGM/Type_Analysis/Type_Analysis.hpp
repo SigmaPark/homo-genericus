@@ -10,6 +10,12 @@
 
 
 #include <cstddef>
+#include "Standard.hpp"
+
+
+#if SGM_CXX_STANDARD < 2011
+    #error C++11 or higher version language support is required.
+#endif
 
 
 #ifndef SGM_DECLTYPE_AUTO
@@ -626,6 +632,7 @@ namespace sgm
             \
             static bool constexpr value = type::value;  \
         }
+
 
 #else
     #error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.

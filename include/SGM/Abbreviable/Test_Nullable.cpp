@@ -35,7 +35,7 @@ static void Null_type()
 static void Constructions()
 {
 	{
-		auto constexpr n = sgm::Nullable<double>{};
+		auto const n = sgm::Nullable<double>{};
 
 		is_True(!n.has_value());
 	}

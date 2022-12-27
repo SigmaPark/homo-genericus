@@ -69,7 +69,7 @@ public:
 	using value_type = T;
 
 
-	Count_iterator(T const number) : _number(number){}
+	Count_iterator(T const number = std::numeric_limits<T>::max()) : _number(number){}
 
 	auto operator*() const-> T{  return _number;  }
 
