@@ -234,3 +234,20 @@ class s3d::_Least_Square_Solution_Helper<s3d::Solving_Mode::QR>
 		return A.colPivHouseholderQr().solve(b).eval();
 	}
 };
+
+
+template<>
+class s3d::_Least_Square_Solution_Helper<s3d::Solving_Mode::CHOLESKY>
+{
+	friend struct Least_Square_Problem;
+
+
+	template<class AMAT, class BVEC>
+	static auto calc(AMAT const& amat, BVEC const& bvec)
+	{
+		auto& A = _Mat_implementor(amat);
+		auto& b = _Mat_implementor(bvec);
+
+		return (A.adjoint()*A).llt().solve(A.adjoint()*b).eval();
+	}
+};

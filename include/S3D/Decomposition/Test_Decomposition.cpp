@@ -30,13 +30,21 @@ static void Least_Square_Solution()
 		,	-.0827f, .0655f, -.562f
 		};
 
-	Vector<float> b{-.906f, .358f, .359f};
+	Vector<float> const b{-.906f, .358f, .359f};
 
 	Vector<float, 2> const
-		x_svd = s3d::Least_Square_Problem::solution<s3d::Solving_Mode::SVD>(A.transpose(), b),
-		x_qr = s3d::Least_Square_Problem::solution<s3d::Solving_Mode::QR>(A.transpose(), b);
+		x_answer = (A*A.transpose()).inv()*A*b,
+		x_svd 
+		=	s3d::Least_Square_Problem::template 
+			solution<s3d::Solving_Mode::SVD>(A.transpose(), b),
+		x_qr 
+		=	s3d::Least_Square_Problem::template 
+			solution<s3d::Solving_Mode::QR>(A.transpose(), b),
+		x_cholesky 
+		=	s3d::Least_Square_Problem::template 
+			solution<s3d::Solving_Mode::CHOLESKY>(A.transpose(), b);
 
-	::_identical(x_svd, x_qr);
+	::_identical(x_answer, x_svd, x_qr, x_cholesky);
 }
 
 

@@ -317,13 +317,13 @@ struct s3d::flag::AbsolutelyTrunc : Truncated<T>
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-enum class s3d::Solving_Mode{SVD, QR};
+enum class s3d::Solving_Mode{QR, SVD, CHOLESKY};
 
 
 struct s3d::Least_Square_Problem : Unconstructible
 {
 	template
-	<	Solving_Mode SM = Solving_Mode::SVD, class AMAT, class BVEC
+	<	Solving_Mode SM = Solving_Mode::QR, class AMAT, class BVEC
 	,	class A_t = Decay_t<AMAT>
 	,	class XVEC 
 		=	_MatrixAdaptor
