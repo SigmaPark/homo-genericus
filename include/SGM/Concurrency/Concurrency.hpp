@@ -402,6 +402,7 @@ public:
 	_Notice_Guard(std::condition_variable& cv) : _cv(cv){}
 	~_Notice_Guard(){  _cv.notify_one();  }
 
+
 private:
 	std::condition_variable& _cv;
 };
@@ -415,6 +416,7 @@ public:
 
 	~_Future_Guard(){  _fut.get();  }
 
+
 private:
 	std::future<void> _fut;
 };
@@ -426,8 +428,7 @@ class sgm::_Pipeline_Buffer
 {
 public:
 	template<class...ARGS>
-	_Pipeline_Buffer(ARGS const&...args)
-	:	_buf{ {false, T(args...)}, {false, T(args...)} }, _p0(&_buf[0]), _p1(&_buf[1]){}
+	_Pipeline_Buffer(ARGS const&...args);
 
 
 	auto data() const noexcept-> T const&{  return _p0->second();  }
@@ -455,6 +456,11 @@ private:
 	auto _wait_until_buffer_is(bool const filled) noexcept
 	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
 };
+
+
+template<class T>  template<class...ARGS>
+sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer(ARGS const&...args)
+:	_buf{ {false, T(args...)}, {false, T(args...)} }, _p0(&_buf[0]), _p1(&_buf[1]){}
 
 
 template<class T>  template<class Q, class>
@@ -503,31 +509,38 @@ auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
 template<class T, class FN>
 class sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::SUPPLIER>
 {
-private:
-	using _buffer_t = _Pipeline_Buffer< Pipeline_Data<T> >;
-
-
 public:
 	using value_type = T;
 
 
-	_buffer_t buffer;
+	_Pipeline_Buffer< Pipeline_Data<T> > buffer;
 
-	_Pipeline_Member(FN& fn) : buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+	_Pipeline_Member(FN& fn);
 
-	auto operator()() noexcept-> _pipeline_guard_detail::_Future_Guard
-	{
-		return
-		[&buf = buffer, &f = _fn]() noexcept
-		{
-			while(buf.data().state() != Pipeline_Data_State::STOP)
-				buf.take(f());
-		};
-	}
+	auto operator()() noexcept-> _pipeline_guard_detail::_Future_Guard;
 	
+
 private:
 	FN& _fn;
 };
+
+
+template<class T, class FN>
+sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::SUPPLIER>::_Pipeline_Member(FN& fn)
+:	buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+
+
+template<class T, class FN>
+auto sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::SUPPLIER>::operator()() noexcept
+->	_pipeline_guard_detail::_Future_Guard
+{
+	return
+	[&buf = buffer, &f = _fn]() noexcept
+	{
+		while(buf.data().state() != Pipeline_Data_State::STOP)
+			buf.take(f());
+	};
+}
 
 
 template<class T, class FN>
@@ -537,22 +550,11 @@ public:
 	using value_type = T;
 
 
-	_Pipeline_Member(FN& fn) : _fn(fn){}
+	_Pipeline_Member(FN& fn);
 
 	template<class _T, class _FN, _PL_Mem_Tag _TAG>
 	auto operator()(_Pipeline_Member<_T, _FN, _TAG>& prev_mem) noexcept
-	->	_pipeline_guard_detail::_Future_Guard
-	{
-		return
-		[&f = _fn, &prev_mem]() noexcept
-		{
-			while(true)
-				if(auto& prev_res = prev_mem.buffer.give();  prev_res.is_valid())
-					f(prev_res);
-				else
-					break;	
-		};
-	}
+	->	_pipeline_guard_detail::_Future_Guard;
 
 
 private:
@@ -561,41 +563,69 @@ private:
 
 
 template<class T, class FN>
+sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::CONSUMER>::_Pipeline_Member(FN& fn) : _fn(fn){}
+
+
+template<class T, class FN>  template<class _T, class _FN, sgm::_PL_Mem_Tag _TAG>
+auto sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::CONSUMER>::operator()
+(	_Pipeline_Member<_T, _FN, _TAG>& prev_mem
+)	noexcept-> _pipeline_guard_detail::_Future_Guard
+{
+	return
+	[&f = _fn, &prev_mem]() noexcept
+	{
+		while(true)
+			if(auto& prev_res = prev_mem.buffer.give();  prev_res.is_valid())
+				f(prev_res);
+			else
+				break;	
+	};
+}
+
+
+template<class T, class FN>
 class sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::BROKER>
 {
-private:
-	using _buffer_t = _Pipeline_Buffer< Pipeline_Data<T> >;
-
-
 public:
 	using value_type = T;
 
 
-	_buffer_t buffer;
+	_Pipeline_Buffer< Pipeline_Data<T> > buffer;
 
-	_Pipeline_Member(FN& fn) : buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+	_Pipeline_Member(FN& fn);
 
 	template<class _T, class _FN, _PL_Mem_Tag _TAG>
 	auto operator()(_Pipeline_Member<_T, _FN, _TAG>& prev_mem) noexcept
-	->	_pipeline_guard_detail::_Future_Guard
-	{
-		return
-		[&buf = buffer, &f = _fn, &prev_mem]() noexcept
-		{
-			while(true)
-				if(auto& prev_res = prev_mem.buffer.give();  prev_res.is_valid())
-					buf.take( f(prev_res) );
-				else
-					break;	
-
-			buf.take(Pipeline_stop_cue_v);
-		};
-	}
+	->	_pipeline_guard_detail::_Future_Guard;
 
 
 private:
 	FN& _fn;
 };
+
+
+template<class T, class FN>
+sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::BROKER>::_Pipeline_Member(FN& fn) 
+:	buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+
+
+template<class T, class FN>  template<class _T, class _FN, sgm::_PL_Mem_Tag _TAG>
+auto sgm::_Pipeline_Member<T, FN, sgm::_PL_Mem_Tag::BROKER>::operator()
+(	_Pipeline_Member<_T, _FN, _TAG>& prev_mem
+)	noexcept-> _pipeline_guard_detail::_Future_Guard
+{
+	return
+	[&buf = buffer, &f = _fn, &prev_mem]() noexcept
+	{
+		while(true)
+			if(auto& prev_res = prev_mem.buffer.give();  prev_res.is_valid())
+				buf.take( f(prev_res) );
+			else
+				break;	
+
+		buf.take(Pipeline_stop_cue_v);
+	};
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -697,10 +727,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<3> : Unconstructible
 		_Pipe< IDX == std::tuple_size<_FAM>::value - 2 ? 2 : 3 >::calc
 		(	fnfam, mems...
 		,	_Pipeline_Member
-			<	invocation_Result_t
-				<	FN
-				,	typename Decay_t< Last_t<MEMS&&...> >::value_type
-				>
+			<	invocation_Result_t<  FN, typename Decay_t< Last_t<MEMS&&...> >::value_type  >
 			,	FN
 			,	_PL_Mem_Tag::BROKER
 			>
