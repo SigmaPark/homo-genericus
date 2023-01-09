@@ -34,6 +34,7 @@ add_executable(
     ${SGM_INCLUDE_DIR}/SGM/Array/Test_Array.cpp
     ${SGM_INCLUDE_DIR}/SGM/Boomerang/Test_Boomerang.cpp
     ${SGM_INCLUDE_DIR}/SGM/Concurrency/Test_Concurrency.cpp
+    ${SGM_INCLUDE_DIR}/SGM/Concurrency/Poiya_Problem.cpp
     ${SGM_INCLUDE_DIR}/SGM/Family/Test_Family.cpp
     ${SGM_INCLUDE_DIR}/SGM/Flag_Set/Test_Flag_Set.cpp
     ${SGM_INCLUDE_DIR}/SGM/Functor/Test_Functor.cpp
