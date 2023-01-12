@@ -581,11 +581,15 @@ template<>
 struct sgm::_concurrent_pipeline_detail::_Loop<2> : Unconstructible
 {
 public:
-	template<class FAM, class...FGS, size_t IDX = sizeof...(FGS) >
+	template
+	<	class FAM, class...FGS, size_t IDX = sizeof...(FGS) 
+	,	int _MODE = IDX == std::tuple_size< Decay_t<FAM> >::value - 1 ? 3 : 2
+	>
 	static auto calc(FAM& memfam, FGS const&...fgs) noexcept-> void
 	{
-		_Loop<  IDX == std::tuple_size< Decay_t<FAM> >::value - 1 ? 3 : 2  >::calc
-		(	memfam, fgs..., _loop(memfam.template get<IDX-1>(), memfam.template get<IDX>())
+		_Loop<_MODE>::calc
+		(	memfam, fgs...
+		,	_loop(memfam.template get<IDX-1>(), memfam.template get<IDX>())
 		);
 	}
 
@@ -664,17 +668,13 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<4> : Unconstructible
 template<>
 struct sgm::_concurrent_pipeline_detail::_Pipe<2> : Unconstructible
 {
-	template<class FAM, class...MEMS, size_t IDX = sizeof...(MEMS)>
+	template
+	<	class FAM, class...MEMS, size_t IDX = sizeof...(MEMS)
+	,	class _FN = std::tuple_element_t< IDX, Decay_t<FAM> >
+	>
 	static auto calc(FAM& fnfam, MEMS&&...mems) noexcept-> void
 	{
-		_Pipe<4>::calc
-		(	mems...
-		,	_Pipeline_Member
-			<	None
-			,	std::tuple_element_t< IDX, Decay_t<FAM> >
-			>
-			(fnfam.template get<IDX>())
-		);
+		_Pipe<4>::calc( mems..., _Pipeline_Member<None, _FN>(fnfam.template get<IDX>()) );
 	}
 };
 
@@ -683,35 +683,31 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<3> : Unconstructible
 {
 	template
 	<	class FAM, class...MEMS, size_t IDX = sizeof...(MEMS)
-	,	class _FAM = Decay_t<FAM>, class FN = std::tuple_element_t<IDX, _FAM> 
+	,	class _FAM = Decay_t<FAM>, class _FN = std::tuple_element_t<IDX, _FAM> 
+	,	int _MODE = IDX == std::tuple_size<_FAM>::value - 2 ? 2 : 3
+	,	class _INPUT = typename Decay_t< Last_t<MEMS&&...> >::value_type
+	,	class _OUTPUT = typename _PL_Data< invocation_Result_t<_FN, _INPUT> >::type
 	>
 	static auto calc(FAM& fnfam, MEMS&&...mems) noexcept-> void
 	{
-		_Pipe< IDX == std::tuple_size<_FAM>::value - 2 ? 2 : 3 >::calc
-		(	fnfam, mems...
-		,	_Pipeline_Member
-			<	invocation_Result_t<  FN, typename Decay_t< Last_t<MEMS&&...> >::value_type  >
-			,	FN
-			>
-			(fnfam.template get<IDX>())
-		);
+		_Pipe<_MODE>
+		::	calc( fnfam, mems..., _Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<IDX>()) );
 	}
 };
 
 template<>
 struct sgm::_concurrent_pipeline_detail::_Pipe<1> : Unconstructible
 {
-	template< class FAM, class _FAM = Decay_t<FAM>, class _SPL = std::tuple_element_t<0, _FAM> >
+	template
+	<	class FAM
+	,	class _FAM = Decay_t<FAM>
+	,	class _FN = std::tuple_element_t<0, _FAM> 
+	,	int _MODE = std::tuple_size<_FAM>::value == 2 ? 2 : 3
+	,	class _OUTPUT = typename _PL_Data< invocation_Result_t<_FN> >::type
+	>
 	static auto calc(FAM&& fnfam) noexcept-> void
 	{
-		_Pipe< std::tuple_size<_FAM>::value == 2 ? 2 : 3 >::calc
-		(	fnfam
-		,	_Pipeline_Member
-			<	typename _PL_Data< invocation_Result_t<_SPL> >::type
-			,	_SPL 
-			>
-			(fnfam.template get<0>())
-		);
+		_Pipe<_MODE>::calc( fnfam, _Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<0>()) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
