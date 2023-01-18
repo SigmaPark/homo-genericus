@@ -146,11 +146,9 @@ struct sgm::Abbreviable_Pedigree<TAG, T, M, false, IS_IMMUTABLE>
 template<class TAG, class T, class M, bool...BS>	
 class sgm::Abbreviable_t< TAG, T, M, sgm::Abbreviable_Pedigree<TAG, T, M, BS...> >
 :	public Abbreviable_Pedigree<TAG, T, M, BS...>::type
-{	
+{
 public:	
-	template<class...QS>
-	Abbreviable_t(QS&&...qs)
-	:	Abbreviable_Pedigree<TAG, T, M, BS...>::type( Forward<QS>(qs)... ){}
+	using Abbreviable_Pedigree<TAG, T, M, BS...>::type::type;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

@@ -40,6 +40,14 @@ namespace sgm
 {
 
     struct Unconstructible{  Unconstructible() = delete;  };
+    struct Uncopiable{  Uncopiable(Uncopiable const&) = delete;  };
+    struct Unmovable{  Unmovable(Unmovable&&) noexcept = delete;  };
+    
+    struct immutable
+    {
+        auto operator=(immutable const&)-> immutable& = delete;
+        auto operator=(immutable&&) noexcept-> immutable& = delete;
+    };
 
 
     template<class T>

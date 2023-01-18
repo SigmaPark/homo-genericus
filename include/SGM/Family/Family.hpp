@@ -429,8 +429,7 @@ private:
 
 
 public:
-	template<class...ARGS>
-	Duo(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
+	using _fam_t::_fam_t;
 
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
@@ -445,8 +444,7 @@ private:
 
 
 public:
-	template<class...ARGS>
-	Trio(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
+	using _fam_t::_fam_t;
 
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
@@ -574,6 +572,7 @@ struct sgm::_Merge_Fam_Helper
 
 namespace sgm
 {
+
 	template<class FAM1, class FAM2>
 	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(Aleph_Check<FAM1&&, FAM2&&>::value)
 	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
@@ -583,6 +582,7 @@ namespace sgm
 		(	Forward<FAM1>(fam1), Forward<FAM2>(fam2)
 		);
 	}
+
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

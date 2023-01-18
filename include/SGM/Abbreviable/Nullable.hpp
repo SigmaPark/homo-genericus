@@ -272,8 +272,7 @@ private:
 
 
 public:
-	template<class...ARGS>
-	constexpr Abbreviable_t(ARGS&&...args) : _base_t( Forward<ARGS>(args)... ){}
+	using _base_t::_base_t;
 
 	Abbreviable_t(Abbreviable_t const& abrv) : _base_t( static_cast<_base_t const&>(abrv) ){}
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
@@ -305,8 +304,7 @@ private:
 
 
 public:
-	template<class...ARGS>
-	constexpr Abbreviable_t(ARGS&&...args) : _base_t( Forward<ARGS>(args)... ){}
+	using _base_t::_base_t;
 
 	Abbreviable_t(Abbreviable_t const& abrv) : _base_t( static_cast<_base_t const&>(abrv) ){}
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
