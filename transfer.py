@@ -129,6 +129,8 @@ def main():
                 ,   'Concurrency.hpp'
                 ,   'Test_Concurrency.hpp'
                 ,   'Test_Concurrency.cpp'
+                ,   'Poiya_Problem.hpp'
+                ,   'Poiya_Problem.cpp'
                 ]
             ,   ["Exception"
                 ,   'Exception.hpp'
@@ -243,6 +245,7 @@ def main():
                 ]
             ]
         ]
+    ,   "Standard.hpp"
     ,   ["platforms"
         ,   ["Clang"
             ,   'CMakeLists.txt'
