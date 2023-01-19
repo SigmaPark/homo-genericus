@@ -43,12 +43,17 @@ namespace sgm
     struct Uncopiable{  Uncopiable(Uncopiable const&) = delete;  };
     struct Unmovable{  Unmovable(Unmovable&&) noexcept = delete;  };
     
-    struct immutable
+    struct Unassignable
     {
-        auto operator=(immutable const&)-> immutable& = delete;
-        auto operator=(immutable&&) noexcept-> immutable& = delete;
+        auto operator=(Unassignable const&)-> Unassignable& = delete;
+        auto operator=(Unassignable&&) noexcept-> Unassignable& = delete;
     };
 
+}
+
+
+namespace sgm
+{
 
     template<class T>
     struct As_type_itself : Unconstructible{  using type = T;  };
@@ -118,7 +123,7 @@ namespace sgm
     template<class...>
     using Void_t = void;
 
-    enum class None{};
+    struct None{  constexpr None() = default;  };
 
 
     template<bool B, class T = void>
@@ -372,7 +377,7 @@ namespace sgm
 
 
     template<class T>
-    static void Swap(T& a, T& b) noexcept
+    static auto Swap(T& a, T& b) noexcept-> void
     {
         T temp = Move(a);
 
@@ -382,21 +387,21 @@ namespace sgm
 
 
     template<class T>
-    static auto immut(T& t) noexcept-> T const&{  return t;  }
+    static auto immut(T const& t) noexcept-> T const&{  return t;  }
 
     template<class T>
-    static auto immut(T* p) noexcept-> T const*{  return p;  }
+    static auto immut(T const* p) noexcept-> T const*{  return p;  }
 
     template<class T>
-    static auto immut(T&&) = delete;
+    static auto immut(T const&&)-> T const&& = delete;
 
 
     template<class T>
-    static auto Decay(T&& t)-> Decay_t<T>{  return t;  }
+    static auto Decay(T&& t) noexcept-> Decay_t<T>{  return t;  }
 
 
 	template<class T>
-	static auto Address_of(T& t)
+	static auto Address_of(T& t) noexcept
 	->	Enable_if_t< Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
 	{
 		return 
@@ -406,7 +411,7 @@ namespace sgm
 	}
 
 	template<class T>
-	static auto Address_of(T& t)
+	static auto Address_of(T& t) noexcept
 	->	Enable_if_t< !Boolean_Or< is_Class_or_Union<T>, is_Primitive_Array<T> >::value, T* >
 	{
 		return &t;
