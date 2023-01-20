@@ -83,11 +83,9 @@ struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 	template<class FUNC>
 	static void calc(FUNC&& func)
 	{
-		auto fut = std::async(func, IDX - 1);
+		auto const fut = std::async(func, IDX - 1);
 
 		_Static_Nof_Loop<IDX - 1>::calc(func);
-
-		fut.get();
 	}
 };
 
@@ -178,12 +176,10 @@ private:
 	template<class FUNC>
 	static void _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)
 	{
-		auto fut = std::async(func, --task_id);
+		auto const fut = std::async(func, --task_id);
 
 		if(task_id > 0)
 			_Dynamic_Nof_Loop_calc(func, task_id);
-
-		fut.get();
 	}
 
 public:
@@ -388,7 +384,6 @@ namespace sgm
 	{
 
 		class _Notice_Guard;
-		class _Future_Guard;
 
 	}
 }
@@ -403,20 +398,6 @@ public:
 
 private:
 	std::condition_variable& _cv;
-};
-
-
-class sgm::_pipeline_guard_detail::_Future_Guard
-{
-public:
-	template<class FN>
-	_Future_Guard(FN&& func) : _fut(  std::async( Move(func) )  ){}
-
-	~_Future_Guard(){  _fut.get();  }
-
-
-private:
-	std::future<void> _fut;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -597,34 +578,40 @@ public:
 private:
 	template<class T1, class FN1, class FN2>
 	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<None, FN2>& mem2) noexcept
-	->	_pipeline_guard_detail::_Future_Guard
+	->	std::future<void>
 	{
 		return
-		[&mem1, &mem2]() noexcept
-		{
-			while(true)
-				if(auto& res = mem1.buffer.give();  res.is_valid())
-					mem2(res);
-				else
-					break;
-		};
+		std::async
+		(	[&mem1, &mem2]() noexcept
+			{
+				while(true)
+					if(auto& res = mem1.buffer.give();  res.is_valid())
+						mem2(res);
+					else
+						break;
+			}
+		);
 	}
 
-	template<class T1, class FN1, class T2, class FN2>
+	template
+	<	class T1, class FN1, class T2, class FN2, class = Enable_if_t< !is_None<T2>::value >
+	>
 	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<T2, FN2>& mem2) noexcept
-	->	Enable_if_t< !is_None<T2>::value, _pipeline_guard_detail::_Future_Guard >
+	->	std::future<void>
 	{
 		return 
-		[&mem1, &mem2]() noexcept
-		{
-			while(true)
-				if(auto& res = mem1.buffer.give();  res.is_valid())
-					mem2.buffer.take( mem2(res) );
-				else
-					break;
+		std::async
+		(	[&mem1, &mem2]() noexcept
+			{
+				while(true)
+					if(auto& res = mem1.buffer.give();  res.is_valid())
+						mem2.buffer.take( mem2(res) );
+					else
+						break;
 
-			mem2.buffer.take(Pipeline_stop_cue_v);
-		};
+				mem2.buffer.take(Pipeline_stop_cue_v);
+			}
+		);
 	}
 };
 
@@ -641,15 +628,16 @@ public:
 
 private:
 	template<class T, class FN>
-	static auto _loop(_Pipeline_Member<T, FN>& mem) noexcept
-	->	_pipeline_guard_detail::_Future_Guard
+	static auto _loop(_Pipeline_Member<T, FN>& mem) noexcept-> std::future<void>
 	{
 		return
-		[&mem]() noexcept
-		{
-			while(mem.buffer.data().state() != Pipeline_Data_State::STOP)
-				mem.buffer.take(mem());
-		};
+		std::async
+		(	[&mem]() noexcept
+			{
+				while(mem.buffer.data().state() != Pipeline_Data_State::STOP)
+					mem.buffer.take(mem());
+			}	
+		);
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
