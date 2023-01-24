@@ -83,7 +83,7 @@ struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 	template<class FUNC>
 	static void calc(FUNC&& func)
 	{
-		auto const fut = std::async(func, IDX - 1);
+		auto const fut = std::async(std::launch::async, func, IDX - 1);
 
 		_Static_Nof_Loop<IDX - 1>::calc(func);
 	}
@@ -176,7 +176,7 @@ private:
 	template<class FUNC>
 	static void _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)
 	{
-		auto const fut = std::async(func, --task_id);
+		auto const fut = std::async(std::launch::async, func, --task_id);
 
 		if(task_id > 0)
 			_Dynamic_Nof_Loop_calc(func, task_id);
@@ -582,7 +582,8 @@ private:
 	{
 		return
 		std::async
-		(	[&mem1, &mem2]() noexcept
+		(	std::launch::async
+		,	[&mem1, &mem2]() noexcept
 			{
 				while(true)
 					if(auto& res = mem1.buffer.give();  res.is_valid())
@@ -601,7 +602,8 @@ private:
 	{
 		return 
 		std::async
-		(	[&mem1, &mem2]() noexcept
+		(	std::launch::async
+		,	[&mem1, &mem2]() noexcept
 			{
 				while(true)
 					if(auto& res = mem1.buffer.give();  res.is_valid())
@@ -632,7 +634,8 @@ private:
 	{
 		return
 		std::async
-		(	[&mem]() noexcept
+		(	std::launch::async
+		,	[&mem]() noexcept
 			{
 				while(mem.buffer.data().state() != Pipeline_Data_State::STOP)
 					mem.buffer.take(mem());
