@@ -40,20 +40,7 @@ namespace sgm
 {
 
     struct Unconstructible{  Unconstructible() = delete;  };
-    struct Uncopiable{  Uncopiable(Uncopiable const&) = delete;  };
-    struct Unmovable{  Unmovable(Unmovable&&) noexcept = delete;  };
-    
-    struct Unassignable
-    {
-        auto operator=(Unassignable const&)-> Unassignable& = delete;
-        auto operator=(Unassignable&&) noexcept-> Unassignable& = delete;
-    };
 
-}
-
-
-namespace sgm
-{
 
     template<class T>
     struct As_type_itself : Unconstructible{  using type = T;  };

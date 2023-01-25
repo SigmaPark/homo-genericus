@@ -36,11 +36,29 @@ namespace sgm
 
 	class FnJ_Fail_to_get_Nof_Core;
 
+	class Async_Guard;
+
 
 	struct _Fork_and_Join_Helper;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
+
+
+class sgm::Async_Guard
+{
+public:
+	template<class FN, class...ARGS>
+	Async_Guard(FN&& fn, ARGS&&...args) 
+	:	_fut(  std::async( Forward<FN>(fn), Forward<ARGS>(args)... )  ){}
+
+	~Async_Guard(){  _fut.get();  }
+
+
+private:
+	std::future<void> _fut;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 struct sgm::_Fork_and_Join_Helper
@@ -81,11 +99,11 @@ template<unsigned IDX>
 struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 {	
 	template<class FUNC>
-	static void calc(FUNC&& func)
+	static auto calc(FUNC&& func)-> void
 	{
-		auto const fut = std::async(std::launch::async, func, IDX - 1);
+		Async_Guard const ag(func, IDX-1);
 
-		_Static_Nof_Loop<IDX - 1>::calc(func);
+		_Static_Nof_Loop<IDX-1>::calc(func);
 	}
 };
 
@@ -94,7 +112,7 @@ template<>
 struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop<0> : Unconstructible
 {
 	template<class FUNC>
-	static void calc(FUNC&&){}
+	static auto calc(FUNC&&) noexcept-> void{}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -108,7 +126,7 @@ struct sgm::Fork_and_Join : private _Fork_and_Join_Helper
 
 
 	template<class FUNC>
-	void operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
+	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const-> void
 	{
 		_Fork_and_Join_Helper::_Static_Nof_Loop<NOF_TASK>::calc
 		(	[&func, begin_idx, end_idx](size_t const task_id)
@@ -124,10 +142,8 @@ struct sgm::Fork_and_Join : private _Fork_and_Join_Helper
 	}
 
 	template<class FUNC>
-	void operator()(size_t const loops, FUNC&& func) const
-	{
-		(*this)( 0, loops, Forward<FUNC>(func) );
-	}
+	auto operator()(size_t const loops, FUNC&& func) const
+	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -141,16 +157,12 @@ struct sgm::Fork_and_Join<1> : private _Fork_and_Join_Helper
 
 
 	template<class FUNC>
-	void operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
-	{
-		func( begin_idx, end_idx, unsigned(0) );
-	}
+	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
+	->	void{  func( begin_idx, end_idx, unsigned(0) );  }
 
 	template<class FUNC>
-	void operator()(size_t const loops, FUNC&& func) const
-	{
-		(*this)( 0, loops, Forward<FUNC>(func) );
-	}
+	auto operator()(size_t const loops, FUNC&& func) const
+	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -174,9 +186,9 @@ struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC> : private _Fork_and_J
 {
 private:
 	template<class FUNC>
-	static void _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)
+	static auto _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)-> void
 	{
-		auto const fut = std::async(std::launch::async, func, --task_id);
+		Async_Guard const ag(func, --task_id);
 
 		if(task_id > 0)
 			_Dynamic_Nof_Loop_calc(func, task_id);
@@ -211,7 +223,7 @@ public:
 
 
 	template<class FUNC>
-	void operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
+	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const-> void
 	{
 		auto const ntask = _nof_task;
 
@@ -230,10 +242,8 @@ public:
 	}
 
 	template<class FUNC>
-	void operator()(size_t const loops, FUNC&& func) const
-	{
-		(*this)( 0, loops, Forward<FUNC>(func) );
-	}
+	auto operator()(size_t const loops, FUNC&& func) const
+	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
 
 
 private:
@@ -578,42 +588,36 @@ public:
 private:
 	template<class T1, class FN1, class FN2>
 	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<None, FN2>& mem2) noexcept
-	->	std::future<void>
+	->	Async_Guard
 	{
 		return
-		std::async
-		(	std::launch::async
-		,	[&mem1, &mem2]() noexcept
-			{
-				while(true)
-					if(auto& res = mem1.buffer.give();  res.is_valid())
-						mem2(res);
-					else
-						break;
-			}
-		);
+		[&mem1, &mem2]() noexcept
+		{
+			while(true)
+				if(auto& res = mem1.buffer.give();  res.is_valid())
+					mem2(res);
+				else
+					break;
+		};
 	}
 
 	template
 	<	class T1, class FN1, class T2, class FN2, class = Enable_if_t< !is_None<T2>::value >
 	>
 	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<T2, FN2>& mem2) noexcept
-	->	std::future<void>
+	->	Async_Guard
 	{
 		return 
-		std::async
-		(	std::launch::async
-		,	[&mem1, &mem2]() noexcept
-			{
-				while(true)
-					if(auto& res = mem1.buffer.give();  res.is_valid())
-						mem2.buffer.take( mem2(res) );
-					else
-						break;
+		[&mem1, &mem2]() noexcept
+		{
+			while(true)
+				if(auto& res = mem1.buffer.give();  res.is_valid())
+					mem2.buffer.take( mem2(res) );
+				else
+					break;
 
-				mem2.buffer.take(Pipeline_stop_cue_v);
-			}
-		);
+			mem2.buffer.take(Pipeline_stop_cue_v);
+		};
 	}
 };
 
@@ -630,17 +634,14 @@ public:
 
 private:
 	template<class T, class FN>
-	static auto _loop(_Pipeline_Member<T, FN>& mem) noexcept-> std::future<void>
+	static auto _loop(_Pipeline_Member<T, FN>& mem) noexcept-> Async_Guard
 	{
 		return
-		std::async
-		(	std::launch::async
-		,	[&mem]() noexcept
-			{
-				while(mem.buffer.data().state() != Pipeline_Data_State::STOP)
-					mem.buffer.take(mem());
-			}	
-		);
+		[&mem]() noexcept
+		{
+			while(mem.buffer.data().state() != Pipeline_Data_State::STOP)
+				mem.buffer.take(mem());
+		};
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -707,7 +708,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<1> : Unconstructible
 struct sgm::Concurrent_Pipeline : Unconstructible
 {
 	template< class...FS, class = Guaranteed_t<( sizeof...(FS) >= 2 )> >
-	static auto run(FS&&...fs) noexcept-> void
+	static auto run(FS&&...fs) noexcept-> void 
 	{
 		_concurrent_pipeline_detail::_Pipe<1>::calc( Forward_as_Family(fs...) );
 	}
