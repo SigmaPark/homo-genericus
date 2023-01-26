@@ -429,7 +429,8 @@ private:
 
 
 public:
-	using _fam_t::_fam_t;
+	template<class...ARGS>
+	Duo(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
 
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
@@ -444,7 +445,8 @@ private:
 
 
 public:
-	using _fam_t::_fam_t;
+	template<class...ARGS>
+	Trio(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
 
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
 	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
