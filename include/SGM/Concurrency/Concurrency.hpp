@@ -36,8 +36,7 @@ namespace sgm
 
 	class FnJ_Fail_to_get_Nof_Core;
 
-	class Async_Guard;
-
+	class Task_Guard;
 
 	struct _Fork_and_Join_Helper;
 
@@ -45,14 +44,14 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-class sgm::Async_Guard
+class sgm::Task_Guard
 {
 public:
 	template<class FN, class...ARGS>
-	Async_Guard(FN&& fn, ARGS&&...args) 
+	Task_Guard(FN&& fn, ARGS&&...args) 
 	:	_fut(  std::async( Forward<FN>(fn), Forward<ARGS>(args)... )  ){}
 
-	~Async_Guard(){  _fut.get();  }
+	~Task_Guard(){  _fut.get();  }
 
 
 private:
@@ -101,7 +100,7 @@ struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 	template<class FUNC>
 	static auto calc(FUNC&& func)-> void
 	{
-		Async_Guard const ag(func, IDX-1);
+		Task_Guard const tg(func, IDX-1);
 
 		_Static_Nof_Loop<IDX-1>::calc(func);
 	}
@@ -188,7 +187,7 @@ private:
 	template<class FUNC>
 	static auto _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)-> void
 	{
-		Async_Guard const ag(func, --task_id);
+		Task_Guard const tg(func, --task_id);
 
 		if(task_id > 0)
 			_Dynamic_Nof_Loop_calc(func, task_id);
@@ -280,7 +279,7 @@ namespace sgm
 {
 
 	template<class T, class FN>
-	class _Pipeline_Member;
+	class Pipeline_Member;
 
 
 	template<class T>
@@ -411,13 +410,110 @@ private:
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
+//#define _USE_SGM_CIRCULAR_QUEUE
+#ifdef _USE_SGM_CIRCULAR_QUEUE
+#include "../Queue/Queue.hpp"
+
 
 template<class T>
 class sgm::_Pipeline_Buffer
 {
 public:
-	template<class...ARGS>
-	_Pipeline_Buffer(ARGS const&...args);
+	_Pipeline_Buffer();
+
+	auto data() const noexcept-> T const&{  return _cirq.front();  }
+	auto is_full() const noexcept-> bool{  return _cirq.is_full();  }
+	auto is_empty() const noexcept-> bool{  return _cirq.is_empty();  }
+
+	template
+	<	class Q
+	,	class = Enable_if_t< !Has_Same_Origin<Q, Pipeline_Data_State>::value >  
+	>
+	auto take(Q&& q) noexcept-> void;
+
+	template<class...>
+	auto take(Pipeline_Data_State const s) noexcept-> void;
+
+	auto give() noexcept-> T&;
+
+
+private:
+	sgm::Circular_Queue<T> _cirq;
+	std::mutex _mx;
+	std::condition_variable _cv;
+
+
+	auto _wait_if_full() noexcept
+	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
+
+	auto _wait_if_empty() noexcept
+	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
+};
+
+
+template<class T>
+sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer() : _cirq(1 + 1){}
+
+
+template<class T>  template<class Q, class>
+auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> void
+{
+	auto const guards = _wait_if_full();
+
+	_cirq.push( Forward<Q>(q) );
+}
+
+template<class T>  template<class...>
+auto sgm::_Pipeline_Buffer<T>::take(Pipeline_Data_State const s) noexcept-> void
+{
+	if(s != Pipeline_retry_cue_v)
+		take( T(s) );
+}
+
+
+template<class T>
+auto sgm::_Pipeline_Buffer<T>::give() noexcept-> T&
+{
+	auto const guards = _wait_if_empty();
+
+	while(_cirq.size() > 1)
+		_cirq.pop();
+
+	return _cirq.front();
+}
+
+
+template<class T>
+auto sgm::_Pipeline_Buffer<T>::_wait_if_full() noexcept
+->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >
+{
+	std::unique_lock<std::mutex> qL(_mx);
+
+	while(is_full())
+		_cv.wait(qL);
+
+	return {Move(qL), _cv};
+}
+
+template<class T>
+auto sgm::_Pipeline_Buffer<T>::_wait_if_empty() noexcept
+->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >
+{
+	std::unique_lock<std::mutex> qL(_mx);
+
+	while(is_empty())
+		_cv.wait(qL);
+
+	return {Move(qL), _cv};
+}
+#else
+
+template<class T>
+class sgm::_Pipeline_Buffer
+{
+public:
+	template<class Q>
+	_Pipeline_Buffer(Q const& q);
 
 
 	auto data() const noexcept-> T const&{  return _p0->second();  }
@@ -447,9 +543,9 @@ private:
 };
 
 
-template<class T>  template<class...ARGS>
-sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer(ARGS const&...args)
-:	_buf{ {false, T(args...)}, {false, T(args...)} }, _p0(&_buf[0]), _p1(&_buf[1]){}
+template<class T>  template<class Q>
+sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer(Q const& q)
+:	_buf{ {false, T(q)}, {false, T(q)} }, _p0(&_buf[0]), _p1(&_buf[1]){}
 
 
 template<class T>  template<class Q, class>
@@ -492,11 +588,12 @@ auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
 
 	return {Move(qL), _cv};
 }
+#endif
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 template<class T, class FN>
-class sgm::_Pipeline_Member
+class sgm::Pipeline_Member
 {
 public:
 	using value_type = T;
@@ -504,7 +601,11 @@ public:
 
 	_Pipeline_Buffer< Pipeline_Data<T> > buffer;
 
-	_Pipeline_Member(FN& fn) : buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+#ifdef _USE_SGM_CIRCULAR_QUEUE
+	Pipeline_Member(FN& fn) : buffer(), _fn(fn){}
+#else
+	Pipeline_Member(FN& fn) : buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
+#endif
 
 	template<class...ARGS>
 	auto operator()(ARGS&...args) noexcept
@@ -517,13 +618,13 @@ private:
 
 
 template<class FN>
-class sgm::_Pipeline_Member<sgm::None, FN>
+class sgm::Pipeline_Member<sgm::None, FN>
 {
 public:
 	using value_type = None;
 
 
-	_Pipeline_Member(FN& fn) : _fn(fn){}
+	Pipeline_Member(FN& fn) : _fn(fn){}
 
 	template<class...ARGS>
 	auto operator()(ARGS&...args) noexcept-> void{  _fn(args...);  }
@@ -564,8 +665,8 @@ namespace sgm
 template<>
 struct sgm::_concurrent_pipeline_detail::_Loop<3> : Unconstructible
 {
-	template<class FAM, class...FGS>
-	static auto calc(FAM&, FGS const&...) noexcept-> void{}
+	template<class FAM, class...TGS>
+	static auto calc(FAM&, TGS const&...) noexcept-> void{}
 };
 
 template<>
@@ -573,13 +674,13 @@ struct sgm::_concurrent_pipeline_detail::_Loop<2> : Unconstructible
 {
 public:
 	template
-	<	class FAM, class...FGS, size_t IDX = sizeof...(FGS) 
+	<	class FAM, class...TGS, size_t IDX = sizeof...(TGS) 
 	,	int _MODE = IDX == std::tuple_size< Decay_t<FAM> >::value - 1 ? 3 : 2
 	>
-	static auto calc(FAM& memfam, FGS const&...fgs) noexcept-> void
+	static auto calc(FAM& memfam, TGS const&...tgs) noexcept-> void
 	{
 		_Loop<_MODE>::calc
-		(	memfam, fgs...
+		(	memfam, tgs...
 		,	_loop(memfam.template get<IDX-1>(), memfam.template get<IDX>())
 		);
 	}
@@ -587,8 +688,8 @@ public:
 
 private:
 	template<class T1, class FN1, class FN2>
-	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<None, FN2>& mem2) noexcept
-	->	Async_Guard
+	static auto _loop(Pipeline_Member<T1, FN1>& mem1, Pipeline_Member<None, FN2>& mem2) noexcept
+	->	Task_Guard
 	{
 		return
 		[&mem1, &mem2]() noexcept
@@ -604,8 +705,8 @@ private:
 	template
 	<	class T1, class FN1, class T2, class FN2, class = Enable_if_t< !is_None<T2>::value >
 	>
-	static auto _loop(_Pipeline_Member<T1, FN1>& mem1, _Pipeline_Member<T2, FN2>& mem2) noexcept
-	->	Async_Guard
+	static auto _loop(Pipeline_Member<T1, FN1>& mem1, Pipeline_Member<T2, FN2>& mem2) noexcept
+	->	Task_Guard
 	{
 		return 
 		[&mem1, &mem2]() noexcept
@@ -634,7 +735,7 @@ public:
 
 private:
 	template<class T, class FN>
-	static auto _loop(_Pipeline_Member<T, FN>& mem) noexcept-> Async_Guard
+	static auto _loop(Pipeline_Member<T, FN>& mem) noexcept-> Task_Guard
 	{
 		return
 		[&mem]() noexcept
@@ -666,7 +767,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<2> : Unconstructible
 	>
 	static auto calc(FAM& fnfam, MEMS&&...mems) noexcept-> void
 	{
-		_Pipe<4>::calc( mems..., _Pipeline_Member<None, _FN>(fnfam.template get<IDX>()) );
+		_Pipe<4>::calc( mems..., Pipeline_Member<None, _FN>(fnfam.template get<IDX>()) );
 	}
 };
 
@@ -683,7 +784,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<3> : Unconstructible
 	static auto calc(FAM& fnfam, MEMS&&...mems) noexcept-> void
 	{
 		_Pipe<_MODE>
-		::	calc( fnfam, mems..., _Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<IDX>()) );
+		::	calc( fnfam, mems..., Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<IDX>()) );
 	}
 };
 
@@ -699,7 +800,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<1> : Unconstructible
 	>
 	static auto calc(FAM&& fnfam) noexcept-> void
 	{
-		_Pipe<_MODE>::calc( fnfam, _Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<0>()) );
+		_Pipe<_MODE>::calc( fnfam, Pipeline_Member<_OUTPUT, _FN>(fnfam.template get<0>()) );
 	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
