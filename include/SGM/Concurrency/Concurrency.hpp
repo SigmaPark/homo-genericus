@@ -410,6 +410,33 @@ private:
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
+
+namespace sgm
+{
+	namespace _concurrent_pipeline_detail
+	{
+
+		template< class T, bool = is_Pipeline_Data< Decay_t<T> >::value >
+		struct _PL_Data;
+
+		template<class T>
+		struct _PL_Data<T, false> : As_type_itself<T>{};
+
+		template<class T>
+		struct _PL_Data<T, true> : As_type_itself< typename Decay_t<T>::value_type >{};
+
+
+		template<int>
+		struct _Pipe;
+
+		template<int>
+		struct _Loop;
+
+	}
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 //#define _USE_SGM_CIRCULAR_QUEUE
 #ifdef _USE_SGM_CIRCULAR_QUEUE
 #include "../Queue/Queue.hpp"
@@ -466,8 +493,10 @@ auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> void
 template<class T>  template<class...>
 auto sgm::_Pipeline_Buffer<T>::take(Pipeline_Data_State const s) noexcept-> void
 {
+	using PL_data_t = Pipeline_Data< typename _concurrent_pipeline_detail::_PL_Data<T>::type >;
+	
 	if(s != Pipeline_retry_cue_v)
-		take( T(s) );
+		take( PL_data_t(s) );
 }
 
 
@@ -507,6 +536,7 @@ auto sgm::_Pipeline_Buffer<T>::_wait_if_empty() noexcept
 	return {Move(qL), _cv};
 }
 #else
+
 
 template<class T>
 class sgm::_Pipeline_Buffer
@@ -559,8 +589,10 @@ auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> void
 template<class T>  template<class...>
 auto sgm::_Pipeline_Buffer<T>::take(Pipeline_Data_State const s) noexcept-> void
 {
+	using PL_data_t = Pipeline_Data< typename _concurrent_pipeline_detail::_PL_Data<T>::type >;
+	
 	if(s != Pipeline_retry_cue_v)
-		take( T(s) );
+		take( PL_data_t(s) );
 }
 
 
@@ -636,32 +668,6 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-namespace sgm
-{
-	namespace _concurrent_pipeline_detail
-	{
-
-		template< class T, bool = is_Pipeline_Data< Decay_t<T> >::value >
-		struct _PL_Data;
-
-		template<class T>
-		struct _PL_Data<T, false> : As_type_itself<T>{};
-
-		template<class T>
-		struct _PL_Data<T, true> : As_type_itself< typename Decay_t<T>::value_type >{};
-
-
-		template<int>
-		struct _Pipe;
-
-		template<int>
-		struct _Loop;
-
-	}
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 template<>
 struct sgm::_concurrent_pipeline_detail::_Loop<3> : Unconstructible
 {
@@ -695,10 +701,14 @@ private:
 		[&mem1, &mem2]() noexcept
 		{
 			while(true)
-				if(auto& res = mem1.buffer.give();  res.is_valid())
+			{
+				auto& res = mem1.buffer.give();
+
+				if(res.is_valid())
 					mem2(res);
 				else
 					break;
+			}
 		};
 	}
 
@@ -712,10 +722,14 @@ private:
 		[&mem1, &mem2]() noexcept
 		{
 			while(true)
-				if(auto& res = mem1.buffer.give();  res.is_valid())
+			{
+				auto& res = mem1.buffer.give();
+
+				if(res.is_valid())
 					mem2.buffer.take( mem2(res) );
 				else
 					break;
+			}
 
 			mem2.buffer.take(Pipeline_stop_cue_v);
 		};
