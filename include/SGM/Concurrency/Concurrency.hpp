@@ -437,107 +437,6 @@ namespace sgm
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-//#define _USE_SGM_CIRCULAR_QUEUE
-#ifdef _USE_SGM_CIRCULAR_QUEUE
-#include "../Queue/Queue.hpp"
-
-
-template<class T>
-class sgm::_Pipeline_Buffer
-{
-public:
-	_Pipeline_Buffer();
-
-	auto data() const noexcept-> T const&{  return _cirq.front();  }
-	auto is_full() const noexcept-> bool{  return _cirq.is_full();  }
-	auto is_empty() const noexcept-> bool{  return _cirq.is_empty();  }
-
-	template
-	<	class Q
-	,	class = Enable_if_t< !Has_Same_Origin<Q, Pipeline_Data_State>::value >  
-	>
-	auto take(Q&& q) noexcept-> void;
-
-	template<class...>
-	auto take(Pipeline_Data_State const s) noexcept-> void;
-
-	auto give() noexcept-> T&;
-
-
-private:
-	sgm::Circular_Queue<T> _cirq;
-	std::mutex _mx;
-	std::condition_variable _cv;
-
-
-	auto _wait_if_full() noexcept
-	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
-
-	auto _wait_if_empty() noexcept
-	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
-};
-
-
-template<class T>
-sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer() : _cirq(1 + 1){}
-
-
-template<class T>  template<class Q, class>
-auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> void
-{
-	auto const guards = _wait_if_full();
-
-	_cirq.push( Forward<Q>(q) );
-}
-
-template<class T>  template<class...>
-auto sgm::_Pipeline_Buffer<T>::take(Pipeline_Data_State const s) noexcept-> void
-{
-	using PL_data_t = Pipeline_Data< typename _concurrent_pipeline_detail::_PL_Data<T>::type >;
-	
-	if(s != Pipeline_retry_cue_v)
-		take( PL_data_t(s) );
-}
-
-
-template<class T>
-auto sgm::_Pipeline_Buffer<T>::give() noexcept-> T&
-{
-	auto const guards = _wait_if_empty();
-
-	while(_cirq.size() > 1)
-		_cirq.pop();
-
-	return _cirq.front();
-}
-
-
-template<class T>
-auto sgm::_Pipeline_Buffer<T>::_wait_if_full() noexcept
-->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >
-{
-	std::unique_lock<std::mutex> qL(_mx);
-
-	while(is_full())
-		_cv.wait(qL);
-
-	return {Move(qL), _cv};
-}
-
-template<class T>
-auto sgm::_Pipeline_Buffer<T>::_wait_if_empty() noexcept
-->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >
-{
-	std::unique_lock<std::mutex> qL(_mx);
-
-	while(is_empty())
-		_cv.wait(qL);
-
-	return {Move(qL), _cv};
-}
-#else
-
-
 template<class T>
 class sgm::_Pipeline_Buffer
 {
@@ -550,14 +449,12 @@ public:
 	auto is_filled() const noexcept-> bool{  return _p0->first();  }
 
 
-	template
-	<	class Q
-	,	class = Enable_if_t< !Has_Same_Origin<Q, Pipeline_Data_State>::value >  
-	>
-	auto take(Q&& q) noexcept-> void;
+	template<class Q>
+	auto take(Q&& q) noexcept-> Enable_if_t< is_Pipeline_Data<Q>::value >;
 
-	template<class...>
-	auto take(Pipeline_Data_State const s) noexcept-> void;
+	template<class Q>
+	auto take(Q&& q) noexcept-> Enable_if_t< !is_Pipeline_Data<Q>::value >;
+
 
 	auto give() noexcept-> T&;
 
@@ -566,6 +463,10 @@ private:
 	sgm::Duo<bool, T> _buf[2], *_p0, *_p1;
 	std::mutex _mx;
 	std::condition_variable _cv;
+
+
+	template<class Q>
+	auto _take(Q&& q) noexcept-> void;
 
 
 	auto _wait_until_buffer_is(bool const filled) noexcept
@@ -578,22 +479,24 @@ sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer(Q const& q)
 :	_buf{ {false, T(q)}, {false, T(q)} }, _p0(&_buf[0]), _p1(&_buf[1]){}
 
 
-template<class T>  template<class Q, class>
-auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> void
+template<class T>  template<class Q>
+auto sgm::_Pipeline_Buffer<T>::_take(Q&& q) noexcept-> void
 {
 	auto const guards = _wait_until_buffer_is(false);
 
 	*_p0 = {true, Forward<Q>(q)};
 }
 
-template<class T>  template<class...>
-auto sgm::_Pipeline_Buffer<T>::take(Pipeline_Data_State const s) noexcept-> void
+template<class T>  template<class Q>
+auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept-> Enable_if_t< is_Pipeline_Data<Q>::value >
 {
-	using PL_data_t = Pipeline_Data< typename _concurrent_pipeline_detail::_PL_Data<T>::type >;
-	
-	if(s != Pipeline_retry_cue_v)
-		take( PL_data_t(s) );
+	if(q.state() != Pipeline_Data_State::RETRY)
+		_take( Forward<Q>(q) );
 }
+
+template<class T>  template<class Q>
+auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept
+->	Enable_if_t< !is_Pipeline_Data<Q>::value >{  _take( Forward<Q>(q) );  }
 
 
 template<class T>
@@ -620,7 +523,6 @@ auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
 
 	return {Move(qL), _cv};
 }
-#endif
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -633,11 +535,9 @@ public:
 
 	_Pipeline_Buffer< Pipeline_Data<T> > buffer;
 
-#ifdef _USE_SGM_CIRCULAR_QUEUE
-	Pipeline_Member(FN& fn) : buffer(), _fn(fn){}
-#else
+
 	Pipeline_Member(FN& fn) : buffer(Pipeline_Data_State::UNDEF), _fn(fn){}
-#endif
+
 
 	template<class...ARGS>
 	auto operator()(ARGS&...args) noexcept
