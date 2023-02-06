@@ -263,8 +263,9 @@ private:
 	static auto _is_valid(sgm::Pipeline_Data<Q> const& pd) noexcept
 	->	bool{  return pd.is_valid();  }
 
-	template<  class Q, class = std::enable_if_t< !sgm::is_Pipeline_Data<Q>::value >  >
-	static auto constexpr _is_valid(Q const&) noexcept-> bool{  return true;  }
+	template<class Q>
+	static auto _is_valid(Q const&) noexcept
+	-> std::enable_if_t< !sgm::is_Pipeline_Data<Q>::value, bool >{  return true;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
