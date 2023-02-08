@@ -37,6 +37,7 @@ namespace sgm
 	class FnJ_Fail_to_get_Nof_Core;
 
 	class Task_Guard;
+	class Thread_Guard;
 
 	struct _Fork_and_Join_Helper;
 
@@ -56,6 +57,20 @@ public:
 
 private:
 	std::future<void> _fut;
+};
+
+
+class sgm::Thread_Guard
+{
+public:
+	template<class FN, class...ARGS>
+	Thread_Guard(FN&& fn, ARGS&&...args) : _th( Forward<FN>(fn), Forward<ARGS>(args)... ){}
+
+	~Thread_Guard(){  _th.join();  }
+
+
+private:
+	std::thread _th;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
