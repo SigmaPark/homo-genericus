@@ -15,6 +15,7 @@
 #include <mutex>
 #include <cassert>
 #include "../Family/Family.hpp"
+#include "../End_of_Life/EOL.hpp"
 #include "../Abbreviable/Nullable.hpp"
 #include "../Exception/Exception.hpp"
 
@@ -115,9 +116,7 @@ struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 	template<class FUNC>
 	static auto calc(FUNC&& func)-> void
 	{
-		Task_Guard const tg(func, IDX-1);
-
-		_Static_Nof_Loop<IDX-1>::calc(func);
+		Task_Guard(func, IDX - 1),  _Static_Nof_Loop<IDX-1>::calc(func);
 	}
 };
 
@@ -202,10 +201,10 @@ private:
 	template<class FUNC>
 	static auto _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)-> void
 	{
-		Task_Guard const tg(func, --task_id);
+		if(task_id-- == 0)
+			return;
 
-		if(task_id > 0)
-			_Dynamic_Nof_Loop_calc(func, task_id);
+		Task_Guard(func, task_id),  _Dynamic_Nof_Loop_calc(func, task_id);
 	}
 
 public:
@@ -404,30 +403,6 @@ auto sgm::Pipeline_Data<T>::operator=(_state_t const s)-> Pipeline_Data&
 
 namespace sgm
 {
-	namespace _pipeline_guard_detail
-	{
-
-		class _Notice_Guard;
-
-	}
-}
-
-
-class sgm::_pipeline_guard_detail::_Notice_Guard
-{
-public:
-	_Notice_Guard(std::condition_variable& cv) : _cv(cv){}
-	~_Notice_Guard(){  _cv.notify_one();  }
-
-
-private:
-	std::condition_variable& _cv;
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-namespace sgm
-{
 	namespace _concurrent_pipeline_detail
 	{
 
@@ -484,8 +459,7 @@ private:
 	auto _take(Q&& q) noexcept-> void;
 
 
-	auto _wait_until_buffer_is(bool const filled) noexcept
-	->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >;
+	auto _wait_until_buffer_is(bool const filled) noexcept-> std::unique_lock<std::mutex>;
 };
 
 
@@ -497,7 +471,8 @@ sgm::_Pipeline_Buffer<T>::_Pipeline_Buffer(Q const& q)
 template<class T>  template<class Q>
 auto sgm::_Pipeline_Buffer<T>::_take(Q&& q) noexcept-> void
 {
-	auto const guards = _wait_until_buffer_is(false);
+	auto const eol_notice = Finally( Memfunc(_cv, &std::condition_variable::notify_one) );
+	auto const eol_unlock = _wait_until_buffer_is(false);
 
 	*_p0 = {true, Forward<Q>(q)};
 }
@@ -517,7 +492,8 @@ auto sgm::_Pipeline_Buffer<T>::take(Q&& q) noexcept
 template<class T>
 auto sgm::_Pipeline_Buffer<T>::give() noexcept-> T&
 {
-	auto const guards = _wait_until_buffer_is(true);
+	auto const eol_notice = Finally( Memfunc(_cv, &std::condition_variable::notify_one) );
+	auto const eol_unlock = _wait_until_buffer_is(true);
 
 	Swap(_p0, _p1);
 
@@ -529,14 +505,14 @@ auto sgm::_Pipeline_Buffer<T>::give() noexcept-> T&
 
 template<class T>
 auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
-->	sgm::Duo< std::unique_lock<std::mutex>, _pipeline_guard_detail::_Notice_Guard >
+->	std::unique_lock<std::mutex> 
 {
 	std::unique_lock<std::mutex> qL(_mx);
 
 	while(is_filled() != filled)
 		_cv.wait(qL);
 
-	return {Move(qL), _cv};
+	return Move(qL);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -586,8 +562,8 @@ private:
 template<>
 struct sgm::_concurrent_pipeline_detail::_Loop<3> : Unconstructible
 {
-	template<class FAM, class...TGS>
-	static auto calc(FAM&, TGS const&...) noexcept-> void{}
+	template<class FAM, class...THS>
+	static auto calc(FAM&, THS const&...) noexcept-> void{}
 };
 
 template<>
@@ -595,13 +571,13 @@ struct sgm::_concurrent_pipeline_detail::_Loop<2> : Unconstructible
 {
 public:
 	template
-	<	class FAM, class...TGS, size_t IDX = sizeof...(TGS) 
+	<	class FAM, class...THS, size_t IDX = sizeof...(THS) 
 	,	int _MODE = IDX == std::tuple_size< Decay_t<FAM> >::value - 1 ? 3 : 2
 	>
-	static auto calc(FAM& memfam, TGS const&...tgs) noexcept-> void
+	static auto calc(FAM& memfam, THS const&...ths) noexcept-> void
 	{
 		_Loop<_MODE>::calc
-		(	memfam, tgs...
+		(	memfam, ths...
 		,	_loop(memfam.template get<IDX-1>(), memfam.template get<IDX>())
 		);
 	}
