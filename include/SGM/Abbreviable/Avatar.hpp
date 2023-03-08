@@ -124,6 +124,109 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<>
+class sgm::Abbreviable_t
+<	sgm::Avatar_tag
+,	void, sgm::Variable_t, sgm::Avatar_Pedigree<void, sgm::Variable_t, false, false>
+>
+{
+public:
+	using element_t = void;
+
+
+	template
+	<	class Q, class = Enable_if_t< !is_Avatar<Q>::value && !is_immutable<Q&>::value >  
+	>
+	Abbreviable_t(Q& q) noexcept : _vp( Address_of(q) ){}
+
+	template
+	<	class Q
+	,	class 
+		=	Enable_if_t
+			<	is_Avatar<Q>::value 
+			&&	!is_constAvatar<Q>::value 
+			&&	!is_Const< Referenceless_t<Q> >::value
+			>
+	>
+	Abbreviable_t(Q&& avt) noexcept : Abbreviable_t(avt.v()){}
+
+	template<  class Q, class = Enable_if_t< is_constAvatar<Q>::value >  >
+	Abbreviable_t(Q const&) = delete;
+
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	Abbreviable_t(Q const&&) = delete;
+
+
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	explicit operator Q&() noexcept{	  return *reinterpret_cast<Q*>(_vp);  }
+
+	template<class Q>
+	explicit operator Avatar<Q>() noexcept
+	{
+		return static_cast< typename Avatar<Q>::element_t& >(*this);  
+	}
+
+	template<class Q>
+	explicit operator constAvatar<Q>() const noexcept
+	{
+		return static_cast< typename constAvatar<Q>::element_t& >(*this);  
+	}
+
+	template<class Q>
+	explicit operator constAvatar<Q>() noexcept
+	{
+		return static_cast< typename constAvatar<Q>::element_t& >(*this);  
+	}
+
+	
+	auto operator&() const noexcept-> void const*{  return _vp;  }
+	auto operator&() noexcept-> void*{  return _vp;  }
+
+
+private:
+	void* const _vp;
+};
+
+
+template<>
+class sgm::Abbreviable_t
+<	sgm::Avatar_tag
+,	void, sgm::invariable_t, sgm::Avatar_Pedigree<void, sgm::invariable_t, false, false>
+>
+{
+public:
+	using element_t = void const;
+
+
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	Abbreviable_t(Q& q) noexcept: _cvp( Address_of(q) ){}
+
+	template<  class Q, class = Enable_if_t< is_Avatar<Q>::value >  >
+	Abbreviable_t(Q const& avt) noexcept : Abbreviable_t(avt.v()){}
+
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	Abbreviable_t(Q const&&) = delete;
+
+
+	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
+	explicit operator Q const&() const noexcept{  return *reinterpret_cast<Q const*>(_cvp);  }
+
+	template<class Q>
+	explicit operator constAvatar<Q>() const noexcept
+	{
+		return static_cast< typename constAvatar<Q>::element_t& >(*this);  
+	}
+
+
+	auto operator&() const noexcept-> void const*{  return _cvp;  }
+
+
+private:
+	void const* const _cvp;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 namespace sgm
 {
 

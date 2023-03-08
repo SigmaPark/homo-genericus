@@ -184,6 +184,55 @@ static void Test09()
 		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
 	}
 }
+
+
+static void Test10()
+{
+	{
+		Specimen s(2);
+
+		sgm::Avatar<void> va = s;
+
+		static_cast<Specimen&>(va).value() = 5;
+
+		is_True(s == 5);
+	}
+	{
+		Specimen s(2);
+
+		sgm::constAvatar<void> cva = s;
+
+		Specimen const& rs = static_cast<Specimen const&>(cva);
+
+		is_True(rs == 2);
+		
+		s.value() = 5;
+
+		is_True(rs == 5);
+	}
+	{
+		Specimen s(2);
+
+		sgm::Avatar<void> va = sgm::Refer(s);
+
+		static_cast<Specimen&>(va).value() = 5;
+
+		is_True(s == 5);
+	}
+	{
+		Specimen s(2);
+
+		sgm::constAvatar<void> cva = sgm::CRefer(s);
+
+		Specimen const& rs = static_cast<Specimen const&>(cva);
+
+		is_True(rs == 2);
+		
+		s.value() = 5;
+
+		is_True(rs == 5);
+	}
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -197,4 +246,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Avatar, /**/)
 ,	::Test07
 ,	::Test08
 ,	::Test09
+,	::Test10
 };
