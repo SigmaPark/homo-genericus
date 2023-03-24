@@ -133,20 +133,20 @@ public:
 			>
 	>
 	_Base_Nullable(ARGS&&...args)
-	noexcept(Aleph_Check<ARGS&&...>::value){  _alloc( Forward<ARGS>(args)... );  }
+	noexcept(Aleph_Check<ARGS&&...>::value){  make( Forward<ARGS>(args)... );  }
 
-	_Base_Nullable(_Base_Nullable const& nb){  _try_alloc(nb);  }
-	_Base_Nullable(_Base_Nullable&& nb){  _try_alloc( Move(nb) );  }
-
-	template
-	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
-	>
-	_Base_Nullable(_Base_Nullable<Q> const& nb){  _try_alloc(nb);  }
+	_Base_Nullable(_Base_Nullable const& nb){  _try_make(nb);  }
+	_Base_Nullable(_Base_Nullable&& nb){  _try_make( Move(nb) );  }
 
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
 	>
-	_Base_Nullable(_Base_Nullable<Q>&& nb){  _try_alloc( Move(nb) );  }
+	_Base_Nullable(_Base_Nullable<Q> const& nb){  _try_make(nb);  }
+
+	template
+	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	>
+	_Base_Nullable(_Base_Nullable<Q>&& nb){  _try_make( Move(nb) );  }
 
 	~_Base_Nullable(){  *this = Null_t{};  }
 
@@ -162,7 +162,7 @@ public:
 	auto operator=(Q&& q) noexcept(is_Rvalue_Reference<Q&&>::value)-> _Base_Nullable&
 	{
 		if(!has_value())
-			_alloc( Forward<Q>(q) );
+			make( Forward<Q>(q) );
 		else
 			v() = Forward<Q>(q);
 
@@ -177,6 +177,16 @@ public:
 
 		return *this;
 	}
+
+
+	template<class...ARGS>
+	auto make(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> _Base_Nullable&
+	{
+		_opof_t::_p = new(&_core) value_type( Forward<ARGS>(args)... );
+
+		return *this;
+	}
+
 
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
@@ -221,17 +231,11 @@ private:
 	_core_t _core;
 
 
-	template<class...ARGS>
-	void _alloc(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	{
-		_opof_t::_p = new(&_core) value_type( Forward<ARGS>(args)... );
-	}
-
 	template<class NB>
-	void _try_alloc(NB&& nb) noexcept(is_Rvalue_Reference<NB&&>::value)
+	void _try_make(NB&& nb) noexcept(is_Rvalue_Reference<NB&&>::value)
 	{
 		if(nb.has_value())
-			_alloc( Forward<NB>(nb).v() );
+			make( Forward<NB>(nb).v() );
 		else
 			*this = Null_t{};
 	}
