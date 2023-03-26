@@ -166,6 +166,7 @@ static void As_it_is_Test()
 
 static void Structured_Binding()
 {
+#if SGM_CXX_STANDARD >= 2017
 	{
 		auto&& [a, b, c] = sgm::Family<int, double, int*>( 3, 0.14, (int*)nullptr );
 
@@ -191,6 +192,24 @@ static void Structured_Binding()
 		&&	sgm::is_Same<decltype(t6), int*&>::value
 		);
 	}
+	//{
+	//	auto [a, b] = sgm::Duo<int, double>(3, 3.14);
+	//	
+	//	static_assert
+	//	(	sgm::is_Same<decltype(a), int>::value
+	//	&&	sgm::is_Same<decltype(b), double>::value
+	//	);
+	//}
+	//{
+	//	auto [a, b, c] = sgm::Trio<int, double, char>(3, 3.14, ' ');
+	//	
+	//	static_assert
+	//	(	sgm::is_Same<decltype(a), int>::value
+	//	&&	sgm::is_Same<decltype(b), double>::value
+	//	&&	sgm::is_Same<decltype(c), char>::value
+	//	);
+	//}
+#endif
 }
 
 

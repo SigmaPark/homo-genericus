@@ -44,6 +44,10 @@ namespace sgm
 	template<size_t N>  
 	struct _Family_get_Helper;
 
+
+	template<  class FAM, bool = is_Same< FAM, Decay_t<FAM> >::value  >
+	struct _Has_Any_Object;
+
 }
 
 
@@ -51,14 +55,15 @@ namespace sgm
 {
 	
 	template<class...TYPES>
-	static auto Make_Family(TYPES...types)-> Family<TYPES...>;
+	static auto Make_Family(TYPES...types)
+	noexcept(!_Has_Any_Object< Family<TYPES...> >::value)-> Family<TYPES...>;
 
 	template<class...TYPES>
 	static auto Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
 	-> Family<TYPES&&...>;
 
 	template<class...TYPES>
-	static auto Tie(TYPES&...types)-> Family<TYPES&...>;
+	static auto Tie(TYPES&...types) noexcept-> Family<TYPES&...>;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -210,6 +215,30 @@ struct sgm::_Family_get_Helper< std::numeric_limits<std::size_t>::max() >
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class FAM>
+struct sgm::_Has_Any_Object<FAM, false> : _Has_Any_Object< Decay_t<FAM> >{};
+
+template<class FAM>
+struct sgm::_Has_Any_Object<FAM, true> 
+{
+	constexpr _Has_Any_Object(){  Compile_Fails();  }
+};
+
+template<class...ARGS>
+struct sgm::_Has_Any_Object< sgm::Family<ARGS...>, true > : Unconstructible
+{
+private:
+	template<class Q>
+	using _is_Refless_Obj = Boolean< !is_Reference<Q>::value && is_Class_or_Union<Q>::value >;
+
+public:
+	static bool constexpr value = Check_if_Any<_is_Refless_Obj, ARGS...>::value;
+
+	using type = Boolean<value>;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<> 
 struct sgm::Family_member<0, sgm::Family<>> 
 :	As_type_itself<None>{  using family_type = Family<>;  };
@@ -315,7 +344,7 @@ public:
 	<	class A_i_i, class...ARGS
 	,	class = Enable_if_t<  is_Same< Decay_t<A_i_i>, _As_it_is_t >::value  >
 	>
-	auto operator=(Family<A_i_i, ARGS...>&& fam)-> Family&
+	auto operator=(Family<A_i_i, ARGS...>&& fam) noexcept-> Family&
 	{
 		_upper_of_this() = static_cast< Family<ARGS...>&& >( Move(fam) );
 
@@ -395,7 +424,7 @@ public:
 
 
 private:
-	auto _upper_of_this()-> _upper_t&{  return static_cast<_upper_t&>(*this);  }
+	auto _upper_of_this() noexcept-> _upper_t&{  return static_cast<_upper_t&>(*this);  }
 };
 
 
@@ -403,8 +432,8 @@ template<>
 class sgm::Family<>
 {
 public:
-	bool constexpr operator==(Family) const{  return true;  }
-	bool constexpr operator!=(Family) const{  return false;  }
+	bool constexpr operator==(Family) const noexcept{  return true;  }
+	bool constexpr operator!=(Family) const noexcept{  return false;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -479,7 +508,8 @@ namespace sgm
 
 
 	template<class FAM1, class FAM2>
-	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(Aleph_Check<FAM1&&, FAM2&&>::value)
+	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) 
+	noexcept(!_Has_Any_Object<FAM1>::value && !_Has_Any_Object<FAM2>::value)
 	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t;
 
 }
@@ -509,7 +539,7 @@ public:
 
 
 	template<class _FAM1, class _FAM2, class...ARGS>
-	static auto calc(_FAM1&& fam1, _FAM2&& fam2, ARGS&&...args)-> res_t
+	static auto calc(_FAM1&& fam1, _FAM2&& fam2, ARGS&&...args) noexcept-> res_t
 	{
 		return
 		_upper_t::calc
@@ -546,7 +576,7 @@ public:
 
 
 	template<class _FAM1, class _FAM2, class...ARGS>
-	static auto calc(_FAM1&& fam1, _FAM2&& fam2, ARGS&&...args)-> res_t
+	static auto calc(_FAM1&& fam1, _FAM2&& fam2, ARGS&&...args) noexcept-> res_t
 	{
 		return
 		_upper_t::calc
@@ -567,7 +597,7 @@ struct sgm::_Merge_Fam_Helper
 
 
 	template<class _FAM1, class _FAM2, class...ARGS>
-	static auto calc(_FAM1&&, _FAM2&&, ARGS&&...args)
+	static auto calc(_FAM1&&, _FAM2&&, ARGS&&...args) noexcept
 	->	SGM_DECLTYPE_AUTO(  res_t( Forward<ARGS>(args)... )  )
 };
 
@@ -576,7 +606,8 @@ namespace sgm
 {
 
 	template<class FAM1, class FAM2>
-	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(Aleph_Check<FAM1&&, FAM2&&>::value)
+	auto Merge_Families(FAM1&& fam1, FAM2&& fam2)
+	noexcept(!_Has_Any_Object<FAM1>::value && !_Has_Any_Object<FAM2>::value)
 	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
 	{
 		return
@@ -597,11 +628,11 @@ namespace sgm
 	
 
 	template< template<class...> class TFAM, class...TYPES >
-	static auto Harden(TFAM<TYPES...>& fam_like)
+	static auto Harden(TFAM<TYPES...>& fam_like) noexcept
 	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t;
 
 	template< template<class...> class TFAM, class...TYPES >
-	static auto Harden(TFAM<TYPES...>&& fam_like)
+	static auto Harden(TFAM<TYPES...>&& fam_like) noexcept
 	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t;
 
 }
@@ -615,14 +646,14 @@ struct sgm::_Harden_Fam_Helper<true, TFAM, TYPES...> : Unconstructible
 	
 
 	template<class FAM, class...ARGS>
-	static auto calc(FAM&&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
+	static auto calc(FAM&&, ARGS&&...args) noexcept-> res_t{  return {Forward<ARGS>(args)...};  }
 };
 
 template< template<class...> class TFAM, class...TYPES >
 struct sgm::_Harden_Fam_Helper<false, TFAM, TYPES...> : Unconstructible
 {
 	template<class FAM, class...ARGS>
-	static auto calc(FAM&& fam, ARGS&&...args)
+	static auto calc(FAM&& fam, ARGS&&...args) noexcept
 	->	typename sgm::_Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
 	{
 		size_t constexpr idx_v = sizeof...(ARGS);
@@ -640,14 +671,14 @@ namespace sgm
 {
 
 	template< template<class...> class TFAM, class...TYPES >
-	auto Harden(TFAM<TYPES...>& fam_like)
+	auto Harden(TFAM<TYPES...>& fam_like) noexcept
 	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
 	{
 		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc(fam_like);
 	}
 	
 	template< template<class...> class TFAM, class...TYPES >
-	auto Harden(TFAM<TYPES...>&& fam_like)
+	auto Harden(TFAM<TYPES...>&& fam_like) noexcept
 	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
 	{
 		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc( Move(fam_like) );
@@ -655,7 +686,9 @@ namespace sgm
 
 
 	template<class...TYPES>
-	auto Make_Family(TYPES...types)-> Family<TYPES...>{  return {types...};  }
+	auto Make_Family(TYPES...types)	noexcept(!_Has_Any_Object< Family<TYPES...> >::value)
+
+	-> Family<TYPES...>{  return {types...};  }
 	
 	
 	template<class...TYPES>
@@ -664,7 +697,7 @@ namespace sgm
 	
 	
 	template<class...TYPES>
-	auto Tie(TYPES&...types)-> Family<TYPES&...>{  return {types...};  }
+	auto Tie(TYPES&...types) noexcept-> Family<TYPES&...>{  return {types...};  }
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
