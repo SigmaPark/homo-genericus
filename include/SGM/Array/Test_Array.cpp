@@ -7,6 +7,7 @@
 #include "Array.hpp"
 #include "Test_Array.hpp"
 #include <vector>
+#include <chrono>
 
 
 using sgm::spec::Specimen;
@@ -582,25 +583,163 @@ void Dynamic::Pop()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+struct Performance : sgm::Unconstructible
+{
+	static void insertion();
+	static void random_access();
+};
+
+
+void Performance::insertion()
+{
+#if 0
+	std::size_t const N = 100'000'000;
+
+	std::cout << "insertion test\n";
+	
+	{
+		std::vector<sgm::spec::Specimen> vec;
+
+		vec.reserve(N);
+		
+		for(size_t n = 10;  n-->0;)
+		{
+			{
+				std::cout << "\tstd::vector emplace_back : ";
+				
+				auto start_tp = std::chrono::system_clock::now();
+
+				for(std::size_t i = 0;  i < N;  ++i)
+					vec.emplace_back( static_cast<int>(i) );
+
+				auto time = (std::chrono::system_clock::now() - start_tp).count();
+
+				std::cout << time << " nanosec\n";
+			}
+			{
+				std::cout << "\tstd::vector pop_back : ";
+				auto start_tp = std::chrono::system_clock::now();
+
+				for(std::size_t i = 0;  i < N;  ++i)
+					vec.pop_back();
+
+				auto time = (std::chrono::system_clock::now() - start_tp).count();
+
+				std::cout << time << " nanosec\n";
+			}
+		}
+	}
+	{
+		sgm::Array<sgm::spec::Specimen> arr(N);
+		
+		for(size_t n = 10; n-->0;)
+		{
+			{
+				std::cout << "\tsgm::Array emplace_back : ";
+				auto start_tp = std::chrono::system_clock::now();
+
+				for(std::size_t i = 0;  i < N;  ++i)
+					arr.emplace_back( static_cast<int>(i) );
+
+				auto time = (std::chrono::system_clock::now() - start_tp).count();
+
+				std::cout << time << " nanosec.\n";
+			}
+			{
+				std::cout << "\tsgm::Array pop_back : ";
+				auto start_tp = std::chrono::system_clock::now();
+
+				arr.pop_back(N);
+
+				auto time = (std::chrono::system_clock::now() - start_tp).count();
+
+				std::cout << time << " nanosec\n";
+			}
+		}
+	}
+#endif
+}
+
+
+void Performance::random_access()
+{
+#if 0
+	std::size_t const N = 1'000'000;
+
+	std::cout << "random access test\n";
+	
+	{
+		std::vector<sgm::spec::Specimen> vec;
+		sgm::spec::Specimen s;
+
+		vec.reserve(N);
+
+		for(std::size_t i = 0;  i < N;  ++i)
+			vec.emplace_back( static_cast<int>(i) );
+
+		std::cout << "\tstd::vector random_access : ";
+
+		auto start_tp = std::chrono::system_clock::now();
+		
+		for(std::size_t n = 10'000;  n-->0; )
+			for(std::size_t i = 0;  i < N;  ++i)
+				s = vec[i];
+		
+		auto time 
+		=	std::chrono::duration_cast<std::chrono::milliseconds>
+			(	std::chrono::system_clock::now() - start_tp
+			) .	count();
+
+		std::cout << time << " millisec\n";		
+	}
+	{
+		sgm::Array<sgm::spec::Specimen> arr(N);
+		sgm::spec::Specimen s;
+
+		for(std::size_t i = 0;  i < N;  ++i)
+			arr.emplace_back( static_cast<int>(i) );
+
+		std::cout << "\tsgm::Array random_access : ";
+
+		auto start_tp = std::chrono::system_clock::now();
+		
+		for(std::size_t n = 10'000;  n-->0; )
+			for(std::size_t i = 0;  i < N;  ++i)
+				s = arr[i];
+			
+		auto time 
+		=	std::chrono::duration_cast<std::chrono::milliseconds>
+			(	std::chrono::system_clock::now() - start_tp
+			) .	count();
+
+		std::cout << time << " millisec\n";		
+	}
+#endif
+}
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Array, /**/)
-{	Static::Construction
-,	Static::No_Move_Construction
-,	Static::Assignment
-,	Static::Move_Assignment
-,	Static::Destruction
-,	Static::Element
-,	Static::Swap
-,	Static::Type_Conversion_into_iterable
-,	Dynamic::Construction
-,	Dynamic::Copy_Construction
-,	Dynamic::Move_Construction
-,	Dynamic::Construction_from_immutable_elements
-,	Dynamic::Assignment
-,	Dynamic::Move_Assignment
-,	Dynamic::Clear_and_Destruction
-,	Dynamic::Element
-,	Dynamic::Swap
-,	Dynamic::Type_Conversion_into_iterable
-,	Dynamic::Push
-,	Dynamic::Pop
+{	::Static::Construction
+,	::Static::No_Move_Construction
+,	::Static::Assignment
+,	::Static::Move_Assignment
+,	::Static::Destruction
+,	::Static::Element
+,	::Static::Swap
+,	::Static::Type_Conversion_into_iterable
+,	::Dynamic::Construction
+,	::Dynamic::Copy_Construction
+,	::Dynamic::Move_Construction
+,	::Dynamic::Construction_from_immutable_elements
+,	::Dynamic::Assignment
+,	::Dynamic::Move_Assignment
+,	::Dynamic::Clear_and_Destruction
+,	::Dynamic::Element
+,	::Dynamic::Swap
+,	::Dynamic::Type_Conversion_into_iterable
+,	::Dynamic::Push
+,	::Dynamic::Pop
+,	::Performance::insertion
+,	::Performance::random_access
 };

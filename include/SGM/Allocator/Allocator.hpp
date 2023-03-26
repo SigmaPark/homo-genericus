@@ -146,13 +146,22 @@ public:
 	{
 		SGM_CRTP_OVERRIDE(destroy, <Q>);
 
-		p->~Q();  
+		_destruct(*p);
 	}
 
 
 	auto max_size() const noexcept
 	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
 
+
+private:
+	template< class Q, class _Q = Decay_t<Q> >
+	static auto _destruct(Q& q) noexcept
+	->	Enable_if_t< is_Class_or_Union<_Q>::value >{  q.~_Q();  }
+	
+	template< class Q, class _Q = Decay_t<Q> >
+	static auto _destruct(Q&) noexcept
+	->	Enable_if_t< !is_Class_or_Union<_Q>::value >{}
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 

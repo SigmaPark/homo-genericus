@@ -84,12 +84,13 @@ private:
 
 
 	template<class T, bool M, bool FWD, class CORE>
-	static auto core_ptr(Array_iterator<T, M, FWD, CORE> itr)
+	static auto core_ptr(Array_iterator<T, M, FWD, CORE> itr) noexcept
 	->	SGM_DECLTYPE_AUTO(  itr._core_ptr  )
 
 
 	template<class T, bool M, bool FWD, class CORE>
-	static auto idx(Array_iterator<T, M, FWD, CORE> itr)-> SGM_DECLTYPE_AUTO(  itr._idx  )
+	static auto idx(Array_iterator<T, M, FWD, CORE> itr) noexcept
+	->	SGM_DECLTYPE_AUTO(  itr._idx  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -102,20 +103,20 @@ private:
 
 
 	template<bool IS_FORWARD>
-	static auto shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff)
+	static auto shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff) noexcept
 	->	Enable_if_t<IS_FORWARD, size_t>{  return plus_dir ? idx + diff : idx - diff;  }
 
 	template<bool IS_FORWARD>
-	static auto shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff)
+	static auto shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff) noexcept
 	->	Enable_if_t<!IS_FORWARD, size_t>{  return plus_dir ? idx - diff : idx + diff;  }
 
 
 	template<bool IS_FORWARD>
-	static auto Less(size_t const idx1, size_t const idx2)
+	static auto Less(size_t const idx1, size_t const idx2) noexcept
 	->	Enable_if_t<IS_FORWARD, bool>{  return idx1 < idx2;  }
 
 	template<bool IS_FORWARD>
-	static auto Less(size_t const idx1, size_t const idx2)
+	static auto Less(size_t const idx1, size_t const idx2) noexcept
 	->	Enable_if_t<!IS_FORWARD, bool>{  return idx1 > idx2;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -158,14 +159,14 @@ public:
 	}
 
 
-	auto operator[](ptrdiff_t const diff) const
+	auto operator[](ptrdiff_t const diff) const noexcept
 	->	_elem_t&{  return *( _arr() + _shifted(_idx, true, diff) - (IS_FORWARD ? 0 : 1) );  }
 
-	auto operator*() const-> _elem_t&{  return (*this)[0];  }
+	auto operator*() const noexcept-> _elem_t&{  return (*this)[0];  }
 
-	auto operator->() const-> _elem_t*{  return &**this;  }
+	auto operator->() const noexcept-> _elem_t*{  return &**this;  }
 
-	auto operator++(int)-> _itr_t
+	auto operator++(int) noexcept-> _itr_t
 	{
 		_itr_t const itr = *this;
 
@@ -174,7 +175,7 @@ public:
 		return itr;
 	}
 
-	auto operator--(int)-> _itr_t
+	auto operator--(int) noexcept-> _itr_t
 	{
 		_itr_t const itr = *this;
 
@@ -184,13 +185,13 @@ public:
 	}
 
 	
-	auto operator+(ptrdiff_t const diff) const 
+	auto operator+(ptrdiff_t const diff) const noexcept
 	->	_itr_t{  return _itr_t( *_core_ptr, _shifted(_idx, true, diff) );  }
 
-	auto operator-(ptrdiff_t const diff) const-> _itr_t{  return *this + -diff;  }
+	auto operator-(ptrdiff_t const diff) const noexcept-> _itr_t{  return *this + -diff;  }
 
 
-	auto operator-(_itr_t const itr) const-> ptrdiff_t
+	auto operator-(_itr_t const itr) const noexcept-> ptrdiff_t
 	{
 		bool const has_greater_idx = _idx > itr._idx;
 		auto const diff_ULL = has_greater_idx ? _idx - itr._idx : itr._idx - _idx;
@@ -206,38 +207,40 @@ public:
 	}
 
 
-	auto operator+=(ptrdiff_t const diff)-> _itr_t&
+	auto operator+=(ptrdiff_t const diff) noexcept-> _itr_t&
 	{
 		_idx = _shifted(_idx, true, diff);
 
 		return *this;
 	}
 
-	auto operator-=(ptrdiff_t const diff)-> _itr_t&{  return *this += -diff;  }
+	auto operator-=(ptrdiff_t const diff) noexcept-> _itr_t&{  return *this += -diff;  }
 
-	auto operator++()-> _itr_t&{  return *this += ptrdiff_t(1);  }
-	auto operator--()-> _itr_t&{  return *this -= ptrdiff_t(1);  }
+	auto operator++() noexcept-> _itr_t&{  return *this += ptrdiff_t(1);  }
+	auto operator--() noexcept-> _itr_t&{  return *this -= ptrdiff_t(1);  }
 
 
 	template<bool M>
-	auto operator==(Array_iterator<T, M, IS_FORWARD, CORE> const itr) const
+	auto operator==(Array_iterator<T, M, IS_FORWARD, CORE> const itr) const noexcept
 	->	bool{  return _idx == _arr_itr_Helper::idx(itr);  }
 
 	template<class Q>
-	auto operator!=(Q const& q) const-> SGM_DECLTYPE_AUTO(  !(*this == q)  )
+	auto operator!=(Q const& q) const noexcept-> SGM_DECLTYPE_AUTO(  !(*this == q)  )
 
 
-	auto operator<(_itr_t const itr) const-> bool{  return _Less(*this, itr);  }
-	auto operator>(_itr_t const itr) const-> bool{  return _Less(itr, *this);  }
+	auto operator<(_itr_t const itr) const noexcept-> bool{  return _Less(*this, itr);  }
+	auto operator>(_itr_t const itr) const noexcept-> bool{  return _Less(itr, *this);  }
 
-	auto operator<(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const-> bool
+	auto operator<(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const noexcept
+	->	bool
 	{
 		using _citr_t = Array_iterator<T, false, IS_FORWARD, CORE>;
 
 		return static_cast<_citr_t>(*this) < static_cast<_citr_t>(itr);
 	}
 
-	auto operator>(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const-> bool
+	auto operator>(Array_iterator<T, !IS_MUTABLE, IS_FORWARD, CORE> const itr) const noexcept
+	->	bool
 	{
 		using _citr_t = Array_iterator<T, false, IS_FORWARD, CORE>;
 
@@ -246,10 +249,10 @@ public:
 
 
 	template<class Q>
-	auto operator<=(Q const& q) const-> SGM_DECLTYPE_AUTO(  !(*this > q)  )
+	auto operator<=(Q const& q) const noexcept-> SGM_DECLTYPE_AUTO(  !(*this > q)  )
 
 	template<class Q>
-	auto operator>=(Q const& q) const-> SGM_DECLTYPE_AUTO(  !(*this < q)  )
+	auto operator>=(Q const& q) const noexcept-> SGM_DECLTYPE_AUTO(  !(*this < q)  )
 
 
 private:
@@ -257,16 +260,16 @@ private:
 	size_t _idx;
 
 
-	auto _arr() const-> _elem_t*{  return _core_ptr->data;  }
+	auto _arr() const noexcept-> _elem_t*{  return _core_ptr->data;  }
 
 
 	static auto _shifted(size_t const idx, bool const plus_dir, ptrdiff_t const diff = 1)
-	->	size_t
+	noexcept-> size_t
 	{
 		return _arr_itr_operation_Helper::shifted<IS_FORWARD>(idx, plus_dir, diff);
 	}
 
-	static auto _Less(_itr_t const itr1, _itr_t const itr2)-> bool
+	static auto _Less(_itr_t const itr1, _itr_t const itr2) noexcept-> bool
 	{
 		return _arr_itr_operation_Helper::Less<IS_FORWARD>(itr1._idx, itr2._idx);
 	}
@@ -281,7 +284,7 @@ struct sgm::Dual_iterator
 	ITR2 _2;
 
 	
-	auto operator++(int)-> Dual_iterator
+	auto operator++(int) noexcept-> Dual_iterator
 	{
 		auto const itr = *this;
 
@@ -290,7 +293,7 @@ struct sgm::Dual_iterator
 		return itr;
 	}
 
-	auto operator++()-> Dual_iterator&
+	auto operator++() noexcept-> Dual_iterator&
 	{
 		++_1,  ++_2;
 
@@ -333,8 +336,8 @@ public:
 	core_t _core;
 
 
-	auto operator+() const-> data_t const&{  return _core.data;  }
-	auto operator+()-> data_t&{  return _core.data;  }
+	auto operator+() const noexcept-> data_t const&{  return _core.data;  }
+	auto operator+() noexcept-> data_t&{  return _core.data;  }
 
 
 	Array() = default;
@@ -354,17 +357,17 @@ public:
 	}
 
 
-	auto cdata() const-> T const*{  return _core.data;  }
-	auto data() const-> SGM_DECLTYPE_AUTO(  cdata()  )
-	auto data()-> T*{  return _core.data;  }
+	auto cdata() const noexcept-> T const*{  return _core.data;  }
+	auto data() const noexcept-> SGM_DECLTYPE_AUTO(  cdata()  )
+	auto data() noexcept-> T*{  return _core.data;  }
 
-	auto operator[](size_t const idx) const
+	auto operator[](size_t const idx) const noexcept
 	->	T const&{  return _core.data[static_cast<ptrdiff_t>(idx)];  }
 
-	auto operator[](size_t const idx)
+	auto operator[](size_t const idx) noexcept
 	->	T&{  return _core.data[static_cast<ptrdiff_t>(idx)];  }
 
-	auto constexpr size() const-> size_t{  return size_v;  }
+	auto constexpr size() const noexcept-> size_t{  return size_v;  }
 
 
 	using iterator = Array_iterator<T, true, true, core_t>;
@@ -372,28 +375,28 @@ public:
 	using reverse_iterator = Array_iterator<T, true, false, core_t>;
 	using const_reverse_iterator = Array_iterator<T, false, false, core_t>;
 
-	auto cbegin() const-> const_iterator{  return {_core, 0};  }
-	auto begin() const-> const_iterator{  return cbegin();  }
-	auto begin()-> iterator{  return {_core, 0};  }
+	auto cbegin() const noexcept-> const_iterator{  return {_core, 0};  }
+	auto begin() const noexcept-> const_iterator{  return cbegin();  }
+	auto begin() noexcept-> iterator{  return {_core, 0};  }
 
-	auto crend() const-> const_reverse_iterator{  return {_core, 0};  }
-	auto rend() const-> const_reverse_iterator{  return crend();  }
-	auto rend()-> reverse_iterator{  return {_core, 0};  }
+	auto crend() const noexcept-> const_reverse_iterator{  return {_core, 0};  }
+	auto rend() const noexcept-> const_reverse_iterator{  return crend();  }
+	auto rend() noexcept-> reverse_iterator{  return {_core, 0};  }
 
-	auto cend() const-> const_iterator{  return {_core, size_v};  }
-	auto end() const-> const_iterator{  return cend();  }
-	auto end()-> iterator{  return {_core, size_v};  }
+	auto cend() const noexcept-> const_iterator{  return {_core, size_v};  }
+	auto end() const noexcept-> const_iterator{  return cend();  }
+	auto end() noexcept-> iterator{  return {_core, size_v};  }
 
-	auto crbegin() const-> const_reverse_iterator{  return {_core, size_v};  }
-	auto rbegin() const-> const_reverse_iterator{  return crbegin();  }
-	auto rbegin()-> reverse_iterator{  return {_core, size_v};  }
+	auto crbegin() const noexcept-> const_reverse_iterator{  return {_core, size_v};  }
+	auto rbegin() const noexcept-> const_reverse_iterator{  return crbegin();  }
+	auto rbegin() noexcept-> reverse_iterator{  return {_core, size_v};  }
 
 
-	auto front() const-> T const&{  return *cbegin();  }
-	auto front()-> T&{  return *begin();  }
+	auto front() const noexcept-> T const&{  return *cbegin();  }
+	auto front() noexcept-> T&{  return *begin();  }
 
-	auto back() const-> T const&{  return *crbegin();  }
-	auto back()-> T&{  return *rbegin();  }
+	auto back() const noexcept-> T const&{  return *crbegin();  }
+	auto back() noexcept-> T&{  return *rbegin();  }
 
 
 	template
@@ -471,11 +474,11 @@ private:
 	allocator_t _alc;
 
 
-	auto _base() const-> _base_t const&{  return *this;  }
-	auto _base()-> _base_t&{  return *this;  }
+	auto _base() const noexcept-> _base_t const&{  return *this;  }
+	auto _base() noexcept-> _base_t&{  return *this;  }
 
 
-	void _alloc(size_t const capa)
+	void _alloc(size_t const capa) 
 	{
 		_core.data = capa != 0  ?  _alc.allocate(capa)  :  (value_type*)nullptr;
 
@@ -615,11 +618,11 @@ public:
 	}
 
 
-	auto capacity() const-> size_t{  return _capacity;  }
-	auto size() const-> size_t{  return _size;  }
+	auto capacity() const noexcept-> size_t{  return _capacity;  }
+	auto size() const noexcept-> size_t{  return _size;  }
 
-	bool is_null() const{  return _base().cdata() == nullptr;  }
-	bool is_empty() const{  return size() == 0;  }
+	bool is_null() const noexcept {  return _base().cdata() == nullptr;  }
+	bool is_empty() const noexcept {  return size() == 0;  }
 
 
 	template<class...ARGS>
@@ -654,15 +657,22 @@ public:
 
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
-	auto pop_back_from(ITR const itr)-> Array&
+	auto pop_back_from(ITR const itr) noexcept-> Array&
 	{
-		for(auto d = end() - itr;  d-->0;  _core.data[--_size].~value_type());
+		for(auto d = end() - itr;  d-->0;  pop_back());
 
 		return *this;
 	}
 
 
-	auto pop_back(size_t const n = 1)-> Array&
+	auto pop_back() noexcept-> Array&
+	{
+		assert(!is_empty() && L"Array::pop_back Error : out of index.\n");
+
+		return _alc.destroy(_core.data + --_size),  *this;
+	}
+
+	auto pop_back(size_t const n) noexcept-> Array&
 	{
 		assert(n <= size() && L"Array::pop_back Error : out of index.\n");
 
@@ -670,7 +680,7 @@ public:
 	}
 
 
-	auto clear()-> Array&{  return pop_back_from(_base().begin());  }
+	auto clear() noexcept-> Array&{  return pop_back_from(_base().begin());  }
 
 
 	auto swap(Array& arr) noexcept-> Array&
@@ -689,17 +699,17 @@ public:
 	using typename _base_t::reverse_iterator;
 	using typename _base_t::const_reverse_iterator;
 
-	auto cend() const-> const_iterator{  return {_core, size()};  }
-	auto end() const-> const_iterator{  return cend();  }
-	auto end()-> iterator{  return {_core, size()};  }
+	auto cend() const noexcept-> const_iterator{  return {_core, size()};  }
+	auto end() const noexcept-> const_iterator{  return cend();  }
+	auto end() noexcept-> iterator{  return {_core, size()};  }
 
-	auto crbegin() const-> const_reverse_iterator{  return{_core, size()};  }
-	auto rbegin() const-> const_reverse_iterator{  return crbegin();  }
-	auto rbegin()-> reverse_iterator{  return {_core, size()};  }
+	auto crbegin() const noexcept-> const_reverse_iterator{  return{_core, size()};  }
+	auto rbegin() const noexcept-> const_reverse_iterator{  return crbegin();  }
+	auto rbegin() noexcept-> reverse_iterator{  return {_core, size()};  }
 
 
-	auto back() const-> T const&{  return *crbegin();  }
-	auto back()-> T&{  return *rbegin();  }
+	auto back() const noexcept-> T const&{  return *crbegin();  }
+	auto back() noexcept-> T&{  return *rbegin();  }
 
 
 	template
