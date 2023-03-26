@@ -13,6 +13,7 @@
 #include "../Operators_of/Operators_of.hpp"
 #include "../Exception/Exception.hpp"
 #include <new>
+#include <cassert>
 
 
 namespace sgm
@@ -93,7 +94,7 @@ union sgm::_Nullable_Core<T, true>
 	T value;
 
 
-	_Nullable_Core() : n(){}
+	_Nullable_Core() noexcept : n(){}
 	~_Nullable_Core(){}
 
 	void clear() noexcept{  value.~T();  }
@@ -136,7 +137,7 @@ public:
 	noexcept(Aleph_Check<ARGS&&...>::value){  make( Forward<ARGS>(args)... );  }
 
 	_Base_Nullable(_Base_Nullable const& nb){  _try_make(nb);  }
-	_Base_Nullable(_Base_Nullable&& nb){  _try_make( Move(nb) );  }
+	_Base_Nullable(_Base_Nullable&& nb) noexcept{  _try_make( Move(nb) );  }
 
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
@@ -146,9 +147,9 @@ public:
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
 	>
-	_Base_Nullable(_Base_Nullable<Q>&& nb){  _try_make( Move(nb) );  }
+	_Base_Nullable(_Base_Nullable<Q>&& nb) noexcept{  _try_make( Move(nb) );  }
 
-	~_Base_Nullable(){  *this = Null_t{};  }
+	~_Base_Nullable() noexcept{  *this = Null_t{};  }
 
 
 	template
@@ -169,7 +170,7 @@ public:
 		return *this;
 	}
 
-	auto operator=(Null_t const)-> _Base_Nullable&
+	auto operator=(Null_t const) noexcept-> _Base_Nullable&
 	{
 		if(has_value())
 			_core.clear(),
@@ -182,6 +183,8 @@ public:
 	template<class...ARGS>
 	auto make(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> _Base_Nullable&
 	{
+		assert(!has_value());
+
 		_opof_t::_p = new(&_core) value_type( Forward<ARGS>(args)... );
 
 		return *this;
@@ -197,13 +200,13 @@ public:
 	template
 	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
 	>
-	auto operator=(_Base_Nullable<Q>&& nb)
+	auto operator=(_Base_Nullable<Q>&& nb) noexcept
 	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
 
-	auto operator=(_Base_Nullable const& nb)
+	auto operator=(_Base_Nullable const& nb) 
 	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
 
-	auto operator=(_Base_Nullable&& nb)
+	auto operator=(_Base_Nullable&& nb) noexcept
 	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
 
 
@@ -345,8 +348,6 @@ namespace sgm
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 
 
 #endif // end of #ifndef _SGM_NULLABLE_
