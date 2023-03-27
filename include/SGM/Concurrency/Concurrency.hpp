@@ -450,7 +450,7 @@ public:
 
 
 private:
-	sgm::Duo<bool, T> _buf[2], *_p0, *_p1;
+	sgm::Family<bool, T> _buf[2], *_p0, *_p1;
 	std::mutex _mx;
 	std::condition_variable _cv;
 

@@ -192,23 +192,30 @@ static void Structured_Binding()
 		&&	sgm::is_Same<decltype(t6), int*&>::value
 		);
 	}
-	//{
-	//	auto [a, b] = sgm::Duo<int, double>(3, 3.14);
-	//	
-	//	static_assert
-	//	(	sgm::is_Same<decltype(a), int>::value
-	//	&&	sgm::is_Same<decltype(b), double>::value
-	//	);
-	//}
-	//{
-	//	auto [a, b, c] = sgm::Trio<int, double, char>(3, 3.14, ' ');
-	//	
-	//	static_assert
-	//	(	sgm::is_Same<decltype(a), int>::value
-	//	&&	sgm::is_Same<decltype(b), double>::value
-	//	&&	sgm::is_Same<decltype(c), char>::value
-	//	);
-	//}
+	{
+		auto duo = sgm::Family<int, double>(3, 3.14);
+		auto [a, b] = duo;
+		
+		static_assert
+		(	sgm::is_Same<decltype(a), int>::value
+		&&	sgm::is_Same<decltype(b), double>::value
+		&&	sgm::is_Same<decltype(duo.first()), int&>::value
+		&&	sgm::is_Same<decltype(duo.second()), double&>::value
+		);
+	}
+	{
+		auto trio = sgm::Family<int, double, char>(3, 3.14, ' ');
+		auto [a, b, c] = trio;
+		
+		static_assert
+		(	sgm::is_Same<decltype(a), int>::value
+		&&	sgm::is_Same<decltype(b), double>::value
+		&&	sgm::is_Same<decltype(c), char>::value
+		&&	sgm::is_Same<decltype(trio.first()), int&>::value
+		&&	sgm::is_Same<decltype(trio.second()), double&>::value
+		&&	sgm::is_Same<decltype(trio.third()), char&>::value
+		);
+	}
 #endif
 }
 

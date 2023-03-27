@@ -20,13 +20,6 @@ namespace sgm
 	class Family;
 
 
-	template<class T0, class T1>
-	class Duo;
-
-	template<class T0, class T1, class T2>
-	class Trio;
-
-
 	enum class _As_it_is_t{} constexpr as_it_is{};
 
 
@@ -298,7 +291,7 @@ public:
 	,	_fv( Move_if< is_Rvalue_Reference<FAM&&>::value >(fam._fv) )
 	{
 		static_assert
-		(	is_Convertible<decltype(fam._fv), T>::value
+		(	is_Convertible<decltype(fam.first()), T>::value
 		,	"no method to convert family member."
 		);
 	}
@@ -306,7 +299,7 @@ public:
 	
 	auto operator=(Family const& fam)-> Family&
 	{
-		_fv = static_cast<T>(fam._fv),
+		first() = static_cast<T>(fam.first()),
 		_upper_of_this() = static_cast<_upper_t const&>(fam);
 
 		return *this;
@@ -314,7 +307,7 @@ public:
 
 	auto operator=(Family&& fam) noexcept-> Family&
 	{
-		_fv = Forward<T>(fam._fv),
+		first() = Forward<T>(fam.first()),
 		_upper_of_this() = static_cast<_upper_t&&>(fam);
 
 		return *this;
@@ -334,7 +327,7 @@ public:
 	>
 	auto operator=(FAM&& fam) noexcept(Aleph_Check<FAM&&>::value)-> Family&
 	{
-		_fv = Move_if< is_Rvalue_Reference<FAM&&>::value >(fam._fv);
+		first() = Move_if< is_Rvalue_Reference<FAM&&>::value >(fam.first());
 		_upper_of_this() = Qualify_Like_t<FAM&&, FAM_UPPER>(fam);
 
 		return *this;
@@ -363,7 +356,7 @@ public:
 	auto operator==(Family<Q, ARGS...> const& fam) const noexcept-> bool
 	{
 		return
-		(	_fv == fam._fv
+		(	first() == fam.first()
 		&&	static_cast<_upper_t const&>(*this) == static_cast< Family<ARGS...> const& >(fam)
 		);
 	}
@@ -423,6 +416,38 @@ public:
 	}	
 
 
+	auto constexpr first() const& noexcept-> T const&{  return std::get<0>(*this);  }
+	auto constexpr first() & noexcept-> T&{  return std::get<0>(*this);  }
+	auto constexpr first() const&& noexcept-> T const&&{  return std::get<0>( Move(*this) );  }
+	auto constexpr first() && noexcept-> T&&{  return std::get<0>( Move(*this) );  }
+
+
+#define _SGM_FAMILY_GET_METHOD_HELPER(TITLE, SIZE, CR, F)	\
+	template\
+	<	bool B = (size_v > SIZE)	\
+	,	class RES = Enable_if_t< B, Nth_t<SIZE-1, TYPES...> >  \
+	>	\
+	auto constexpr TITLE() CR noexcept->	RES CR{  return std::get<SIZE>( F(*this) );  }\
+	\
+	template< bool B = (size_v > SIZE), class RES = Enable_if_t<!B> >	\
+	auto constexpr TITLE(int = 0) CR noexcept-> RES{  static_assert(B, "out of index");  }
+
+
+#define _SGM_FAMILY_GET_METHODS(TITLE, SIZE)	\
+	_SGM_FAMILY_GET_METHOD_HELPER(TITLE, SIZE, const&, /**/)	\
+	_SGM_FAMILY_GET_METHOD_HELPER(TITLE, SIZE, &, /**/)	\
+	_SGM_FAMILY_GET_METHOD_HELPER(TITLE, SIZE, const&&, Move)	\
+	_SGM_FAMILY_GET_METHOD_HELPER(TITLE, SIZE, &&, Move)
+
+
+	_SGM_FAMILY_GET_METHODS(second, 1)
+	_SGM_FAMILY_GET_METHODS(third, 2)
+	_SGM_FAMILY_GET_METHODS(fourth, 3)
+
+
+#undef _SGM_FAMILY_GET_METHODS
+#undef _SGM_FAMILY_GET_METHOD_HELPER
+
 private:
 	auto _upper_of_this() noexcept-> _upper_t&{  return static_cast<_upper_t&>(*this);  }
 };
@@ -435,55 +460,6 @@ public:
 	bool constexpr operator==(Family) const noexcept{  return true;  }
 	bool constexpr operator!=(Family) const noexcept{  return false;  }
 };
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-#ifndef _SGM_FAMILY_MEMBER_ACCESS_FUNC
-	#define _SGM_FAMILY_MEMBER_ACCESS_FUNC(TITLE, N)		\
-		auto TITLE() & noexcept-> T##N&{  return _fam_t::template get<N>();  }	\
-		auto TITLE() const& noexcept-> T##N const&{  return _fam_t::template get<N>();  }	\
-		auto TITLE() && noexcept-> T##N&&{  return Move(_fam_t::template get<N>());  }		\
-		auto TITLE() const&& noexcept-> T##N const&&{  return Move(_fam_t::template get<N>());  }
-
-#else
-	#error _SGM_FAMILY_MEMBER_ACCESS_FUNC was already defined somewhere else.
-#endif
-
-
-template<class T0, class T1>
-class sgm::Duo : public Family<T0, T1>
-{
-private:
-	using _fam_t = Family<T0, T1>;
-
-
-public:
-	template<class...ARGS>
-	Duo(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
-
-	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
-	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
-};
-
-
-template<class T0, class T1, class T2>
-class sgm::Trio : public Family<T0, T1, T2>
-{
-private:
-	using _fam_t = Family<T0, T1, T2>;
-
-
-public:
-	template<class...ARGS>
-	Trio(ARGS&&...args) : _fam_t( Forward<ARGS>(args)... ){}
-
-	_SGM_FAMILY_MEMBER_ACCESS_FUNC(first, 0)
-	_SGM_FAMILY_MEMBER_ACCESS_FUNC(second, 1)
-	_SGM_FAMILY_MEMBER_ACCESS_FUNC(third, 2)
-};
-
-
-#undef _SGM_FAMILY_MEMBER_ACCESS_FUNC
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -687,7 +663,6 @@ namespace sgm
 
 	template<class...TYPES>
 	auto Make_Family(TYPES...types)	noexcept(!_Has_Any_Object< Family<TYPES...> >::value)
-
 	-> Family<TYPES...>{  return {types...};  }
 	
 	
