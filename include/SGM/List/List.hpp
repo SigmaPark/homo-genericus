@@ -56,6 +56,12 @@ struct sgm::List_Node
 {
 	using value_type = T;
 
+	List_Node() : front_ptr(nullptr), back_ptr(nullptr), value(){}
+	
+	template<class Q>
+	List_Node(List_Node* fp, List_Node* bp, Q&& q) noexcept(is_Rvalue_Reference<Q&&>::value)
+	:	front_ptr(fp), back_ptr(bp), value( Forward<Q>(q) ){}
+
 	List_Node *front_ptr = nullptr, *back_ptr = nullptr;
 	T value;
 };
@@ -490,7 +496,7 @@ private:
 	{
 		_node_t* const pres = _allocator.allocate( sizeof(_node_t) );
 
-		_allocator.construct( pres, _node_t{Forward<ARGS>(args)...} );
+		_allocator.construct( pres, Forward<ARGS>(args)... );
 
 		return pres;
 	}
