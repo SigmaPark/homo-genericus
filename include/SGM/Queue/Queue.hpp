@@ -149,8 +149,8 @@ public:
 	auto front() noexcept-> T&{  return *_optr;  }
 	auto front() const noexcept-> T const&{  return *_optr;  }
 
+	auto back() noexcept-> T&{  return *_prev(_iptr);  }
 	auto back() const noexcept-> T const&{  return *_prev(_iptr);  }
-
 
 	template<class...ARGS>
 	auto push(ARGS&&...args)-> Circular_Queue&
