@@ -56,13 +56,15 @@ struct sgm::List_Node
 {
 	using value_type = T;
 
-	List_Node() : front_ptr(nullptr), back_ptr(nullptr), value(){}
+	List_Node() noexcept(T()) : front_ptr(nullptr), back_ptr(nullptr), value(){}
 	
 	template<class Q>
-	List_Node(List_Node* fp, List_Node* bp, Q&& q) noexcept(is_Rvalue_Reference<Q&&>::value)
+	List_Node(List_Node* fp, List_Node* bp, Q&& q) 
+	noexcept(  is_Rvalue_Reference<Q&&>::value && noexcept( T(Declval<Q&&>()) )  )
 	:	front_ptr(fp), back_ptr(bp), value( Forward<Q>(q) ){}
 
-	List_Node *front_ptr = nullptr, *back_ptr = nullptr;
+
+	List_Node *front_ptr, *back_ptr;
 	T value;
 };
 
@@ -127,20 +129,20 @@ public:
 	static bool constexpr is_mutable_v = IS_MUTABLE, is_forward_v = IS_FORWARD;
 
 
-	List_iterator(_node_t* const node_ptr = nullptr) : _node_ptr(node_ptr){}
+	List_iterator(_node_t* const node_ptr = nullptr) noexcept : _node_ptr(node_ptr){}
 
-	List_iterator(_itr_t const&) = default;
+	List_iterator(_itr_t const&) noexcept = default;
 
-	List_iterator(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const& itr) 
+	List_iterator(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const& itr) noexcept
 	:	_node_ptr( _List_itr_Helper::node_ptr(itr) )
 	{
 		static_assert(!IS_MUTABLE, "cannot assign immutable iterator to mutable one .");
 	}
 
 
-	auto operator=(_itr_t const&)-> _itr_t& = default;
+	auto operator=(_itr_t const&) noexcept-> _itr_t& = default;
 
-	auto operator=(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const& itr)-> _itr_t&
+	auto operator=(List_iterator<T, !IS_MUTABLE, IS_FORWARD> const& itr) noexcept-> _itr_t&
 	{
 		static_assert(!IS_MUTABLE, "cannot assign immutable iterator to mutable one .");
 		
@@ -155,7 +157,7 @@ public:
 	auto operator->() const noexcept-> _elem_t*{  return &**this;  }
 
 
-	auto operator++()-> _itr_t&
+	auto operator++() noexcept-> _itr_t&
 	{
 		_node_ptr = _List_node_Helper::shift<true, IS_FORWARD>(_node_ptr);
 
@@ -163,7 +165,7 @@ public:
 	}
 
 
-	auto operator--()-> _itr_t&
+	auto operator--() noexcept-> _itr_t&
 	{
 		_node_ptr = _List_node_Helper::shift<false, IS_FORWARD>(_node_ptr);
 
@@ -171,7 +173,7 @@ public:
 	}
 
 
-	auto operator++(int)-> _itr_t
+	auto operator++(int) noexcept-> _itr_t
 	{
 		auto res = *this;
 
@@ -180,7 +182,7 @@ public:
 		return res;
 	}
 
-	auto operator--(int)-> _itr_t
+	auto operator--(int) noexcept-> _itr_t
 	{
 		auto res = *this;
 
@@ -240,10 +242,11 @@ public:
 	using const_reverse_iterator = List_iterator<T, false, false>;
 
 
-	List() : _bnd_node{}, _allocator(){  _link_nodes(_rend_nptr(), _end_nptr());  }
+	List() noexcept : _bnd_node{}, _allocator(){  _link_nodes(_rend_nptr(), _end_nptr());  }
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	List(ITR begin_itr, ITR const end_itr) 
+	noexcept( _construct_from_iterators(begin_itr, end_itr) )
 	:	List(){  _construct_from_iterators(begin_itr, end_itr);  }
 
 	List(List const& Li) : List(Li.cbegin(), Li.cend()){}
@@ -326,30 +329,30 @@ public:
 	}
 
 
-	auto cbegin() const-> const_iterator{  return _bnd_node.rend.back_ptr;  }
-	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> iterator{  return _bnd_node.rend.back_ptr;  };
+	auto cbegin() const noexcept-> const_iterator{  return _bnd_node.rend.back_ptr;  }
+	auto begin() const noexcept-> SGM_DECLTYPE_AUTO(  cbegin()  )
+	auto begin() noexcept-> iterator{  return _bnd_node.rend.back_ptr;  };
 
-	auto cend() const-> const_iterator{  return _end_nptr();  }
-	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end()-> iterator{  return _end_nptr();  }
+	auto cend() const noexcept-> const_iterator{  return _end_nptr();  }
+	auto end() const noexcept-> SGM_DECLTYPE_AUTO(  cend()  )
+	auto end() noexcept-> iterator{  return _end_nptr();  }
 
-	auto crbegin() const-> const_reverse_iterator{  return _bnd_node.end.front_ptr;  }
-	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
-	auto rbegin()-> reverse_iterator{  return _bnd_node.end.front_ptr;  }
+	auto crbegin() const noexcept-> const_reverse_iterator{  return _bnd_node.end.front_ptr;  }
+	auto rbegin() const noexcept-> SGM_DECLTYPE_AUTO(  crbegin()  )
+	auto rbegin() noexcept-> reverse_iterator{  return _bnd_node.end.front_ptr;  }
 
-	auto crend() const-> const_reverse_iterator{  return _rend_nptr();  }
-	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
-	auto rend()-> reverse_iterator{  return _rend_nptr();  }
-
-
-	auto front() const-> T const&{  return *cbegin();  }
-	auto front()-> T&{  return *begin();  }
-	auto back() const-> T const&{  return *crbegin();  }
-	auto back()-> T&{  return *rbegin();  }
+	auto crend() const noexcept-> const_reverse_iterator{  return _rend_nptr();  }
+	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
+	auto rend() noexcept-> reverse_iterator{  return _rend_nptr();  }
 
 
-	auto size() const-> size_t
+	auto front() const noexcept-> T const&{  return *cbegin();  }
+	auto front() noexcept-> T&{  return *begin();  }
+	auto back() const noexcept-> T const&{  return *crbegin();  }
+	auto back() noexcept-> T&{  return *rbegin();  }
+
+
+	auto size() const noexcept-> size_t
 	{	
 		size_t res = 0;
 
@@ -359,13 +362,12 @@ public:
 	}
 	
 
-	auto is_empty() const-> bool{  return cbegin() == cend();  }
+	auto is_empty() const noexcept-> bool{  return cbegin() == cend();  }
 
 
-	auto clear()-> List&
+	auto clear() noexcept-> List&
 	{
-		while(!is_empty())
-			pop_back();
+		pop(begin(), end());
 
 		return *this;
 	}
@@ -423,12 +425,12 @@ public:
 	}
 
 
-	auto pop_back()-> List&{  return pop(rbegin()),  *this;  }
-	auto pop_front()-> List&{  return pop(begin()),  *this;  }
+	auto pop_back() noexcept-> List&{  return pop(rbegin()),  *this;  }
+	auto pop_front() noexcept-> List&{  return pop(begin()),  *this;  }
 
 
 	template<class ITR>
-	auto pop(ITR const itr)-> ITR
+	auto pop(ITR const itr) noexcept-> ITR
 	{
 		assert( !_itr_hp::is_end_itr(itr) );
 
@@ -437,7 +439,7 @@ public:
 
 
 	template<class ITR>
-	auto pop(ITR bi, ITR const ei)-> ITR
+	auto pop(ITR bi, ITR const ei) noexcept-> ITR
 	{
 		static_assert
 		(	(	is_Convertible<ITR, const_iterator>::value 
@@ -501,11 +503,11 @@ private:
 		return pres;
 	}
 
-	void _destroy(_node_t* p)
+	void _destroy(_node_t* p) noexcept
 	{
 		_allocator.destroy(p);
 
-		p->front_ptr = p->back_ptr = nullptr;
+		//p->front_ptr = p->back_ptr = nullptr;
 
 		_allocator.deallocate( p, sizeof(_node_t) );
 	}
@@ -565,7 +567,7 @@ private:
 
 
 	template<class ITR>
-	static void _link_itrs(ITR const itr0, ITR const itr1)
+	static void _link_itrs(ITR const itr0, ITR const itr1) noexcept
 	{
 		_node_t 
 			*const _nptr0 = _itr_hp::node_ptr(itr0),  
@@ -579,14 +581,14 @@ private:
 
 
 	template<class ITR>
-	static void _unlink_range(ITR const bi, ITR const ei)
+	static void _unlink_range(ITR const bi, ITR const ei) noexcept
 	{
 		if(bi != ei)
 			_link_itrs( Prev(bi), ei );
 	}
 
 
-	static void _link_nodes(_node_t* nptr0, _node_t* nptr1)
+	static void _link_nodes(_node_t* nptr0, _node_t* nptr1) noexcept
 	{
 		assert(nptr0 != nullptr && nptr1 != nullptr);
 

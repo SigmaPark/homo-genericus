@@ -348,6 +348,92 @@ static void Size_of_List()
 {
 	static_assert( sizeof(sgm::List<Specimen>) <= 3*sizeof(std::uint64_t*), "" );
 }
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+struct Performance : sgm::Unconstructible
+{
+	static void push_and_pop();
+};
+
+
+#include <list>
+#include <chrono>
+
+
+void Performance::push_and_pop()
+{
+#if 0
+	using namespace std::chrono;
+	
+	int constexpr N = 10'000'000;
+	
+	{
+		std::cout << "\tstd::list\n";
+
+		std::list<sgm::spec::Specimen> list;
+
+		{
+			std::cout << "\t\templace_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			for( int i = 0;  i < N;  list.emplace_back(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			std::cout << "\t\tpop_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(int i = 0;  i < N;  list.pop_back(),  ++i);
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+
+		is_True(list.empty());
+	}
+
+	std::cout << '\n';
+
+	{
+		std::cout << "\tsgm::List\n";
+
+		sgm::List<sgm::spec::Specimen> list;
+
+		{
+			std::cout << "\t\templace_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			for( int i = 0;  i < N;  list.emplace_back(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			std::cout << "\t\tpop_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			list.pop(list.begin(), list.end());
+			//for(int i = 0;  i < N;  list.pop_back(),  ++i);
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+
+		is_True(list.is_empty());
+	}
+#endif
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -360,4 +446,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::End_iterator
 ,	::Swap
 ,	::Size_of_List
+,	::Performance::push_and_pop
 };

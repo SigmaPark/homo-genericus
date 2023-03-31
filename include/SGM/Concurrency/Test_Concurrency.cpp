@@ -347,6 +347,7 @@ auto pipeline_test::Time_per_Unit_Task()-> double
 
 static void Pipeline_Test()
 {
+#if 0
 	using namespace std::chrono;
 	using std::cout;
 
@@ -425,6 +426,7 @@ static void Pipeline_Test()
 	}
 
 	cout << "Pipeline Test Ends\n";
+#endif
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
