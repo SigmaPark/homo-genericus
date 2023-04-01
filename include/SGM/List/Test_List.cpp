@@ -228,6 +228,8 @@ namespace sgm
 			template<class Q, class...ARGS>
 			void construct(Q* p, ARGS&&...args)
 			{
+				SGM_CRTP_OVERRIDE(construct, <Q, ARGS&&...>);
+
 				_base_t::construct( p, Forward<ARGS&&>(args)... );
 
 				++_idx;
@@ -353,7 +355,7 @@ static void Size_of_List()
 
 struct Performance : sgm::Unconstructible
 {
-	static void push_and_pop();
+	static void push_iterate_and_pop();
 };
 
 
@@ -361,46 +363,12 @@ struct Performance : sgm::Unconstructible
 #include <chrono>
 
 
-void Performance::push_and_pop()
+void Performance::push_iterate_and_pop()
 {
 #if 0
 	using namespace std::chrono;
 	
-	int constexpr N = 10'000'000;
-	
-	{
-		std::cout << "\tstd::list\n";
-
-		std::list<sgm::spec::Specimen> list;
-
-		{
-			std::cout << "\t\templace_back : ";
-
-			auto const start_tp = system_clock::now();
-
-			for( int i = 0;  i < N;  list.emplace_back(i++) );
-
-			auto const time = system_clock::now() - start_tp;
-
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
-		}
-		{
-			std::cout << "\t\tpop_back : ";
-
-			auto const start_tp = system_clock::now();
-
-			for(int i = 0;  i < N;  list.pop_back(),  ++i);
-
-			auto const time = system_clock::now() - start_tp;
-
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
-		}
-
-		is_True(list.empty());
-	}
-
-	std::cout << '\n';
-
+	int constexpr N = 30'000'000;
 	{
 		std::cout << "\tsgm::List\n";
 
@@ -412,6 +380,20 @@ void Performance::push_and_pop()
 			auto const start_tp = system_clock::now();
 
 			for( int i = 0;  i < N;  list.emplace_back(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			sgm::spec::Specimen s;
+
+			std::cout << "\t\titerate : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(auto const& e : list)
+				s = e;
 
 			auto const time = system_clock::now() - start_tp;
 
@@ -431,6 +413,53 @@ void Performance::push_and_pop()
 		}
 
 		is_True(list.is_empty());
+	}	
+
+	std::cout << '\n';
+
+	{
+		std::cout << "\tstd::list\n";
+
+		std::list<sgm::spec::Specimen> list;
+
+		{
+			std::cout << "\t\templace_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			for( int i = 0;  i < N;  list.emplace_back(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			sgm::spec::Specimen s;
+
+			std::cout << "\t\titerate : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(auto const& e : list)
+				s = e;
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			std::cout << "\t\tpop_back : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(int i = 0;  i < N;  list.pop_front(),  ++i);
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+
+		is_True(list.empty());
 	}
 #endif
 }
@@ -446,5 +475,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
 ,	::End_iterator
 ,	::Swap
 ,	::Size_of_List
-,	::Performance::push_and_pop
+,	::Performance::push_iterate_and_pop
 };

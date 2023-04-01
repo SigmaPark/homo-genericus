@@ -246,7 +246,6 @@ public:
 
 	template<  class ITR, class = Enable_if_t< is_iterator<ITR>::value >  >
 	List(ITR begin_itr, ITR const end_itr) 
-	noexcept( _construct_from_iterators(begin_itr, end_itr) )
 	:	List(){  _construct_from_iterators(begin_itr, end_itr);  }
 
 	List(List const& Li) : List(Li.cbegin(), Li.cend()){}

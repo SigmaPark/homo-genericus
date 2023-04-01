@@ -306,7 +306,7 @@ public:
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
-
+#if 0
 template<class PREC>
 static auto Unit_task_time_check(std::size_t const reps)-> double
 {
@@ -343,7 +343,7 @@ auto pipeline_test::Time_per_Unit_Task()-> double
 
 	return res;
 }
-
+#endif
 
 static void Pipeline_Test()
 {
