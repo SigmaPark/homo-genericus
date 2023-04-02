@@ -370,9 +370,23 @@ void Performance::push_iterate_and_pop()
 	
 	int constexpr N = 30'000'000;
 	{
-		std::cout << "\tsgm::List\n";
+	#if 1
+		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 
+		auto* buffer = new unsigned char[list_node_byte_size_v * N];
+		//[list_node_byte_size_v * N] = {0, };
+		auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
+
+		auto list	
+		=	sgm::List<Specimen>::by
+			(	sgm::_Test_List_Allocator_detail
+				::	Test_Allocator<sgm::spec::Specimen>(node_arr)
+			);
+	#else
 		sgm::List<sgm::spec::Specimen> list;
+	#endif
+
+		std::cout << "\tsgm::List\n";
 
 		{
 			std::cout << "\t\templace_back : ";
@@ -413,6 +427,8 @@ void Performance::push_iterate_and_pop()
 		}
 
 		is_True(list.is_empty());
+
+		delete[] buffer;
 	}	
 
 	std::cout << '\n';

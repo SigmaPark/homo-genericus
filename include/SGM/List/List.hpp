@@ -506,7 +506,7 @@ private:
 	{
 		_allocator.destroy(p);
 
-		//p->front_ptr = p->back_ptr = nullptr;
+		p->front_ptr = p->back_ptr = nullptr;
 
 		_allocator.deallocate( p, sizeof(_node_t) );
 	}
