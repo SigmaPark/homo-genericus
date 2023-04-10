@@ -143,7 +143,7 @@ public:
 	<	class Q
 	,	class 
 		=	Enable_if_t
-			<	is_Avatar<Q>::value 
+			<	is_Avatar<Q>::value && !Has_Same_Origin<Q, Abbreviable_t>::value
 			&&	!is_constAvatar<Q>::value 
 			&&	!is_Const< Referenceless_t<Q> >::value
 			>
@@ -155,6 +155,8 @@ public:
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
 	Abbreviable_t(Q const&&) = delete;
+
+	Abbreviable_t(Abbreviable_t const&) = default;
 
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
@@ -201,11 +203,23 @@ public:
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
 	Abbreviable_t(Q& q) noexcept: _cvp( Address_of(q) ){}
 
-	template<  class Q, class = Enable_if_t< is_Avatar<Q>::value >  >
+	template
+	<  	class Q
+	, 	class = Enable_if_t< is_Avatar<Q>::value && !Has_Same_Origin<Q, Abbreviable_t>::value >  
+	>
 	Abbreviable_t(Q const& avt) noexcept : Abbreviable_t(avt.v()){}
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
 	Abbreviable_t(Q const&&) = delete;
+
+	Abbreviable_t(Abbreviable_t const&) = default;
+
+	Abbreviable_t
+	(	Abbreviable_t
+		<	Avatar_tag, void, Variable_t
+		,	Avatar_Pedigree<void, Variable_t, false, false>
+		>	va
+	) :	_cvp(&va){}
 
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
