@@ -19,6 +19,9 @@ namespace sgm
 	
 	SGM_ABBREVIABLE_WIZARD(Avatar);
 
+	template<class T>
+	struct is_VoidAvatar;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -99,7 +102,7 @@ class sgm::Abbreviable_t
 {
 public:
 	using element_t = T const;
-
+	using value_type = T;
 
 private:
 	using _base_t = Operators_of<element_t>;
@@ -124,6 +127,27 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class T>
+struct sgm::is_VoidAvatar
+{
+private:
+	/* Declaration Only */
+	template< class Q, bool B = is_Avatar<Q>::value, class = Enable_if_t<!B> >
+	static auto _calc(int)-> Boolean<B>;
+
+	/* Declaration Only */
+	template< class Q, bool B = is_Avatar<Q>::value, class = Enable_if_t<B> >
+	static auto _calc(...)-> is_Void< typename Referenceless_t<Q>::value_type >;
+
+
+public:
+	static bool constexpr value = decltype( _calc<T>(0) )::value;
+
+	using type = Boolean<value>;
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<>
 class sgm::Abbreviable_t
 <	sgm::Avatar_tag
@@ -132,6 +156,7 @@ class sgm::Abbreviable_t
 {
 public:
 	using element_t = void;
+	using value_type = void;
 
 
 	template
@@ -198,6 +223,7 @@ class sgm::Abbreviable_t
 {
 public:
 	using element_t = void const;
+	using value_type = void;
 
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
