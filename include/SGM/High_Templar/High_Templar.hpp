@@ -127,10 +127,10 @@ namespace sgm
 		using _Try_Mutable_t = Selective_t<TRY_MUTABLE, T, T const>;
 
 		template<bool TRY_MUTABLE, class T>
-		static auto Try_Mut_if(T& t)-> _Try_Mutable_t<T, TRY_MUTABLE>&{  return t;  }
+		static auto Try_Mut_if(T& t) noexcept-> _Try_Mutable_t<T, TRY_MUTABLE>&{  return t;  }
 
 		template<bool TRY_MUTABLE, class T>
-		static auto Try_Mut_if(T* p)-> _Try_Mutable_t<T, TRY_MUTABLE>*{  return p;  }
+		static auto Try_Mut_if(T* p) noexcept-> _Try_Mutable_t<T, TRY_MUTABLE>*{  return p;  }
 
 	}
 }
@@ -152,13 +152,13 @@ struct sgm::Fork_and_Join_Flag<sgm::Nof_Task::AUTO_OR, N>
 :	Fork_and_Join<Nof_Hardware_Core::DYNAMIC>
 {
 private:
-	auto _dynamic_fnj() const
+	auto _dynamic_fnj() const noexcept
 	->	Fork_and_Join<Nof_Hardware_Core::DYNAMIC> const&{  return *this;  }
 
 
 public:
 	template<class FUNC>
-	void operator()(size_t const nof_iteration, FUNC&& func) const
+	void operator()(size_t const nof_iteration, FUNC&& func) const noexcept
 	{
 		if(_dynamic_fnj().number_of_task() != 1)
 			_dynamic_fnj()( nof_iteration, Forward<FUNC>(func) );
@@ -192,7 +192,7 @@ struct sgm::ht::_Array_Evaluation<_D, sgm::ht::_Evaluation_Mode::SEQUANCIAL> : U
 	<	class RG, class ELEM = Decay_t< decltype( *Begin(Declval<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
-	static auto calc(RG&& rg, ALC&& allocator = {})
+	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
 	->	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
 	{
 		return Array<ELEM>::by( Forward<ALC>(allocator), fBegin<RG>(rg), fEnd<RG>(rg) );
@@ -314,9 +314,9 @@ class sgm::ht::_Pointer_Proxy<REF, true>
 public:
 	using type = Referenceless_t<REF>*;
 
-	_Pointer_Proxy(REF& t) : _ptr( Address_of(t) ){}
+	_Pointer_Proxy(REF& t) noexcept : _ptr( Address_of(t) ){}
 
-	operator type() const{  return _ptr;  }
+	operator type() const noexcept{  return _ptr;  }
 
 
 private:
@@ -333,7 +333,7 @@ private:
 public:
 	using type = _Pointer_Proxy;
 
-	_Pointer_Proxy(REF&& t) : _t( Move(t) ){}
+	_Pointer_Proxy(REF&& t) noexcept : _t( Move(t) ){}
 
 	auto operator->() const noexcept-> _elem_t const*{  return Address_of(_t);  }
 	auto operator->() noexcept-> _elem_t*{  return Address_of(_t);  }
@@ -358,20 +358,22 @@ class sgm::ht::Morph_iterator<ITR, FUNC, 1>
 {
 protected:
 	using _deref_t = decltype( Declval<FUNC>()(*Declval<ITR>()) );
+
+	static bool constexpr _is_noexcept_func_v = noexcept( Declval<FUNC>()(*Declval<ITR>()) );
 	
 private:
 	using _self_t = Morph_iterator;
 
 public:
 	template<  class ITR2, class = Enable_if_t< is_Convertible<ITR2, ITR>::value >  >
-	Morph_iterator(ITR2 const xitr2, FUNC& func) : _xitr(xitr2), _pfunc(&func){}
+	Morph_iterator(ITR2 const xitr2, FUNC& func) noexcept : _xitr(xitr2), _pfunc(&func){}
 
 
 	template
 	<	class ITR2
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
-	Morph_iterator(Morph_iterator<ITR2, FUNC> const mitr) 
+	Morph_iterator(Morph_iterator<ITR2, FUNC> const mitr) noexcept
 	:	_xitr(mitr._xitr), _pfunc(mitr._pfunc){}	
 
 
@@ -379,20 +381,23 @@ public:
 	<	class ITR2
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
-	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
+	auto operator=(Morph_iterator<ITR2, FUNC> const mitr) noexcept
 	->	_self_t&{  return _xitr = mitr._xitr,  _pfunc = mitr._pfunc,  *this;  }
 
 
-	auto operator*() const-> _deref_t{  return (*_pfunc)(*_xitr);  }
+	auto operator*() const noexcept(_is_noexcept_func_v)
+	->	_deref_t{  return (*_pfunc)(*_xitr);  }
 
-	auto operator->() const
+	auto operator->() const noexcept(_is_noexcept_func_v)
 	->	typename _Pointer_Proxy<_deref_t>::type{  return _Pointer_Proxy<_deref_t>(**this);  }
 
 	auto operator==(_self_t const itr) const noexcept-> bool{  return _xitr == itr._xitr;  }
 	auto operator!=(_self_t const itr) const noexcept-> bool{  return !(*this == itr);  }
 
-	auto operator++()-> _self_t&{  return ++_xitr,  *this;  }
-	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+	auto operator++() noexcept-> _self_t&{  return ++_xitr,  *this;  }
+	
+	auto operator++(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
 
 
 	ITR _xitr;
@@ -409,22 +414,26 @@ private:
 
 public:
 	template<class...ARGS>
-	Morph_iterator(ARGS&&...args) : _top_t( Forward<ARGS>(args)... ){}
+	Morph_iterator(ARGS&&...args) noexcept : _top_t( Forward<ARGS>(args)... ){}
 
 
 	template
 	<	class ITR2
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
-	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
+	auto operator=(Morph_iterator<ITR2, FUNC> const mitr) noexcept
 	->	_self_t&{  return _top_t::operator=(mitr),  *this;  }
 
 
-	auto operator++()-> _self_t&{  return _top_t::operator++(),  *this;  }
-	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+	auto operator++() noexcept-> _self_t&{  return _top_t::operator++(),  *this;  }
+	
+	auto operator++(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
 
-	auto operator--()-> _self_t&{  return --_top_t::_xitr,  *this;  }
-	auto operator--(int)-> _self_t{  _self_t const itr = *this;  return --*this,  itr;  }
+	auto operator--() noexcept-> _self_t&{  return --_top_t::_xitr,  *this;  }
+	
+	auto operator--(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return --*this,  itr;  }
 };
 
 
@@ -439,37 +448,48 @@ private:
 
 public:
 	template<class...ARGS>
-	Morph_iterator(ARGS&&...args) : _middle_t( Forward<ARGS>(args)... ){}
+	Morph_iterator(ARGS&&...args) noexcept : _middle_t( Forward<ARGS>(args)... ){}
 
 
 	template
 	<	class ITR2
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
-	auto operator=(Morph_iterator<ITR2, FUNC> const mitr)
+	auto operator=(Morph_iterator<ITR2, FUNC> const mitr) noexcept
 	->	_self_t&{  return _top_t::operator=(mitr),  *this;  }
 
 
-	auto operator++()-> _self_t&{  return _middle_t::operator++(),  *this;  }
-	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+	auto operator++() noexcept-> _self_t&{  return _middle_t::operator++(),  *this;  }
+	
+	auto operator++(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
 
-	auto operator--()-> _self_t&{  return _middle_t::operator--(),  *this;  }
-	auto operator--(int)-> _self_t{  _self_t const itr = *this;  return --*this,  itr;  }
+	auto operator--() noexcept-> _self_t&{  return _middle_t::operator--(),  *this;  }
+	
+	auto operator--(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return --*this,  itr;  }
 
 
-	auto operator[](ptrdiff_t const d) const-> _deref_t{  return *(*this + d);  }
-	auto operator[](ptrdiff_t const d)-> _deref_t{  return *(*this + d);  }
+	auto operator[](ptrdiff_t const d) const noexcept(_top_t::_is_noexcept_func_v)
+	->	_deref_t{  return *(*this + d);  }
+	
+	auto operator[](ptrdiff_t const d) noexcept(_top_t::_is_noexcept_func_v)
+	->	_deref_t{  return *(*this + d);  }
 
-	auto operator+(ptrdiff_t const d) const
+	auto operator+(ptrdiff_t const d) const noexcept
 	->	_self_t{  return{_top_t::_xitr + d, *_top_t::_pfunc};  }
 	
-	auto operator-(ptrdiff_t const d) const
+	auto operator-(ptrdiff_t const d) const noexcept
 	->	_self_t{  return{_top_t::_xitr - d, *_top_t::_pfunc};  }
 
-	auto operator+=(ptrdiff_t const d)-> _self_t&{  return _top_t::_xitr += d,  *this;  }
-	auto operator-=(ptrdiff_t const d)-> _self_t&{  return _top_t::_xitr -= d,  *this;  }
+	auto operator+=(ptrdiff_t const d) noexcept
+	->	_self_t&{  return _top_t::_xitr += d,  *this;  }
+	
+	auto operator-=(ptrdiff_t const d) noexcept
+	->	_self_t&{  return _top_t::_xitr -= d,  *this;  }
 
-	auto operator-(_self_t const itr) const-> ptrdiff_t{  return _top_t::_xitr - itr._xitr;  }
+	auto operator-(_self_t const itr) const noexcept
+	->	ptrdiff_t{  return _top_t::_xitr - itr._xitr;  }
 
 	auto operator<(_self_t const itr) const noexcept{  return _top_t::_xitr < itr._xitr;  }
 	auto operator>(_self_t const itr) const noexcept{  return _top_t::_xitr > itr._xitr;  }
@@ -525,32 +545,33 @@ public:
 	:	_rg( Forward<RG_>(rg) ), _func( Forward<FUNC_>(func) ){}
 
 
-	auto cbegin() const-> const_iterator{  return {Begin(_rg), _func};  }
-	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> iterator{  return {Begin(_rg), _func};  }
+	auto cbegin() const noexcept-> const_iterator{  return {Begin(_rg), _func};  }
+	auto begin() const noexcept-> SGM_DECLTYPE_AUTO(  cbegin()  )
+	auto begin() noexcept-> iterator{  return {Begin(_rg), _func};  }
 
-	auto cend() const-> const_iterator{  return {End(_rg), _func};  }
-	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end()-> iterator{  return {End(_rg), _func};  }
+	auto cend() const noexcept-> const_iterator{  return {End(_rg), _func};  }
+	auto end() const noexcept-> SGM_DECLTYPE_AUTO(  cend()  )
+	auto end() noexcept-> iterator{  return {End(_rg), _func};  }
 
-	auto crbegin() const-> const_reverse_iterator{  return {rBegin(_rg), _func};  }
-	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
-	auto rbegin()-> reverse_iterator{  return {rBegin(_rg), _func};  }
+	auto crbegin() const noexcept-> const_reverse_iterator{  return {rBegin(_rg), _func};  }
+	auto rbegin() const noexcept-> SGM_DECLTYPE_AUTO(  crbegin()  )
+	auto rbegin() noexcept-> reverse_iterator{  return {rBegin(_rg), _func};  }
 
-	auto crend() const-> const_reverse_iterator{  return {rEnd(_rg), _func};  }
-	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
-	auto rend()-> reverse_iterator{  return {rEnd(_rg), _func};  }
+	auto crend() const noexcept-> const_reverse_iterator{  return {rEnd(_rg), _func};  }
+	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
+	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _func};  }
 
 
 	template<class EVAL_FLAG = None, class ALC = _Default_Array_Allocator_t<value_type> >
-	auto eval(ALC&& allocator = {}) const-> Array< value_type, arrSize::DYNAMIC, Decay_t<ALC> >
+	auto eval(ALC&& allocator = {}) const noexcept
+	->	Array< value_type, arrSize::DYNAMIC, Decay_t<ALC> >
 	{  
 		return _Array_Evaluation<EVAL_FLAG>::calc( *this, Forward<ALC>(allocator) );
 	}
 
 
 	template< class ALC = _Default_Array_Allocator_t<value_type> >
-	operator Array<value_type, arrSize::DYNAMIC, ALC>() const{  return eval(ALC{});  }
+	operator Array<value_type, arrSize::DYNAMIC, ALC>() const noexcept{  return eval(ALC{});  }
 
 
 private:
@@ -566,11 +587,19 @@ class sgm::ht::_Filter_itr_Func
 private:
 	using _pfunc_t = Referenceless_t<FUNC>*;
 
-public:
-	_Filter_itr_Func(_pfunc_t const pfunc, ITR const eitr) : _pfunc(pfunc), _eitr(eitr){}
+	static bool constexpr _is_noexcept_func_v 
+	=	noexcept( Declval< Pointerless_t<_pfunc_t> >()(*Declval<ITR>()) );
 
-	auto operator()(ITR const itr) const-> bool{  return itr == _eitr || (*_pfunc)(*itr);  }
-	auto operator()(ITR const itr)-> bool{  return itr == _eitr || (*_pfunc)(*itr);  }
+public:
+	_Filter_itr_Func(_pfunc_t const pfunc, ITR const eitr) noexcept 
+	:	_pfunc(pfunc), _eitr(eitr){}
+
+	auto operator()(ITR const itr) const noexcept(_is_noexcept_func_v)
+	->	bool{  return itr == _eitr || (*_pfunc)(*itr);  }
+	
+	auto operator()(ITR const itr) noexcept(_is_noexcept_func_v)
+	->	bool{  return itr == _eitr || (*_pfunc)(*itr);  }
+
 
 private:
 	_pfunc_t _pfunc;
@@ -585,10 +614,20 @@ private:
 	using _deref_t = decltype(*Declval<ITR>());
 	using _self_t = Filter_iterator;
 
+	static bool constexpr 
+		_is_noexcept_func_v = noexcept( Declval<ITR_FUNC>()(Declval<ITR>()) ),
+		_is_noexcept_copy_constructible_func_v 
+		=	noexcept( ITR_FUNC(Declval<ITR_FUNC const&>()) ),
+		_is_noexcept_copy_assignable_func_v
+		=	noexcept(Declval<ITR_FUNC>() = Declval<ITR_FUNC const&>()),
+		_is_noexcept_deref_operator_v = noexcept(*Declval<ITR>());
+
+
 
 public:
 	template<  class ITR2, class = Enable_if_t< is_Convertible<ITR2, ITR>::value >  >
-	Filter_iterator(ITR2 const xitr2, ITR_FUNC const itr_func)
+	Filter_iterator(ITR2 const xitr2, ITR_FUNC const itr_func) 
+	noexcept(_is_noexcept_copy_constructible_func_v && _is_noexcept_func_v)
 	:	_xitr(xitr2), _itr_func(itr_func){  _shift_until_valid();  }
 
 
@@ -596,7 +635,8 @@ public:
 	<	class ITR2
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
-	Filter_iterator(Filter_iterator<ITR2, ITR_FUNC> const fitr) 
+	Filter_iterator(Filter_iterator<ITR2, ITR_FUNC> const fitr)
+	noexcept(_is_noexcept_copy_constructible_func_v && _is_noexcept_func_v)
 	:	_xitr(fitr._xitr), _itr_func(fitr._itr_func){  _shift_until_valid();  }
 
 
@@ -605,17 +645,21 @@ public:
 	,	class = Enable_if_t< is_Convertible<ITR2, ITR>::value && !is_Same<ITR2, ITR>::value >  
 	>
 	auto operator=(Filter_iterator<ITR2, ITR_FUNC> const fitr)
+	noexcept(_is_noexcept_copy_assignable_func_v)
 	->	_self_t&{  return _xitr = fitr._xitr,  _itr_func = fitr._itr_func,  *this;  }
 
 
-	auto operator*() const-> _deref_t{  return *_xitr;  }
+	auto operator*() const noexcept(_is_noexcept_deref_operator_v)-> _deref_t{  return *_xitr;  }
 
-	auto operator->() const
+	auto operator->() const noexcept(_is_noexcept_deref_operator_v)
 	->	typename _Pointer_Proxy<_deref_t>::type{  return _Pointer_Proxy<_deref_t>(**this);  }
 
 
-	auto operator++()-> _self_t&{  return ++_xitr,  _shift_until_valid(),  *this;  }
-	auto operator++(int)-> _self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
+	auto operator++() noexcept(_is_noexcept_func_v)
+	->	_self_t&{  return ++_xitr,  _shift_until_valid(),  *this;  }
+	
+	auto operator++(int) noexcept
+	->	_self_t{  _self_t const itr = *this;  return ++*this,  itr;  }
 
 	bool operator==(_self_t const fitr) const noexcept{  return _xitr == fitr._xitr;  }
 	bool operator!=(_self_t const fitr) const noexcept{  return !(*this == fitr);  }
@@ -626,7 +670,10 @@ public:
 
 
 private:
-	void _shift_until_valid(){  for(;  !_itr_func(_xitr);  _xitr++);  }
+	void _shift_until_valid() noexcept(_is_noexcept_func_v)
+	{
+		for(;  !_itr_func(_xitr);  _xitr++);  
+	}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -665,28 +712,38 @@ public:
 
 
 	template<class RG_, class FUNC_>
-	Filter_Range(RG_&& rg, FUNC_&& fn) : _rg( Forward<RG_>(rg) ), _fn( Forward<FUNC_>(fn) ){}
+	Filter_Range(RG_&& rg, FUNC_&& fn)
+	noexcept
+	(	Aleph_Check<RG_&&, FUNC_&&>::value 
+	||	(  noexcept( RG_(rg) ) && noexcept( FUNC_(fn) )  )
+	)
+	:	_rg( Forward<RG_>(rg) ), _fn( Forward<FUNC_>(fn) ){}
 
 
-	auto cbegin() const-> const_iterator{  return {Begin(_rg), _fitr_func(this)};  }
-	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin()-> iterator{  return {Begin(_rg), _fitr_func(this)};  }
+	auto cbegin() const noexcept-> const_iterator{  return {Begin(_rg), _fitr_func(this)};  }
+	auto begin() const noexcept-> SGM_DECLTYPE_AUTO(  cbegin()  )
+	auto begin() noexcept-> iterator{  return {Begin(_rg), _fitr_func(this)};  }
 
-	auto cend() const-> const_iterator{  return {End(_rg), _fitr_func(this)};  }
-	auto end() const-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end()->	iterator{  return {End(_rg), _fitr_func(this)};  }
+	auto cend() const noexcept-> const_iterator{  return {End(_rg), _fitr_func(this)};  }
+	auto end() const noexcept-> SGM_DECLTYPE_AUTO(  cend()  )
+	auto end() noexcept-> iterator{  return {End(_rg), _fitr_func(this)};  }
 
-	auto crbegin() const->	const_reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
-	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
-	auto rbegin()-> reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
+	auto crbegin() const noexcept
+	->	const_reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
+	
+	auto rbegin() const noexcept-> SGM_DECLTYPE_AUTO(  crbegin()  )
+	auto rbegin() noexcept-> reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
 
-	auto crend() const-> const_reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
-	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
-	auto rend()-> reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
+	auto crend() const noexcept
+	->	const_reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
+	
+	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
+	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
 
 
 	template< class ALC = _Default_Array_Allocator_t<value_type> >
-	auto eval(ALC&& allocator = {}) const-> Array< value_type, arrSize::DYNAMIC, Decay_t<ALC> >
+	auto eval(ALC&& allocator = {}) const noexcept
+	->	Array< value_type, arrSize::DYNAMIC, Decay_t<ALC> >
 	{  
 		static_assert
 		(	!is_Fork_and_Join_Flag<ALC>::value && is_Allocator<ALC>::value
@@ -698,7 +755,7 @@ public:
 
 
 	template< class ALC = _Default_Array_Allocator_t<value_type> >
-	operator Array<value_type, arrSize::DYNAMIC, ALC>() const{  return eval(ALC{});  }
+	operator Array<value_type, arrSize::DYNAMIC, ALC>() const noexcept{  return eval(ALC{});  }
 
 
 private:
@@ -707,11 +764,11 @@ private:
 
 
 	template<  class ME, class itr_t = Decay_t< decltype( End(Declval<ME>()._rg) ) >  >
-	static auto _fitr_func(ME* p)
+	static auto _fitr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, End(p->_rg)};  }
 
 	template<  class ME, class itr_t = Decay_t< decltype( rEnd(Declval<ME>()._rg) ) >  >
-	static auto _fritr_func(ME* p)
+	static auto _fritr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, rEnd(p->_rg)};  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -723,7 +780,12 @@ namespace sgm
 	{
 		
 		template<class ITR, class FUNC, class RES>
-		static auto Accumulate(ITR itr, ITR const eitr, FUNC&& func, RES res)-> RES
+		static auto Accumulate(ITR itr, ITR const eitr, FUNC&& func, RES res)
+		noexcept
+		(	noexcept(*itr) && noexcept(itr++) 
+		&&	noexcept( func(res, *itr) ) && noexcept(res = res)
+		)
+		->	RES
 		{
 			while(itr != eitr)
 				res = func(res, *itr++);
@@ -739,14 +801,14 @@ namespace sgm
 		struct Direction_Dependent<true> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG&& rg)-> SGM_DECLTYPE_AUTO(  fBegin<RG>(rg)  )
+			static auto begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fBegin<RG>(rg)  )
 
 			template<class RG> 
-			static auto end(RG&& rg)-> SGM_DECLTYPE_AUTO(  fEnd<RG>(rg)  )
+			static auto end(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fEnd<RG>(rg)  )
 
 
 			template<class FUNC, class L, class FOLDED>
-			static auto last_fold(FUNC&& func, L&& last, FOLDED&& folded)
+			static auto last_fold(FUNC&& func, L&& last, FOLDED&& folded) noexcept
 			->	SGM_DECLTYPE_AUTO(  func( Forward<L>(last), Forward<FOLDED>(folded) )  )
 		};
 	
@@ -754,14 +816,15 @@ namespace sgm
 		struct Direction_Dependent<false> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG&& rg)-> SGM_DECLTYPE_AUTO(  frBegin<RG>(rg)  )
+			static auto begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frBegin<RG>(rg)  )
 			
 			template<class RG> 
-			static auto end(RG&& rg)-> SGM_DECLTYPE_AUTO(  frEnd<RG>(rg)  )
+			static auto end(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frEnd<RG>(rg)  )
 
 
 			template<class FUNC, class L, class FOLDED>
 			static auto last_fold(FUNC&& func, L&& last, FOLDED&& folded)
+			noexcept(  Aleph_Check<L&&, FOLDED&&>::value || noexcept( func(folded, last) )  )
 			->	SGM_DECLTYPE_AUTO(  func( Forward<FOLDED>(folded), Forward<L>(last) )  )
 		};
 
@@ -775,7 +838,18 @@ struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode
 :	Unconstructible
 {
 	template<class RG, class FUNC, class RES>
-	static auto calc(RG&& rg, FUNC&& func, RES&& res)-> RES
+	static auto calc(RG&& rg, FUNC&& func, RES&& res)
+	noexcept
+	(	Aleph_Check<RG&&, FUNC&&, RES&&>::value
+	||	noexcept
+		(	_ht_Fold_impl_helper::Accumulate	
+			(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
+			,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg)
+			,	func, res
+			)	
+		)
+	)
+	->	RES
 	{
 		return
 		_ht_Fold_impl_helper::Accumulate
@@ -793,6 +867,16 @@ struct sgm::ht::_Fold_impl<false, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mod
 {
 	template<class RG, class FUNC>
 	static auto calc(RG&& rg, FUNC&& func, None)
+	noexcept
+	(	Aleph_Check<RG&&, FUNC&&>::value
+	||	noexcept
+		(	_ht_Fold_impl_helper::Accumulate	
+			(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
+			,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg)
+			,	func, *_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
+			)
+		)	
+	)
 	->	Decay_t< decltype( *_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg) ) >
 	{
 		auto const 
@@ -812,7 +896,16 @@ struct sgm::ht::_Fold_impl<false, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mod
 {
 private:
 	template<class RG, class FUNC>
-	static auto _sequancial_fold(RG&& rg, FUNC&& func)-> SGM_DECLTYPE_AUTO
+	static auto _sequancial_fold(RG&& rg, FUNC&& func)
+	noexcept
+	(	Aleph_Check<RG&&, FUNC&&>::value
+	||	noexcept
+		(	_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::SEQUANCIAL>::calc
+			(	rg, func, None{}
+			)
+		)
+	)
+	->	SGM_DECLTYPE_AUTO
 	(
 		_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::SEQUANCIAL>::calc
 		(	Forward<RG>(rg), Forward<FUNC>(func), None{}
@@ -825,7 +918,7 @@ public:
 	<	class RG, class FUNC
 	,	class RES = Decay_t<  decltype( *Begin(Declval< Decay_t<RG> >()) )  >
 	>
-	static auto calc(RG&& rg, FUNC&& func, None)-> RES
+	static auto calc(RG&& rg, FUNC&& func, None) noexcept-> RES
 	{
 		auto const fnj = FNJ_FLAG{};
 		size_t const nof_elem = Size(rg),  nof_task = fnj.number_of_task();
@@ -872,7 +965,7 @@ struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode
 :	Unconstructible
 {
 	template<class RG, class FUNC, class RES>
-	static auto calc(RG&& rg, FUNC&& func, RES&& res)-> RES
+	static auto calc(RG&& rg, FUNC&& func, RES&& res) noexcept-> RES
 	{
 		static_assert
 		(	is_Convertible< RES, Decay_t<decltype( *Begin(rg) )> >::value
