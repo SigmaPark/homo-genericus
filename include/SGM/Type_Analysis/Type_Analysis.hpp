@@ -586,7 +586,7 @@ namespace sgm
         
 
     public:
-        Member_Function(HOST_PTR const host_ptr, MEMFN_PTR const memfn_ptr)
+        Member_Function(HOST_PTR const host_ptr, MEMFN_PTR const memfn_ptr) noexcept
         :   _host_ptr(host_ptr), _memfn_ptr(memfn_ptr){}
 
 
