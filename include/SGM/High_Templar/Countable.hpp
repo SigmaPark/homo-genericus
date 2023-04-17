@@ -39,21 +39,21 @@ private:
 
 
 	template<bool IS_FORWARD, bool PLUS_DIR, class T>
-	static auto shift(T const n, T const diff)
+	static auto shift(T const n, T const diff) noexcept
 	->	Enable_if_t<IS_FORWARD == PLUS_DIR, T>{  return n + diff;  }
 
 	template<bool IS_FORWARD, bool PLUS_DIR, class T>
-	static auto shift(T const n, T const diff)
+	static auto shift(T const n, T const diff) noexcept
 	->	Enable_if_t<IS_FORWARD != PLUS_DIR, T>{  return n - diff;  }
 
 
 	template<bool IS_FORWARD, class T>
-	static auto less(T const n1, T const n2)
-	-> Enable_if_t<IS_FORWARD, bool>{  return n1 < n2;  }
+	static auto less(T const n1, T const n2) noexcept
+	->	Enable_if_t<IS_FORWARD, bool>{  return n1 < n2;  }
 	
 	template<bool IS_FORWARD, class T>
-	static auto less(T const n1, T const n2)
-	-> Enable_if_t<!IS_FORWARD, bool>{  return n1 > n2;  }
+	static auto less(T const n1, T const n2) noexcept
+	->	Enable_if_t<!IS_FORWARD, bool>{  return n1 > n2;  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -71,9 +71,9 @@ public:
 
 	Count_iterator(T const number = std::numeric_limits<T>::max()) : _number(number){}
 
-	auto operator*() const-> T{  return _number;  }
+	auto operator*() const noexcept-> T{  return _number;  }
 
-	auto operator++(int)->	_itr_t
+	auto operator++(int) noexcept->	_itr_t
 	{  
 		auto const iter = *this;
 
@@ -81,7 +81,7 @@ public:
 	}
 
 
-	auto operator--(int)-> _itr_t
+	auto operator--(int) noexcept-> _itr_t
 	{
 		auto const iter = *this;
 
@@ -90,15 +90,15 @@ public:
 
 
 	template<class _T>
-	auto operator+(_T const diff) const
+	auto operator+(_T const diff) const noexcept
 	->	_itr_t{  return {_shift<true>( **this, static_cast<T>(diff) )};  }
 
 	template<class _T>
-	auto operator-(_T const diff) const
+	auto operator-(_T const diff) const noexcept
 	->	_itr_t{  return {_shift<false>( **this, static_cast<T>(diff) )};  }
 
 
-	auto operator-(_itr_t const itr) const-> ptrdiff_t
+	auto operator-(_itr_t const itr) const noexcept-> ptrdiff_t
 	{
 		bool const greater_mine = **this > *itr;
 		size_t const diff_ULL = greater_mine ? **this - *itr : *itr - **this;
@@ -115,23 +115,23 @@ public:
 
 
 	template<class _T>
-	auto operator+=(_T const diff)-> _itr_t&{  return *this = *this + diff;  }
+	auto operator+=(_T const diff) noexcept-> _itr_t&{  return *this = *this + diff;  }
 	
 	template<class _T>
-	auto operator-=(_T const diff)-> _itr_t&{  return *this = *this - diff;  }
+	auto operator-=(_T const diff) noexcept-> _itr_t&{  return *this = *this - diff;  }
 
-	auto operator++()-> _itr_t&{  return *this += 1;  }
-	auto operator--()-> _itr_t&{  return *this -= 1;  }
+	auto operator++() noexcept-> _itr_t&{  return *this += 1;  }
+	auto operator--() noexcept-> _itr_t&{  return *this -= 1;  }
 
-	auto operator[](ptrdiff_t const diff) const-> T{  return *( *this + diff );  }
+	auto operator[](ptrdiff_t const diff) const noexcept-> T{  return *( *this + diff );  }
 
-	auto operator==(_itr_t const itr) const-> bool{  return **this == *itr;  }
-	auto operator!=(_itr_t const itr) const-> bool{  return !(*this == itr);  }
+	auto operator==(_itr_t const itr) const noexcept-> bool{  return **this == *itr;  }
+	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
 	
-	auto operator<(_itr_t const itr) const-> bool{  return _Less(*this, itr);  }
-	auto operator>(_itr_t const itr) const-> bool{  return _Less(itr, *this);  }
-	auto operator<=(_itr_t const itr) const-> bool{  return !(*this > itr);  }
-	auto operator>=(_itr_t const itr) const-> bool{  return !(*this < itr);  }
+	auto operator<(_itr_t const itr) const noexcept-> bool{  return _Less(*this, itr);  }
+	auto operator>(_itr_t const itr) const noexcept-> bool{  return _Less(itr, *this);  }
+	auto operator<=(_itr_t const itr) const noexcept-> bool{  return !(*this > itr);  }
+	auto operator>=(_itr_t const itr) const noexcept-> bool{  return !(*this < itr);  }
 
 
 private:
@@ -139,11 +139,11 @@ private:
 
 
 	template<bool IS_PLUS_DIR>
-	static auto _shift(T const n, T const diff = 1)
+	static auto _shift(T const n, T const diff = 1) noexcept
 	->	T{  return _Count_iterator_Helper::shift<IS_INCREASING, IS_PLUS_DIR>(n, diff);  }
 
 
-	static auto _Less(T const n1, T const n2)
+	static auto _Less(T const n1, T const n2) noexcept
 	->	bool{  return _Count_iterator_Helper::less<IS_INCREASING>(n1, n2);  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -153,24 +153,24 @@ template<class T>
 class sgm::Countable
 {
 public:
-	Countable(T const length, T const offset = 0) : _length(length), _offset(offset){}
+	constexpr Countable(T const length, T const offset = 0) : _length(length), _offset(offset){}
 
 	using iterator = Count_iterator<T, true>;
 	using reverse_iterator = Count_iterator<T, false>;
 	using const_iterator = iterator;
 	using const_reverse_iterator = reverse_iterator;
 
-	auto cbegin() const-> iterator{  return {_offset};  }
-	auto begin() const-> iterator{  return cbegin();  }
-	auto cend() const-> iterator{  return {_offset + _length};  }
-	auto end() const-> iterator{  return cend();  }
+	auto cbegin() const noexcept-> iterator{  return {_offset};  }
+	auto begin() const noexcept-> iterator{  return cbegin();  }
+	auto cend() const noexcept-> iterator{  return {_offset + _length};  }
+	auto end() const noexcept-> iterator{  return cend();  }
 
-	auto crbegin() const-> reverse_iterator{  return {_offset + _length - 1};  }
-	auto rbegin() const-> reverse_iterator{  return crbegin();  }
-	auto crend() const-> reverse_iterator{  return {_offset - 1};  }
-	auto rend() const-> reverse_iterator{  return crend();  }
+	auto crbegin() const noexcept-> reverse_iterator{  return {_offset + _length - 1};  }
+	auto rbegin() const noexcept-> reverse_iterator{  return crbegin();  }
+	auto crend() const noexcept-> reverse_iterator{  return {_offset - 1};  }
+	auto rend() const noexcept-> reverse_iterator{  return crend();  }
 
-	auto size() const-> size_t{  return _length;  }
+	auto size() const noexcept-> size_t{  return _length;  }
 
 private:
 	T _length, _offset;
