@@ -247,13 +247,13 @@ private:
 
 
 protected:
-	auto crtp() const-> _CRTP const&{  return *static_cast<_CRTP const*>(this);  }
-	auto crtp()-> _CRTP&{  return *static_cast<_CRTP*>(this);  }
+	auto crtp() const noexcept-> _CRTP const&{  return *static_cast<_CRTP const*>(this);  }
+	auto crtp() noexcept-> _CRTP&{  return *static_cast<_CRTP*>(this);  }
 };
 
 
 #define SGM_CRTP_TEMPLATE_INTERFACE(TITLE, ...)	\
-	void constexpr crtp_override_##TITLE()	\
+	auto constexpr crtp_override_##TITLE() noexcept-> void	\
 	{	\
 		static_assert	\
 		(	(__VA_ARGS__)	\
@@ -262,13 +262,13 @@ protected:
 	}	\
 	\
 	template<bool B = false>	\
-	void constexpr TITLE(...)	\
+	auto constexpr TITLE(...) noexcept-> void		\
 	{	\
 		static_assert(B, "crtp method \"" #TITLE "\" is not overriden .");  \
 	}	\
 	\
 	template<class RES, class...ARGS, class HOST>	\
-	auto constexpr check_return_type_of_##TITLE(HOST&&)	\
+	auto constexpr check_return_type_of_##TITLE(HOST&&) noexcept	\
 	->	sgm::is_Same	\
 		<	decltype	\
 			(	sgm::Declval<HOST>().TITLE(sgm::Declval<ARGS>()...) \
