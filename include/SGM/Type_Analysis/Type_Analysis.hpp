@@ -18,12 +18,18 @@
 #endif
 
 
+#ifndef SGM_MACROPACK
+    #define SGM_MACROPACK(...)  __VA_ARGS__
+#endif
+
+
 #ifndef SGM_DECLTYPE_AUTO
     #define SGM_DECLTYPE_AUTO(...)  decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
-#ifndef SGM_MACROPACK
-    #define SGM_MACROPACK(...)  __VA_ARGS__
+#ifndef SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    #define SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(...) \
+        noexcept( noexcept(__VA_ARGS__) )-> SGM_DECLTYPE_AUTO(__VA_ARGS__)
 #endif
 
 
@@ -133,11 +139,11 @@ namespace sgm
     struct Omni_Convertible
     {
     	template<class T>
-    	operator T(){  return *static_cast<T*>( reinterpret_cast<void*>(this) );  }
+    	operator T() noexcept{  return *static_cast<T*>( reinterpret_cast<void*>(this) );  }
     };
 
     template<bool B = false>
-    static auto Compile_Fails()-> Omni_Convertible
+    static auto Compile_Fails() noexcept-> Omni_Convertible
     {
         static_assert(B, "Compile Fails.");
 
@@ -348,19 +354,21 @@ namespace sgm
     struct _Move_if_Helper<false> : Unconstructible
     {
         template<class T>
-        static auto _calc(T&& t) noexcept-> SGM_DECLTYPE_AUTO(  Forward<T>(t)  )
+        static auto _calc(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Forward<T>(t)  )
     };
 
     template<>
     struct _Move_if_Helper<true> : Unconstructible
     {
         template<class T>
-        static auto _calc(T&& t) noexcept-> SGM_DECLTYPE_AUTO(  Move(t)  )
+        static auto _calc(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Move(t)  )
     };
 
     template<bool CONDITION, class T>
-    static auto Move_if(T&& t) noexcept 
-    ->  SGM_DECLTYPE_AUTO(  _Move_if_Helper<CONDITION>::_calc( static_cast<T&&>(t) )  )
+    static auto Move_if(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    (
+        _Move_if_Helper<CONDITION>::_calc( static_cast<T&&>(t) )  
+    )
 
 
     template<class T>
@@ -475,8 +483,10 @@ namespace sgm
     };
 
     template<unsigned N, class...ARGS>
-    static auto Nth_Param(ARGS&&...args) noexcept
-    ->  SGM_DECLTYPE_AUTO(  _Nth_Param_Helper<N>::calc( Forward<ARGS>(args)... )  )
+    static auto Nth_Param(ARGS&&...args) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    (
+        _Nth_Param_Helper<N>::calc( Forward<ARGS>(args)... )  
+    )
 
 
     template<class FUNC, class...ARGS>
@@ -605,10 +615,10 @@ namespace sgm
 
 
     template<class MEMFN_PTR, class HOST>
-    static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) noexcept
-    ->  SGM_DECLTYPE_AUTO
-        (   Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >( Address_of(host), memfn_ptr )
-        )
+    static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    (
+        Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >( Address_of(host), memfn_ptr )
+    )
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
