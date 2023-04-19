@@ -185,7 +185,7 @@ public:
 	{
 		assert(!has_value());
 
-		_opof_t::_p = new(&_core) value_type( Forward<ARGS>(args)... );
+		_opof_t::_p = new(&_core) value_type{Forward<ARGS>(args)...};
 
 		return *this;
 	}
