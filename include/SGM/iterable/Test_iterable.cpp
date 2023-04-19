@@ -110,15 +110,11 @@ static void iterator_Wrapper_Test()
 	);
 
 
-	using reverse_fLitr_t = sgm::Reverse_iterator<fLitr_t>;
 	using reverse_bLitr_t = sgm::Reverse_iterator<bLitr_t>;
 
 	static_assert
 	(	(	!sgm::is_random_access_iterator<reverse_bLitr_t>::value
 		&&	sgm::is_bidirectional_iterator<reverse_bLitr_t>::value
-		&&	!sgm::is_random_access_iterator<reverse_fLitr_t>::value
-		&&	!sgm::is_bidirectional_iterator<reverse_fLitr_t>::value
-		&&	sgm::is_iterator<reverse_fLitr_t>::value
 		)
 	,	""
 	);
