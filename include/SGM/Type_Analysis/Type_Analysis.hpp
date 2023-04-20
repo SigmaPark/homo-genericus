@@ -27,9 +27,13 @@
     #define SGM_DECLTYPE_AUTO(...)  decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
+#ifndef SGM_TRY_NOEXCEPT
+    #define SGM_TRY_NOEXCEPT(...)  noexcept( noexcept(__VA_ARGS__) )
+#endif
+
 #ifndef SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
     #define SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(...) \
-        noexcept( noexcept(__VA_ARGS__) )-> SGM_DECLTYPE_AUTO(__VA_ARGS__)
+        SGM_TRY_NOEXCEPT(__VA_ARGS__)-> SGM_DECLTYPE_AUTO(__VA_ARGS__)
 #endif
 
 

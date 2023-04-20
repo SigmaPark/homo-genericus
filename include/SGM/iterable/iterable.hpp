@@ -79,7 +79,7 @@ namespace sgm
 	struct _Begin_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>  
-		static auto calc(A&& arr) noexcept-> SGM_DECLTYPE_AUTO(  &arr[0]  )
+		static auto calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) ){  return arr;  }
 	};
 
 	template<class RG>
@@ -123,8 +123,10 @@ namespace sgm
 	struct _End_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>
-		static auto calc(A&& arr) noexcept
-		->	SGM_DECLTYPE_AUTO(  &arr[__Static_Array_Size< Decay_t<A> >::value]  )
+		static auto calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) )
+		{
+			return arr + __Static_Array_Size< Decay_t<A> >::value;
+		}
 	};
 
 	template<class RG>
@@ -153,11 +155,11 @@ namespace sgm
 
 
 	template<class ITR>
-	static auto Reversing(ITR const itr) noexcept( noexcept(Reverse_iterator<ITR>{itr}) )
+	static auto Reversing(ITR const itr) SGM_TRY_NOEXCEPT(Reverse_iterator<ITR>{itr})
 	->	Reverse_iterator<ITR>{  return {itr};  }
 
 	template<class ITR>
-	static auto Reversing(Reverse_iterator<ITR> const ritr) noexcept( noexcept(ritr.base()) )
+	static auto Reversing(Reverse_iterator<ITR> const ritr) SGM_TRY_NOEXCEPT(ritr.base())
 	->	ITR{  return ritr.base();  }
 
 
@@ -309,27 +311,27 @@ public:
 	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;	
 
 
-	Reverse_iterator(ITR const itr) noexcept(  noexcept( ITR(itr) )  ) : _itr(itr){}	
+	Reverse_iterator(ITR const itr) SGM_TRY_NOEXCEPT( ITR(itr) ) : _itr(itr){}	
 
 	auto base() const noexcept-> ITR const&{  return _itr;  }
 	auto base() noexcept-> ITR&{  return _itr;  }
 
 	auto operator*() const SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  *base()  )
 
-	auto operator->() const noexcept(  noexcept( Address_of(*Declval<_itr_t>()) )  )
+	auto operator->() const SGM_TRY_NOEXCEPT( Address_of(*Declval<_itr_t>()) )
 	->	pointer{  return Address_of(**this);  }	
 
 	auto operator==(_itr_t const itr) const 
 	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  base() == itr.base()  )
 
-	auto operator!=(_itr_t const itr) const noexcept( noexcept(itr == itr) )
+	auto operator!=(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr == itr)
 	->	bool{  return !(*this == itr);  }
 
 
-	auto operator++() noexcept( noexcept(--Declval<ITR>()) )
+	auto operator++() SGM_TRY_NOEXCEPT(--base())
 	->	_itr_t&{  return --base(),  *this;  }
 
-	auto operator++(int) noexcept( noexcept(++Declval<_itr_t>()) )-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -339,10 +341,10 @@ public:
 	}
 
 
-	auto operator--() noexcept( noexcept(++Declval<ITR>()) )
+	auto operator--() SGM_TRY_NOEXCEPT(++base())
 	->	_itr_t&{  return ++base(),  *this;  }
 
-	auto operator--(int) noexcept( noexcept(--Declval<_itr_t>()) )-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -370,14 +372,13 @@ private:
 public:
 	using typename _top_t::difference_type;
 
-
-	template<class...ARGS>
-	Reverse_iterator(ARGS&&...args) : Reverse_iterator<ITR, 2>( Forward<ARGS>(args)... ){}
+	using _top_t::_top_t;
 
 
-	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
+	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_top_t>())
+	->	_itr_t&{  return _top_t::operator++(),  *this;  }
 	
-	auto operator++(int)-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -386,9 +387,10 @@ public:
 		return res;
 	}
 
-	auto operator--()-> _itr_t&{  return _top_t::operator--(),  *this;  }
+	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_top_t>())
+	->	_itr_t&{  return _top_t::operator--(),  *this;  }
 
-	auto operator--(int)-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -398,34 +400,41 @@ public:
 	}
 
 
-	auto operator[](difference_type const diff) const-> _deref_t{  return *(*this + diff);  }
+	auto operator[](difference_type const diff) const 
+	SGM_TRY_NOEXCEPT( *(Declval<_itr_t>() + diff) )
+	->	_deref_t{  return *(*this + diff);  }
 
 	auto operator+(difference_type const diff) const
+	SGM_TRY_NOEXCEPT( _itr_t{Declval<_top_t>().base() - diff} )
 	->	_itr_t{  return {_top_t::base() - diff};  }
 	
 	auto operator-(difference_type const diff) const
-	->	_itr_t{  return { _top_t::base() + diff};  }
+	SGM_TRY_NOEXCEPT( _itr_t{Declval<_top_t>().base() + diff} )
+	->	_itr_t{  return {_top_t::base() + diff};  }
 	
-	auto operator-(_itr_t const itr) const
-	->	difference_type{  return itr.base() - _top_t::base();  }
+	auto operator-(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() - itr.base())
+	->	SGM_DECLTYPE_AUTO(  itr.base() - _top_t::base()  )
+	
 
 	auto operator+=(difference_type const diff)
+	SGM_TRY_NOEXCEPT(Declval<_top_t>().base() -= diff)
 	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
 
 	auto operator-=(difference_type const diff)
+	SGM_TRY_NOEXCEPT(Declval<_top_t>().base() += diff)
 	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
 
 
-	auto operator<(_itr_t const itr) const noexcept
-	->	bool{  return _top_t::base() > itr.base();  }
+	auto operator<(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() < itr.base())
+	->	SGM_DECLTYPE_AUTO(  _top_t::base() > itr.base()  )
 	
-	auto operator>(_itr_t const itr) const noexcept
-	->	bool{  return _top_t::base() < itr.base();  }
+	auto operator>(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() < itr.base())
+	->	SGM_DECLTYPE_AUTO(  _top_t::base() < itr.base()  )
 
-	auto operator<=(_itr_t const itr) const noexcept
+	auto operator<=(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr > itr)
 	->	bool{  return !(*this > itr);  }
 
-	auto operator>=(_itr_t const itr) const noexcept
+	auto operator>=(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr < itr)
 	->	bool{  return !(*this < itr);  }
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
