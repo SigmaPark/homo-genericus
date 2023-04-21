@@ -478,21 +478,24 @@ public:
 	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;
 
 
-	Move_iterator(ITR const itr) : _itr(itr){}
+	Move_iterator(ITR const itr) SGM_TRY_NOEXCEPT( ITR(itr) ) : _itr(itr){}
 
 	auto base() const noexcept-> ITR const&{  return _itr;  }
 	auto base() noexcept-> ITR&{  return _itr;  }
 
-	auto operator*() const noexcept-> value_type{  return Move(*base());  }
-	auto operator->() const noexcept-> pointer{  return &*base();  }	
+	auto operator*() const SGM_TRY_NOEXCEPT(*base())-> value_type{  return Move(*base());  }
+	auto operator->() const SGM_TRY_NOEXCEPT(*base())-> pointer{  return Address_of(*base());  }
 
-	auto operator==(_itr_t const itr) const noexcept-> bool{  return base() == itr.base();  }
-	auto operator!=(_itr_t const itr) const noexcept-> bool{  return !(*this == itr);  }
+	auto operator==(_itr_t const itr) const SGM_TRY_NOEXCEPT(base() == base())
+	->	bool{  return base() == itr.base();  }
+
+	auto operator!=(_itr_t const itr) const SGM_TRY_NOEXCEPT(base() == base())
+	->	bool{  return !(*this == itr);  }
 
 
-	auto operator++()-> _itr_t&{  return ++base(),  *this;  }
+	auto operator++() SGM_TRY_NOEXCEPT(++base())-> _itr_t&{  return ++base(),  *this;  }
 
-	auto operator++(int)-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
