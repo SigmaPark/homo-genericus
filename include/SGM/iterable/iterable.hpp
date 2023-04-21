@@ -785,10 +785,10 @@ namespace sgm
 	template<class ITR, bool IS_BIDIRECTIONAL>
 	struct _Travel<ITR, IS_BIDIRECTIONAL, true>
 	{
-		static auto _next(ITR const itr, ptrdiff_t const steps)//-> ITR{  return itr + steps;  }
+		static auto _next(ITR const itr, ptrdiff_t const steps)
 		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  itr + steps  )
 
-		static auto _prev(ITR const itr, ptrdiff_t const steps)//-> ITR{  return itr - steps;  }
+		static auto _prev(ITR const itr, ptrdiff_t const steps)
 		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  itr - steps  )
 	};
 
@@ -796,13 +796,11 @@ namespace sgm
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto Next(ITR const itr, ptrdiff_t const steps = 1)
 	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Travel<ITR>::_next(itr, steps)  )
-	//->	ITR{  return _Travel<ITR>::_next(itr, steps);  }
 
 
 	template<  class ITR, class = Guaranteed_t< is_bidirectional_iterator<ITR>::value >  >
 	static auto Prev(ITR const itr, ptrdiff_t const steps = 1)
 	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Travel<ITR>::_prev(itr, steps)  )
-	//->	ITR{  return _Travel<ITR>::_prev(itr, steps);  }
 
 
 	struct _Difference_Helper : Unconstructible
@@ -829,7 +827,6 @@ namespace sgm
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto constexpr Difference(ITR const bi, ITR const ei)
 	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Difference_Helper::calc(bi, ei)  )
-	//->	ptrdiff_t{  return _Difference_Helper::calc(bi, ei);  }
 
 
 	struct _iterable_Size_Helper : Unconstructible
@@ -856,7 +853,6 @@ namespace sgm
 	template<class RG>
 	static auto constexpr Size(RG&& rg)
 	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _iterable_Size_Helper::calc( Forward<RG>(rg) )  )
-	//->	size_t{  return _iterable_Size_Helper::calc( Forward<RG>(rg) );  }
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
