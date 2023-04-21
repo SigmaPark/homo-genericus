@@ -96,7 +96,7 @@ public:
 	template<class MAT, class FS>
 	void operator()(MAT&& m, [[maybe_unused]] FS&& fs)
 	{
-		Eigen::BDCSVD< Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> > const svd
+		Eigen::JacobiSVD< Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> > const svd
 		(	_Mat_implementor( Forward<MAT>(m) ), _bit_flag<FS>()
 		);
 
@@ -213,8 +213,8 @@ class s3d::_Least_Square_Solution_Helper<s3d::Solving_Mode::SVD>
 	{
 		auto& A = _Mat_implementor(amat);
 		auto& b = _Mat_implementor(bvec);
-
-		return A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b).eval();
+		
+		return A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b).eval();
 	}
 };
 
