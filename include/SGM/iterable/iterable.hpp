@@ -759,7 +759,7 @@ namespace sgm
 	template<class ITR>
 	struct _Travel<ITR, false, false>
 	{
-		static auto _next(ITR itr, ptrdiff_t steps)-> ITR
+		static auto _next(ITR itr, ptrdiff_t steps) SGM_TRY_NOEXCEPT(itr++)-> ITR
 		{
 			while(steps-->0)
 				itr++;
@@ -772,7 +772,7 @@ namespace sgm
 	template<class ITR>
 	struct _Travel<ITR, true, false> : _Travel<ITR, false, false>
 	{
-		static auto _prev(ITR itr, ptrdiff_t steps)-> ITR
+		static auto _prev(ITR itr, ptrdiff_t steps) SGM_TRY_NOEXCEPT(itr--)-> ITR
 		{
 			while(steps-->0)
 				itr--;
@@ -785,32 +785,37 @@ namespace sgm
 	template<class ITR, bool IS_BIDIRECTIONAL>
 	struct _Travel<ITR, IS_BIDIRECTIONAL, true>
 	{
-		static auto _next(ITR const itr, ptrdiff_t const steps)-> ITR{  return itr + steps;  }
-		static auto _prev(ITR const itr, ptrdiff_t const steps)-> ITR{  return itr - steps;  }
+		static auto _next(ITR const itr, ptrdiff_t const steps)//-> ITR{  return itr + steps;  }
+		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  itr + steps  )
+
+		static auto _prev(ITR const itr, ptrdiff_t const steps)//-> ITR{  return itr - steps;  }
+		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  itr - steps  )
 	};
 
 
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto Next(ITR const itr, ptrdiff_t const steps = 1)
-	->	ITR{  return _Travel<ITR>::_next(itr, steps);  }
+	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Travel<ITR>::_next(itr, steps)  )
+	//->	ITR{  return _Travel<ITR>::_next(itr, steps);  }
 
 
 	template<  class ITR, class = Guaranteed_t< is_bidirectional_iterator<ITR>::value >  >
 	static auto Prev(ITR const itr, ptrdiff_t const steps = 1)
-	->	ITR{  return _Travel<ITR>::_prev(itr, steps);  }
+	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Travel<ITR>::_prev(itr, steps)  )
+	//->	ITR{  return _Travel<ITR>::_prev(itr, steps);  }
 
 
 	struct _Difference_Helper : Unconstructible
 	{
 		template<class ITR>
-		static auto calc(ITR bi, ITR const ei)
+		static auto calc(ITR bi, ITR const ei) SGM_TRY_NOEXCEPT(ei - bi)
 		->	Enable_if_t< is_random_access_iterator<ITR>::value, ptrdiff_t >
 		{
 			return static_cast<ptrdiff_t>(ei - bi);
 		}
 
 		template<class ITR>
-		static auto calc(ITR bi, ITR const ei)
+		static auto calc(ITR bi, ITR const ei) SGM_TRY_NOEXCEPT(bi != ei,  bi++)
 		->	Enable_if_t< !is_random_access_iterator<ITR>::value, ptrdiff_t >
 		{
 			ptrdiff_t diff = 0;
@@ -823,7 +828,8 @@ namespace sgm
 
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto constexpr Difference(ITR const bi, ITR const ei)
-	->	ptrdiff_t{  return _Difference_Helper::calc(bi, ei);  }
+	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _Difference_Helper::calc(bi, ei)  )
+	//->	ptrdiff_t{  return _Difference_Helper::calc(bi, ei);  }
 
 
 	struct _iterable_Size_Helper : Unconstructible
@@ -833,13 +839,15 @@ namespace sgm
 
 	public:
 		template<class RG>
-		static auto calc(RG&& rg)-> Enable_if_t< Has_MemFunc_size<RG>::value, size_t >
+		static auto calc(RG&& rg) SGM_TRY_NOEXCEPT(rg.size())
+		->	Enable_if_t< Has_MemFunc_size<RG>::value, size_t >
 		{
 			return static_cast<size_t>(rg.size());
 		}
 
 		template<class RG>
-		static auto calc(RG&& rg)-> Enable_if_t< !Has_MemFunc_size<RG>::value, size_t >
+		static auto calc(RG&& rg) SGM_TRY_NOEXCEPT(  Difference( Begin(rg), End(rg) )  )
+		->	Enable_if_t< !Has_MemFunc_size<RG>::value, size_t >
 		{
 			return static_cast<size_t>(  Difference( Begin(rg), End(rg) )  );	
 		}
@@ -847,7 +855,8 @@ namespace sgm
 
 	template<class RG>
 	static auto constexpr Size(RG&& rg)
-	->	size_t{  return _iterable_Size_Helper::calc( Forward<RG>(rg) );  }
+	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  _iterable_Size_Helper::calc( Forward<RG>(rg) )  )
+	//->	size_t{  return _iterable_Size_Helper::calc( Forward<RG>(rg) );  }
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
