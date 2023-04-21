@@ -483,7 +483,7 @@ public:
 	auto base() const noexcept-> ITR const&{  return _itr;  }
 	auto base() noexcept-> ITR&{  return _itr;  }
 
-	auto operator*() const SGM_TRY_NOEXCEPT(*base())-> value_type{  return Move(*base());  }
+	auto operator*() const noexcept-> value_type{  return Move(*base());  }
 	auto operator->() const SGM_TRY_NOEXCEPT(*base())-> pointer{  return Address_of(*base());  }
 
 	auto operator==(_itr_t const itr) const SGM_TRY_NOEXCEPT(base() == base())
@@ -518,28 +518,30 @@ private:
 	using _itr_t = Move_iterator;
 
 public:
-	template<class...ARGS>
-	Move_iterator(ARGS&&...args) : _top_t( Forward<ARGS>(args)... ){}
+	using _top_t::_top_t;
 
 
-	auto operator--()-> _itr_t&{  return --_top_t::base(),  *this;  }
-
-	auto operator--(int)-> _itr_t
-	{
-		auto const res = *this;
-
-		--*this;
-
-		return res;
-	}
-
-	auto operator++()-> _itr_t&{  return _top_t::operator++(),  *this;  }
+	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_top_t>())
+	->	_itr_t&{  return _top_t::operator++(),  *this;  }
 	
-	auto operator++(int)-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
 		++*this;
+
+		return res;
+	}
+
+
+	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_top_t>().base())
+	->	_itr_t&{  return --_top_t::base(),  *this;  }
+
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
+	{
+		auto const res = *this;
+
+		--*this;
 
 		return res;
 	}
@@ -555,13 +557,13 @@ private:
 	using _itr_t = Move_iterator;
 
 public:
-	template<class...ARGS>
-	Move_iterator(ARGS&&...args) : _middle_t( Forward<ARGS>(args)... ){}
+	using _middle_t::_middle_t;
 
 
-	auto operator++()-> _itr_t&{  return _middle_t::operator++(),  *this;  }
+	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_middle_t>().base())
+	->	_itr_t&{  return _middle_t::operator++(),  *this;  }
 
-	auto operator++(int)-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -570,9 +572,11 @@ public:
 		return res;
 	}
 
-	auto operator--()-> _itr_t&{  return _middle_t::operator--(),  *this;  }
 
-	auto operator--(int)-> _itr_t
+	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_middle_t>())
+	->	_itr_t&{  return _middle_t::operator--(),  *this;  }
+
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -582,21 +586,21 @@ public:
 	}
 
 
-	auto operator+(ptrdiff_t const diff) const
+	auto operator+(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Declval<_top_t>().base() + diff)
 	->	_itr_t{  return {_top_t::base() + diff};  }
 	
-	auto operator-(ptrdiff_t const diff) const
+	auto operator-(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Declval<_top_t>().base() - diff)
 	->	_itr_t{  return {_top_t::base() - diff};  }
 
 
-	auto operator-(_itr_t const itr) const
+	auto operator-(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() - itr.base())
 	->	ptrdiff_t{  return _top_t::base() - itr.base();  }
 
 
-	auto operator+=(ptrdiff_t const diff)
+	auto operator+=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Declval<_top_t>().base() += diff)
 	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
 	
-	auto operator-=(ptrdiff_t const diff)
+	auto operator-=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Declval<_top_t>().base() -= diff)
 	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
 
 
