@@ -44,7 +44,7 @@ public:
 	template
 	<	class Q, class = Enable_if_t< !is_Avatar<Q>::value && !is_immutable<Q&>::value >  
 	>
-	Abbreviable_t(Q& q) noexcept : _base_t(q){}
+	Abbreviable_t(Q& q) SGM_TRY_NOEXCEPT( _base_t(q) ) : _base_t(q){}
 
 	template
 	<	class Q
@@ -55,7 +55,7 @@ public:
 			&&	!is_Const< Referenceless_t<Q> >::value
 			>
 	>
-	Abbreviable_t(Q&& avt) noexcept : _base_t(avt.v()){}
+	Abbreviable_t(Q&& avt) SGM_TRY_NOEXCEPT( _base_t(avt.v()) ) : _base_t(avt.v()){}
 
 	template<  class Q, class = Enable_if_t< is_constAvatar<Q>::value >  >
 	Abbreviable_t(Q const&) = delete;
@@ -63,24 +63,26 @@ public:
 	Abbreviable_t(T const&&) = delete;
 
 
-	auto operator=(constAvatar<T> const& avt)-> Abbreviable_t&
+	auto operator=(constAvatar<T> const& avt) SGM_TRY_NOEXCEPT(Declval<_base_t>().v() = avt.v())
+	->	Abbreviable_t&
 	{
 		_base_t::v() = avt.v();
 
 		return *this;
 	}	
 
-	auto operator=(Abbreviable_t const& avt)-> Abbreviable_t&
-	{
-		return *this = constAvatar<T>(avt);
-	}
+	auto operator=(Abbreviable_t const& avt) 
+	SGM_TRY_NOEXCEPT(Declval<Abbreviable_t>() = Declval< constAvatar<T> >())
+	->	Abbreviable_t&{  return *this = constAvatar<T>(avt);  }
 
 	template
 	<	class Q
 	,	class 
 		=	Enable_if_t< !is_Avatar<Q>::value && is_Convertible<Q, T>::value >  
 	>
-	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)-> Abbreviable_t&
+	auto operator=(Q&& q) 
+	noexcept( Aleph_Check<Q&&>::value || noexcept(Declval<_base_t>().v() = q) )
+	->	Abbreviable_t&
 	{
 		_base_t::v() = Forward<Q>(q);
 
@@ -88,8 +90,11 @@ public:
 	}
 
 
-	auto operator&() const-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
-	auto operator&()-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+	auto operator&() const SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+	
+	auto operator&() SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -110,10 +115,10 @@ private:
 
 public:
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
-	Abbreviable_t(Q& q) noexcept: _base_t(q){}
+	Abbreviable_t(Q& q) SGM_TRY_NOEXCEPT( _base_t(q) ) : _base_t(q){}
 
 	template<  class Q, class = Enable_if_t< is_Avatar<Q>::value >  >
-	Abbreviable_t(Q const& avt) noexcept : _base_t(avt.v()){}
+	Abbreviable_t(Q const& avt) SGM_TRY_NOEXCEPT( _base_t(avt.v()) ) : _base_t(avt.v()){}
 
 	Abbreviable_t(T const&&) = delete;
 
@@ -121,8 +126,11 @@ public:
 	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
 	auto operator=(T const&)-> Abbreviable_t& = delete;
 
-	auto operator&() const-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
-	auto operator&()-> SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+	auto operator&() const SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
+
+	auto operator&() SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -210,6 +218,13 @@ public:
 	auto operator&() noexcept-> void*{  return _vp;  }
 
 
+	auto v() const noexcept
+	->	Omni_Convertible const&{  return *reinterpret_cast<Omni_Convertible const*>(_vp);  }
+
+	auto v() noexcept
+	->	Omni_Convertible&{  return *reinterpret_cast<Omni_Convertible*>(_vp);  }
+
+
 private:
 	void* const _vp;
 };
@@ -245,7 +260,7 @@ public:
 		<	Avatar_tag, void, Variable_t
 		,	Avatar_Pedigree<void, Variable_t, false, false>
 		>	va
-	) :	_cvp(&va){}
+	)	noexcept : _cvp(&va){}
 
 
 	template<  class Q, class = Enable_if_t< !is_Avatar<Q>::value >  >
@@ -260,6 +275,9 @@ public:
 
 	auto operator&() const noexcept-> void const*{  return _cvp;  }
 
+	auto v() const noexcept
+	->	Omni_Convertible const&{  return *reinterpret_cast<Omni_Convertible const*>(_cvp);  }
+
 
 private:
 	void const* const _cvp;
@@ -271,13 +289,20 @@ namespace sgm
 {
 
 	template<  class T, class = Enable_if_t< !is_Avatar<T>::value >  >
-	static auto Refer(T& t) noexcept-> Avatar< Referenceless_t<T> >{  return t;  }
+	static auto Refer(T& t) noexcept
+	->	Selective_t
+		<	is_immutable<T&>::value
+		,	constAvatar< Decay_t<T> >, Avatar< Decay_t<T> >
+		>
+	{
+		return t;  
+	}
 
 	template<class T, class M>
-	static auto Refer(Avatar_t<T, M> avt) noexcept-> Avatar_t<T, M>{  return avt;  }
+	static auto Refer(Avatar_t<T, M> avt) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Refer(avt.v())  )
 
 	template<class T>
-	static auto CRefer(T&& t)-> SGM_DECLTYPE_AUTO(  Refer( immut(t) )  )
+	static auto CRefer(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Refer( immut(t) )  )
 
 
 	template<class T, class M>
