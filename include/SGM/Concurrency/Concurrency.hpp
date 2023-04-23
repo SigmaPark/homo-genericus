@@ -183,7 +183,7 @@ struct sgm::Fork_and_Join<1> : private _Fork_and_Join_Helper
 class sgm::FnJ_Fail_to_get_Nof_Core : public Exception
 {
 public:
-	auto what() const
+	auto what() const noexcept
 	->	char const* override{  return "Failed to get the number of hardware cores.";  }
 
 private:
