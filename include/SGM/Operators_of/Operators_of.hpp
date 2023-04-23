@@ -64,7 +64,7 @@ namespace sgm
 		{	\
 			template<class Q, class...ARGS>	\
 			static auto calc(Q *p, ARGS&&...args)	\
-			->	SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
+			SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 		};	\
 		\
 		template<>	\
@@ -72,7 +72,7 @@ namespace sgm
 		{	\
 			template<class Q, class...ARGS>	\
 			static auto calc(Q const *p, ARGS&&...args)	\
-			->	SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
+			SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 		}
 
 
@@ -84,7 +84,7 @@ namespace sgm
 				<	_operator_helper_detail::_op##TITLE##Case<true, T  TPARAM2>::value \
 				>	\
 		>	\
-		auto operator SYM(ARG1)-> SGM_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )	\
+		auto operator SYM(ARG1) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )	\
 		\
 		template	\
 		<	TPARAM1  \
@@ -93,7 +93,7 @@ namespace sgm
 				<	_operator_helper_detail::_op##TITLE##Case<false, T  TPARAM2>::value \
 				>	\
 		>	\
-		auto operator SYM(ARG1) const-> SGM_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )
+		auto operator SYM(ARG1) const SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )
 
 
 	#define _SGM_MULTIPARAM_OPERATOR(SYM, TITLE)	\
@@ -112,13 +112,13 @@ namespace sgm
 		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
 		>	\
 		static auto operator SYM(Q&& q, sgm::Operators_of<T>& opr)	\
-		->	SGM_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.get()  )	\
+		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.v()  )	\
 		\
 		template	\
 		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
 		>	\
 		static auto operator SYM(Q&& q, sgm::Operators_of<T> const& opr)		\
-		->	SGM_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.get()  )
+		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.v()  )
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -185,7 +185,7 @@ public:
 	using value_type = T;
 	
 
-	constexpr Operators_of() : _p(nullptr){}
+	constexpr Operators_of() noexcept : _p(nullptr){}
 	Operators_of(T& t) noexcept : _p( Address_of(t) ){}
 
 
