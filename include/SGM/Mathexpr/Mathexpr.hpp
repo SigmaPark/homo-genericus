@@ -74,31 +74,31 @@ private:
 
 public:
 	template<class T>
-	static auto constexpr pi()
+	static auto constexpr pi() noexcept
 	->	T{  return static_cast<T>(3.14159265358979323846264338327950288419716939937511L);  }
 
 
 	template<class BASE, std::int64_t POWER, class RES = decltype(BASE::value)>
-	static auto constexpr pow()
+	static auto constexpr pow() noexcept
 	->	RES{  return _Mathexpr_pow_detail::Power<BASE, POWER, RES>::value;  }
 
 
 	template<class T, std::int64_t BASE, std::int64_t POWER>
-	static auto constexpr int_pow()
+	static auto constexpr int_pow() noexcept
 	->	T{  return pow< As_value_itself<std::int64_t, BASE>, POWER, T >();  }
 
 
 	template<class T, std::size_t N>
-	static auto constexpr factorial()
+	static auto constexpr factorial() noexcept
 	->	Enable_if_t<N == 0, T>{  return 1;  }
 
 	template<class T, std::size_t N>
-	static auto constexpr factorial()
+	static auto constexpr factorial() noexcept
 	->	Enable_if_t<N != 0, T>{  return N*factorial<T, N-1>();  }
 
 
 	template<class RES, std::int64_t POWER>
-	static auto constexpr exp()
+	static auto constexpr exp() noexcept
 	->	RES{  return pow< _Base_of_Exp<RES>, POWER >();  }
 };
 
