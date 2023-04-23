@@ -49,7 +49,7 @@ private:
 	friend class sgm::Null_t;
 
 
-	constexpr Bad_Access_to_Nullable() = default;
+	constexpr Bad_Access_to_Nullable() noexcept = default;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -57,12 +57,12 @@ private:
 class sgm::Null_t
 {
 public:
-	constexpr Null_t() = default;
+	constexpr Null_t() noexcept = default;
 
 
 	auto constexpr has_value() const noexcept-> bool{  return false;  }
 
-	void v() const noexcept = delete;
+	void v() const = delete;
 	auto v_or() const noexcept(false)-> Omni_Convertible{  throw Bad_Access_to_Nullable{};  }
 
 	template<class T>
@@ -111,6 +111,9 @@ private:
 	using _opof_t = Operators_of<T>;
 
 
+	_core_t _core;
+
+
 public:
 	using value_type = Decay_t<T>;
 
@@ -121,68 +124,18 @@ public:
 	);
 
 
-	constexpr _Base_Nullable(Null_t const = {}){};
+	auto has_value() const noexcept-> bool{  return _opof_t::_p != nullptr;  }
 
-	template
-	<	class...ARGS
-	,	class
-		=	Enable_if_t
-			<	( sizeof...(ARGS) >= 2 )
-			||	(	!is_Nullable< First_t<ARGS...> >::value
-				&&	!Has_Same_Origin< First_t<ARGS...>, _Base_Nullable >::value
-				&&	!Has_Same_Origin< First_t<ARGS...>, Null_t >::value
-				)
-			>
-	>
-	_Base_Nullable(ARGS&&...args)
-	noexcept(Aleph_Check<ARGS&&...>::value){  make( Forward<ARGS>(args)... );  }
-
-	_Base_Nullable(_Base_Nullable const& nb){  _try_make(nb);  }
-	_Base_Nullable(_Base_Nullable&& nb) noexcept{  _try_make( Move(nb) );  }
-
-	template
-	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
-	>
-	_Base_Nullable(_Base_Nullable<Q> const& nb){  _try_make(nb);  }
-
-	template
-	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
-	>
-	_Base_Nullable(_Base_Nullable<Q>&& nb) noexcept{  _try_make( Move(nb) );  }
-
-	~_Base_Nullable() noexcept{  *this = Null_t{};  }
-
-
-	template
-	<	class Q
-	,	class
-		=	Enable_if_t
-			<	is_Convertible_but_Different_Origin<Q, _Base_Nullable>::value
-			&&	!is_Nullable<Q>::value
-			>
-	>
-	auto operator=(Q&& q) noexcept(is_Rvalue_Reference<Q&&>::value)-> _Base_Nullable&
-	{
-		if(!has_value())
-			make( Forward<Q>(q) );
-		else
-			v() = Forward<Q>(q);
-
-		return *this;
-	}
-
-	auto operator=(Null_t const) noexcept-> _Base_Nullable&
-	{
-		if(has_value())
-			_core.clear(),
-			_opof_t::_p = nullptr;
-
-		return *this;
-	}
+	auto v() & noexcept-> T&{  return _core.value;  }
+	auto v() const& noexcept-> T const&{  return _core.value;  }
+	auto v() && noexcept-> T&&{  return Move(_core.value);  }
+	auto v() const&& noexcept-> T const&&{  return Move(_core.value);  }
 
 
 	template<class...ARGS>
-	auto make(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> _Base_Nullable&
+	auto make(ARGS&&...args) 
+	noexcept( Aleph_Check<ARGS&&...>::value || noexcept(value_type{args...}) )
+	->	_Base_Nullable&
 	{
 		assert(!has_value());
 
@@ -193,50 +146,49 @@ public:
 
 
 	template
-	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	<	class Q
+	,	class
+		=	Enable_if_t
+			<	is_Convertible_but_Different_Origin<Q, _Base_Nullable>::value
+			&&	!is_Nullable<Q>::value
+			>
 	>
-	auto operator=(_Base_Nullable<Q> const& nb)
-	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
+	auto operator=(Q&& q) 
+	noexcept
+	(	Aleph_Check<Q&&>::value
+	||	(  noexcept(has_value()) && noexcept( make(q) ) && noexcept(Declval<T>() = q)  ) 
+	)
+	->	_Base_Nullable&
+	{
+		if(!has_value())
+			make( Forward<Q>(q) );
+		else
+			v() = Forward<Q>(q);
 
-	template
-	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
-	>
-	auto operator=(_Base_Nullable<Q>&& nb) noexcept
-	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
-
-	auto operator=(_Base_Nullable const& nb) 
-	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
-
-	auto operator=(_Base_Nullable&& nb) noexcept
-	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
+		return *this;
+	}
 
 
-	auto has_value() const noexcept-> bool{  return _opof_t::_p != nullptr;  }
+	auto operator=(Null_t const) noexcept( noexcept(has_value()) && noexcept(_core.clear()) )
+	->	_Base_Nullable&
+	{
+		if(has_value())
+			_core.clear(),
+			_opof_t::_p = nullptr;
 
-	auto v() & noexcept-> T&{  return _core.value;  }
-	auto v() const& noexcept-> T const&{  return _core.value;  }
-	auto v() && noexcept-> T&&{  return Move(_core.value);  }
-	auto v() const&& noexcept-> T const&&{  return Move(_core.value);  }
-
-	auto v_or() & noexcept(false)-> T&{  return _get_or(*this);  }
-	auto v_or() const& noexcept(false)-> T const&{  return _get_or(*this);  }
-	auto v_or() && noexcept(false)-> T&&{  return _get_or( Move(*this) );  }
-	auto v_or() const&& noexcept(false)-> T const&&{  return _get_or( Move(*this) );  }
-	
-	auto v_or(T& t) & noexcept-> T&{  return _get_or(*this, t);  }
-	auto v_or(T const& t) const& noexcept-> T const&{  return _get_or(*this, t);  }
-	auto v_or(T&& t) && noexcept-> T&&{  return _get_or( Move(*this), Move(t) );  }
-	
-	auto v_or(T const&& t) const&& noexcept
-	->	T const&&{  return _get_or( Move(*this), Move(t) );  }
+		return *this;
+	}
 
 
 private:
-	_core_t _core;
-
-
 	template<class NB>
-	void _try_make(NB&& nb) noexcept(is_Rvalue_Reference<NB&&>::value)
+	void _try_make(NB&& nb) 
+	noexcept
+	(	is_Rvalue_Reference<NB&&>::value
+	||	(	noexcept( make(nb.v()) ) 
+		&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+		)
+	)
 	{
 		if(nb.has_value())
 			make( Forward<NB>(nb).v() );
@@ -256,7 +208,14 @@ private:
 	}
 
 	template<class ME, class...ARGS>
-	static auto _get_or(ME&& me, ARGS&&...args) noexcept
+	static auto _get_or(ME&& me, ARGS&&...args) 
+	noexcept
+	(	Aleph_Check<ME&&, ARGS&&...>::value
+	||	(	noexcept(me.has_value())
+		&&	noexcept(me.v())
+		&&	noexcept( Nth_Param<0>(args...) )
+		)
+	)
 	->	Enable_if_t< sizeof...(ARGS) == 1, Qualify_Like_t<ME&&, T> >
 	{
 		if(me.has_value())
@@ -264,6 +223,105 @@ private:
 		else
 			return Nth_Param<0>( Forward<ARGS>(args)... );
 	}
+
+
+public:
+	constexpr _Base_Nullable(Null_t const = {}) noexcept {};
+
+	template
+	<	class...ARGS
+	,	class
+		=	Enable_if_t
+			<	( sizeof...(ARGS) >= 2 )
+			||	(	!is_Nullable< First_t<ARGS...> >::value
+				&&	!Has_Same_Origin< First_t<ARGS...>, _Base_Nullable >::value
+				&&	!Has_Same_Origin< First_t<ARGS...>, Null_t >::value
+				)
+			>
+	>
+	_Base_Nullable(ARGS&&...args)
+	noexcept(  Aleph_Check<ARGS&&...>::value || noexcept( make(args...) )  )
+	{
+		make( Forward<ARGS>(args)... );  
+	}
+
+	_Base_Nullable(_Base_Nullable const& nb)
+	SGM_TRY_NOEXCEPT( _try_make(nb) ){  _try_make(nb);  }
+	
+	_Base_Nullable(_Base_Nullable&& nb) noexcept{  _try_make( Move(nb) );  }
+
+
+	template
+	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	>
+	_Base_Nullable(_Base_Nullable<Q> const& nb)
+	SGM_TRY_NOEXCEPT( _try_make(nb) ){  _try_make(nb);  }
+
+
+	template
+	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	>
+	_Base_Nullable(_Base_Nullable<Q>&& nb) noexcept{  _try_make( Move(nb) );  }
+
+
+	~_Base_Nullable() noexcept{  *this = Null_t{};  }
+
+
+	auto v_or() & SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&>()) )
+	->	T&{  return _get_or(*this);  }
+	
+	auto v_or() const& SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&>()) )
+	->	T const&{  return _get_or(*this);  }
+
+	auto v_or() && SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&&>()) )
+	->	T&&{  return _get_or( Move(*this) );  }
+	
+	auto v_or() const&& SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&&>()) )
+	->	T const&&{  return _get_or( Move(*this) );  }
+	
+	auto v_or(T& t) & SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&>(), t) )
+	->	T&{  return _get_or(*this, t);  }
+	
+	auto v_or(T const& t) const& 
+	SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&>(), t) )
+	->	T const&{  return _get_or(*this, t);  }
+	
+	auto v_or(T&& t) && SGM_TRY_NOEXCEPT(  _get_or( Declval<_Base_Nullable&&>(), Move(t) )  )
+	->	T&&{  return _get_or( Move(*this), Move(t) );  }
+	
+	auto v_or(T const&& t) const&& 
+	SGM_TRY_NOEXCEPT(  _get_or( Declval<_Base_Nullable const&&>(), Move(t) )  )
+	->	T const&&{  return _get_or( Move(*this), Move(t) );  }
+
+
+	template
+	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	>
+	auto operator=(_Base_Nullable<Q> const& nb)
+	noexcept
+	(	noexcept(Declval<_Base_Nullable>() = nb.v())
+	&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+	)
+	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
+
+
+	template
+	<	class Q, class = Enable_if_t< is_Convertible_but_Different_Origin<Q, T>::value >
+	>
+	auto operator=(_Base_Nullable<Q>&& nb) noexcept
+	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
+
+
+	auto operator=(_Base_Nullable const& nb) 
+	noexcept
+	(	noexcept(Declval<_Base_Nullable>() = nb.v())
+	&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+	)
+	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
+
+
+	auto operator=(_Base_Nullable&& nb) noexcept
+	->	_Base_Nullable&{  return nb.has_value() ? *this = Move(nb).v() : *this = Null_t{};  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -282,7 +340,10 @@ private:
 public:
 	using _base_t::_base_t;
 
-	Abbreviable_t(Abbreviable_t const& abrv) : _base_t( static_cast<_base_t const&>(abrv) ){}
+	Abbreviable_t(Abbreviable_t const& abrv) 
+	SGM_TRY_NOEXCEPT( _base_t(Declval<_base_t const&>()) ) 
+	:	_base_t( static_cast<_base_t const&>(abrv) ){}
+	
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
 
 
@@ -291,9 +352,14 @@ public:
 
 	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
 
-	auto v() const noexcept-> T const&{  return _base_t::v();  }
-	auto v_or() const noexcept(false)-> T const&{  return _base_t::v_or();  }
-	auto v_or(T const& t) const noexcept-> T const&{  return _base_t::v_or(t);  }
+	auto v() const SGM_TRY_NOEXCEPT(Declval<_base_t>().v())
+	->	T const&{  return _base_t::v();  }
+
+	auto v_or() const SGM_TRY_NOEXCEPT(Declval<_base_t>().v_or())
+	->	T const&{  return _base_t::v_or();  }
+
+	auto v_or(T const& t) const SGM_TRY_NOEXCEPT( Declval<_base_t>().v_or(t) )
+	->	T const&{  return _base_t::v_or(t);  }
 
 	auto move() noexcept-> T const&&{  return Move(v());  }
 };
@@ -314,15 +380,20 @@ private:
 public:
 	using _base_t::_base_t;
 
-	Abbreviable_t(Abbreviable_t const& abrv) : _base_t( static_cast<_base_t const&>(abrv) ){}
+	Abbreviable_t(Abbreviable_t const& abrv) 
+	SGM_TRY_NOEXCEPT( _base_t(Declval<_base_t const&>()) ) 
+	:	_base_t( static_cast<_base_t const&>(abrv) ){}
+	
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
 
 
 	template<class Q>
-	auto operator=(Q&& q) noexcept(is_Rvalue_Reference<Q&&>::value)
+	auto operator=(Q&& q) 
+	SGM_TRY_NOEXCEPT( Declval<_base_t>() = Forward<Q>(q) )
 	->	Abbreviable_t&{  return _base_t::operator=( Forward<Q>(q) ),  *this;  }
 
 	auto operator=(Abbreviable_t const& abrv)
+	SGM_TRY_NOEXCEPT(Declval<_base_t>() = abrv)
 	->	Abbreviable_t&{  return _base_t::operator=(abrv),  *this;  }
 
 	auto operator=(Abbreviable_t&& abrv) noexcept
