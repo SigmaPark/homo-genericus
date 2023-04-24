@@ -57,7 +57,7 @@ public:
 	);
 
 
-	void constexpr check_type_definitions()
+	auto constexpr check_type_definitions() const noexcept-> void
 	{
 		static_assert
 		(	Boolean_And
@@ -71,7 +71,7 @@ public:
 
 
 	template<class SIZE, class PTR>
-	void constexpr check_nontemplate_overridings()
+	auto constexpr check_nontemplate_overridings() const noexcept-> void
 	{
 		static_assert
 		(	Boolean_And
@@ -83,7 +83,7 @@ public:
 	}
 
 
-	constexpr Allocator_interface()
+	constexpr Allocator_interface() noexcept
 	{
 		check_type_definitions(),
 		check_nontemplate_overridings<typename ALLOC::size_type, typename ALLOC::pointer>();
@@ -134,11 +134,12 @@ public:
 	}
 
 	template<class Q, class...ARGS>
-	void construct(Q* p, ARGS&&...args)
+	void construct(Q* p, ARGS&&...args) 
+	noexcept( Aleph_Check<ARGS&&...>::value || noexcept(Q{args...}) )
 	{
 		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
 
-		new(p) Q( Forward<ARGS>(args)... );  
+		new(p) Q{ Forward<ARGS>(args)... };  
 	}
 
 	template<class Q>
