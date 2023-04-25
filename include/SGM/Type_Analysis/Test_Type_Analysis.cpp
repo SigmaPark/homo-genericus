@@ -95,20 +95,20 @@ struct _Casting_Test_Helper
 	static auto calc(T&& t)-> decltype( sgm::Forward<T>(t) );
 
 	template<class IN, class OUT>
-	using type = sgm::is_Same< decltype( calc(sgm::Declval<IN>()) ), OUT  >;
+	using type = sgm::is_Same< decltype( calc(sgm::Mock<IN>()) ), OUT  >;
 };
 
 
 static void Casting_Test()
 {
 	static_assert
-	(	(	sgm::is_Same< decltype( sgm::Move(sgm::Declval<int&>()) ), int&& >::value
-		&&	sgm::is_Same< decltype( sgm::Move(sgm::Declval<int&&>()) ), int&& >::value
+	(	(	sgm::is_Same< decltype( sgm::Move(sgm::Mock<int&>()) ), int&& >::value
+		&&	sgm::is_Same< decltype( sgm::Move(sgm::Mock<int&&>()) ), int&& >::value
 		&&	sgm::is_Same
-			<	decltype( sgm::Move(sgm::Declval<int const&>()) ), int const&& 
+			<	decltype( sgm::Move(sgm::Mock<int const&>()) ), int const&& 
 			>::	value
 		&&	sgm::is_Same
-			<	decltype( sgm::Move(sgm::Declval<int const&&>()) ), int const&& 
+			<	decltype( sgm::Move(sgm::Mock<int const&&>()) ), int const&& 
 			>::	value
 		)
 	,	""
@@ -126,10 +126,10 @@ static void Casting_Test()
 
 	static_assert
 	(	(	sgm::is_Same
-			<	decltype( sgm::Move_if<true>(sgm::Declval<int&>()) ), int&& 
+			<	decltype( sgm::Move_if<true>(sgm::Mock<int&>()) ), int&& 
 			>::	value
 		&&	sgm::is_Same
-			<	decltype( sgm::Move_if<false>(sgm::Declval<int&>()) ), int& 
+			<	decltype( sgm::Move_if<false>(sgm::Mock<int&>()) ), int& 
 			>::	value
 		)
 	,	""

@@ -156,7 +156,7 @@ public:
 	auto operator=(Q&& q) 
 	noexcept
 	(	Aleph_Check<Q&&>::value
-	||	(  noexcept(has_value()) && noexcept( make(q) ) && noexcept(Declval<T>() = q)  ) 
+	||	(  noexcept(has_value()) && noexcept( make(q) ) && noexcept(Mock<T>() = q)  ) 
 	)
 	->	_Base_Nullable&
 	{
@@ -186,7 +186,7 @@ private:
 	noexcept
 	(	is_Rvalue_Reference<NB&&>::value
 	||	(	noexcept( make(nb.v()) ) 
-		&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+		&&	noexcept(Mock<_Base_Nullable>() = Null_t{})
 		)
 	)
 	{
@@ -267,30 +267,30 @@ public:
 	~_Base_Nullable() noexcept{  *this = Null_t{};  }
 
 
-	auto v_or() & SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&>()) )
+	auto v_or() & SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable&>()) )
 	->	T&{  return _get_or(*this);  }
 	
-	auto v_or() const& SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&>()) )
+	auto v_or() const& SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable const&>()) )
 	->	T const&{  return _get_or(*this);  }
 
-	auto v_or() && SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&&>()) )
+	auto v_or() && SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable&&>()) )
 	->	T&&{  return _get_or( Move(*this) );  }
 	
-	auto v_or() const&& SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&&>()) )
+	auto v_or() const&& SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable const&&>()) )
 	->	T const&&{  return _get_or( Move(*this) );  }
 	
-	auto v_or(T& t) & SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable&>(), t) )
+	auto v_or(T& t) & SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable&>(), t) )
 	->	T&{  return _get_or(*this, t);  }
 	
 	auto v_or(T const& t) const& 
-	SGM_TRY_NOEXCEPT( _get_or(Declval<_Base_Nullable const&>(), t) )
+	SGM_TRY_NOEXCEPT( _get_or(Mock<_Base_Nullable const&>(), t) )
 	->	T const&{  return _get_or(*this, t);  }
 	
-	auto v_or(T&& t) && SGM_TRY_NOEXCEPT(  _get_or( Declval<_Base_Nullable&&>(), Move(t) )  )
+	auto v_or(T&& t) && SGM_TRY_NOEXCEPT(  _get_or( Mock<_Base_Nullable&&>(), Move(t) )  )
 	->	T&&{  return _get_or( Move(*this), Move(t) );  }
 	
 	auto v_or(T const&& t) const&& 
-	SGM_TRY_NOEXCEPT(  _get_or( Declval<_Base_Nullable const&&>(), Move(t) )  )
+	SGM_TRY_NOEXCEPT(  _get_or( Mock<_Base_Nullable const&&>(), Move(t) )  )
 	->	T const&&{  return _get_or( Move(*this), Move(t) );  }
 
 
@@ -299,8 +299,8 @@ public:
 	>
 	auto operator=(_Base_Nullable<Q> const& nb)
 	noexcept
-	(	noexcept(Declval<_Base_Nullable>() = nb.v())
-	&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+	(	noexcept(Mock<_Base_Nullable>() = nb.v())
+	&&	noexcept(Mock<_Base_Nullable>() = Null_t{})
 	)
 	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
 
@@ -314,8 +314,8 @@ public:
 
 	auto operator=(_Base_Nullable const& nb) 
 	noexcept
-	(	noexcept(Declval<_Base_Nullable>() = nb.v())
-	&&	noexcept(Declval<_Base_Nullable>() = Null_t{})
+	(	noexcept(Mock<_Base_Nullable>() = nb.v())
+	&&	noexcept(Mock<_Base_Nullable>() = Null_t{})
 	)
 	->	_Base_Nullable&{  return nb.has_value() ? *this = nb.v() : *this = Null_t{};  }
 
@@ -341,7 +341,7 @@ public:
 	using _base_t::_base_t;
 
 	Abbreviable_t(Abbreviable_t const& abrv) 
-	SGM_TRY_NOEXCEPT( _base_t(Declval<_base_t const&>()) ) 
+	SGM_TRY_NOEXCEPT( _base_t(Mock<_base_t const&>()) ) 
 	:	_base_t( static_cast<_base_t const&>(abrv) ){}
 	
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
@@ -352,13 +352,13 @@ public:
 
 	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
 
-	auto v() const SGM_TRY_NOEXCEPT(Declval<_base_t>().v())
+	auto v() const SGM_TRY_NOEXCEPT(Mock<_base_t>().v())
 	->	T const&{  return _base_t::v();  }
 
-	auto v_or() const SGM_TRY_NOEXCEPT(Declval<_base_t>().v_or())
+	auto v_or() const SGM_TRY_NOEXCEPT(Mock<_base_t>().v_or())
 	->	T const&{  return _base_t::v_or();  }
 
-	auto v_or(T const& t) const SGM_TRY_NOEXCEPT( Declval<_base_t>().v_or(t) )
+	auto v_or(T const& t) const SGM_TRY_NOEXCEPT( Mock<_base_t>().v_or(t) )
 	->	T const&{  return _base_t::v_or(t);  }
 
 	auto move() noexcept-> T const&&{  return Move(v());  }
@@ -381,7 +381,7 @@ public:
 	using _base_t::_base_t;
 
 	Abbreviable_t(Abbreviable_t const& abrv) 
-	SGM_TRY_NOEXCEPT( _base_t(Declval<_base_t const&>()) ) 
+	SGM_TRY_NOEXCEPT( _base_t(Mock<_base_t const&>()) ) 
 	:	_base_t( static_cast<_base_t const&>(abrv) ){}
 	
 	Abbreviable_t(Abbreviable_t&& abrv) noexcept : _base_t( static_cast<_base_t&&>(abrv) ){}
@@ -389,11 +389,11 @@ public:
 
 	template<class Q>
 	auto operator=(Q&& q) 
-	SGM_TRY_NOEXCEPT( Declval<_base_t>() = Forward<Q>(q) )
+	SGM_TRY_NOEXCEPT( Mock<_base_t>() = Forward<Q>(q) )
 	->	Abbreviable_t&{  return _base_t::operator=( Forward<Q>(q) ),  *this;  }
 
 	auto operator=(Abbreviable_t const& abrv)
-	SGM_TRY_NOEXCEPT(Declval<_base_t>() = abrv)
+	SGM_TRY_NOEXCEPT(Mock<_base_t>() = abrv)
 	->	Abbreviable_t&{  return _base_t::operator=(abrv),  *this;  }
 
 	auto operator=(Abbreviable_t&& abrv) noexcept

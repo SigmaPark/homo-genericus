@@ -67,7 +67,7 @@ namespace s3d::trait
 
 
 	template<class CON>
-	using Deref_t = decltype( *Begin(Declval<CON>()) );
+	using Deref_t = decltype( *Begin(Mock<CON>()) );
 
 
 	template<class MAT>  

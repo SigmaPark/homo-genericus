@@ -103,7 +103,7 @@ private:
 
 
 public:
-	using type = decltype( _calc(Declval<T>()) );
+	using type = decltype( _calc(Mock<T>()) );
 	
 	static bool constexpr value = type::value;
 };

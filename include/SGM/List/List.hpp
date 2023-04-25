@@ -60,7 +60,7 @@ struct sgm::List_Node
 	
 	template<class Q>
 	List_Node(List_Node* fp, List_Node* bp, Q&& q) 
-	noexcept(  is_Rvalue_Reference<Q&&>::value && noexcept( T(Declval<Q&&>()) )  )
+	noexcept(  is_Rvalue_Reference<Q&&>::value && noexcept( T(Mock<Q&&>()) )  )
 	:	front_ptr(fp), back_ptr(bp), value( Forward<Q>(q) ){}
 
 

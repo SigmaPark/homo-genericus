@@ -55,7 +55,7 @@ private:
 
 
 public:
-	static bool constexpr value = decltype( _calc(Declval<T>()) )::value;
+	static bool constexpr value = decltype( _calc(Mock<T>()) )::value;
 
 	using type = Boolean<value>;
 };
@@ -318,13 +318,13 @@ namespace s3d
 			<	sizeof...(ARGS) != 1 
 			||	!trait::is_StrictVec< First_t<ARGS...> >::value  
 			>
-	,	class S = typename decltype( Quaternion(Declval<ARGS&&>()...) )::scalar_type 
+	,	class S = typename decltype( Quaternion(Mock<ARGS&&>()...) )::scalar_type 
 	>
 	UnitQuaternion(ARGS&&...)-> UnitQuaternion<S>;
 
 	template<  class U, class = Enable_if_t< trait::is_StrictVec<U>::value >  >
 	UnitQuaternion(U&&)
-	->	UnitQuaternion<  Decay_t< decltype( Declval<U>()(0) ) >  >;
+	->	UnitQuaternion<  Decay_t< decltype( Mock<U>()(0) ) >  >;
 
 }
 

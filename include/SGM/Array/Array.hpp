@@ -309,7 +309,7 @@ class sgm::Array
 protected:
 	template
 	<	class ITR, class RG
-	,	class RES_ITR = decltype( Begin(Declval<RG>()) )
+	,	class RES_ITR = decltype( Begin(Mock<RG>()) )
 	,	class = Enable_if_t< is_iterator<ITR>::value && is_iterable<RG>::value >
 	>
 	static auto _copy_AMAP(ITR bi, ITR const ei, RG& rg) noexcept(is_Move_iterator<ITR>::value)

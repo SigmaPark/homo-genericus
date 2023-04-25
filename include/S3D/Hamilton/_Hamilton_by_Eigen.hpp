@@ -56,7 +56,7 @@ private:
 public:
 	using egn_Mat_t = Eigen::Matrix<T, egnRows, egnCols, egnStor>;
 
-	using value_type = Decay_t<decltype( Declval<egn_Mat_t>()(0, 0) )>;
+	using value_type = Decay_t<decltype( Mock<egn_Mat_t>()(0, 0) )>;
 };
 
 
@@ -65,7 +65,7 @@ struct s3d::_Seed_Matrix<T, ROWS, COLS, STOR, false>
 {
 	using egn_Mat_t = T;
 
-	using value_type = Decay_t<decltype( Declval<egn_Mat_t>()(0, 0) )>;
+	using value_type = Decay_t<decltype( Mock<egn_Mat_t>()(0, 0) )>;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -317,7 +317,7 @@ public:
 
 	template
 	<	class Q
-	,	class _E = Decay_t< decltype(Declval<value_type>()/Declval<Q>()) >
+	,	class _E = Decay_t< decltype(Mock<value_type>()/Mock<Q>()) >
 	,	class ELEM = std::conditional_t< std::numeric_limits<_E>::is_integer, float, _E >
 	>
 	auto operator/(Q const q) const-> _MatrixAdaptor<ELEM, ROWS, COLS, STOR>

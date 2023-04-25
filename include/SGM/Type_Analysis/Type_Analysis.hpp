@@ -111,10 +111,10 @@ namespace sgm
 {
 
     template<class T>  /* Declaration Only */
-    static auto Declval() noexcept-> T;
+    static auto Mock() noexcept-> T;
 
     template<class TEST, class T = True_t>
-    using SFINAE_t = decltype( (void)Declval<TEST>(),  Declval<T>() );
+    using SFINAE_t = decltype( (void)Mock<TEST>(),  Mock<T>() );
 
 
     template<class...>
@@ -236,7 +236,7 @@ namespace sgm
     <   FROM, TO
     ,   Void_t
         <   decltype( static_cast<TO(*)()>(nullptr) )
-        ,   decltype( Declval<void(*)(TO)>()(Declval<FROM>()) ) 
+        ,   decltype( Mock<void(*)(TO)>()(Mock<FROM>()) ) 
         > 
     > : True_t{};
 
@@ -494,7 +494,7 @@ namespace sgm
 
 
     template<class FUNC, class...ARGS>
-    using invocation_Result_t = decltype( Declval<FUNC>()(Declval<ARGS>()...) );
+    using invocation_Result_t = decltype( Mock<FUNC>()(Mock<ARGS>()...) );
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -590,11 +590,11 @@ namespace sgm
         template<class...ARGS>
         struct _Helper
         :   As_type_itself
-            <   decltype( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) )
+            <   decltype( (Mock<HOST_PTR>()->*Mock<MEMFN_PTR>())(Mock<ARGS>()...) )
             >
         ,   As_value_itself
             <   bool
-            ,   noexcept( (Declval<HOST_PTR>()->*Declval<MEMFN_PTR>())(Declval<ARGS>()...) )
+            ,   noexcept( (Mock<HOST_PTR>()->*Mock<MEMFN_PTR>())(Mock<ARGS>()...) )
             >
         {};
         

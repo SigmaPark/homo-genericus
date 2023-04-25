@@ -63,7 +63,7 @@ public:
 	Abbreviable_t(T const&&) = delete;
 
 
-	auto operator=(constAvatar<T> const& avt) SGM_TRY_NOEXCEPT(Declval<_base_t>().v() = avt.v())
+	auto operator=(constAvatar<T> const& avt) SGM_TRY_NOEXCEPT(Mock<_base_t>().v() = avt.v())
 	->	Abbreviable_t&
 	{
 		_base_t::v() = avt.v();
@@ -72,7 +72,7 @@ public:
 	}	
 
 	auto operator=(Abbreviable_t const& avt) 
-	SGM_TRY_NOEXCEPT(Declval<Abbreviable_t>() = Declval< constAvatar<T> >())
+	SGM_TRY_NOEXCEPT(Mock<Abbreviable_t>() = Mock< constAvatar<T> >())
 	->	Abbreviable_t&{  return *this = constAvatar<T>(avt);  }
 
 	template
@@ -81,7 +81,7 @@ public:
 		=	Enable_if_t< !is_Avatar<Q>::value && is_Convertible<Q, T>::value >  
 	>
 	auto operator=(Q&& q) 
-	noexcept( Aleph_Check<Q&&>::value || noexcept(Declval<_base_t>().v() = q) )
+	noexcept( Aleph_Check<Q&&>::value || noexcept(Mock<_base_t>().v() = q) )
 	->	Abbreviable_t&
 	{
 		_base_t::v() = Forward<Q>(q);
@@ -90,10 +90,10 @@ public:
 	}
 
 
-	auto operator&() const SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	auto operator&() const SGM_TRY_NOEXCEPT(&Mock<_base_t>().v())
 	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 	
-	auto operator&() SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	auto operator&() SGM_TRY_NOEXCEPT(&Mock<_base_t>().v())
 	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -126,10 +126,10 @@ public:
 	auto operator=(Abbreviable_t const&)-> Abbreviable_t& = delete;
 	auto operator=(T const&)-> Abbreviable_t& = delete;
 
-	auto operator&() const SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	auto operator&() const SGM_TRY_NOEXCEPT(&Mock<_base_t>().v())
 	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 
-	auto operator&() SGM_TRY_NOEXCEPT(&Declval<_base_t>().v())
+	auto operator&() SGM_TRY_NOEXCEPT(&Mock<_base_t>().v())
 	->	SGM_DECLTYPE_AUTO(  &_base_t::v()  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

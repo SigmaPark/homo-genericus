@@ -79,7 +79,7 @@ private:
 	static auto _calc(_Affine_interface<T>) noexcept-> True_t;
 
 public:
-	using type = decltype( _calc(Declval<A>()) );
+	using type = decltype( _calc(Mock<A>()) );
 	
 	static bool constexpr value = type::value;
 };
@@ -150,7 +150,7 @@ public:
 			return _crtp(this)-> _translate( Nth_Param<0>(args...) );
 		else if constexpr(is_Convertible< First_t<ARGS const&...>, double >::value)
 		{
-			using _T = Decay_t<decltype( Declval<A>().vec()(0) )>;
+			using _T = Decay_t<decltype( Mock<A>().vec()(0) )>;
 
 			return translate( Vector<_T, sizeof...(ARGS)>{static_cast<_T>(args)...} );
 		}
@@ -330,7 +330,7 @@ namespace s3d
 	template
 	<	class A
 	,	class = Enable_if_t< trait::is_AffineTr<A>::valule >
-	,	class _V = Decay_t< decltype(Declval<A>().vec()) >
+	,	class _V = Decay_t< decltype(Mock<A>().vec()) >
 	,	class _S = typename Decay_t<_V>::value_type
 	,	size_t _DIM = trait::Dimension<_V>::value
 	>
@@ -671,7 +671,7 @@ namespace s3d
 	template
 	<	class R, class = Enable_if_t< trait::is_Rotation<R>::value >
 	,	class S = typename Decay_t<R>::scalar_type
-	,	size_t _DIM = Decay_t< decltype(Declval<R>().cortho_mat()) >::COL_SIZE
+	,	size_t _DIM = Decay_t< decltype(Mock<R>().cortho_mat()) >::COL_SIZE
 	>
 	Rigid_Body_Transform(R&&)-> Rigid_Body_Transform<S, _DIM>;
 

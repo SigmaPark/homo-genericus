@@ -77,7 +77,7 @@ struct _constPinweight_Test_Helper
 {
 private:
 	template<class _CPW>
-	static auto _calc(int)-> sgm::SFINAE_t< decltype(sgm::Declval<_CPW>().v() = 7) >;
+	static auto _calc(int)-> sgm::SFINAE_t< decltype(sgm::Mock<_CPW>().v() = 7) >;
 
 	template<class...>
 	static auto _calc(...)-> sgm::False_t;

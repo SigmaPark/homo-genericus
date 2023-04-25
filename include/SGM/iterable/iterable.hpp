@@ -301,7 +301,7 @@ private:
 	using _itr_t = Reverse_iterator;
 
 protected:
-	using _deref_t = decltype(*Declval<ITR>());	
+	using _deref_t = decltype(*Mock<ITR>());	
 
 
 public:
@@ -318,7 +318,7 @@ public:
 
 	auto operator*() const SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  *base()  )
 
-	auto operator->() const SGM_TRY_NOEXCEPT( Address_of(*Declval<_itr_t>()) )
+	auto operator->() const SGM_TRY_NOEXCEPT( Address_of(*Mock<_itr_t>()) )
 	->	pointer{  return Address_of(**this);  }	
 
 	auto operator==(_itr_t const itr) const 
@@ -331,7 +331,7 @@ public:
 	auto operator++() SGM_TRY_NOEXCEPT(--base())
 	->	_itr_t&{  return --base(),  *this;  }
 
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -344,7 +344,7 @@ public:
 	auto operator--() SGM_TRY_NOEXCEPT(++base())
 	->	_itr_t&{  return ++base(),  *this;  }
 
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -375,10 +375,10 @@ public:
 	using _top_t::_top_t;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_top_t>())
+	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
 	->	_itr_t&{  return _top_t::operator++(),  *this;  }
 	
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -387,10 +387,10 @@ public:
 		return res;
 	}
 
-	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_top_t>())
+	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_top_t>())
 	->	_itr_t&{  return _top_t::operator--(),  *this;  }
 
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -401,15 +401,15 @@ public:
 
 
 	auto operator[](difference_type const diff) const 
-	SGM_TRY_NOEXCEPT( *(Declval<_itr_t>() + diff) )
+	SGM_TRY_NOEXCEPT( *(Mock<_itr_t>() + diff) )
 	->	_deref_t{  return *(*this + diff);  }
 
 	auto operator+(difference_type const diff) const
-	SGM_TRY_NOEXCEPT( _itr_t{Declval<_top_t>().base() - diff} )
+	SGM_TRY_NOEXCEPT( _itr_t{Mock<_top_t>().base() - diff} )
 	->	_itr_t{  return {_top_t::base() - diff};  }
 	
 	auto operator-(difference_type const diff) const
-	SGM_TRY_NOEXCEPT( _itr_t{Declval<_top_t>().base() + diff} )
+	SGM_TRY_NOEXCEPT( _itr_t{Mock<_top_t>().base() + diff} )
 	->	_itr_t{  return {_top_t::base() + diff};  }
 	
 	auto operator-(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() - itr.base())
@@ -417,11 +417,11 @@ public:
 	
 
 	auto operator+=(difference_type const diff)
-	SGM_TRY_NOEXCEPT(Declval<_top_t>().base() -= diff)
+	SGM_TRY_NOEXCEPT(Mock<_top_t>().base() -= diff)
 	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
 
 	auto operator-=(difference_type const diff)
-	SGM_TRY_NOEXCEPT(Declval<_top_t>().base() += diff)
+	SGM_TRY_NOEXCEPT(Mock<_top_t>().base() += diff)
 	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
 
 
@@ -469,7 +469,7 @@ class sgm::Move_iterator<ITR, 1>
 {
 private:
 	using _itr_t = Move_iterator;
-	using _deref_t = decltype(*Declval<ITR>());	
+	using _deref_t = decltype(*Mock<ITR>());	
 
 public:
 	using value_type = _detail::value_type_or_t< ITR, Decay_t<_deref_t> >;
@@ -495,7 +495,7 @@ public:
 
 	auto operator++() SGM_TRY_NOEXCEPT(++base())-> _itr_t&{  return ++base(),  *this;  }
 
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -521,10 +521,10 @@ public:
 	using _top_t::_top_t;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_top_t>())
+	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
 	->	_itr_t&{  return _top_t::operator++(),  *this;  }
 	
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -534,10 +534,10 @@ public:
 	}
 
 
-	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_top_t>().base())
+	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_top_t>().base())
 	->	_itr_t&{  return --_top_t::base(),  *this;  }
 
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -560,10 +560,10 @@ public:
 	using _middle_t::_middle_t;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Declval<_middle_t>().base())
+	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_middle_t>().base())
 	->	_itr_t&{  return _middle_t::operator++(),  *this;  }
 
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Declval<_itr_t>())-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -573,10 +573,10 @@ public:
 	}
 
 
-	auto operator--() SGM_TRY_NOEXCEPT(--Declval<_middle_t>())
+	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_middle_t>())
 	->	_itr_t&{  return _middle_t::operator--(),  *this;  }
 
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Declval<_itr_t>())-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
@@ -586,10 +586,10 @@ public:
 	}
 
 
-	auto operator+(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Declval<_top_t>().base() + diff)
+	auto operator+(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_top_t>().base() + diff)
 	->	_itr_t{  return {_top_t::base() + diff};  }
 	
-	auto operator-(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Declval<_top_t>().base() - diff)
+	auto operator-(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_top_t>().base() - diff)
 	->	_itr_t{  return {_top_t::base() - diff};  }
 
 
@@ -597,10 +597,10 @@ public:
 	->	ptrdiff_t{  return _top_t::base() - itr.base();  }
 
 
-	auto operator+=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Declval<_top_t>().base() += diff)
+	auto operator+=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_top_t>().base() += diff)
 	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
 	
-	auto operator-=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Declval<_top_t>().base() -= diff)
+	auto operator-=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_top_t>().base() -= diff)
 	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
 
 
@@ -647,7 +647,7 @@ namespace sgm
 	->	SGM_DECLTYPE_AUTO(  To_Move_iterator( rEnd(rg) )  )
 
 
-	template<  class RG, class ITR = Decay_t< decltype( Begin(Declval<RG>()) ) >  >
+	template<  class RG, class ITR = Decay_t< decltype( Begin(Mock<RG>()) ) >  >
 	static auto fBegin(Referenceless_t<RG>& rg) noexcept
 	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
 	{
@@ -658,7 +658,7 @@ namespace sgm
 	static auto fBegin(Referenceless_t<RG>&& rg) noexcept
 	->	SGM_DECLTYPE_AUTO(  mBegin( Move(rg) )  )
 
-	template<  class RG, class ITR = Decay_t< decltype( End(Declval<RG>()) ) >  >
+	template<  class RG, class ITR = Decay_t< decltype( End(Mock<RG>()) ) >  >
 	static auto fEnd(Referenceless_t<RG>& rg) noexcept
 	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
 	{
@@ -669,7 +669,7 @@ namespace sgm
 	static auto fEnd(Referenceless_t<RG>&& rg) noexcept
 	->	SGM_DECLTYPE_AUTO(  mEnd( Move(rg) )  )
 
-	template<  class RG, class ITR = Decay_t< decltype( rBegin(Declval<RG>()) ) >  >
+	template<  class RG, class ITR = Decay_t< decltype( rBegin(Mock<RG>()) ) >  >
 	static auto frBegin(Referenceless_t<RG>& rg) noexcept
 	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
 	{
@@ -680,7 +680,7 @@ namespace sgm
 	static auto frBegin(Referenceless_t<RG>&& rg) noexcept
 	->	SGM_DECLTYPE_AUTO(  mrBegin( Move(rg) )  )
 
-	template<  class RG, class ITR = Decay_t< decltype( rEnd(Declval<RG>()) ) >  >
+	template<  class RG, class ITR = Decay_t< decltype( rEnd(Mock<RG>()) ) >  >
 	static auto frEnd(Referenceless_t<RG>& rg) noexcept
 	->	Selective_t< is_Rvalue_Reference<RG&&>::value, Move_iterator<ITR>, ITR >  
 	{
@@ -709,8 +709,8 @@ namespace sgm
 			<	Boolean_And
 				<	is_iterable<RG1>, is_iterable<RG2>
 				,	is_Same
-					<	Decay_t< decltype( *Begin(Declval<RG1>()) ) >
-					,	Decay_t< decltype( *Begin(Declval<RG2>()) ) >
+					<	Decay_t< decltype( *Begin(Mock<RG1>()) ) >
+					,	Decay_t< decltype( *Begin(Mock<RG2>()) ) >
 					>
 				>::	value
 			>
@@ -725,13 +725,13 @@ struct sgm::is_iterable : Unconstructible
 {
 private:
 	template<class Q>  /* Declaration Only */
-	static auto _begin(int)-> SFINAE_t< decltype( static_cast<T>(*Declval<Q>().begin()) ) >;
+	static auto _begin(int)-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().begin()) ) >;
 
 	template<class Q>  /* Declaration Only */
 	static auto _begin(...)-> is_Bounded_Array< Referenceless_t<Q> >;
 
 	template<class Q>  /* Declaration Only */
-	static auto _end(int)-> SFINAE_t< decltype( static_cast<T>(*Declval<Q>().end()) ) >;
+	static auto _end(int)-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().end()) ) >;
 
 	template<class Q>  /* Declaration Only */
 	static auto _end(...)-> is_Bounded_Array< Referenceless_t<Q> >;

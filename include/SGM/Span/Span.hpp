@@ -85,7 +85,7 @@ struct sgm::_Span_value_type_Helper::_value_type<ITR, true>
 
 template<class ITR>
 struct sgm::_Span_value_type_Helper::_value_type<ITR, false> 
-:	Unconstructible{  using value_type = Decay_t< decltype(*Declval<ITR>()) >;  };
+:	Unconstructible{  using value_type = Decay_t< decltype(*Mock<ITR>()) >;  };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -105,11 +105,11 @@ private:
 	static auto constexpr _try_arr_size( A(&)[N] ) 
 	->	As_value_itself< std::size_t, (N <= S ? N : S) >;
 
-	static std::size_t constexpr size_v = decltype( _try_arr_size(Declval<Q>()) )::value;
+	static std::size_t constexpr size_v = decltype( _try_arr_size(Mock<Q>()) )::value;
 
 
 public:
-	using res_t = Span_t<  size_v, Decay_t< decltype( Address_of(Declval<Q>()[0]) ) >  >;
+	using res_t = Span_t<  size_v, Decay_t< decltype( Address_of(Mock<Q>()[0]) ) >  >;
 
 	template<class ARR>
 	static auto calc(ARR arr, None = {})-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
@@ -127,7 +127,7 @@ struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
 template<class Q, std::size_t S>
 struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 {
-	using res_t = Span_t<  S, Decay_t< decltype( Begin(Declval<Q>()) ) >  >;
+	using res_t = Span_t<  S, Decay_t< decltype( Begin(Mock<Q>()) ) >  >;
 	
 	template<class RG>
 	static auto calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
@@ -171,7 +171,7 @@ template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 {
 	using res_t 
-	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( Begin(Declval<T1>()) ) >  >;
+	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( Begin(Mock<T1>()) ) >  >;
 
 	template<class RG, class _T2>
 	static auto calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
@@ -191,7 +191,7 @@ template<std::size_t S, class ITR>
 class sgm::Span_t
 {
 protected:
-	using _deref_t = decltype(*Declval<ITR>());
+	using _deref_t = decltype(*Mock<ITR>());
 
 
 public:

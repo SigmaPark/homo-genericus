@@ -40,33 +40,33 @@ namespace sgm
 	SGM_INTERFACE_CHECK
 	(	class...ARGS
 	,	Has_Operator_New
-	,	new _CLASS( sgm::Declval<ARGS>()... )
+	,	new _CLASS( sgm::Mock<ARGS>()... )
 	);
 
 	SGM_INTERFACE_CHECK
 	(	class...
 	,	Has_Operator_Delete
-	,	delete sgm::Declval<_CLASS*>()
+	,	delete sgm::Mock<_CLASS*>()
 	);
 
 
 	SGM_INTERFACE_CHECK
 	(	class RHS = CLASS
 	,	Has_Operator_Copy_Assignment
-	,	sgm::Declval<_CLASS>() = sgm::Declval<RHS const&>()
+	,	sgm::Mock<_CLASS>() = sgm::Mock<RHS const&>()
 	);
 	
 	SGM_INTERFACE_CHECK
 	(	class RHS = CLASS
 	,	Has_Operator_Move_Assignment
-	,	sgm::Declval<_CLASS>() = sgm::Move(sgm::Declval<RHS>())
+	,	sgm::Mock<_CLASS>() = sgm::Move(sgm::Mock<RHS>())
 	);
 
 
 	SGM_INTERFACE_CHECK
 	(	class...ARGS
 	,	Has_Operator_invocation
-	,	sgm::Declval<_CLASS>()( sgm::Declval<ARGS>()... )
+	,	sgm::Mock<_CLASS>()( sgm::Mock<ARGS>()... )
 	);
 
 
@@ -75,7 +75,7 @@ namespace sgm
 		SGM_INTERFACE_CHECK	\
 		(	class RHS = CLASS	\
 		,	 Has_Operator_##TITLE	\
-		,	sgm::Declval<_CLASS>() OP sgm::Declval<RHS>()	\
+		,	sgm::Mock<_CLASS>() OP sgm::Mock<RHS>()	\
 		)	
 
 
@@ -124,13 +124,13 @@ namespace sgm
 	SGM_INTERFACE_CHECK
 	(	class CLASS2 = CLASS
 	,	Has_Operator_Comma
-	,	sgm::Declval<_CLASS>().operator,(sgm::Declval<CLASS2>())
+	,	sgm::Mock<_CLASS>().operator,(sgm::Mock<CLASS2>())
 	);
 
 
 #ifndef _SGM_UNARY_OPERATOR_INTERFACE
 	#define _SGM_UNARY_OPERATOR_INTERFACE(PRE, TITLE, POST)	\
-		SGM_INTERFACE_CHECK(class..., Has_Operator_##TITLE, PRE sgm::Declval<_CLASS>() POST)
+		SGM_INTERFACE_CHECK(class..., Has_Operator_##TITLE, PRE sgm::Mock<_CLASS>() POST)
 
 
 	_SGM_UNARY_OPERATOR_INTERFACE(+, Posit,/**/);
@@ -156,7 +156,7 @@ namespace sgm
 
 	SGM_INTERFACE_CHECK
 	(	class IDX_TYPE = int
-	,	Has_Operator_index, sgm::Declval<_CLASS>()[sgm::Declval<IDX_TYPE>()]
+	,	Has_Operator_index, sgm::Mock<_CLASS>()[sgm::Mock<IDX_TYPE>()]
 	);	
 	
 }
@@ -168,7 +168,7 @@ namespace sgm
 		SGM_INTERFACE_CHECK	\
 		(	class..._ARGUMENTS	\
 		,	Has_MemFunc_##MEMFUNC		\
-		,	sgm::Declval<_CLASS>().MEMFUNC(sgm::Declval<_ARGUMENTS>()...) \
+		,	sgm::Mock<_CLASS>().MEMFUNC(sgm::Mock<_ARGUMENTS>()...) \
 		);	\
 		\
 		template<class R, class C, class...TYPES>	\
@@ -178,8 +178,8 @@ namespace sgm
 			template<class _Q, class..._TYPES>	\
 			static auto _calc(int)	\
 			->	sgm::SFINAE_t	\
-				<	decltype( sgm::Declval<_Q>().MEMFUNC(sgm::Declval<_TYPES>()...) )	\
-				,	decltype( sgm::Declval<_Q>().MEMFUNC(sgm::Declval<_TYPES>()...) )	\
+				<	decltype( sgm::Mock<_Q>().MEMFUNC(sgm::Mock<_TYPES>()...) )	\
+				,	decltype( sgm::Mock<_Q>().MEMFUNC(sgm::Mock<_TYPES>()...) )	\
 				>;	\
 			\
 			template<class...>	\
@@ -208,7 +208,7 @@ namespace sgm
 		SGM_INTERFACE_CHECK	\
 		(	class...	\
 		,	Has_Member_##MEMBER	\
-		,	sgm::Declval<_CLASS>().MEMBER	\
+		,	sgm::Mock<_CLASS>().MEMBER	\
 		)
 	
 #else
@@ -221,7 +221,7 @@ namespace sgm
 		SGM_INTERFACE_CHECK	\
 		(	class...	\
 		,	Has_NestedType_##TYPE	\
-		,	sgm::Declval<typename _CLASS::TYPE>()		\
+		,	sgm::Mock<typename _CLASS::TYPE>()		\
 		)
 
 #else
@@ -271,7 +271,7 @@ protected:
 	auto constexpr check_return_type_of_##TITLE(HOST&&) noexcept	\
 	->	sgm::is_Same	\
 		<	decltype	\
-			(	sgm::Declval<HOST>().TITLE(sgm::Declval<ARGS>()...) \
+			(	sgm::Mock<HOST>().TITLE(sgm::Mock<ARGS>()...) \
 			)	\
 		,	RES	\
 		>

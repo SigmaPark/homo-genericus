@@ -36,7 +36,7 @@ namespace sgm
 	#define _SGM_OPERATOR_HELPER(SYM, TITLE)	\
 		template<class Q, class...ARGS>	/* Declaration Only */	\
 		static auto _has##TITLE(int)	\
-		->	SFINAE_t< decltype( Declval<Q>().operator SYM(Declval<ARGS>()...) ) >;	\
+		->	SFINAE_t< decltype( Mock<Q>().operator SYM(Mock<ARGS>()...) ) >;	\
 		\
 		template<class...> /* Declaration Only */	\
 		static auto _has##TITLE(...)-> False_t;	\

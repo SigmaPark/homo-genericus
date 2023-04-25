@@ -189,7 +189,7 @@ template<class _D>
 struct sgm::ht::_Array_Evaluation<_D, sgm::ht::_Evaluation_Mode::SEQUANCIAL> : Unconstructible
 {
 	template
-	<	class RG, class ELEM = Decay_t< decltype( *Begin(Declval<RG>()) ) >  
+	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
 	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
@@ -205,7 +205,7 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 :	Unconstructible
 {
 	template
-	<	class RG, class ELEM = Decay_t< decltype( *Begin(Declval<RG>()) ) >  
+	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
 	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
@@ -241,7 +241,7 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 
 #if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
 	template
-	<	class RG, class ELEM = Decay_t< decltype( *Begin(Declval<RG>()) ) >  
+	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
 	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
@@ -295,13 +295,13 @@ namespace sgm
 		template<class RG>  
 		struct rxitr<RG, false> 
 		:	As_type_itself
-			<	Reverse_iterator<  Decay_t< decltype( Begin(Declval<RG>()) ) >  > 
+			<	Reverse_iterator<  Decay_t< decltype( Begin(Mock<RG>()) ) >  > 
 			>
 		{};
 		
 		template<class RG>  
 		struct rxitr<RG, true>
-		:	As_type_itself<  Decay_t< decltype( rBegin(Declval<RG>()) ) >  >{};
+		:	As_type_itself<  Decay_t< decltype( rBegin(Mock<RG>()) ) >  >{};
 		
 	}
 }
@@ -357,9 +357,9 @@ template<class ITR, class FUNC>
 class sgm::ht::Morph_iterator<ITR, FUNC, 1>
 {
 protected:
-	using _deref_t = decltype( Declval<FUNC>()(*Declval<ITR>()) );
+	using _deref_t = decltype( Mock<FUNC>()(*Mock<ITR>()) );
 
-	static bool constexpr _is_noexcept_func_v = noexcept( Declval<FUNC>()(*Declval<ITR>()) );
+	static bool constexpr _is_noexcept_func_v = noexcept( Mock<FUNC>()(*Mock<ITR>()) );
 	
 private:
 	using _self_t = Morph_iterator;
@@ -514,10 +514,10 @@ template<class RG, class FUNC, bool TRY_MUTABLE>
 class sgm::ht::Morph_Range
 {
 private:
-	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
+	using _cxitr_t = Decay_t< decltype( Begin(Mock<RG const>()) ) >;
 
 	using _xitr_t
-	=	Selective_t<  TRY_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
+	=	Selective_t<  TRY_MUTABLE, Decay_t< decltype( Begin(Mock<RG>()) ) >, _cxitr_t  >;
 
 
 	using _crxitr_t = typename _ht_reverse_xitr_type_detail::rxitr<RG const>::type;
@@ -537,7 +537,7 @@ public:
 	using reverse_iterator = Morph_iterator<_rxitr_t, _func_t>;
 	using const_reverse_iterator = Morph_iterator<_crxitr_t, _func_t const>;
 
-	using value_type = Decay_t< decltype(*Declval<iterator>()) >;
+	using value_type = Decay_t< decltype(*Mock<iterator>()) >;
 
 
 	template<class RG_, class FUNC_>
@@ -588,7 +588,7 @@ private:
 	using _pfunc_t = Referenceless_t<FUNC>*;
 
 	static bool constexpr _is_noexcept_func_v 
-	=	noexcept( Declval< Pointerless_t<_pfunc_t> >()(*Declval<ITR>()) );
+	=	noexcept( Mock< Pointerless_t<_pfunc_t> >()(*Mock<ITR>()) );
 
 public:
 	_Filter_itr_Func(_pfunc_t const pfunc, ITR const eitr) noexcept 
@@ -611,16 +611,16 @@ template<class ITR, class ITR_FUNC>
 class sgm::ht::Filter_iterator
 {
 private:
-	using _deref_t = decltype(*Declval<ITR>());
+	using _deref_t = decltype(*Mock<ITR>());
 	using _self_t = Filter_iterator;
 
 	static bool constexpr 
-		_is_noexcept_func_v = noexcept( Declval<ITR_FUNC>()(Declval<ITR>()) ),
+		_is_noexcept_func_v = noexcept( Mock<ITR_FUNC>()(Mock<ITR>()) ),
 		_is_noexcept_copy_constructible_func_v 
-		=	noexcept( ITR_FUNC(Declval<ITR_FUNC const&>()) ),
+		=	noexcept( ITR_FUNC(Mock<ITR_FUNC const&>()) ),
 		_is_noexcept_copy_assignable_func_v
-		=	noexcept(Declval<ITR_FUNC>() = Declval<ITR_FUNC const&>()),
-		_is_noexcept_deref_operator_v = noexcept(*Declval<ITR>());
+		=	noexcept(Mock<ITR_FUNC>() = Mock<ITR_FUNC const&>()),
+		_is_noexcept_deref_operator_v = noexcept(*Mock<ITR>());
 
 
 
@@ -682,10 +682,10 @@ template<class RG, class FUNC, bool TRY_MUTABLE>
 class sgm::ht::Filter_Range
 {
 private:
-	using _cxitr_t = Decay_t< decltype( Begin(Declval<RG const>()) ) >;
+	using _cxitr_t = Decay_t< decltype( Begin(Mock<RG const>()) ) >;
 
 	using _xitr_t
-	=	Selective_t<  TRY_MUTABLE, Decay_t< decltype( Begin(Declval<RG>()) ) >, _cxitr_t  >;
+	=	Selective_t<  TRY_MUTABLE, Decay_t< decltype( Begin(Mock<RG>()) ) >, _cxitr_t  >;
 
 
 	using _crxitr_t = typename _ht_reverse_xitr_type_detail::rxitr<RG const>::type;
@@ -708,7 +708,7 @@ public:
 	using reverse_iterator = Filter_iterator< _rxitr_t, _filter_itr_func_t<_rxitr_t> >;
 	using const_reverse_iterator = Filter_iterator< _crxitr_t, _filter_itr_func_t<_crxitr_t> >;
 
-	using value_type = Decay_t< decltype(*Declval<_xitr_t>()) >;
+	using value_type = Decay_t< decltype(*Mock<_xitr_t>()) >;
 
 
 	template<class RG_, class FUNC_>
@@ -763,11 +763,11 @@ private:
 	FUNC _fn;
 
 
-	template<  class ME, class itr_t = Decay_t< decltype( End(Declval<ME>()._rg) ) >  >
+	template<  class ME, class itr_t = Decay_t< decltype( End(Mock<ME>()._rg) ) >  >
 	static auto _fitr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, End(p->_rg)};  }
 
-	template<  class ME, class itr_t = Decay_t< decltype( rEnd(Declval<ME>()._rg) ) >  >
+	template<  class ME, class itr_t = Decay_t< decltype( rEnd(Mock<ME>()._rg) ) >  >
 	static auto _fritr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, rEnd(p->_rg)};  }
 };
@@ -916,7 +916,7 @@ private:
 public:
 	template
 	<	class RG, class FUNC
-	,	class RES = Decay_t<  decltype( *Begin(Declval< Decay_t<RG> >()) )  >
+	,	class RES = Decay_t<  decltype( *Begin(Mock< Decay_t<RG> >()) )  >
 	>
 	static auto calc(RG&& rg, FUNC&& func, None) noexcept-> RES
 	{
@@ -1014,11 +1014,11 @@ namespace sgm
 
 			template<class...ITRS> /* Declaration Only */
 			static auto _res(Family<ITRS...>)
-			->	Family<  _member_t< decltype(*Declval<ITRS>()) >...  >;
+			->	Family<  _member_t< decltype(*Mock<ITRS>()) >...  >;
 
 
 		public:
-			using res_t = decltype( _res(Declval<ITR_FAM>()) );
+			using res_t = decltype( _res(Mock<ITR_FAM>()) );
 
 			template<class ME, class...ARGS>
 			static auto calc(ME&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
@@ -1103,7 +1103,7 @@ namespace sgm
 			using _boundary_t 
 			=	Selective_t
 				<	IS_FORWARD
-				,	decltype( Begin(Declval<RG>()) ), decltype( rBegin(Declval<RG>()) )
+				,	decltype( Begin(Mock<RG>()) ), decltype( rBegin(Mock<RG>()) )
 				>;
 			
 			using _itr_fam_t = Family<  _boundary_t< _try_mut_t<RGS> >...  >;
@@ -1434,7 +1434,7 @@ class sgm::ht::cPlait_Range
 private:
 	template<class RG>
 	struct _is_random_access_range
-	:	is_random_access_iterator< decltype( Begin(Declval<RG>()) ) >{};
+	:	is_random_access_iterator< decltype( Begin(Mock<RG>()) ) >{};
 
 
 public:
@@ -1447,7 +1447,7 @@ public:
 	using const_reverse_iterator
 	=	typename _ht_Plait_detail::Boundary< Family<RGS...>, false, false, true >::res_t;
 
-	using value_type = Decay_t< decltype(*Declval<const_iterator>()) >;
+	using value_type = Decay_t< decltype(*Mock<const_iterator>()) >;
 
 
 	template<class...RGS_>

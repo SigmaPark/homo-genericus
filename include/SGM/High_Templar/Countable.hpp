@@ -90,7 +90,7 @@ public:
 
 	auto operator*() const noexcept-> T const&{  return _number;  }
 
-	auto operator++(int) SGM_TRY_NOEXCEPT( _shift<true>(*Declval<_itr_t>()) )-> _itr_t
+	auto operator++(int) SGM_TRY_NOEXCEPT( _shift<true>(*Mock<_itr_t>()) )-> _itr_t
 	{  
 		auto const iter = *this;
 
@@ -98,7 +98,7 @@ public:
 	}
 
 
-	auto operator--(int) SGM_TRY_NOEXCEPT( _shift<false>(*Declval<_itr_t>()) )-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT( _shift<false>(*Mock<_itr_t>()) )-> _itr_t
 	{
 		auto const iter = *this;
 
@@ -108,27 +108,27 @@ public:
 
 	template<class _T>
 	auto operator+(_T const diff) const 
-	SGM_TRY_NOEXCEPT( _shift<true>(*Declval<_itr_t>(), Declval<T>()) )
+	SGM_TRY_NOEXCEPT( _shift<true>(*Mock<_itr_t>(), Mock<T>()) )
 	->	_itr_t{  return {_shift<true>( **this, static_cast<T>(diff) )};  }
 
 	template<class _T>
 	auto operator-(_T const diff) const 
-	SGM_TRY_NOEXCEPT( _shift<false>(*Declval<_itr_t>(), Declval<T>()) )
+	SGM_TRY_NOEXCEPT( _shift<false>(*Mock<_itr_t>(), Mock<T>()) )
 	->	_itr_t{  return {_shift<false>( **this, static_cast<T>(diff) )};  }
 
 
 	template<class _T>
-	auto operator+=(_T const diff) SGM_TRY_NOEXCEPT(Declval<_itr_t>() + diff)
+	auto operator+=(_T const diff) SGM_TRY_NOEXCEPT(Mock<_itr_t>() + diff)
 	->	_itr_t&{  return *this = *this + diff;  }
 	
 	template<class _T>
-	auto operator-=(_T const diff) SGM_TRY_NOEXCEPT(Declval<_itr_t>() - diff)
+	auto operator-=(_T const diff) SGM_TRY_NOEXCEPT(Mock<_itr_t>() - diff)
 	->	_itr_t&{  return *this = *this - diff;  }
 
-	auto operator++() SGM_TRY_NOEXCEPT(Declval<_itr_t>() += 1)-> _itr_t&{  return *this += 1;  }
-	auto operator--() SGM_TRY_NOEXCEPT(Declval<_itr_t>() -= 1)-> _itr_t&{  return *this -= 1;  }
+	auto operator++() SGM_TRY_NOEXCEPT(Mock<_itr_t>() += 1)-> _itr_t&{  return *this += 1;  }
+	auto operator--() SGM_TRY_NOEXCEPT(Mock<_itr_t>() -= 1)-> _itr_t&{  return *this -= 1;  }
 
-	auto operator[](ptrdiff_t const diff) const SGM_TRY_NOEXCEPT( *(Declval<_itr_t>() + diff) )
+	auto operator[](ptrdiff_t const diff) const SGM_TRY_NOEXCEPT( *(Mock<_itr_t>() + diff) )
 	->	T const&{  return *( *this + diff );  }
 
 

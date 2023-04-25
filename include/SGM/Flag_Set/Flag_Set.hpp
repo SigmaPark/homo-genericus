@@ -115,7 +115,7 @@ struct sgm::Has_Satisfying_Flag
 template<class FLAG, class FS>
 struct sgm::_Flag_Pick_Helper : Unconstructible
 {
-	using type = Referenceless_t< decltype( std::get<FLAG>(Declval<FS>()._fs) ) >;
+	using type = Referenceless_t< decltype( std::get<FLAG>(Mock<FS>()._fs) ) >;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

@@ -213,8 +213,8 @@ struct sgm::fp::_FXP_Harden : Unconstructible
 
 			return
 			_FuncExpr
-			<	decltype( calc(Declval<closure_t>()) )
-			,	decltype( calc(Declval<invoker_t>()) ), MIN_D 
+			<	decltype( calc(Mock<closure_t>()) )
+			,	decltype( calc(Mock<invoker_t>()) ), MIN_D 
 			>
 			{	calc( Forward<closure_t>(t.closure) )
 			,	calc( Forward<invoker_t>(t.invoker) )
@@ -547,8 +547,8 @@ template<class hFXP>
 class sgm::fp::Functor : public Operators_of<hFXP>
 {
 public:
-	using closure_t = decltype(Declval<hFXP>().closure);
-	using invoker_t = decltype(Declval<hFXP>().invoker);
+	using closure_t = decltype(Mock<hFXP>().closure);
+	using invoker_t = decltype(Mock<hFXP>().invoker);
 	static unsigned constexpr MINIMAL_DIMENSION = Decay_t<hFXP>::MINIMAL_DIMENSION;
 
 
@@ -618,7 +618,7 @@ namespace sgm::fp
 	->	Functor
 		<	Selective_t
 			<	is__FuncExpr<F>::value
-			,	decltype( _FXP_Harden::calc(Declval<F>()) )
+			,	decltype( _FXP_Harden::calc(Mock<F>()) )
 			,	_FuncExpr< _Closure<>, Alephless_t<F> >
 			>
 		>;
