@@ -7,6 +7,7 @@
 #include "Countable.hpp"
 #include "High_Templar.hpp"
 #include "Test_High_Templar.hpp"
+#include <forward_list>
 
 
 using sgm::spec::Specimen;
@@ -118,6 +119,13 @@ static void Morph_Test()
 		(	sgm::is_Same< decltype(arr), sgm::Array<Specimen, sgm::arrSize::DYNAMIC> >::value
 		,	""
 		);
+
+		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+	}
+	{
+		std::forward_list<int> fLi{0, 1, 2, 3, 4};
+
+		auto arr = sgm::Morph(fLi, triple_f).eval();
 
 		sgm::spec::Are_Equivalent_Ranges(arr, answer);
 	}

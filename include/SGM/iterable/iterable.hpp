@@ -287,20 +287,15 @@ template<class ITR, int ITR_TRAITS>
 class sgm::Reverse_iterator
 {
 public:
-	static_assert
-	(	ITR_TRAITS != 0 && ITR_TRAITS != 1
-	,	"sgm::Reverse_iterator expects ITR to be a bidirectional iterator type."
-	);
+	static_assert(ITR_TRAITS != 0, "sgm::Reverse_iterator expects ITR to be an iterator type.");
 };
 
 
 template<class ITR>
-class sgm::Reverse_iterator<ITR, 2>
+class sgm::Reverse_iterator<ITR, 1> 
 {
 private:
 	using _itr_t = Reverse_iterator;
-
-protected:
 	using _deref_t = decltype(*Mock<ITR>());	
 
 
@@ -341,8 +336,38 @@ public:
 	}
 
 
-	auto operator--() SGM_TRY_NOEXCEPT(++base())
-	->	_itr_t&{  return ++base(),  *this;  }
+private:
+	ITR _itr;
+};
+
+
+template<class ITR>
+class sgm::Reverse_iterator<ITR, 2> : public Reverse_iterator<ITR, 1>
+{
+private:
+	using _itr_t = Reverse_iterator;
+	using _top_t = Reverse_iterator<ITR, 1>;
+
+
+public:
+	using _top_t::_top_t;
+
+
+	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
+	->	_itr_t&{  return ++_top_t::operator++();  }
+
+	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
+	{
+		auto const res = *this;
+
+		++*this;
+
+		return res;
+	}
+
+
+	auto operator--() SGM_TRY_NOEXCEPT(++Mock<_top_t>().base())
+	->	_itr_t&{  return ++_top_t::base(),  *this;  }
 
 	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
@@ -352,10 +377,6 @@ public:
 
 		return res;
 	}
-
-
-private:
-	ITR _itr;
 };
 
 
@@ -365,8 +386,6 @@ class sgm::Reverse_iterator<ITR, 3> : public Reverse_iterator<ITR, 2>
 private: 
 	using _top_t = Reverse_iterator<ITR, 2>;
 	using _itr_t = Reverse_iterator;
-
-	using typename _top_t::_deref_t;
 
 
 public:
@@ -402,7 +421,7 @@ public:
 
 	auto operator[](difference_type const diff) const 
 	SGM_TRY_NOEXCEPT( *(Mock<_itr_t>() + diff) )
-	->	_deref_t{  return *(*this + diff);  }
+	->	decltype(*Mock<ITR>()){  return *(*this + diff);  }
 
 	auto operator+(difference_type const diff) const
 	SGM_TRY_NOEXCEPT( _itr_t{Mock<_top_t>().base() - diff} )
