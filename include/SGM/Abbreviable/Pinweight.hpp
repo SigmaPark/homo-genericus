@@ -54,7 +54,7 @@ private:
 
 	template<class Q>
 	static auto Construct(Q&& q)
-	SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  new _Pinweight_Data( Forward<Q>(q), false )  )  
+	->	_Pinweight_Data*{  return new _Pinweight_Data( Forward<Q>(q), false );  }
 
 	template<class Q>
 	static auto Construct(Q&& q, void* vp)

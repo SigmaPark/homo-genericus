@@ -323,14 +323,13 @@ public:
 	->	bool{  return !(*this == itr);  }
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(--base())
-	->	_itr_t&{  return --base(),  *this;  }
+	auto operator--() SGM_TRY_NOEXCEPT(++base())-> _itr_t&{  return ++base(),  *this;  }
 
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
+	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
-		++*this;
+		--*this;
 
 		return res;
 	}
@@ -346,34 +345,23 @@ class sgm::Reverse_iterator<ITR, 2> : public Reverse_iterator<ITR, 1>
 {
 private:
 	using _itr_t = Reverse_iterator;
-	using _top_t = Reverse_iterator<ITR, 1>;
+	using _1st_t = Reverse_iterator<ITR, 1>;
 
 
 public:
-	using _top_t::_top_t;
+	using _1st_t::_1st_t;
+
+	using _1st_t::operator--;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
-	->	_itr_t&{  return ++_top_t::operator++();  }
+	auto operator++() SGM_TRY_NOEXCEPT(--Mock<_1st_t>().base())
+	->	_itr_t&{  return --_1st_t::base(),  *this;  }
 
 	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
 	{
 		auto const res = *this;
 
 		++*this;
-
-		return res;
-	}
-
-
-	auto operator--() SGM_TRY_NOEXCEPT(++Mock<_top_t>().base())
-	->	_itr_t&{  return ++_top_t::base(),  *this;  }
-
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		--*this;
 
 		return res;
 	}
@@ -384,71 +372,51 @@ template<class ITR>
 class sgm::Reverse_iterator<ITR, 3> : public Reverse_iterator<ITR, 2>
 {
 private: 
-	using _top_t = Reverse_iterator<ITR, 2>;
+	using _1st_t = Reverse_iterator<ITR, 1>;
+	using _2nd_t = Reverse_iterator<ITR, 2>;
 	using _itr_t = Reverse_iterator;
 
 
 public:
-	using typename _top_t::difference_type;
+	using typename _1st_t::difference_type;
 
-	using _top_t::_top_t;
+	using _2nd_t::_2nd_t;
 
+	using _2nd_t::operator++;
+	using _1st_t::operator--;
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
-	->	_itr_t&{  return _top_t::operator++(),  *this;  }
-	
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		++*this;
-
-		return res;
-	}
-
-	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_top_t>())
-	->	_itr_t&{  return _top_t::operator--(),  *this;  }
-
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		--*this;
-
-		return res;
-	}
-
+	using _1st_t::base;
 
 	auto operator[](difference_type const diff) const 
 	SGM_TRY_NOEXCEPT( *(Mock<_itr_t>() + diff) )
 	->	decltype(*Mock<ITR>()){  return *(*this + diff);  }
 
 	auto operator+(difference_type const diff) const
-	SGM_TRY_NOEXCEPT( _itr_t{Mock<_top_t>().base() - diff} )
-	->	_itr_t{  return {_top_t::base() - diff};  }
+	SGM_TRY_NOEXCEPT( _itr_t{Mock<_1st_t>().base() - diff} )
+	->	_itr_t{  return {base() - diff};  }
 	
 	auto operator-(difference_type const diff) const
-	SGM_TRY_NOEXCEPT( _itr_t{Mock<_top_t>().base() + diff} )
-	->	_itr_t{  return {_top_t::base() + diff};  }
+	SGM_TRY_NOEXCEPT( _itr_t{Mock<_1st_t>().base() + diff} )
+	->	_itr_t{  return {base() + diff};  }
 	
 	auto operator-(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() - itr.base())
-	->	SGM_DECLTYPE_AUTO(  itr.base() - _top_t::base()  )
+	->	SGM_DECLTYPE_AUTO(  itr.base() - base()  )
 	
 
 	auto operator+=(difference_type const diff)
-	SGM_TRY_NOEXCEPT(Mock<_top_t>().base() -= diff)
-	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
+	SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() -= diff)
+	->	_itr_t&{  return base() -= diff,  *this;  }
 
 	auto operator-=(difference_type const diff)
-	SGM_TRY_NOEXCEPT(Mock<_top_t>().base() += diff)
-	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
+	SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() += diff)
+	->	_itr_t&{  return base() += diff,  *this;  }
 
 
 	auto operator<(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() < itr.base())
-	->	SGM_DECLTYPE_AUTO(  _top_t::base() > itr.base()  )
+	->	SGM_DECLTYPE_AUTO(  base() > itr.base()  )
 	
 	auto operator>(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() < itr.base())
-	->	SGM_DECLTYPE_AUTO(  _top_t::base() < itr.base()  )
+	->	SGM_DECLTYPE_AUTO(  base() < itr.base()  )
 
 	auto operator<=(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr > itr)
 	->	bool{  return !(*this > itr);  }
