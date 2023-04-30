@@ -344,8 +344,8 @@ template<class ITR>
 class sgm::Reverse_iterator<ITR, 2> : public Reverse_iterator<ITR, 1>
 {
 private:
-	using _itr_t = Reverse_iterator;
 	using _1st_t = Reverse_iterator<ITR, 1>;
+	using _itr_t = Reverse_iterator;
 
 
 public:
@@ -501,28 +501,17 @@ template<class ITR>
 class sgm::Move_iterator<ITR, 2> : public Move_iterator<ITR, 1> 
 {
 private:
-	using _top_t = Move_iterator<ITR, 1>;
+	using _1st_t = Move_iterator<ITR, 1>;
 	using _itr_t = Move_iterator;
 
 public:
-	using _top_t::_top_t;
+	using _1st_t::_1st_t;
+
+	using _1st_t::operator++;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_top_t>())
-	->	_itr_t&{  return _top_t::operator++(),  *this;  }
-	
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		++*this;
-
-		return res;
-	}
-
-
-	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_top_t>().base())
-	->	_itr_t&{  return --_top_t::base(),  *this;  }
+	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_1st_t>().base())
+	->	_itr_t&{  return --_1st_t::base(),  *this;  }
 
 	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
 	{
@@ -539,60 +528,37 @@ template<class ITR>
 class sgm::Move_iterator<ITR, 3> : public Move_iterator<ITR, 2>
 {
 private:
-	using _top_t = Move_iterator<ITR, 1>;
-	using _middle_t = Move_iterator<ITR, 2>;
+	using _1st_t = Move_iterator<ITR, 1>;
+	using _2nd_t = Move_iterator<ITR, 2>;
 	using _itr_t = Move_iterator;
 
 public:
-	using _middle_t::_middle_t;
+	using _2nd_t::_2nd_t;
+
+	using _1st_t::operator++;
+	using _2nd_t::operator--;
 
 
-	auto operator++() SGM_TRY_NOEXCEPT(++Mock<_middle_t>().base())
-	->	_itr_t&{  return _middle_t::operator++(),  *this;  }
-
-	auto operator++(int) SGM_TRY_NOEXCEPT(++Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		++*this;
-
-		return res;
-	}
-
-
-	auto operator--() SGM_TRY_NOEXCEPT(--Mock<_middle_t>())
-	->	_itr_t&{  return _middle_t::operator--(),  *this;  }
-
-	auto operator--(int) SGM_TRY_NOEXCEPT(--Mock<_itr_t>())-> _itr_t
-	{
-		auto const res = *this;
-
-		--*this;
-
-		return res;
-	}
-
-
-	auto operator+(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_top_t>().base() + diff)
-	->	_itr_t{  return {_top_t::base() + diff};  }
+	auto operator+(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() + diff)
+	->	_itr_t{  return {_1st_t::base() + diff};  }
 	
-	auto operator-(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_top_t>().base() - diff)
-	->	_itr_t{  return {_top_t::base() - diff};  }
+	auto operator-(ptrdiff_t const diff) const SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() - diff)
+	->	_itr_t{  return {_1st_t::base() - diff};  }
 
 
 	auto operator-(_itr_t const itr) const SGM_TRY_NOEXCEPT(itr.base() - itr.base())
-	->	ptrdiff_t{  return _top_t::base() - itr.base();  }
+	->	ptrdiff_t{  return _1st_t::base() - itr.base();  }
 
 
-	auto operator+=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_top_t>().base() += diff)
-	->	_itr_t&{  return _top_t::base() += diff,  *this;  }
+	auto operator+=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() += diff)
+	->	_itr_t&{  return _1st_t::base() += diff,  *this;  }
 	
-	auto operator-=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_top_t>().base() -= diff)
-	->	_itr_t&{  return _top_t::base() -= diff,  *this;  }
+	auto operator-=(ptrdiff_t const diff) SGM_TRY_NOEXCEPT(Mock<_1st_t>().base() -= diff)
+	->	_itr_t&{  return _1st_t::base() -= diff,  *this;  }
 
 
 	auto operator[](ptrdiff_t const diff) const noexcept
-	->	typename _top_t::value_type{  return Move(_top_t::base()[diff]);  }
+	->	typename _1st_t::value_type{  return Move(_1st_t::base()[diff]);  }
 };
 
 
