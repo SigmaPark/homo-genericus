@@ -29,9 +29,7 @@ namespace sgm
 
 
 #if	!defined(_SGM_OPERATOR_HELPER) && !defined(_SGM_GENERIC_OPERATOR) &&	\
-	!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_MULTIPARAM_OPERATOR) && \
-	!defined(_SGM_GLOBAL_BINARY_OPERATOR)
-
+	!defined(_SGM_UNARY_OPERATOR) && !defined(_SGM_MULTIPARAM_OPERATOR)
 
 	#define _SGM_OPERATOR_HELPER(SYM, TITLE)	\
 		template<class Q, class...ARGS>	/* Declaration Only */	\
@@ -105,20 +103,6 @@ namespace sgm
 
 	#define _SGM_UNARY_OPERATOR(SYM, TITLE)	\
 		_SGM_GENERIC_OPERATOR(/**/, /**/, SYM, TITLE, /**/, /**/)
-
-
-	#define _SGM_GLOBAL_BINARY_OPERATOR(SYM)	\
-		template	\
-		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
-		>	\
-		static auto operator SYM(Q&& q, sgm::Operators_of<T>& opr)	\
-		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.v()  )	\
-		\
-		template	\
-		<	class Q, class T, class = sgm::Enable_if_t< !sgm::is_Operators_of<Q>::value >  \
-		>	\
-		static auto operator SYM(Q&& q, sgm::Operators_of<T> const& opr)		\
-		SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  sgm::Forward<Q>(q) SYM opr.v()  )
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -244,42 +228,9 @@ public:
 	_SGM_MULTIPARAM_OPERATOR(>>=, RShiftAssign)
 
 };
-
-
-_SGM_GLOBAL_BINARY_OPERATOR(+)
-_SGM_GLOBAL_BINARY_OPERATOR(-)
-_SGM_GLOBAL_BINARY_OPERATOR(*)
-_SGM_GLOBAL_BINARY_OPERATOR(/)
-_SGM_GLOBAL_BINARY_OPERATOR(%)
-_SGM_GLOBAL_BINARY_OPERATOR(==)
-_SGM_GLOBAL_BINARY_OPERATOR(!=)
-_SGM_GLOBAL_BINARY_OPERATOR(<)
-_SGM_GLOBAL_BINARY_OPERATOR(>)
-_SGM_GLOBAL_BINARY_OPERATOR(<=)
-_SGM_GLOBAL_BINARY_OPERATOR(>=)
-_SGM_GLOBAL_BINARY_OPERATOR(&&)
-_SGM_GLOBAL_BINARY_OPERATOR(||)
-_SGM_GLOBAL_BINARY_OPERATOR(|)
-_SGM_GLOBAL_BINARY_OPERATOR(&)
-_SGM_GLOBAL_BINARY_OPERATOR(^)
-_SGM_GLOBAL_BINARY_OPERATOR(<<)
-_SGM_GLOBAL_BINARY_OPERATOR(>>)
-_SGM_GLOBAL_BINARY_OPERATOR(->*)
-
-_SGM_GLOBAL_BINARY_OPERATOR(+=)
-_SGM_GLOBAL_BINARY_OPERATOR(-=)
-_SGM_GLOBAL_BINARY_OPERATOR(*=)
-_SGM_GLOBAL_BINARY_OPERATOR(/=)
-_SGM_GLOBAL_BINARY_OPERATOR(%=)
-_SGM_GLOBAL_BINARY_OPERATOR(&=)
-_SGM_GLOBAL_BINARY_OPERATOR(|=)
-_SGM_GLOBAL_BINARY_OPERATOR(^=)
-_SGM_GLOBAL_BINARY_OPERATOR(<<=)
-_SGM_GLOBAL_BINARY_OPERATOR(>>=)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-	#undef _SGM_GLOBAL_BINARY_OPERATOR
 	#undef _SGM_UNARY_OPERATOR
 	#undef _SGM_MULTIPARAM_OPERATOR
 	#undef _SGM_GENERIC_OPERATOR

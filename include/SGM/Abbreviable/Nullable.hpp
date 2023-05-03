@@ -133,9 +133,7 @@ public:
 
 
 	template<class...ARGS>
-	auto make(ARGS&&...args) 
-	noexcept( Aleph_Check<ARGS&&...>::value || noexcept(value_type{args...}) )
-	->	_Base_Nullable&
+	auto make(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)-> _Base_Nullable&
 	{
 		assert(!has_value());
 
