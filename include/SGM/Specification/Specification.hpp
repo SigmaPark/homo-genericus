@@ -274,7 +274,7 @@ namespace sgm
     {
 
 	    auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
-	    auto Load_image(std::string const& image_name, size_t const image_width = 0)-> std::string;
+	    auto Load_image(std::string const& img_name, size_t const img_width = 0)-> std::string;
 	    auto Empty_lines(size_t nof_empty_lines = 1)-> std::string;
         auto Title(std::string const& title, unsigned const level = 1)-> std::string;
 
