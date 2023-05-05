@@ -512,7 +512,7 @@ auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
 	while(is_filled() != filled)
 		_cv.wait(qL);
 
-	return Move(qL);
+	return qL;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
