@@ -128,14 +128,13 @@ public:
 		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
 	}
 
-	void deallocate(pointer p, size_type) noexcept
+	auto deallocate(pointer p, size_type) noexcept-> void
 	{
 		::operator delete(p);  
 	}
 
 	template<class Q, class...ARGS>
-	void construct(Q* p, ARGS&&...args) 
-	noexcept( Aleph_Check<ARGS&&...>::value || noexcept(Q{args...}) )
+	auto construct(Q* p, ARGS&&...args)-> void
 	{
 		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
 
@@ -143,7 +142,7 @@ public:
 	}
 
 	template<class Q>
-	void destroy(Q* p) noexcept
+	auto destroy(Q* p) noexcept-> void
 	{
 		SGM_CRTP_OVERRIDE(destroy, <Q>);
 

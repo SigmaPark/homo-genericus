@@ -62,7 +62,7 @@ namespace sgm
 		{	\
 			template<class Q, class...ARGS>	\
 			static auto calc(Q *p, ARGS&&...args)	\
-			SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
+			-> SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 		};	\
 		\
 		template<>	\
@@ -70,7 +70,7 @@ namespace sgm
 		{	\
 			template<class Q, class...ARGS>	\
 			static auto calc(Q const *p, ARGS&&...args)	\
-			SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
+			-> SGM_DECLTYPE_AUTO(  p->operator SYM( Forward<ARGS>(args)... )  )	\
 		}
 
 
@@ -82,7 +82,7 @@ namespace sgm
 				<	_operator_helper_detail::_op##TITLE##Case<true, T  TPARAM2>::value \
 				>	\
 		>	\
-		auto operator SYM(ARG1) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )	\
+		auto operator SYM(ARG1)-> SGM_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )	\
 		\
 		template	\
 		<	TPARAM1  \
@@ -91,7 +91,7 @@ namespace sgm
 				<	_operator_helper_detail::_op##TITLE##Case<false, T  TPARAM2>::value \
 				>	\
 		>	\
-		auto operator SYM(ARG1) const SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )
+		auto operator SYM(ARG1) const-> SGM_DECLTYPE_AUTO(  Q::calc(_p  ARG2)  )
 
 
 	#define _SGM_MULTIPARAM_OPERATOR(SYM, TITLE)	\

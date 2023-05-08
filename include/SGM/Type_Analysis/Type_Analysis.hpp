@@ -27,15 +27,6 @@
     #define SGM_DECLTYPE_AUTO(...)  decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
-#ifndef SGM_TRY_NOEXCEPT
-    #define SGM_TRY_NOEXCEPT(...)  noexcept( noexcept(__VA_ARGS__) )
-#endif
-
-#ifndef SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
-    #define SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(...) \
-        SGM_TRY_NOEXCEPT(__VA_ARGS__)-> SGM_DECLTYPE_AUTO(__VA_ARGS__)
-#endif
-
 
 namespace sgm
 {
@@ -358,18 +349,18 @@ namespace sgm
     struct _Move_if_Helper<false> : Unconstructible
     {
         template<class T>
-        static auto _calc(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Forward<T>(t)  )
+        static auto _calc(T&& t) noexcept-> SGM_DECLTYPE_AUTO(  Forward<T>(t)  )
     };
 
     template<>
     struct _Move_if_Helper<true> : Unconstructible
     {
         template<class T>
-        static auto _calc(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO(  Move(t)  )
+        static auto _calc(T&& t) noexcept-> SGM_DECLTYPE_AUTO(  Move(t)  )
     };
 
     template<bool CONDITION, class T>
-    static auto Move_if(T&& t) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    static auto Move_if(T&& t) noexcept-> SGM_DECLTYPE_AUTO
     (
         _Move_if_Helper<CONDITION>::_calc( static_cast<T&&>(t) )  
     )
@@ -487,7 +478,7 @@ namespace sgm
     };
 
     template<unsigned N, class...ARGS>
-    static auto Nth_Param(ARGS&&...args) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    static auto Nth_Param(ARGS&&...args) noexcept-> SGM_DECLTYPE_AUTO
     (
         _Nth_Param_Helper<N>::calc( Forward<ARGS>(args)... )  
     )
@@ -619,7 +610,7 @@ namespace sgm
 
 
     template<class MEMFN_PTR, class HOST>
-    static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+    static auto Memfunc(HOST& host, MEMFN_PTR const memfn_ptr) noexcept-> SGM_DECLTYPE_AUTO
     (
         Member_Function< MEMFN_PTR, Referenceless_t<HOST>* >( Address_of(host), memfn_ptr )
     )

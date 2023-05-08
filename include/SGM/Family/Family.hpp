@@ -167,7 +167,7 @@ namespace std
 {
 
 	template<class Q, class...TYPES>
-	static auto constexpr get(sgm::Family<TYPES...>& fam) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+	static auto constexpr get(sgm::Family<TYPES...>& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	
 		sgm::_Family_get_Helper
 		<	sgm::_Family_index_Helper<sizeof...(TYPES), Q, TYPES...>::value 
@@ -175,7 +175,7 @@ namespace std
 	)
 
 	template<class Q, class...TYPES>
-	static auto constexpr get(sgm::Family<TYPES...> const& fam) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+	static auto constexpr get(sgm::Family<TYPES...> const& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	
 		sgm::_Family_get_Helper
 		<	sgm::_Family_index_Helper<sizeof...(TYPES), Q, TYPES...>::value 
@@ -183,7 +183,7 @@ namespace std
 	)
 
 	template<class Q, class...TYPES>
-	static auto constexpr get(sgm::Family<TYPES...>&& fam) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+	static auto constexpr get(sgm::Family<TYPES...>&& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	
 		sgm::_Family_get_Helper
 		<	sgm::_Family_index_Helper<sizeof...(TYPES), Q, TYPES...>::value 
@@ -191,7 +191,7 @@ namespace std
 	)
 
 	template<class Q, class...TYPES>
-	static auto constexpr get(sgm::Family<TYPES...> const&& fam) SGM_TRY_NOEXCEPT_DECLTYPE_AUTO
+	static auto constexpr get(sgm::Family<TYPES...> const&& fam) noexcept-> SGM_DECLTYPE_AUTO
 	(	
 		sgm::_Family_get_Helper
 		<	sgm::_Family_index_Helper<sizeof...(TYPES), Q, TYPES...>::value 
@@ -297,25 +297,13 @@ public:
 	constexpr Family() noexcept = default;
 
 	constexpr Family(T t, TYPES...types)
-	noexcept
-	(	noexcept(  _upper_t( static_cast<TYPES>(types)... )  )
-	&&	noexcept( Forward<T>(t) )
-	)
 	:	_upper_t( static_cast<TYPES>(types)... ), _fv( Forward<T>(t) ){}
 
 
 	Family(Family const& fam) 
-	noexcept
-	(	noexcept(  _upper_t( static_cast<_upper_t const&>(fam) )  )
-	&&	noexcept( T(Mock<T>()) )
-	)
 	:	_upper_t( static_cast<_upper_t const&>(fam) ), _fv(fam._fv){}
 
-	Family(Family&& fam) 
-	noexcept
-	(	noexcept(  _upper_t( static_cast<_upper_t&&>(fam) )  )
-	&&	noexcept( T(Mock<T>()) )
-	)
+	Family(Family&& fam) noexcept
 	:	_upper_t( static_cast<_upper_t&&>(fam) ), _fv(fam.template forward<0>()){}
 
 
@@ -324,12 +312,7 @@ public:
 	,	class 
 		=	Enable_if_t<  is_Family<FAM>::value && !is_Same< Decay_t<FAM>, Family >::value  >
 	>
-	Family(FAM&& fam) 
-	noexcept
-	(	noexcept( _upper_t(Mock< Qualify_Like_t<FAM&&, FAM_UPPER> >()) )
-	&&	_family_nxct::is_Nxct_Constructible<FAM, T>::value
-	&&	noexcept( T(Mock<T>()) )
-	)
+	Family(FAM&& fam) noexcept(Aleph_Check<FAM&&>::value)
 	:	_upper_t( Qualify_Like_t<FAM&&, FAM_UPPER>(fam) )
 	,	_fv(fam.template forward<0>())
 	{
@@ -340,12 +323,7 @@ public:
 	}
 
 	
-	auto operator=(Family const& fam)
-	noexcept
-	(	noexcept(Mock<T&>() = Mock<T>())
-	&&	noexcept(Mock<_upper_t&>() = Mock<_upper_t const&>())
-	)
-	->	Family&
+	auto operator=(Family const& fam)-> Family&
 	{
 		first() = static_cast<T>(fam.first()),
 		_upper_of_this() = static_cast<_upper_t const&>(fam);
@@ -354,12 +332,7 @@ public:
 	}
 
 
-	auto operator=(Family&& fam) 
-	noexcept
-	(	noexcept(Mock<T&>() = Mock<T>())
-	&&	noexcept(Mock<_upper_t&>() = Mock<_upper_t&&>())
-	)
-	->	Family&
+	auto operator=(Family&& fam) noexcept-> Family&
 	{
 		first() = Forward<T>(fam.first()),
 		_upper_of_this() = static_cast<_upper_t&&>(fam);
@@ -718,12 +691,12 @@ namespace sgm
 
 	template<class...TYPES>
 	auto Make_Family(TYPES...types)	noexcept(!_Has_Any_Object< Family<TYPES...> >::value)
-	-> Family<TYPES...>{  return {types...};  }
+	->	Family<TYPES...>{  return {types...};  }
 	
 	
 	template<class...TYPES>
 	auto Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
-	-> Family<TYPES&&...>{  return {Forward<TYPES>(types)...};  }
+	->	Family<TYPES&&...>{  return {Forward<TYPES>(types)...};  }
 	
 	
 	template<class...TYPES>

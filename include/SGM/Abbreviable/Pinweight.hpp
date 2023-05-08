@@ -47,8 +47,7 @@ private:
 
 
 	template<class Q>
-	_Pinweight_Data(Q&& q, bool const inp) 
-	noexcept(  Aleph_Check<Q&&>::value || noexcept( T(q) )  )
+	_Pinweight_Data(Q&& q, bool const inp) noexcept(Aleph_Check<Q&&>::value)
 	:	_val( Forward<Q>(q) ), _inplace(inp){}	
 
 
@@ -58,7 +57,6 @@ private:
 
 	template<class Q>
 	static auto Construct(Q&& q, void* vp)
-	SGM_TRY_NOEXCEPT(  _Pinweight_Data( Forward<Q>(q), false )  )
 	->	_Pinweight_Data*{  return new(vp) _Pinweight_Data( Forward<Q>(q), true );  }
 
 
@@ -105,9 +103,7 @@ private:
 
 	auto _update_val() noexcept-> void{  Operators_of<T const>::_p = Address_of(_pdata->_val);  }
 
-	auto _update(_data_t* pdata)
-	noexcept(  noexcept( _data_t::CountDown(pdata) ) && noexcept(_update_val())  )
-	->	void
+	auto _update(_data_t* pdata) noexcept-> void
 	{
 		_data_t::CountDown(_pdata);
 		_pdata = pdata;
@@ -124,33 +120,26 @@ public:
 	static size_t constexpr data_size_value = sizeof(T) + 2*sizeof(size_t);
 
 
-	_Base_Pinweight() 
-	noexcept(  noexcept( _data_t::Construct(Mock<T>()) ) && noexcept(_update_val())  )
-	:	_pdata( _data_t::Construct(T()) ){  _update_val();  }
+	_Base_Pinweight() : _pdata( _data_t::Construct(T()) ){  _update_val();  }
 
-	_Base_Pinweight(T const& t) 
-	noexcept(  noexcept( _data_t::Construct(t) ) && noexcept(_update_val())  )
-	:	_pdata( _data_t::Construct(t) ){  _update_val();  }
+	_Base_Pinweight(T const& t) : _pdata( _data_t::Construct(t) ){  _update_val();  }
 
 	_Base_Pinweight(T&& t) noexcept
 	:	_pdata(  _data_t::Construct( Move(t) )  ){  _update_val();  }
 
 	_Base_Pinweight(void* vp) 
-	noexcept(  noexcept( _data_t::Construct(Mock<T>(), vp) ) && noexcept(_update_val())  )
 	:	_pdata( _data_t::Construct(T(), vp) ){  _update_val();  }
 
 	_Base_Pinweight(T const& t, void* vp)  
-	noexcept(  noexcept( _data_t::Construct(t, vp) ) && noexcept(_update_val())  )
 	:	_pdata( _data_t::Construct(t, vp) ){  _update_val();  }
 
 	_Base_Pinweight(T&& t, void* vp) noexcept
 	:	_pdata(  _data_t::Construct( Move(t), vp )  ){  _update_val();  }
 
-	_Base_Pinweight(_Base_Pinweight const& pwb) 
-	noexcept(  noexcept( _data_t::CountUp(Mock<_data_t*>()) ) && noexcept(_update_val())  )
+	_Base_Pinweight(_Base_Pinweight const& pwb) noexcept
 	:	_pdata( _data_t::CountUp(pwb._pdata) ){  _update_val();  }
 
-	_Base_Pinweight(_Base_Pinweight&& pwb) SGM_TRY_NOEXCEPT(_update_val())
+	_Base_Pinweight(_Base_Pinweight&& pwb) noexcept
 	:	_pdata(pwb._pdata){  _update_val(),  pwb._pdata = nullptr;  }
 
 
@@ -165,12 +154,7 @@ public:
 	auto share_count() const noexcept-> size_t{  return _pdata->_count;  }
 
 
-	auto operator=(_Base_Pinweight const& pwb)
-	noexcept
-	(	noexcept( !share_with(pwb) ) 
-	&&	noexcept(  _update( _data_t::CountUp(pwb._pdata) )  ) 
-	)
-	->	_Base_Pinweight&
+	auto operator=(_Base_Pinweight const& pwb) noexcept-> _Base_Pinweight&
 	{
 		if( !share_with(pwb) )
 			_update( _data_t::CountUp(pwb._pdata) );
@@ -178,9 +162,7 @@ public:
 		return *this;
 	}
 
-	auto operator=(_Base_Pinweight&& pwb)
-	noexcept(  noexcept( !share_with(pwb) ) && noexcept( _update(pwb._pdata) )  )
-	->	_Base_Pinweight&
+	auto operator=(_Base_Pinweight&& pwb) noexcept-> _Base_Pinweight&
 	{
 		if( !share_with(pwb) )
 			_update(pwb._pdata),  
@@ -190,8 +172,7 @@ public:
 	}
 
 	template<  class Q, class = Enable_if_t< !is_Pinweight<Q>::value >  >
-	auto operator=(Q&& q) 
-	SGM_TRY_NOEXCEPT(  Mock<_Base_Pinweight>() = _Base_Pinweight( Forward<Q>(q) )  )
+	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)
 	->	_Base_Pinweight&{  return *this = _Base_Pinweight( Forward<Q>(q) );  }
 
 };
@@ -218,20 +199,17 @@ private:
 
 
 public:
-	Abbreviable_t() SGM_TRY_NOEXCEPT(_base_t()) = default;
+	Abbreviable_t() = default;
 
 	template<  class Q, class = Enable_if_t< _condition_t<Q>::value >  >
-	Abbreviable_t(Q&& q) SGM_TRY_NOEXCEPT(  _base_t( Forward<Q>(q) )  ) 
-	:	_base_t( Forward<Q>(q) ){}
+	Abbreviable_t(Q&& q) noexcept(Aleph_Check<Q&&>::value) : _base_t( Forward<Q>(q) ){}
 
 	template<  class Q, class = Enable_if_t< _condition_t<Q>::value >  >
-	Abbreviable_t(Q&& q, void* vp) SGM_TRY_NOEXCEPT(  _base_t( Forward<Q>(q), vp )  )
+	Abbreviable_t(Q&& q, void* vp) noexcept(Aleph_Check<Q&&>::value)
 	:	_base_t( Forward<Q>(q), vp ){}
 
-	Abbreviable_t(Abbreviable_t const& pw) SGM_TRY_NOEXCEPT( _base_t(pw) ) : _base_t(pw){}
-	
-	Abbreviable_t(Abbreviable_t&& pw) SGM_TRY_NOEXCEPT(  _base_t( Move(pw) )  ) 
-	:	_base_t( Move(pw) ){}
+	Abbreviable_t(Abbreviable_t const& pw) noexcept : _base_t(pw){}
+	Abbreviable_t(Abbreviable_t&& pw) noexcept : _base_t( Move(pw) ){}
 
 
 	template<class Q>  
@@ -262,43 +240,33 @@ private:
 
 
 public:
-	Abbreviable_t() SGM_TRY_NOEXCEPT(_base_t()) = default;
+	Abbreviable_t() = default;
 
 	template<  class Q, class = Enable_if_t< _condition_t<Q>::value >  >
-	Abbreviable_t(Q&& q) SGM_TRY_NOEXCEPT(  _base_t( Forward<Q>(q) )  ) 
-	:	_base_t( Forward<Q>(q) ){}
+	Abbreviable_t(Q&& q) noexcept(Aleph_Check<Q&&>::value) : _base_t( Forward<Q>(q) ){}
 
 	template<  class Q, class = Enable_if_t< _condition_t<Q>::value >  >
-	Abbreviable_t(Q&& q, void* vp) SGM_TRY_NOEXCEPT(  _base_t( Forward<Q>(q), vp )  ) 
+	Abbreviable_t(Q&& q, void* vp) noexcept(Aleph_Check<Q&&>::value)
 	:	_base_t( Forward<Q>(q), vp ){}
 
-	Abbreviable_t(Abbreviable_t const& pw) SGM_TRY_NOEXCEPT( _base_t(pw) ) : _base_t(pw){}
-	
-	Abbreviable_t(Abbreviable_t&& pw) SGM_TRY_NOEXCEPT(  _base_t( Move(pw) )  ) 
-	:	_base_t( Move(pw) ){}
+	Abbreviable_t(Abbreviable_t const& pw) noexcept : _base_t(pw){}
+	Abbreviable_t(Abbreviable_t&& pw) noexcept : _base_t( Move(pw) ){}
 
 
 	template
 	<	class Q, class = Enable_if_t<  !is_Same< Decay_t<Q>, Abbreviable_t >::value  >   
 	>
-	auto operator=(Q&& q) SGM_TRY_NOEXCEPT( Mock<_base_t&>() = Forward<Q>(q) )
+	auto operator=(Q&& q) noexcept(Aleph_Check<Q&&>::value)
 	->	Abbreviable_t&{  return static_cast<_base_t&>(*this) = Forward<Q>(q),  *this;  }
 
-	auto operator=(Abbreviable_t const& pw) 
-	SGM_TRY_NOEXCEPT(Mock<Abbreviable_t>() = Mock<_base_t const&>())
+	auto operator=(Abbreviable_t const& pw) noexcept
 	->	Abbreviable_t&{  return *this = static_cast<_base_t const&>(pw);  }
 
-	auto operator=(Abbreviable_t&& pw)
-	SGM_TRY_NOEXCEPT(Mock<Abbreviable_t>() = Mock<_base_t&&>())
+	auto operator=(Abbreviable_t&& pw) noexcept
 	->	Abbreviable_t&{  return *this = static_cast<_base_t&&>( Move(pw) );  }
 
 
-	auto mut()
-	noexcept
-	(	noexcept(Mock<_base_t>().share_count())
-	&&	noexcept( Mock<Abbreviable_t>() = Abbreviable_t(Mock<_base_t>().v()) )
-	)
-	->	typename _base_t::value_type&
+	auto mut()->	typename _base_t::value_type&
 	{
 		if(_base_t::share_count() > 1)
 			*this = Abbreviable_t(_base_t::v());
@@ -313,12 +281,11 @@ namespace sgm
 {
 
 	template<class T>
-	static auto Share(T&& t) SGM_TRY_NOEXCEPT( Pinweight< Referenceless_t<T> >{Forward<T>(t)} )
+	static auto Share(T&& t) noexcept(Aleph_Check<T&&>::value)
 	->	Pinweight< Referenceless_t<T> >{  return {Forward<T>(t)};  }
 
 	template<class T>
-	static auto Share(T&& t, void* vp)
-	SGM_TRY_NOEXCEPT( Pinweight< Referenceless_t<T> >{Forward<T>(t), vp} )
+	static auto Share(T&& t, void* vp) noexcept(Aleph_Check<T&&>::value)
 	->	Pinweight< Referenceless_t<T> >{  return {Forward<T>(t), vp};  }
 
 }
