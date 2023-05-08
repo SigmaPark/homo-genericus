@@ -253,37 +253,6 @@ struct sgm::Family_member< N, sgm::Family<T, TYPES...> const >
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-namespace sgm
-{
-	namespace _family_nxct
-	{
-	
-		template< class FROM, class TO, bool = is_Convertible<FROM, TO>::value >
-		struct _is_Nxct_Constructible_1;
-
-		template<class FROM, class TO>
-		struct _is_Nxct_Constructible_1<FROM, TO, false> : False_t{};
-
-		template<class FROM, class TO>
-		struct _is_Nxct_Constructible_1<FROM, TO, true> 
-		:	Boolean< noexcept( static_cast<TO>(Mock<FROM>()) ) >{};
-
-
-		template< class FAM, class TO, bool = is_Family<FAM>::value >
-		struct is_Nxct_Constructible;
-
-		template<class FAM, class TO>
-		struct is_Nxct_Constructible<FAM, TO, false> : False_t{};
-
-		template<class FAM, class TO>
-		struct is_Nxct_Constructible<FAM, TO, true> 
-		:	_is_Nxct_Constructible_1< typename Family_member<0, FAM>::type, TO >{};
-
-	}
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 template<class T, class...TYPES>
 class sgm::Family<T, TYPES...> : public Family<TYPES...>
 {
@@ -325,7 +294,7 @@ public:
 	
 	auto operator=(Family const& fam)-> Family&
 	{
-		first() = static_cast<T>(fam.first()),
+		first() = fam.template forward<0>(),
 		_upper_of_this() = static_cast<_upper_t const&>(fam);
 
 		return *this;
@@ -334,7 +303,7 @@ public:
 
 	auto operator=(Family&& fam) noexcept-> Family&
 	{
-		first() = Forward<T>(fam.first()),
+		first() = fam.template forward<0>(),
 		_upper_of_this() = static_cast<_upper_t&&>(fam);
 
 		return *this;
