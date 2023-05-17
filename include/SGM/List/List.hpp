@@ -653,5 +653,120 @@ namespace sgm
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+namespace sgm
+{
+
+	static size_t constexpr default_list_node_chunk_size_v = 16;
+
+
+	template<class T>
+	using _Naive_List_Allocator_t = Allocator< List_Node<T> >;
+
+
+	template<class T, size_t N = default_list_node_chunk_size_v>
+	class _Chunk_Memory
+	{
+	private:
+		enum class _byte_t : bool{};
+		using _host_t = List< _Chunk_Memory, _Naive_List_Allocator_t<_Chunk_Memory> >;
+		
+
+	public:
+		template<class...ARGS>
+		_Chunk_Memory(_host_t& host, ARGS&&...args)
+		:	_node_arr{}, _cur_idx(0), _nof_elem(0), _host_ptr(&host), _self_nptr(nullptr)
+		{
+			push( Forward<ARGS>(args)... );
+		}
+
+		auto operator()(List_Node<_Chunk_Memory>* self_nptr) noexcept
+		->	void{  _self_nptr = self_nptr;  }
+
+
+		auto is_full() noexcept-> bool{  return _cur_idx == N;  }
+
+
+		template<class...ARGS>
+		auto push(ARGS&&...args)-> void
+		{
+			assert(!is_full());
+
+			T* cur_ptr = _data() + _cur_idx;
+
+			new(cur_ptr) T{ Forward<ARGS>(args)... };
+
+			++_cur_idx,  ++_nof_elem;
+		}
+
+
+		auto pop(T* elem_ptr) noexcept-> void
+		{
+			assert(_data() <= elem_ptr && elem_ptr < _data() + N);
+
+			_Destroy(*elem_ptr);
+
+			if(--_nof_elem == 0)
+				_suicide();
+		}
+
+
+		auto front() noexcept-> T&{  return _data()[_cur_idx-1];  }
+
+
+	private:
+		_byte_t _node_arr[N*sizeof(T)];
+		size_t _cur_idx, _nof_elem;
+		_host_t* _host_ptr;
+		List_Node<_Chunk_Memory>* _self_nptr;
+
+
+		template<class Q>
+		static auto _Destroy(Q& q) noexcept-> void{  q.~Q();  }
+
+
+		auto _data() noexcept-> T*{  return reinterpret_cast<T*>(_node_arr);  }
+
+		auto _suicide() noexcept
+		->	void{  _host_ptr->pop( typename _host_t::iterator(_self_nptr) );  }
+	};
+
+
+	template<class T>
+	class List_Allocator_by_Chuck : public Allocator_interface< List_Allocator_by_Chuck<T> >
+	{
+	public:
+		using value_type = T;
+		using pointer = value_type*;
+		using const_pointer = value_type const*;
+		using void_pointer = void*;
+		using const_void_pointer = void const*;
+		using size_type = std::size_t;
+		using difference_type = std::ptrdiff_t;
+
+		List_Allocator_by_Chuck();
+		~List_Allocator_by_Chuck();
+
+		auto allocate(size_type n)-> pointer;
+		auto deallocate(pointer p, size_type n) noexcept-> void;
+
+		template<class Q, class...ARGS>
+		auto construct(Q* p, ARGS&&...args)-> void;
+
+		template<class Q>
+		auto destroy(Q* p) noexcept-> void;
+
+
+	private:
+		class impl;
+
+		impl* _pimpl;
+	};
+
+
+
+
+}
+
+
 #endif // end of #ifndef _SGM_LIST_
 
