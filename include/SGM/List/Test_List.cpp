@@ -365,12 +365,12 @@ struct Performance : sgm::Unconstructible
 
 void Performance::push_iterate_and_pop()
 {
-#if 0
+#if 1
 	using namespace std::chrono;
 	
-	int constexpr N = 30'000'000;
+	int constexpr N = 3;
 	{
-	#if 1
+	#if 0
 		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 
 		auto* buffer = new unsigned char[list_node_byte_size_v * N];
@@ -428,7 +428,7 @@ void Performance::push_iterate_and_pop()
 
 		is_True(list.is_empty());
 
-		delete[] buffer;
+		//delete[] buffer;
 	}	
 
 	std::cout << '\n';

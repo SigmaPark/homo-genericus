@@ -31,9 +31,23 @@ namespace sgm
 	template<class T>
 	using _List_rEnd_Node = _List_Boundary_Node<T, false>;
 
+	
+	template<class T>
+	using _Naive_List_Allocator_t = Allocator< List_Node<T> >;
+
+
+	static size_t constexpr default_list_node_chunk_size_v = 16;
+
+
+	template<class T, size_t N>
+	class _Chunk_Memory;
+
+	template<class T, size_t N = default_list_node_chunk_size_v>
+	class _Allocator_by_Chunk;
+
 
 	template<class T>
-	using _Default_List_Allocator_t = Allocator< List_Node<T> >;
+	using _Default_List_Allocator_t = _Allocator_by_Chunk< List_Node<T> >;
 
 	template< class T, class ALLOC = _Default_List_Allocator_t<T> >
 	class List;
@@ -56,7 +70,7 @@ struct sgm::List_Node
 {
 	using value_type = T;
 
-	List_Node() noexcept(T()) : front_ptr(nullptr), back_ptr(nullptr), value(){}
+	List_Node() noexcept( noexcept(T()) ) : front_ptr(nullptr), back_ptr(nullptr), value(){}
 	
 	template<class Q>
 	List_Node(List_Node* fp, List_Node* bp, Q&& q) 
@@ -634,105 +648,103 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-namespace std
-{
-
-	template<class T>
-	static void swap(sgm::List<T>& L0, sgm::List<T>& L1) noexcept{  L0.swap(L1);  }
-
-}
-
-
-namespace sgm
-{
-	
-	template<class T>
-	static void Swap(List<T>& L0, List<T>& L1) noexcept{  L0.swap(L1);  }
-
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 namespace sgm
 {
 
-	static size_t constexpr default_list_node_chunk_size_v = 16;
-
-
-	template<class T>
-	using _Naive_List_Allocator_t = Allocator< List_Node<T> >;
-
-
-	template<class T, size_t N = default_list_node_chunk_size_v>
+#if 1
+	template<class T, size_t N>
 	class _Chunk_Memory
 	{
 	private:
-		enum class _byte_t : bool{};
 		using _host_t = List< _Chunk_Memory, _Naive_List_Allocator_t<_Chunk_Memory> >;
-		
+
+		struct _indexed_Memory
+		{
+			ptrdiff_t from_header = 0;
+
+			union _Mem 
+			{
+				ptrdiff_t null;
+				T value;
+
+				_Mem() noexcept : null(0){}
+				~_Mem(){}
+			}	nullable_value;
+		};
+
+
+		struct _Header{  size_t cur_idx = 0, nof_elem = 0;  };
+
 
 	public:
-		template<class...ARGS>
-		_Chunk_Memory(_host_t& host, ARGS&&...args)
-		:	_node_arr{}, _cur_idx(0), _nof_elem(0), _host_ptr(&host), _self_nptr(nullptr)
-		{
-			push( Forward<ARGS>(args)... );
-		}
-
-		auto operator()(List_Node<_Chunk_Memory>* self_nptr) noexcept
-		->	void{  _self_nptr = self_nptr;  }
-
-
-		auto is_full() noexcept-> bool{  return _cur_idx == N;  }
+		auto has_gone() const noexcept-> bool{  return N == _header.cur_idx;  }
 
 
 		template<class...ARGS>
 		auto push(ARGS&&...args)-> void
 		{
-			assert(!is_full());
+			assert(!has_gone());
 
-			T* cur_ptr = _data() + _cur_idx;
+			_indexed_Memory* cur_ptr = _mem_arr + _header.cur_idx;
 
-			new(cur_ptr) T{ Forward<ARGS>(args)... };
+			new(cur_ptr) _indexed_Memory{};
 
-			++_cur_idx,  ++_nof_elem;
+			cur_ptr->from_header = _diff_from_header(cur_ptr);
+			new(&cur_ptr->nullable_value) T{Forward<ARGS>(args)...};
+
+			++_header.cur_idx,  ++_header.nof_elem;
 		}
 
 
-		auto pop(T* elem_ptr) noexcept-> void
+		static auto Pop(T* p) noexcept-> _Chunk_Memory*
 		{
-			assert(_data() <= elem_ptr && elem_ptr < _data() + N);
+			assert(p);
 
-			_Destroy(*elem_ptr);
+			ptrdiff_t& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
 
-			if(--_nof_elem == 0)
-				_suicide();
+			if(from_header == 0)
+				return nullptr;
+
+			_indexed_Memory& cur_mem = *reinterpret_cast<_indexed_Memory*>(&from_header);
+			_Header& header = *( reinterpret_cast<_Header*>(&cur_mem) - from_header );
+
+			_Destruct(*p);
+			cur_mem.nullable_value.null = from_header = 0;
+
+			if(--header.nof_elem == 0)
+				return header.cur_idx = N,  reinterpret_cast<_Chunk_Memory*>(&header);
+			else
+				return nullptr;
 		}
 
 
-		auto front() noexcept-> T&{  return _data()[_cur_idx-1];  }
+		auto get() noexcept
+		->	T*{  return &_mem_arr[_header.cur_idx].nullable_value.value;  }
 
 
 	private:
-		_byte_t _node_arr[N*sizeof(T)];
-		size_t _cur_idx, _nof_elem;
-		_host_t* _host_ptr;
-		List_Node<_Chunk_Memory>* _self_nptr;
+		_Header _header;
+		_indexed_Memory _mem_arr[N];
 
 
-		template<class Q>
-		static auto _Destroy(Q& q) noexcept-> void{  q.~Q();  }
+		auto _diff_from_header(_indexed_Memory const* p) const noexcept-> ptrdiff_t
+		{
+			return p - reinterpret_cast<_indexed_Memory const*>(&_header);  
+		}
 
 
-		auto _data() noexcept-> T*{  return reinterpret_cast<T*>(_node_arr);  }
-
-		auto _suicide() noexcept
-		->	void{  _host_ptr->pop( typename _host_t::iterator(_self_nptr) );  }
+		template< class Q, class _Q = Decay_t<Q> >
+		static auto _Destruct(Q& q) noexcept
+		->	Enable_if_t< is_Class_or_Union<_Q>::value >{  q.~_Q();  }
+		
+		template< class Q, class _Q = Decay_t<Q> >
+		static auto _Destruct(Q&) noexcept
+		->	Enable_if_t< !is_Class_or_Union<_Q>::value >{}
 	};
 
 
-	template<class T>
-	class List_Allocator_by_Chuck : public Allocator_interface< List_Allocator_by_Chuck<T> >
+	template<class T, size_t N>
+	class _Allocator_by_Chunk : public Allocator_interface< _Allocator_by_Chunk<T, N> >
 	{
 	public:
 		using value_type = T;
@@ -743,8 +755,15 @@ namespace sgm
 		using size_type = std::size_t;
 		using difference_type = std::ptrdiff_t;
 
-		List_Allocator_by_Chuck();
-		~List_Allocator_by_Chuck();
+
+		_Allocator_by_Chunk();
+		_Allocator_by_Chunk(_Allocator_by_Chunk const& rhs);
+		_Allocator_by_Chunk(_Allocator_by_Chunk&& rhs) noexcept;
+
+		~_Allocator_by_Chunk();
+
+		auto operator=(_Allocator_by_Chunk const& rhs)-> _Allocator_by_Chunk&;
+		auto operator=(_Allocator_by_Chunk&& rhs) noexcept-> _Allocator_by_Chunk&;
 
 		auto allocate(size_type n)-> pointer;
 		auto deallocate(pointer p, size_type n) noexcept-> void;
@@ -756,6 +775,9 @@ namespace sgm
 		auto destroy(Q* p) noexcept-> void;
 
 
+		auto swap(_Allocator_by_Chunk& rhs) noexcept-> void{  Swap(_pimpl, rhs._pimpl);  }
+
+
 	private:
 		class impl;
 
@@ -763,10 +785,193 @@ namespace sgm
 	};
 
 
+	template<class T, size_t N>
+	class _Allocator_by_Chunk<T, N>::impl
+	{
+	private:
+		using _chunk_t = _Chunk_Memory<T, N>;
 
+	public:
+		using value_type = T;
+		using pointer = value_type*;
+		using size_type = std::size_t;
+
+
+		impl() noexcept : _cur_chunk(nullptr), _chunk_allocator{}{}
+		impl(impl const&) : impl(){}
+		
+		impl(impl&& rhs) noexcept 
+		:	_cur_chunk(rhs._cur_chunk), _chunk_allocator(rhs._chunk_allocator)
+		{
+			rhs._cur_chunk = nullptr;
+		}
+
+
+		auto operator=(impl const& rhs)-> impl&
+		{
+			auto temp = rhs;
+
+			return swap(temp),  *this;
+		}
+
+		auto operator=(impl&& rhs) noexcept-> impl&
+		{
+			auto temp = Move(rhs);
+
+			return swap(temp),  *this;
+		}
+
+
+		auto allocate(size_type)-> pointer
+		{
+			if(_cur_chunk == nullptr || _cur_chunk->has_gone())
+				_cur_chunk = _chunk_allocator.allocate(1),
+				_chunk_allocator.construct(_cur_chunk);
+
+			return _cur_chunk->get();
+		}
+		
+
+		auto deallocate(pointer, size_type) noexcept-> void{}
+
+
+		template<class Q, class...ARGS>
+		auto construct(Q*, ARGS&&...args)-> void
+		{
+			_cur_chunk->push( Forward<ARGS>(args)... );
+		}
+
+
+		template<class Q>
+		auto destroy(Q* p) noexcept-> void
+		{
+			if(!p)
+				return;
+			
+			_chunk_t* chunk_ptr = _chunk_t::Pop(p);
+
+			if(chunk_ptr)
+				_chunk_allocator.destroy(chunk_ptr),
+				_chunk_allocator.deallocate(chunk_ptr, 1);
+
+			if(_cur_chunk == chunk_ptr)
+				_cur_chunk = nullptr;
+		}
+
+
+		auto swap(impl& rhs) noexcept-> void
+		{
+			Swap(_cur_chunk, rhs._cur_chunk);
+			Swap(_chunk_allocator, rhs._chunk_allocator);
+		}
+
+
+	private:
+		_chunk_t* _cur_chunk;
+		Allocator<_chunk_t> _chunk_allocator;
+	};
+
+
+	template<class T, size_t N>
+	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk() : _pimpl(new impl{}){}
+
+	template<class T, size_t N>
+	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk(_Allocator_by_Chunk const& rhs) 
+	:	_pimpl(new impl{*rhs._pimpl}){}
+
+	template<class T, size_t N>
+	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk(_Allocator_by_Chunk&& rhs) noexcept
+	:	_pimpl(rhs._pimpl){  rhs._pimpl = nullptr;  }
+
+
+	template<class T, size_t N>
+	_Allocator_by_Chunk<T, N>::~_Allocator_by_Chunk()
+	{
+		delete _pimpl,  _pimpl = nullptr;
+	}
+
+
+	template<class T, size_t N>
+	auto _Allocator_by_Chunk<T, N>::operator=(_Allocator_by_Chunk const& rhs)
+	->	_Allocator_by_Chunk&
+	{
+		auto temp = rhs;
+
+		return swap(temp),  *this;
+	}
+	
+
+	template<class T, size_t N>
+	auto _Allocator_by_Chunk<T, N>::operator=(_Allocator_by_Chunk&& rhs) noexcept
+	->	_Allocator_by_Chunk&
+	{
+		auto temp = Move(rhs);
+
+		return swap(temp),  *this;		
+	}
+
+
+	template<class T, size_t N>
+	auto _Allocator_by_Chunk<T, N>::allocate(size_type n)-> pointer
+	{
+		return _pimpl->allocate(n);
+	}
+	
+
+	template<class T, size_t N>
+	auto _Allocator_by_Chunk<T, N>::deallocate(pointer p, size_type n) noexcept-> void
+	{
+		_pimpl->deallocate(p, n);
+	}
+
+
+	template<class T, size_t N>  template<class Q, class...ARGS>
+	auto _Allocator_by_Chunk<T, N>::construct(Q* p, ARGS&&...args)-> void
+	{
+		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
+
+		_pimpl->construct( p, Forward<ARGS>(args)... );
+	}
+
+
+	template<class T, size_t N>  template<class Q>
+	auto _Allocator_by_Chunk<T, N>::destroy(Q* p) noexcept-> void
+	{
+		SGM_CRTP_OVERRIDE(destroy, <Q>);
+
+		_pimpl->destroy(p);
+	}
+#endif
+
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace std
+{
+
+	template<class T>
+	static auto swap(sgm::List<T>& L0, sgm::List<T>& L1) noexcept-> void{  L0.swap(L1);  }
+
+	template<class T, size_t N>
+	static auto swap(sgm::_Allocator_by_Chunk<T, N>& a0, sgm::_Allocator_by_Chunk<T, N>& a1) 
+	noexcept-> void{  a0.swap(a1);  }
 
 }
 
+
+namespace sgm
+{
+	
+	template<class T>
+	static auto Swap(List<T>& L0, List<T>& L1) noexcept-> void{  L0.swap(L1);  }
+
+	template<class T, size_t N>
+	static auto Swap(_Allocator_by_Chunk<T, N>& a0, _Allocator_by_Chunk<T, N>& a1) noexcept
+	->	void{  a0.swap(a1);  }
+
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 #endif // end of #ifndef _SGM_LIST_
 
