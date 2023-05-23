@@ -36,7 +36,7 @@ namespace sgm
 	using _Naive_List_Allocator_t = Allocator< List_Node<T> >;
 
 
-	static size_t constexpr default_list_node_chunk_size_v = 16;
+	static size_t constexpr default_list_node_chunk_size_v = 32;
 
 
 	template<class T, size_t N>
@@ -518,10 +518,9 @@ private:
 
 	void _destroy(_node_t* p) noexcept
 	{
-		_allocator.destroy(p);
-
 		p->front_ptr = p->back_ptr = nullptr;
 
+		_allocator.destroy(p);
 		_allocator.deallocate( p, sizeof(_node_t) );
 	}
 
@@ -656,8 +655,6 @@ namespace sgm
 	class _Chunk_Memory
 	{
 	private:
-		using _host_t = List< _Chunk_Memory, _Naive_List_Allocator_t<_Chunk_Memory> >;
-
 		struct _indexed_Memory
 		{
 			ptrdiff_t from_header = 0;
@@ -685,7 +682,7 @@ namespace sgm
 		{
 			assert(!has_gone());
 
-			_indexed_Memory* cur_ptr = _mem_arr + _header.cur_idx;
+			_indexed_Memory* cur_ptr = &_mem_arr[_header.cur_idx];
 
 			new(cur_ptr) _indexed_Memory{};
 
@@ -704,9 +701,8 @@ namespace sgm
 
 			if(from_header == 0)
 				return nullptr;
-
 			_indexed_Memory& cur_mem = *reinterpret_cast<_indexed_Memory*>(&from_header);
-			_Header& header = *( reinterpret_cast<_Header*>(&cur_mem) - from_header );
+			_Header& header = *reinterpret_cast<_Header*>(&cur_mem.from_header - from_header);
 
 			_Destruct(*p);
 			cur_mem.nullable_value.null = from_header = 0;
@@ -729,7 +725,10 @@ namespace sgm
 
 		auto _diff_from_header(_indexed_Memory const* p) const noexcept-> ptrdiff_t
 		{
-			return p - reinterpret_cast<_indexed_Memory const*>(&_header);  
+			return 
+			(	reinterpret_cast<ptrdiff_t const*>(p)
+			-	reinterpret_cast<ptrdiff_t const*>(&_header) 
+			);
 		}
 
 

@@ -368,7 +368,7 @@ void Performance::push_iterate_and_pop()
 #if 1
 	using namespace std::chrono;
 	
-	int constexpr N = 3;
+	int constexpr N = 30'000'000;
 	{
 	#if 0
 		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
