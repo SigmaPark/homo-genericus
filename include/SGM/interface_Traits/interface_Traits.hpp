@@ -253,7 +253,7 @@ protected:
 
 
 #define SGM_CRTP_TEMPLATE_INTERFACE(TITLE, ...)	\
-	auto constexpr crtp_override_##TITLE() noexcept-> void	\
+	auto constexpr crtp_override_##TITLE() const noexcept-> void	\
 	{	\
 		static_assert	\
 		(	(__VA_ARGS__)	\
@@ -262,13 +262,13 @@ protected:
 	}	\
 	\
 	template<bool B = false>	\
-	auto constexpr TITLE(...) noexcept-> void		\
+	auto constexpr TITLE(...) const noexcept-> void		\
 	{	\
 		static_assert(B, "crtp method \"" #TITLE "\" is not overriden .");  \
 	}	\
 	\
 	template<class RES, class...ARGS, class HOST>	\
-	auto constexpr check_return_type_of_##TITLE(HOST&&) noexcept	\
+	auto constexpr check_return_type_of_##TITLE(HOST&&) const noexcept	\
 	->	sgm::is_Same	\
 		<	decltype	\
 			(	sgm::Mock<HOST>().TITLE(sgm::Mock<ARGS>()...) \

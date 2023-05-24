@@ -123,45 +123,51 @@ public:
 	using difference_type = std::ptrdiff_t;
 
 
-	auto allocate(size_type n)-> pointer
-	{
-		return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  
-	}
+	auto allocate(size_type n) const-> pointer{  return Allocate(n);  }
 
-	auto deallocate(pointer p, size_type) noexcept-> void
-	{
-		::operator delete(p);  
-	}
+	auto deallocate(pointer p, size_type n) const noexcept-> void{  Deallocate(p, n);  }
 
 	template<class Q, class...ARGS>
-	auto construct(Q* p, ARGS&&...args)-> void
+	auto construct(Q* p, ARGS&&...args) const-> void
 	{
 		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
 
-		new(p) Q{ Forward<ARGS>(args)... };  
+		Construct( p, Forward<ARGS>(args)... );
 	}
 
 	template<class Q>
-	auto destroy(Q* p) noexcept-> void
+	auto destroy(Q* p) const noexcept-> void
 	{
 		SGM_CRTP_OVERRIDE(destroy, <Q>);
 
-		_destruct(*p);
+		Destroy(*p);
 	}
 
 
-	auto max_size() const noexcept
-	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
+	auto max_size() const noexcept-> size_type{  return Max_size();  }
 
+public:
+	static auto Allocate(size_type n)
+	->	pointer{  return static_cast<pointer>(  ::operator new( sizeof(value_type)*n )  );  }
 
-private:
+	static auto Deallocate(pointer p, size_type) noexcept
+	->	void{  ::operator delete(p);  }
+
+	template<class Q, class...ARGS>
+	static auto Construct(Q* p, ARGS&&...args)
+	->	void{  new(p) Q{ Forward<ARGS>(args)... };  }
+
 	template< class Q, class _Q = Decay_t<Q> >
-	static auto _destruct(Q& q) noexcept
+	static auto Destroy(Q& q) noexcept
 	->	Enable_if_t< is_Class_or_Union<_Q>::value >{  q.~_Q();  }
 	
 	template< class Q, class _Q = Decay_t<Q> >
-	static auto _destruct(Q&) noexcept
+	static auto Destroy(Q&) noexcept
 	->	Enable_if_t< !is_Class_or_Union<_Q>::value >{}
+
+	static auto Max_size() noexcept
+	->	size_type{  return std::numeric_limits<size_type>::max() / sizeof(value_type);  }
+
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
 

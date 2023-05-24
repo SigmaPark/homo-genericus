@@ -36,7 +36,7 @@ namespace sgm
 	using _Naive_List_Allocator_t = Allocator< List_Node<T> >;
 
 
-	static size_t constexpr default_list_node_chunk_size_v = 32;
+	static size_t constexpr default_list_node_chunk_size_v = 0x10;
 
 
 	template<class T, size_t N>
@@ -647,302 +647,175 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-namespace sgm
+template<class T, std::size_t N>
+class sgm::_Chunk_Memory
 {
-
-#if 1
-	template<class T, size_t N>
-	class _Chunk_Memory
+private:
+	struct _indexed_Memory
 	{
-	private:
-		struct _indexed_Memory
+		ptrdiff_t from_header = 0;
+
+		union _Mem 
 		{
-			ptrdiff_t from_header = 0;
+			ptrdiff_t null;
+			T value;
 
-			union _Mem 
-			{
-				ptrdiff_t null;
-				T value;
-
-				_Mem() noexcept : null(0){}
-				~_Mem(){}
-			}	nullable_value;
-		};
-
-
-		struct _Header{  size_t cur_idx = 0, nof_elem = 0;  };
-
-
-	public:
-		auto has_gone() const noexcept-> bool{  return N == _header.cur_idx;  }
-
-
-		template<class...ARGS>
-		auto push(ARGS&&...args)-> void
-		{
-			assert(!has_gone());
-
-			_indexed_Memory* cur_ptr = &_mem_arr[_header.cur_idx];
-
-			new(cur_ptr) _indexed_Memory{};
-
-			cur_ptr->from_header = _diff_from_header(cur_ptr);
-			new(&cur_ptr->nullable_value) T{Forward<ARGS>(args)...};
-
-			++_header.cur_idx,  ++_header.nof_elem;
-		}
-
-
-		static auto Pop(T* p) noexcept-> _Chunk_Memory*
-		{
-			assert(p);
-
-			ptrdiff_t& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
-
-			if(from_header == 0)
-				return nullptr;
-			_indexed_Memory& cur_mem = *reinterpret_cast<_indexed_Memory*>(&from_header);
-			_Header& header = *reinterpret_cast<_Header*>(&cur_mem.from_header - from_header);
-
-			_Destruct(*p);
-			cur_mem.nullable_value.null = from_header = 0;
-
-			if(--header.nof_elem == 0)
-				return header.cur_idx = N,  reinterpret_cast<_Chunk_Memory*>(&header);
-			else
-				return nullptr;
-		}
-
-
-		auto get() noexcept
-		->	T*{  return &_mem_arr[_header.cur_idx].nullable_value.value;  }
-
-
-	private:
-		_Header _header;
-		_indexed_Memory _mem_arr[N];
-
-
-		auto _diff_from_header(_indexed_Memory const* p) const noexcept-> ptrdiff_t
-		{
-			return 
-			(	reinterpret_cast<ptrdiff_t const*>(p)
-			-	reinterpret_cast<ptrdiff_t const*>(&_header) 
-			);
-		}
-
-
-		template< class Q, class _Q = Decay_t<Q> >
-		static auto _Destruct(Q& q) noexcept
-		->	Enable_if_t< is_Class_or_Union<_Q>::value >{  q.~_Q();  }
-		
-		template< class Q, class _Q = Decay_t<Q> >
-		static auto _Destruct(Q&) noexcept
-		->	Enable_if_t< !is_Class_or_Union<_Q>::value >{}
+			_Mem() noexcept : null(0){}
+			~_Mem(){}
+		}	nullable_value;
 	};
 
 
-	template<class T, size_t N>
-	class _Allocator_by_Chunk : public Allocator_interface< _Allocator_by_Chunk<T, N> >
+	struct _Header{  size_t cur_idx = 0, nof_elem = 0;  };
+
+
+public:
+	auto has_gone() const noexcept-> bool{  return N == _header.cur_idx;  }
+
+
+	template<class...ARGS>
+	auto push(ARGS&&...args)-> void
 	{
-	public:
-		using value_type = T;
-		using pointer = value_type*;
-		using const_pointer = value_type const*;
-		using void_pointer = void*;
-		using const_void_pointer = void const*;
-		using size_type = std::size_t;
-		using difference_type = std::ptrdiff_t;
+		assert(!has_gone());
 
+		_indexed_Memory* cur_ptr = &_mem_arr[_header.cur_idx];
 
-		_Allocator_by_Chunk();
-		_Allocator_by_Chunk(_Allocator_by_Chunk const& rhs);
-		_Allocator_by_Chunk(_Allocator_by_Chunk&& rhs) noexcept;
+		new(cur_ptr) _indexed_Memory{};
 
-		~_Allocator_by_Chunk();
+		cur_ptr->from_header = _diff_from_header(cur_ptr);
+		new(&cur_ptr->nullable_value) T{Forward<ARGS>(args)...};
 
-		auto operator=(_Allocator_by_Chunk const& rhs)-> _Allocator_by_Chunk&;
-		auto operator=(_Allocator_by_Chunk&& rhs) noexcept-> _Allocator_by_Chunk&;
-
-		auto allocate(size_type n)-> pointer;
-		auto deallocate(pointer p, size_type n) noexcept-> void;
-
-		template<class Q, class...ARGS>
-		auto construct(Q* p, ARGS&&...args)-> void;
-
-		template<class Q>
-		auto destroy(Q* p) noexcept-> void;
-
-
-		auto swap(_Allocator_by_Chunk& rhs) noexcept-> void{  Swap(_pimpl, rhs._pimpl);  }
-
-
-	private:
-		class impl;
-
-		impl* _pimpl;
-	};
-
-
-	template<class T, size_t N>
-	class _Allocator_by_Chunk<T, N>::impl
-	{
-	private:
-		using _chunk_t = _Chunk_Memory<T, N>;
-
-	public:
-		using value_type = T;
-		using pointer = value_type*;
-		using size_type = std::size_t;
-
-
-		impl() noexcept : _cur_chunk(nullptr), _chunk_allocator{}{}
-		impl(impl const&) : impl(){}
-		
-		impl(impl&& rhs) noexcept 
-		:	_cur_chunk(rhs._cur_chunk), _chunk_allocator(rhs._chunk_allocator)
-		{
-			rhs._cur_chunk = nullptr;
-		}
-
-
-		auto operator=(impl const& rhs)-> impl&
-		{
-			auto temp = rhs;
-
-			return swap(temp),  *this;
-		}
-
-		auto operator=(impl&& rhs) noexcept-> impl&
-		{
-			auto temp = Move(rhs);
-
-			return swap(temp),  *this;
-		}
-
-
-		auto allocate(size_type)-> pointer
-		{
-			if(_cur_chunk == nullptr || _cur_chunk->has_gone())
-				_cur_chunk = _chunk_allocator.allocate(1),
-				_chunk_allocator.construct(_cur_chunk);
-
-			return _cur_chunk->get();
-		}
-		
-
-		auto deallocate(pointer, size_type) noexcept-> void{}
-
-
-		template<class Q, class...ARGS>
-		auto construct(Q*, ARGS&&...args)-> void
-		{
-			_cur_chunk->push( Forward<ARGS>(args)... );
-		}
-
-
-		template<class Q>
-		auto destroy(Q* p) noexcept-> void
-		{
-			if(!p)
-				return;
-			
-			_chunk_t* chunk_ptr = _chunk_t::Pop(p);
-
-			if(chunk_ptr)
-				_chunk_allocator.destroy(chunk_ptr),
-				_chunk_allocator.deallocate(chunk_ptr, 1);
-
-			if(_cur_chunk == chunk_ptr)
-				_cur_chunk = nullptr;
-		}
-
-
-		auto swap(impl& rhs) noexcept-> void
-		{
-			Swap(_cur_chunk, rhs._cur_chunk);
-			Swap(_chunk_allocator, rhs._chunk_allocator);
-		}
-
-
-	private:
-		_chunk_t* _cur_chunk;
-		Allocator<_chunk_t> _chunk_allocator;
-	};
-
-
-	template<class T, size_t N>
-	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk() : _pimpl(new impl{}){}
-
-	template<class T, size_t N>
-	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk(_Allocator_by_Chunk const& rhs) 
-	:	_pimpl(new impl{*rhs._pimpl}){}
-
-	template<class T, size_t N>
-	_Allocator_by_Chunk<T, N>::_Allocator_by_Chunk(_Allocator_by_Chunk&& rhs) noexcept
-	:	_pimpl(rhs._pimpl){  rhs._pimpl = nullptr;  }
-
-
-	template<class T, size_t N>
-	_Allocator_by_Chunk<T, N>::~_Allocator_by_Chunk()
-	{
-		delete _pimpl,  _pimpl = nullptr;
+		++_header.cur_idx,  ++_header.nof_elem;
 	}
 
 
-	template<class T, size_t N>
-	auto _Allocator_by_Chunk<T, N>::operator=(_Allocator_by_Chunk const& rhs)
-	->	_Allocator_by_Chunk&
+	static auto Pop(T* p) noexcept-> _Chunk_Memory*
+	{
+		assert(p);
+
+		ptrdiff_t& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
+
+		if(from_header == 0)
+			return nullptr;
+
+		_indexed_Memory& cur_mem = *reinterpret_cast<_indexed_Memory*>(&from_header);
+		_Header& header = *reinterpret_cast<_Header*>(&cur_mem.from_header - from_header);
+
+		Allocator<T>::Destroy(*p);
+		cur_mem.nullable_value.null = from_header = 0;
+
+		if(--header.nof_elem == 0)
+			return header.cur_idx = N,  reinterpret_cast<_Chunk_Memory*>(&header);
+		else
+			return nullptr;
+	}
+
+
+	auto get() noexcept
+	->	T*{  return &_mem_arr[_header.cur_idx].nullable_value.value;  }
+
+
+private:
+	_Header _header;
+	_indexed_Memory _mem_arr[N];
+
+
+	auto _diff_from_header(_indexed_Memory const* p) const noexcept-> ptrdiff_t
+	{
+		return 
+		(	reinterpret_cast<ptrdiff_t const*>(p)
+		-	reinterpret_cast<ptrdiff_t const*>(&_header) 
+		);
+	}
+};
+
+
+template<class T, std::size_t N>
+class sgm::_Allocator_by_Chunk : public Allocator_interface< _Allocator_by_Chunk<T, N> >
+{
+private:
+	using _chunk_t = _Chunk_Memory<T, N>;
+	using _chunk_alloc_t = Allocator<_chunk_t>;
+
+public:
+	using value_type = T;
+	using pointer = value_type*;
+	using const_pointer = value_type const*;
+	using void_pointer = void*;
+	using const_void_pointer = void const*;
+	using size_type = size_t;
+	using difference_type = ptrdiff_t;
+
+
+	_Allocator_by_Chunk() noexcept : _cur_chunk(nullptr){}
+	_Allocator_by_Chunk(_Allocator_by_Chunk const& rhs) noexcept	 : _Allocator_by_Chunk(){}
+	
+	_Allocator_by_Chunk(_Allocator_by_Chunk&& rhs) noexcept 
+	:	_cur_chunk(rhs._cur_chunk){  rhs._cur_chunk = nullptr;  }
+
+
+	auto operator=(_Allocator_by_Chunk const& rhs)-> _Allocator_by_Chunk&
 	{
 		auto temp = rhs;
 
 		return swap(temp),  *this;
 	}
-	
 
-	template<class T, size_t N>
-	auto _Allocator_by_Chunk<T, N>::operator=(_Allocator_by_Chunk&& rhs) noexcept
-	->	_Allocator_by_Chunk&
+	auto operator=(_Allocator_by_Chunk&& rhs) noexcept-> _Allocator_by_Chunk&
 	{
 		auto temp = Move(rhs);
 
-		return swap(temp),  *this;		
+		return swap(temp),  *this;
 	}
 
 
-	template<class T, size_t N>
-	auto _Allocator_by_Chunk<T, N>::allocate(size_type n)-> pointer
+	auto allocate(size_type)-> pointer
 	{
-		return _pimpl->allocate(n);
+		if(_cur_chunk == nullptr || _cur_chunk->has_gone())
+			_cur_chunk = _chunk_alloc_t::Allocate(1),
+			_chunk_alloc_t::Construct(_cur_chunk);
+
+		return _cur_chunk->get();
 	}
 	
 
-	template<class T, size_t N>
-	auto _Allocator_by_Chunk<T, N>::deallocate(pointer p, size_type n) noexcept-> void
-	{
-		_pimpl->deallocate(p, n);
-	}
+	auto deallocate(pointer, size_type) noexcept-> void{}
 
 
-	template<class T, size_t N>  template<class Q, class...ARGS>
-	auto _Allocator_by_Chunk<T, N>::construct(Q* p, ARGS&&...args)-> void
+	template<class Q, class...ARGS>
+	auto construct(Q*, ARGS&&...args)-> void
 	{
 		SGM_CRTP_OVERRIDE(construct, <Q, ARGS...>);
 
-		_pimpl->construct( p, Forward<ARGS>(args)... );
+		_cur_chunk->push( Forward<ARGS>(args)... );
 	}
 
 
-	template<class T, size_t N>  template<class Q>
-	auto _Allocator_by_Chunk<T, N>::destroy(Q* p) noexcept-> void
+	template<class Q>
+	auto destroy(Q* p) noexcept-> void
 	{
 		SGM_CRTP_OVERRIDE(destroy, <Q>);
 
-		_pimpl->destroy(p);
-	}
-#endif
+		if(!p)
+			return;
+		
+		_chunk_t* chunk_ptr = _chunk_t::Pop(p);
 
-}
+		if(chunk_ptr)
+			_chunk_alloc_t::Destroy(chunk_ptr),
+			_chunk_alloc_t::Deallocate(chunk_ptr, 1);
+
+		if(_cur_chunk == chunk_ptr)
+			_cur_chunk = nullptr;
+	}
+
+
+	auto swap(_Allocator_by_Chunk& rhs) noexcept
+	->	void{  Swap(_cur_chunk, rhs._cur_chunk);  }
+
+private:
+	_chunk_t* _cur_chunk;
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
