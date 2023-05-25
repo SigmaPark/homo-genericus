@@ -72,10 +72,10 @@ struct sgm::List_Node
 
 	List_Node() noexcept( noexcept(T()) ) : front_ptr(nullptr), back_ptr(nullptr), value(){}
 	
-	template<class Q>
-	List_Node(List_Node* fp, List_Node* bp, Q&& q) 
-	noexcept(  is_Rvalue_Reference<Q&&>::value && noexcept( T(Mock<Q&&>()) )  )
-	:	front_ptr(fp), back_ptr(bp), value( Forward<Q>(q) ){}
+	template<class...ARGS>
+	List_Node(List_Node* fp, List_Node* bp, ARGS&&...args) 
+	noexcept(  Aleph_Check<ARGS&&...>::value && noexcept( T(Mock<ARGS&&>()...) )  )
+	:	front_ptr(fp), back_ptr(bp), value( Forward<ARGS>(args)... ){}
 
 
 	List_Node *front_ptr, *back_ptr;
