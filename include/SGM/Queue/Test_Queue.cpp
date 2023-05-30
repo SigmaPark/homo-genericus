@@ -488,6 +488,90 @@ void Circular_Queue_Contents::Push_and_Pop_by_Allocator()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+struct Performance : sgm::Unconstructible
+{
+	static void Push_and_Pop();
+};
+
+
+#include <queue>
+#include <chrono>
+
+
+void Performance::Push_and_Pop()
+{
+#if 0
+	using namespace std::chrono;
+	
+	int constexpr N = 100'000'000;
+	{
+
+		sgm::Queue<sgm::spec::Specimen> qu;
+
+		std::cout << "\tsgm::Queue\n";
+
+		{
+			std::cout << "\t\tpush : ";
+
+			auto const start_tp = system_clock::now();
+
+			for( int i = 0;  i < N;  qu.push(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			std::cout << "\t\tpop : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(int i = 0;  i < N;  qu.pop(),  ++i);
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+
+		sgm::spec::is_True(qu.is_empty());
+	}	
+
+	std::cout << '\n';
+
+	{
+		std::cout << "\tstd::queue\n";
+
+		std::queue<sgm::spec::Specimen> qu;
+
+		{
+			std::cout << "\t\tpush : ";
+
+			auto const start_tp = system_clock::now();
+
+			for( int i = 0;  i < N;  qu.push(i++) );
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+		{
+			std::cout << "\t\tpop : ";
+
+			auto const start_tp = system_clock::now();
+
+			for(int i = 0;  i < N;  qu.pop(),  ++i);
+
+			auto const time = system_clock::now() - start_tp;
+
+			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+		}
+
+		sgm::spec::is_True(qu.empty());
+	}
+#endif
+}
+
+
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Queue, /**/)
 {	::Queue_Contents::Construction
 ,	::Queue_Contents::Push_and_Pop
@@ -504,4 +588,5 @@ SGM_SPECIFICATION_TEST(sgm::spec::Test_, Queue, /**/)
 ,	::Circular_Queue_Contents::Clear
 ,	::Circular_Queue_Contents::Construction_by_Allocator
 ,	::Circular_Queue_Contents::Push_and_Pop_by_Allocator
+,	::Performance::Push_and_Pop
 };
