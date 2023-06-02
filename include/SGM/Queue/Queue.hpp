@@ -31,10 +31,11 @@ public:
 
 	auto size() const noexcept-> size_t{  return _list.size();  }
 
-	auto front() noexcept-> T&{  return _list.front();  }
 	auto front() const noexcept-> T const&{  return _list.front();  }
+	auto front() noexcept-> T&{  return _list.front();  }
 
 	auto back() const noexcept-> T const&{  return _list.back();  }
+	auto back() noexcept-> T&{  return _list.back();  }
 
 	template<class...ARGS>
 	auto push(ARGS&&...args)
