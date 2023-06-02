@@ -504,8 +504,8 @@ void Performance::Push_and_Pop()
 	using namespace std::chrono;
 	
 	int constexpr N = 100'000'000;
-	{
 
+	{
 		sgm::Queue<sgm::spec::Specimen> qu;
 
 		std::cout << "\tsgm::Queue\n";

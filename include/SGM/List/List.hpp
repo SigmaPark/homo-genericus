@@ -78,6 +78,9 @@ struct sgm::List_Node
 	:	front_ptr(fp), back_ptr(bp), value( Forward<ARGS>(args)... ){}
 
 
+	~List_Node(){  front_ptr = back_ptr = nullptr;  }
+
+
 	List_Node *front_ptr, *back_ptr;
 	T value;
 };
@@ -518,8 +521,6 @@ private:
 
 	void _destroy(_node_t* p) noexcept
 	{
-		p->front_ptr = p->back_ptr = nullptr;
-
 		_allocator.destroy(p);
 		_allocator.deallocate( p, sizeof(_node_t) );
 	}
