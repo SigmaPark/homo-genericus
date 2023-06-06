@@ -13,7 +13,6 @@
 #include "../iterable/iterable.hpp"
 #include <initializer_list>
 #include <iostream>
-#include <limits>
 #include <string>
 
 
@@ -520,13 +519,11 @@ private:
         \
         try     \
         {   \
-            \
             for(auto _test : __##TITLE##_Helper::test_list)  \
                 _test(); \
             \
             guard.is_successful = true;    \
             std::cout << #TITLE << " test complete.\n"; \
-            \
         }   \
         catch(sgm::Exception const& e)  \
         {   \

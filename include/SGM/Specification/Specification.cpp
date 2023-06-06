@@ -9,16 +9,21 @@
 #include <queue>
 
 
+using std::size_t;
+using std::string;
+using dir_t = string;
+
+
 auto operator ""_mdo(char const* str, size_t)
-->	sgm::spec::_tabless_description{  return std::string(str);  }
+->	sgm::spec::_tabless_description{  return string(str);  }
 
 
 auto operator ""_code(char const* str, size_t)
-->	sgm::spec::_code_description{  return std::string(str);  }
+->	sgm::spec::_code_description{  return string(str);  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-struct sgm::spec::_MD_Stream::_Contents{  std::queue<std::string> q = {};  };
+struct sgm::spec::_MD_Stream::_Contents{  std::queue<string> q = {};  };
 
 
 sgm::spec::_MD_Stream::_MD_Stream() 
@@ -35,7 +40,7 @@ auto sgm::spec::_MD_Stream::instance()-> _MD_Stream&
 }
 
 
-void sgm::spec::_MD_Stream::open(std::string const working_filepath)
+void sgm::spec::_MD_Stream::open(dir_t const working_filepath)
 {
 	if(is_open())
 		return;
@@ -43,7 +48,7 @@ void sgm::spec::_MD_Stream::open(std::string const working_filepath)
 	_working_filepath = working_filepath;
 
 	_md_materials_dir
-	=	[](std::string str)
+	=	[](dir_t str)
 		{
 			auto const last_slash = str.find_last_of('/');
 		
@@ -53,7 +58,7 @@ void sgm::spec::_MD_Stream::open(std::string const working_filepath)
 		}(working_filepath);
  
 	_md_filepath
-	=	[](std::string str)
+	=	[](dir_t str)
 		{
 			auto const last_dot = str.find_last_of('.');
 		
@@ -61,16 +66,15 @@ void sgm::spec::_MD_Stream::open(std::string const working_filepath)
 
 			auto const last_slash = str.find_last_of('/');
 			
-			std::string const 
-				direc(str.begin(), str.begin() + last_slash + 1),
-				name(str.begin() + last_slash + 1, str.end());
+			dir_t const direc(str.begin(), str.begin() + last_slash + 1);
+			string const name(str.begin() + last_slash + 1, str.end());
 			
 			return direc + "[guide]_" + name + ".md";
 		}(working_filepath);
 }
 
 
-bool sgm::spec::_MD_Stream::is_open() const{  return _md_filepath != std::string();  }
+bool sgm::spec::_MD_Stream::is_open() const{  return _md_filepath != dir_t();  }
 
 void sgm::spec::_MD_Stream::close()
 {
@@ -82,12 +86,12 @@ void sgm::spec::_MD_Stream::close()
 auto sgm::spec::_MD_Stream::ever_used() const-> bool{  return !_pcnts->q.empty();  }
 
 auto sgm::spec::_MD_Stream::working_filepath() const
-->	std::string const&{  return _working_filepath;  }
+->	dir_t const&{  return _working_filepath;  }
 
-auto sgm::spec::_MD_Stream::md_filepath() const-> std::string const&{  return _md_filepath;  }
+auto sgm::spec::_MD_Stream::md_filepath() const-> dir_t const&{  return _md_filepath;  }
 
 auto sgm::spec::_MD_Stream::md_materials_dir() const
-->	std::string const&{  return _md_materials_dir;  }
+->	dir_t const&{  return _md_materials_dir;  }
 
 
 void sgm::spec::_MD_Stream::print_and_close()
@@ -105,25 +109,25 @@ void sgm::spec::_MD_Stream::print_and_close()
 }
 
 
-void sgm::spec::_MD_Stream::_push(std::string const& str)
+void sgm::spec::_MD_Stream::_push(string const& str)
 {
 	_pcnts->q.push(str);  
 }
 
-void sgm::spec::_MD_Stream::_push(std::string&& str)
+void sgm::spec::_MD_Stream::_push(string&& str)
 {
-	_pcnts->q.push( std::move(str) );  
+	_pcnts->q.push( Move(str) );  
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(std::string working_filepath) : is_successful(true)
+sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(dir_t working_filepath) : is_successful(true)
 {
 	for(auto& c : working_filepath)
 		if(c == '\\')
 			c = '/';
 
-	mdo->open( std::move(working_filepath) ); 
+	mdo->open( Move(working_filepath) ); 
 }
 
 
@@ -141,20 +145,20 @@ sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::md_guard::md_guard(std::string begin) : md_guard(begin, begin){}
-sgm::spec::md_guard::md_guard(std::string begin, std::string end) : _end(end){  mdo << begin; }
+sgm::spec::md_guard::md_guard(string begin) : md_guard(begin, begin){}
+sgm::spec::md_guard::md_guard(string begin, string end) : _end(end){  mdo << begin; }
 sgm::spec::md_guard::~md_guard(){  mdo << _end; }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::md_block_guard::md_block_guard(std::string s) 
-:	md_guard( std::string("```") + s + "\n", "```\n" ){}
+sgm::spec::md_block_guard::md_block_guard(string s) 
+:	md_guard( string("```") + s + "\n", "```\n" ){}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::html_block_guard::html_block_guard(std::string const& tags)
+sgm::spec::html_block_guard::html_block_guard(string const& tags)
 {
-	std::queue<std::string> q;
+	std::queue<string> q;
 
 	for(auto itr1 = tags.cbegin(),  itr2 = itr1;  ;  ++itr2)
 		if(itr2 == tags.cend())
@@ -172,19 +176,19 @@ sgm::spec::html_block_guard::html_block_guard(std::string const& tags)
 		auto const& tag = q.front();
 
 		mdo << _bracket(tag);
-		_end.append( _bracket(std::string{'/'}+tag) );
+		_end.append( _bracket(string{'/'}+tag) );
 	}
 }
 
 
 sgm::spec::html_block_guard::~html_block_guard(){  mdo << _end;  }
 
-auto sgm::spec::html_block_guard::_bracket(std::string const& s)
-->	std::string{  return std::string{'<'} + s + '>';  }
+auto sgm::spec::html_block_guard::_bracket(string const& s)
+->	string{  return string{'<'} + s + '>';  }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-static auto _is_empty_line(std::string const& line)-> bool
+static auto _is_empty_line(string const& line)-> bool
 {
 	for(auto const c : line)
 		if(c != ' ' && c != '\t' && c != '\n')
@@ -194,33 +198,35 @@ static auto _is_empty_line(std::string const& line)-> bool
 }
 
 
-static auto _file_exists(std::string const& filepath)-> bool
+static auto _file_exists(dir_t const& filepath)-> bool
 {
 	return std::ifstream(filepath).is_open();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::_tabless_description::_tabless_description(std::string&& s) 
-:	_str(  _tabless_string( std::move(s) )  ){}
+sgm::spec::_tabless_description::_tabless_description(string&& s) 
+:	_str(  _tabless_string( Move(s) )  ){}
 
 
-auto sgm::spec::_tabless_description::_tabless_string(std::string&& str)-> std::string
+auto sgm::spec::_tabless_description::_tabless_string(string&& str)-> string
 {
-	std::queue<std::string> qs;
+	std::queue<string> qs;
 	size_t total_str_len = 0;
 
+	using str_itr_t = string::const_iterator;
+
 	auto enqueue_f
-	=	[&qs, &total_str_len](auto itr1, auto itr2)
+	=	[&qs, &total_str_len](str_itr_t itr1, str_itr_t itr2)
 		{
 			if( !_is_empty_line({itr1, itr2}) )
 				for(;  *itr1 == '\t';  ++itr1);
 
-			std::string s(itr1, itr2);
+			string s(itr1, itr2);
 
-			qs.emplace( std::move(s) );
+			qs.emplace( Move(s) );
 
-			total_str_len += std::distance(itr1, itr2);
+			total_str_len += Difference(itr1, itr2);
 		};
 
 	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)
@@ -240,7 +246,7 @@ auto sgm::spec::_tabless_description::_tabless_string(std::string&& str)-> std::
 
 	for ( ;  _is_empty_line(qs.front());  qs.pop() );
 
-	std::string res;
+	string res;
 	res.reserve(total_str_len + 2*qs.size());
 
 	for(;  !qs.empty();  qs.pop())
@@ -251,13 +257,13 @@ auto sgm::spec::_tabless_description::_tabless_string(std::string&& str)-> std::
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-sgm::spec::_code_description::_code_description(std::string&& s) : _str( _Code_writing(s) ){}
+sgm::spec::_code_description::_code_description(string&& s) : _str( _Code_writing(s) ){}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-auto sgm::spec::HTML_tag(std::string const& contents, std::string const& tag)-> std::string
+auto sgm::spec::HTML_tag(string const& contents, string const& tag)-> string
 {
-	std::queue<std::string> tags;
+	std::queue<string> tags;
 
 	for(auto itr1 = tag.cbegin(),  itr2 = itr1;  ;  ++itr2)
 		if(itr2 == tag.cend())
@@ -270,11 +276,11 @@ auto sgm::spec::HTML_tag(std::string const& contents, std::string const& tag)-> 
 			tags.emplace(itr1, itr2),  itr1 = itr2 + 1;  
 
 	auto tag_f 
-	=	[](std::string const& s, std::string const& t)
+	=	[](string const& s, string const& t)
 		{
-			std::string const
-				begin_str = std::string("<") + t + ">",
-				end_str = std::string("</") + t + ">";
+			string const
+				begin_str = string("<") + t + ">",
+				end_str = string("</") + t + ">";
 			
 			return begin_str + s + end_str;
 		};
@@ -288,35 +294,35 @@ auto sgm::spec::HTML_tag(std::string const& contents, std::string const& tag)-> 
 }
 
 
-auto sgm::spec::Load_image(std::string const& image_name, size_t const image_width)-> std::string
+auto sgm::spec::Load_image(string const& image_name, size_t const image_width)-> string
 {
 	if( !::_file_exists(mdo->md_materials_dir() + '/' + image_name) )
 		throw sgm::Exception("Cannot find the image file in ./md_materials directory.");
 
 	auto const size_str
 	=	image_width == 0 
-		?	std::string("") 
-		:	std::string(" width =\"") + std::to_string(image_width) + "\"";
+		?	string("") 
+		:	string(" width =\"") + std::to_string(image_width) + "\"";
 
-	return std::string("<img src=\"") + "./md_materials/" + image_name + "\"" + size_str + ">";
+	return string("<img src=\"") + "./md_materials/" + image_name + "\"" + size_str + ">";
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-auto sgm::spec::Empty_lines(size_t nof_el)-> std::string
+auto sgm::spec::Empty_lines(size_t nof_el)-> string
 {
-	std::string const nbsp = "&nbsp;  \n";
-	std::string spaces;
+	string const nbsp = "&nbsp;  \n";
+	string spaces;
 
 	for( spaces.reserve(nof_el*nbsp.size());  nof_el-->0;  spaces.append(nbsp) );
 
-	return std::string("\n\n") + spaces + "\n";
+	return string("\n\n") + spaces + "\n";
 }
 
 
-auto sgm::spec::Title(std::string const& title, unsigned const level)-> std::string
+auto sgm::spec::Title(string const& title, unsigned const level)-> string
 {
-	std::string sharps{};
+	string sharps{};
 
 	for(auto d = level;  d-->0;  sharps += '#');
 
@@ -325,20 +331,20 @@ auto sgm::spec::Title(std::string const& title, unsigned const level)-> std::str
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false)-> std::string
+auto sgm::spec::Load_code_block(string const code_block_tag) noexcept(false)-> string
 {
 	if( !::_file_exists(mdo->working_filepath()) )
 		throw Exception("the file to be loaded doesn't exist.");
 
 	std::ifstream file(mdo->working_filepath());
 
-	std::string const
-		cb_begin = std::string("BEGIN_CODE_BLOCK(") + code_block_tag + ")",
-		cb_end = std::string("END_CODE_BLOCK(") + code_block_tag + ")",
-		cb_end2 = std::string("END_CODE_BLOCK_AND_LOAD(") + code_block_tag + ")";
+	string const
+		cb_begin = string("BEGIN_CODE_BLOCK(") + code_block_tag + ")",
+		cb_end = string("END_CODE_BLOCK(") + code_block_tag + ")",
+		cb_end2 = string("END_CODE_BLOCK_AND_LOAD(") + code_block_tag + ")";
 
 	auto trimmed_str_f
-	=	[](std::string const& s)-> std::string
+	=	[](string const& s)-> string
 		{
 			if( s.empty() || _is_empty_line(s) )
 				return s;
@@ -353,7 +359,7 @@ auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false
 		};
 
 	auto are_same_str_f
-	=	[](std::string const& s1, std::string const& s2, size_t const size)
+	=	[](string const& s1, string const& s2, size_t const size)
 		{
 			bool res = s1.size() >= size && s2.size() >= size;
 
@@ -363,10 +369,10 @@ auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false
 		};
 
 
-	std::queue<std::string> qs;
+	std::queue<string> qs;
 	size_t nof_char = 0;
 
-	for(std::string buf;  std::getline(file, buf);  )
+	for(string buf;  std::getline(file, buf);  )
 		if(  are_same_str_f( trimmed_str_f(buf), cb_begin, cb_begin.size() )  )
 			for
 			(	std::getline(file, buf)
@@ -378,7 +384,7 @@ auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false
 				qs.push(buf + "\n"),  
 				nof_char += buf.size() + 1;
 
-	std::string merged_str;
+	string merged_str;
 	
 	for( merged_str.reserve(nof_char);  !qs.empty();  qs.pop() )
 		merged_str.append(qs.front());
@@ -387,7 +393,7 @@ auto sgm::spec::Load_code_block(std::string const code_block_tag) noexcept(false
 }
 
 
-auto sgm::spec::Load_description_file(std::string const& filename) noexcept(false)-> std::string
+auto sgm::spec::Load_description_file(string const& filename) noexcept(false)-> string
 {
 	auto const filepath = mdo->md_materials_dir() + '/' + filename;
 
@@ -395,17 +401,17 @@ auto sgm::spec::Load_description_file(std::string const& filename) noexcept(fals
 	if( !::_file_exists(filepath) )
 		throw sgm::Exception("Cannot find the file in ./md_materials directory.");
 	
-	std::queue<std::string> qs;
+	std::queue<string> qs;
 	size_t nof_char = 0;
 	std::ifstream file(filepath);
 
 	for
-	(	std::string buf
+	(	string buf
 	;	std::getline(file, buf)
 	;	qs.push(buf+"  \n"),  nof_char += buf.size() + 4 
 	);
 
-	std::string merged_str;
+	string merged_str;
 	
 	for( merged_str.reserve(nof_char);  !qs.empty();  qs.pop() )
 		merged_str.append(qs.front());
@@ -414,10 +420,10 @@ auto sgm::spec::Load_description_file(std::string const& filename) noexcept(fals
 }
 
 
-auto sgm::spec::_Code_writing(std::string const& str, std::string const& lang)-> std::string
+auto sgm::spec::_Code_writing(string const& str, string const& lang)-> string
 {
 	auto tab_count_f
-	=	[](std::string const& line)-> size_t
+	=	[](string const& line)-> size_t
 		{
 			size_t res = 0;
 
@@ -430,20 +436,28 @@ auto sgm::spec::_Code_writing(std::string const& str, std::string const& lang)->
 			return res;
 		};
 
-	std::queue<std::string> qs;
-	size_t total_str_len = 0,  min_nof_tab = std::numeric_limits<size_t>::max();
+
+	size_t constexpr max_nof_tabs = 1024;
+
+	std::queue<string> qs;
+	size_t total_str_len = 0,  min_nof_tab = max_nof_tabs;
+
+	using str_itr_t = string::const_iterator;
 
 	auto enqueue_f
-	=	[&qs, &total_str_len, &min_nof_tab, tab_count_f](auto itr1, auto itr2)
+	=	[&qs, &total_str_len, &min_nof_tab, tab_count_f](str_itr_t itr1, str_itr_t itr2)
 		{
-			std::string s(itr1, itr2);
+			auto min_f 
+			=	[](size_t _1, size_t _2) noexcept-> size_t{  return _1 < _2 ? _1 : _2;  };
+
+			string s(itr1, itr2);
 
 			if( !_is_empty_line(s) )
-				min_nof_tab = std::min( min_nof_tab, tab_count_f(s) );
+				min_nof_tab = min_f( min_nof_tab, tab_count_f(s) );
 
-			qs.emplace( std::move(s) );
+			qs.emplace( Move(s) );
 
-			total_str_len += std::distance(itr1, itr2);
+			total_str_len += Difference(itr1, itr2);
 		};
 
 	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)
@@ -464,10 +478,10 @@ auto sgm::spec::_Code_writing(std::string const& str, std::string const& lang)->
 	for( ;  _is_empty_line(qs.front());  qs.pop() );
 
 
-	std::string res;
+	string res;
 	res.reserve(8 + lang.size() + total_str_len + 2*qs.size());
 
-	for(  res.append( std::string("```") + lang + "\n" );  !qs.empty();  qs.pop()  )
+	for(  res.append( string("```") + lang + "\n" );  !qs.empty();  qs.pop()  )
 	{
 		if( auto const& s = qs.front();  !_is_empty_line(s) )
 			res.append(s.cbegin() + min_nof_tab, s.cend());
