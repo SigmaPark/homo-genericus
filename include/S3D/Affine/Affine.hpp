@@ -137,7 +137,10 @@ public:
 	
 
 	template<class Q>  
-	decltype(auto) operator>>=(Q const& q){  return *this = *this >> q;  }
+	decltype(auto) operator>>=(Q const& q)
+	{
+		return *static_cast<A*>(this) = *this >> q,  *this;  
+	}
 
 
 	auto inv() const{  return _crtp(this)->_inv();  }
