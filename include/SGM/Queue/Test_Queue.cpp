@@ -113,7 +113,7 @@ void Queue_Contents::Construction_by_Allocator()
 	std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 	std::size_t constexpr max_nof_node_in_buffer_v = 10;
 
-	unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
+	wchar_t buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
 	auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
 	
 	auto qu 
@@ -130,7 +130,7 @@ void Queue_Contents::Push_and_Pop_by_Allocator()
 	std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 	std::size_t constexpr max_nof_node_in_buffer_v = 10;
 
-	unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
+	wchar_t buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
 	auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
 
 	auto qu 
@@ -423,7 +423,7 @@ void Circular_Queue_Contents::Construction_by_Allocator()
 	std::size_t constexpr byte_size_v = sizeof(Specimen);
 	std::size_t constexpr max_nof_buffer_v = 10;
 
-	unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
+	wchar_t buffer[byte_size_v * max_nof_buffer_v] = {0, };
 	auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
 	
 	auto qu 
@@ -441,7 +441,7 @@ void Circular_Queue_Contents::Push_and_Pop_by_Allocator()
 	std::size_t constexpr byte_size_v = sizeof(Specimen);
 	std::size_t constexpr max_nof_buffer_v = 10;
 
-	unsigned char buffer[byte_size_v * max_nof_buffer_v] = {0, };
+	wchar_t buffer[byte_size_v * max_nof_buffer_v] = {0, };
 	auto buffer_arr = reinterpret_cast<Specimen*>(buffer);
 	
 	auto qu 
@@ -508,10 +508,10 @@ void Performance::Push_and_Pop()
 	{
 		sgm::Queue<sgm::spec::Specimen> qu;
 
-		std::cout << "\tsgm::Queue\n";
+		std::wcout << "\tsgm::Queue\n";
 
 		{
-			std::cout << "\t\tpush : ";
+			std::wcout << "\t\tpush : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -519,10 +519,10 @@ void Performance::Push_and_Pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			std::cout << "\t\tpop : ";
+			std::wcout << "\t\tpop : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -530,21 +530,21 @@ void Performance::Push_and_Pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
 		sgm::spec::is_True(qu.is_empty());
 	}	
 
-	std::cout << '\n';
+	std::wcout << '\n';
 
 	{
-		std::cout << "\tstd::queue\n";
+		std::wcout << "\tstd::queue\n";
 
 		std::queue<sgm::spec::Specimen> qu;
 
 		{
-			std::cout << "\t\tpush : ";
+			std::wcout << "\t\tpush : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -552,10 +552,10 @@ void Performance::Push_and_Pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			std::cout << "\t\tpop : ";
+			std::wcout << "\t\tpop : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -563,7 +563,7 @@ void Performance::Push_and_Pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
 		sgm::spec::is_True(qu.empty());

@@ -40,7 +40,7 @@ namespace sgm
 struct sgm::Bad_Access_to_Nullable : public Exception
 {
 	auto what() const noexcept
-	->	char const* override{  return "you accessed invalid sgm::Nullable .";  }
+	->	wchar_t const* override{  return L"you accessed invalid sgm::Nullable .";  }
 
 private:
 	template<class T>

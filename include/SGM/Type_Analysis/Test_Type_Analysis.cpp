@@ -148,9 +148,9 @@ static void Casting_Test()
 static void Parameter_Pack_Test()
 {
 	static_assert
-	(	(	sgm::is_Same< sgm::Nth_t<2, int, char const*, double**, void>, double** >::value
-		&&	sgm::is_Same< sgm::First_t<int, char const*, double**, void>, int >::value
-		&&	sgm::is_Same< sgm::Last_t<int, char const*, double**, void>, void >::value
+	(	(	sgm::is_Same< sgm::Nth_t<2, int, wchar_t const*, double**, void>, double** >::value
+		&&	sgm::is_Same< sgm::First_t<int, wchar_t const*, double**, void>, int >::value
+		&&	sgm::is_Same< sgm::Last_t<int, wchar_t const*, double**, void>, void >::value
 		&&	sgm::is_Same< decltype( sgm::Nth_Param<0>(1, 2.f, 3.0) ), int&& >::value
 		&&	sgm::is_Same< decltype( sgm::Nth_Param<1>(1, 2.f, 3.0) ), float&& >::value
 		&&	sgm::is_Same< decltype( sgm::Nth_Param<2>(1, 2.f, 3.0) ), double&& >::value
@@ -163,7 +163,7 @@ static void Parameter_Pack_Test()
 static void Type_Check_Test()
 {
 	static_assert
-	(	(	sgm::Check_if_All<std::is_integral, int, long long, unsigned char, short>::value
+	(	(	sgm::Check_if_All<std::is_integral, int, long long, wchar_t, short>::value
 		&&	sgm::Check_if_Any<std::is_floating_point, int, long long, float, short>::value
 		)
 	,	""
@@ -179,7 +179,7 @@ static void Type_Check_Test()
 			>::	value
 		&&	sgm::is_None
 			<	typename
-				sgm::Satisfying_Among<std::is_floating_point, int, long long, char, short>::type
+				sgm::Satisfying_Among<std::is_floating_point, int, long long, wchar_t, short>::type
 			>::	value
 		)
 	,	""

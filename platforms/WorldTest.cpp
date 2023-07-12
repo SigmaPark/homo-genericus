@@ -14,7 +14,7 @@ static void test() noexcept(false);
 template<class A, class...ARGS>
 static void log_message(A&& a, ARGS&&...args) noexcept
 {
-    std::cout << static_cast<A&&>(a);
+    std::wcout << static_cast<A&&>(a);
     
     if constexpr( sizeof...(ARGS) != 0 )
         log_message( static_cast<ARGS&&>(args)... );
@@ -23,16 +23,16 @@ static void log_message(A&& a, ARGS&&...args) noexcept
 
 static void system_pause() noexcept
 {
-    std::cout << "Press Enter key to continue. . .";
+    std::wcout << L"Press Enter key to continue. . .";
     std::cin.get();   
 }
 
 
-bool wt::Tests(char const* const module_title) noexcept
+bool wt::Tests(wchar_t const* const module_title) noexcept
 {
     ::log_message
-    (   "//========//========//========//========//=======#\n"
-    ,   module_title, " test Start\n"
+    (   L"//========//========//========//========//=======#\n"
+    ,   module_title, L" test Start\n"
     );
 
     try
@@ -40,8 +40,8 @@ bool wt::Tests(char const* const module_title) noexcept
         ::test();
 
         ::log_message
-        (   module_title, " test Complete\n"
-        ,   "//========//========//========//========//=======#\n"
+        (   module_title, L" test Complete\n"
+        ,   L"//========//========//========//========//=======#\n"
         );
 
         ::system_pause();
@@ -50,12 +50,12 @@ bool wt::Tests(char const* const module_title) noexcept
     }
     catch(...)
     {
-        std::cout << "Unexpected Error!\n";
+        std::wcout << L"Unexpected Error!\n";
     }
 
     ::log_message
-    (   module_title, " test Failed"
-    ,   "//========//========//========//========//=======#\n"
+    (   module_title, L" test Failed"
+    ,   L"//========//========//========//========//=======#\n"
     );
 
     ::system_pause();

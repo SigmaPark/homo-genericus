@@ -22,9 +22,9 @@ static void intro()
     using namespace sgm::spec;
 
     mdo
-    <<  Title("introduction")
-    <<  "Span is an iterable type that refers to a certain length of range "
-    <<  "between two iteraters or pointers."
+    <<  Title(L"introduction")
+    <<  L"Span is an iterable type that refers to a certain length of range "
+    <<  L"between two iteraters or pointers."
     <<  empty_line;
 }
 
@@ -74,7 +74,7 @@ static void Primitive_Array()
 {
     using namespace sgm::spec;
 
-    mdo <<  Title("Span from Primitive Array") << newl;
+    mdo <<  Title(L"Span from Primitive Array") << newl;
     
 BEGIN_CODE_BLOCK(primitive_array_ex)
     {
@@ -134,11 +134,11 @@ static void Static_Size_Array()
     using namespace sgm::spec;
 
     mdo
-    <<  Title("Static-sized Span")
-    <<  "sgm::Span can be static-sized iterable by setting constexpr size_t as a template "
-    <<  "parameter explicitly." << empty_line;
+    <<  Title(L"Static-sized Span")
+    <<  L"sgm::Span can be static-sized iterable by setting constexpr size_t as a template "
+    <<  L"parameter explicitly." << empty_line;
 
-    mdo << Title("by a Starting Pointer", 2) << newl;
+    mdo << Title(L"by a Starting Pointer", 2) << newl;
 
 BEGIN_CODE_BLOCK(static_size_array_by_starting_pointer_ex)
     {
@@ -176,7 +176,7 @@ END_CODE_BLOCK_AND_LOAD(static_size_array_by_starting_pointer_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by an iterable", 2) << newl;
+    mdo << Title(L"by an iterable", 2) << newl;
 
 BEGIN_CODE_BLOCK(static_size_array_by_iterable_ex)
     {
@@ -220,12 +220,12 @@ static void Dynamic_Size_Array()
     using namespace sgm::spec;
 
     mdo 
-    <<  Title("Span by iterables with Size in Runtime")
-    <<  "sgm::Span without explicit size infomation as a template parameter also can refer to "
-    <<  "a range."
+    <<  Title(L"Span by iterables with Size in Runtime")
+    <<  L"sgm::Span without explicit size infomation as a template parameter also can refer to "
+    <<  L"a range."
     <<  empty_line;
 
-    mdo << Title("by an iterable", 2) << newl;
+    mdo << Title(L"by an iterable", 2) << newl;
 
 BEGIN_CODE_BLOCK(dynamic_size_array_by_iterable_ex)
     {
@@ -263,7 +263,7 @@ END_CODE_BLOCK_AND_LOAD(dynamic_size_array_by_iterable_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by 2 iterators", 2) << newl;
+    mdo << Title(L"by 2 iterators", 2) << newl;
 
 BEGIN_CODE_BLOCK(dynamic_size_array_by_2_iterators_ex)
     {
@@ -301,7 +301,7 @@ END_CODE_BLOCK_AND_LOAD(dynamic_size_array_by_2_iterators_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by an iterator and Size", 2) << newl;
+    mdo << Title(L"by an iterator and Size", 2) << newl;
 
 BEGIN_CODE_BLOCK(dynamic_size_array_by_iterator_and_size)
     {
@@ -345,11 +345,11 @@ static void Pointer_and_Size()
     using namespace sgm::spec;
 
     mdo
-    <<  Title("Span refering to Contiguous Memories")
-    <<  "A contiguous memory range also can be refered by sgm::Span." 
+    <<  Title(L"Span refering to Contiguous Memories")
+    <<  L"A contiguous memory range also can be refered by sgm::Span." 
     <<  empty_line;
 
-    mdo << Title("by a Pointer and Size", 2) << newl;
+    mdo << Title(L"by a Pointer and Size", 2) << newl;
     
 BEGIN_CODE_BLOCK(contiguous_memory_by_pointer_and_size_ex)
     {
@@ -402,7 +402,7 @@ END_CODE_BLOCK_AND_LOAD(contiguous_memory_by_pointer_and_size_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by 2 Pointers", 2) << newl;
+    mdo << Title(L"by 2 Pointers", 2) << newl;
 
 BEGIN_CODE_BLOCK(contiguous_memory_by_2_pointer_ex)
     {
@@ -464,13 +464,13 @@ static void Linked_List()
     using namespace sgm::spec;
 
     mdo
-    <<  Title("Linked List (Non-contiguous Memories)")
-    <<  "sgm::Span doesn't care whether a refered range is on conteguous memories or not. "
-    <<  "Here's are exmples with non-contiguous memory ranges by linked list containers." 
+    <<  Title(L"Linked List (Non-contiguous Memories)")
+    <<  L"sgm::Span doesn't care whether a refered range is on conteguous memories or not. "
+    <<  L"Here's are exmples with non-contiguous memory ranges by linked list containers." 
     <<  empty_line;
 
 
-    mdo << Title("by an iterable", 2) << newl;
+    mdo << Title(L"by an iterable", 2) << newl;
 
 BEGIN_CODE_BLOCK(linked_list_by_iterable_ex)
     {
@@ -511,7 +511,7 @@ END_CODE_BLOCK_AND_LOAD(linked_list_by_iterable_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by 2 iterators", 2) << newl;
+    mdo << Title(L"by 2 iterators", 2) << newl;
 
 BEGIN_CODE_BLOCK(linked_list_by_2_iterators_ex)
     {
@@ -552,7 +552,7 @@ END_CODE_BLOCK_AND_LOAD(linked_list_by_2_iterators_ex)
     mdo << empty_line;
 
 
-    mdo << Title("by an iterator and Size", 2) << newl;
+    mdo << Title(L"by an iterator and Size", 2) << newl;
 
 BEGIN_CODE_BLOCK(linked_list_by_iterator_and_size_ex)
     {

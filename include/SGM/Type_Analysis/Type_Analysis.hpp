@@ -396,7 +396,7 @@ namespace sgm
 	{
 		return 
 		reinterpret_cast<T*>
-		(	&const_cast<char&>( reinterpret_cast<char const volatile&>(t) )
+		(	&const_cast<wchar_t&>( reinterpret_cast<wchar_t const volatile&>(t) )
 		);
 	}
 

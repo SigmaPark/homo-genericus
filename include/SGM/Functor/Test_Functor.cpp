@@ -115,11 +115,11 @@ void Test::Permutation()
 	int const x = 5;
 	double y = 3.2;
 
-	auto&& [a0, a1, a2] = sgm::fp::Permute<1, 2, 0>(x, y, 'a');
+	auto&& [a0, a1, a2] = sgm::fp::Permute<1, 2, 0>(x, y, L'a');
 	
 	static_assert
 	(	sgm::is_Same<decltype(a0), double&>::value 
-	&&	sgm::is_Same<decltype(a1), char&&>::value
+	&&	sgm::is_Same<decltype(a1), wchar_t&&>::value
 	&&	sgm::is_Same<decltype(a2), int const&>::value
 	);
 }

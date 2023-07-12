@@ -89,7 +89,7 @@ static void Size_Test()
 		&&	sgm::Size(li) == 5
 		&&	sgm::Size(fli) == 5
 		)
-	,	""
+	,	L""
 	);
 }
 

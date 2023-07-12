@@ -21,12 +21,12 @@ namespace sgm
 class sgm::Exception
 {
 public:
-    constexpr Exception(char const* const message = "") noexcept : _message(message){}
+    constexpr Exception(wchar_t const* const message = L"") noexcept : _message(message){}
 
-    virtual auto what() const noexcept-> char const*{  return _message;  }
+    virtual auto what() const noexcept-> wchar_t const*{  return _message;  }
 
 private:
-    char const* _message;
+    wchar_t const* _message;
 };
 
 

@@ -175,7 +175,7 @@ static void Test08()
 
 static void Test09()
 {
-	enum class Byte : unsigned char{};
+	enum class Byte : wchar_t{};
 	using Pinweight_bytes = Byte[sgm::Pinweight<Specimen>::data_size_value];
 
 	Pinweight_bytes buf[2];

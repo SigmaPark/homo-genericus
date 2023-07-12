@@ -200,7 +200,7 @@ protected:
 	auto _check_result(Type<5> const t) noexcept-> void
 	{
 		if(t.tag != Stride_for_Full_Cycle_v*_result_count)
-			std::cout
+			std::wcout
 			<<	"Pipeline Test Failed : Test_Process::_check_result gets wrong tag number. \n"
 			<<	"t.tag == " << t.tag << " , _result_count = " << _result_count << '\n';
 
@@ -328,7 +328,7 @@ auto pipeline_test::Time_per_Unit_Task()-> double
 {
 	using namespace std::chrono;
 
-	std::cout << "\tMeasuring unit task time. Wait for 10 seconds...\n";
+	std::wcout << "\tMeasuring unit task time. Wait for 10 seconds...\n";
 
 	double constexpr measuring_time_by_millisec_v = 10 * 1e3;
 
@@ -339,7 +339,7 @@ auto pipeline_test::Time_per_Unit_Task()-> double
 	
 	auto const res = ::Unit_task_time_check<milliseconds>(fine_test_reps);
 
-	std::cout << "\tTime_per_Unit_Task = " << res << '\n';
+	std::wcout << "\tTime_per_Unit_Task = " << res << '\n';
 
 	return res;
 }
@@ -349,11 +349,11 @@ static void Pipeline_Test()
 {
 #if 0
 	using namespace std::chrono;
-	using std::cout;
+	using std::wcout;
 
-	cout << "\nPipeline Test Begins\n";
+	wcout << "\nPipeline Test Begins\n";
 	
-	cout << "\tnof hardware cores = " << std::thread::hardware_concurrency() << '\n';
+	wcout << "\tnof hardware cores = " << std::thread::hardware_concurrency() << '\n';
 
 	auto const unit_task_time_by_millisec = pipeline_test::Time_per_Unit_Task();
 
@@ -382,7 +382,7 @@ static void Pipeline_Test()
 		auto const nof_short_task 
 		=	accumulated_task_f(pipeline_test::nof_Functors_in_Short_Cycle_v);
 
-		cout 
+		wcout 
 		<<	"\tExpected time for serial test = "
 		<<	(	nof_full_cycle*nof_full_task
 			+	nof_short_cycle*nof_short_task
@@ -402,30 +402,30 @@ static void Pipeline_Test()
 				return res;
 			}();
 
-		cout
+		wcout
 		<<	"\tideal time for concurrent test = "
 		<<	( nof_full_task + max_task*(nof_cycle-1) ) * unit_task_time_by_millisec
 		<<	" millisec\n";
 	}
 
-	cout << '\n';
+	wcout << '\n';
 
 	{
 		pipeline_test::Serial_Process serial_proc(amount_of_tasks);
 
 		auto const serial_test_time = serial_proc.test(nof_cycle);
 
-		cout << "\tserial_test_time = " << serial_test_time.count() << '\n';
+		wcout << "\tserial_test_time = " << serial_test_time.count() << '\n';
 	}
 	{
 		pipeline_test::Async_Process async_proc(amount_of_tasks);
 
 		auto const async_test_time = async_proc.test(nof_cycle);
 
-		cout << "\tasync_test_time = " << async_test_time.count() << '\n';
+		wcout << "\tasync_test_time = " << async_test_time.count() << '\n';
 	}
 
-	cout << "Pipeline Test Ends\n";
+	wcout << "Pipeline Test Ends\n";
 #endif
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#

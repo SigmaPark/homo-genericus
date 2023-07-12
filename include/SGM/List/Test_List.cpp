@@ -252,7 +252,7 @@ static void Allocator()
 	size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 	size_t constexpr max_nof_node_in_buffer_v = 10;
 
-	unsigned char buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
+	wchar_t buffer[list_node_byte_size_v * max_nof_node_in_buffer_v] = {0, };
 	auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
 
 	auto Li 
@@ -373,7 +373,7 @@ void Performance::push_iterate_and_pop()
 	#if 0
 		std::size_t constexpr list_node_byte_size_v = sizeof(sgm::List_Node<Specimen>);
 
-		auto* buffer = new unsigned char[list_node_byte_size_v * N];
+		auto* buffer = new wchar_t[list_node_byte_size_v * N];
 		//[list_node_byte_size_v * N] = {0, };
 		auto node_arr = reinterpret_cast< sgm::List_Node<Specimen>* >(buffer);
 
@@ -386,10 +386,10 @@ void Performance::push_iterate_and_pop()
 		sgm::List<sgm::spec::Specimen> list;
 	#endif
 
-		std::cout << "\tsgm::List\n";
+		std::wcout << "\tsgm::List\n";
 
 		{
-			std::cout << "\t\templace_back : ";
+			std::wcout << "\t\templace_back : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -397,12 +397,12 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
 			sgm::spec::Specimen s;
 
-			std::cout << "\t\titerate : ";
+			std::wcout << "\t\titerate : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -411,10 +411,10 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			std::cout << "\t\tpop_back : ";
+			std::wcout << "\t\tpop_back : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -423,7 +423,7 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
 		is_True(list.is_empty());
@@ -431,15 +431,15 @@ void Performance::push_iterate_and_pop()
 		//delete[] buffer;
 	}	
 
-	std::cout << '\n';
+	std::wcout << '\n';
 
 	{
-		std::cout << "\tstd::list\n";
+		std::wcout << "\tstd::list\n";
 
 		std::list<sgm::spec::Specimen> list;
 
 		{
-			std::cout << "\t\templace_back : ";
+			std::wcout << "\t\templace_back : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -447,12 +447,12 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
 			sgm::spec::Specimen s;
 
-			std::cout << "\t\titerate : ";
+			std::wcout << "\t\titerate : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -461,10 +461,10 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			std::cout << "\t\tpop_back : ";
+			std::wcout << "\t\tpop_back : ";
 
 			auto const start_tp = system_clock::now();
 
@@ -472,7 +472,7 @@ void Performance::push_iterate_and_pop()
 
 			auto const time = system_clock::now() - start_tp;
 
-			std::cout << duration_cast<milliseconds>(time).count() << " millisec.\n";
+			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
 		is_True(list.empty());

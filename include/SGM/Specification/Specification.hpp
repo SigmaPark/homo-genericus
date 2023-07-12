@@ -36,7 +36,7 @@ public:
     Specimen_Logger() = default;
     virtual ~Specimen_Logger() = default;
 
-    virtual void log(std::string const& log_message) = 0;
+    virtual void log(std::wstring const& log_message) = 0;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -58,24 +58,24 @@ public:
 
     Specimen() : _state(State::DEFAULT_CONSTRUCTION), _value(0)
     {
-        _Log("default_construction");
+        _Log(L"default_construction");
     }
     
     Specimen(int val) : _state(State::MANUAL_CONSTRUCTION), _value(val)
     {
-        _Log("manual_construction");
+        _Log(L"manual_construction");
     }
     
     Specimen(Specimen const& s) : _state(State::COPY_CONSTRUCTION), _value(s.value())
     {
-        _Log("copy_construction");
+        _Log(L"copy_construction");
     }
     
     Specimen(Specimen&& s) noexcept : _state(State::MOVE_CONSTRUCTION), _value(s.value())
     {
         s._state = State::MOVE_AWAY;  
 
-        _Log("move_construction");
+        _Log(L"move_construction");
     }
 
     ~Specimen()
@@ -85,7 +85,7 @@ public:
 
         value() = -1,  _state = State::DESTRUCTION; 
         
-        _Log("destruction");
+        _Log(L"destruction");
     }
 
 
@@ -93,7 +93,7 @@ public:
     {
         _state = State::COPY_ASSIGNMENT,  value() = s.value();
 
-        _Log("copy_assignment");
+        _Log(L"copy_assignment");
 
         return *this;        
     }
@@ -104,7 +104,7 @@ public:
 
         s._state = State::MOVE_AWAY;
 
-        _Log("move_assignment");
+        _Log(L"move_assignment");
 
         return *this;
     }
@@ -122,7 +122,11 @@ public:
     auto operator!=(T t) const noexcept-> bool{  return !(*this == t);  }
 
 
-    static void Begin_log(Specimen_Logger& logger) noexcept{  _Logger_ptr() = Address_of(logger);  }
+    static void Begin_log(Specimen_Logger& logger) noexcept
+    {  
+        _Logger_ptr() = Address_of(logger);  
+    }
+    
     static void End_log() noexcept{  _Logger_ptr() = nullptr;  }
 
 
@@ -139,7 +143,7 @@ private:
     }
 
 
-    static void _Log(std::string const& log_str)
+    static void _Log(std::wstring const& log_str)
     {
         if(_Logger_ptr() != nullptr)
             _Logger_ptr()->log(log_str);
@@ -263,7 +267,7 @@ namespace sgm
 
 #define BEGIN_CODE_BLOCK(TAG) /* nothing */
 #define END_CODE_BLOCK(TAG) /* nothing */
-#define END_CODE_BLOCK_AND_LOAD(TAG)  sgm::spec::mdo << sgm::spec::Load_code_block(#TAG);
+#define END_CODE_BLOCK_AND_LOAD(TAG)  sgm::spec::mdo << sgm::spec::Load_code_block(L#TAG);
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -272,13 +276,13 @@ namespace sgm
     namespace spec
     {
 
-	    auto HTML_tag(std::string const& contents, std::string const& tag)-> std::string;
-	    auto Load_image(std::string const& img_name, size_t const img_width = 0)-> std::string;
-	    auto Empty_lines(size_t nof_empty_lines = 1)-> std::string;
-        auto Title(std::string const& title, unsigned const level = 1)-> std::string;
+	    auto HTML_tag(std::wstring const& contents, std::wstring const& tag)-> std::wstring;
+	    auto Load_image(std::wstring const& img_name, size_t const img_width = 0)-> std::wstring;
+	    auto Empty_lines(size_t nof_empty_lines = 1)-> std::wstring;
+        auto Title(std::wstring const& title, unsigned const level = 1)-> std::wstring;
 
-	    auto Load_description_file(std::string const& filename) noexcept(false)-> std::string;
-        auto Load_code_block(std::string const code_block_tag) noexcept(false)-> std::string;
+	    auto Load_description_file(std::wstring const& filename) noexcept(false)-> std::wstring;
+        auto Load_code_block(std::wstring const code_block_tag) noexcept(false)-> std::wstring;
 	    
 
 	    class md_guard;
@@ -309,14 +313,15 @@ namespace sgm
         class _Singleton_MD_Streamer;
 	    class _MD_Stream_Guard;
 
-	    auto _Code_writing(std::string const& code, std::string const &lang = "")-> std::string;
+	    auto _Code_writing(std::wstring const& code, std::wstring const &lang = L"")
+        ->  std::wstring;
     
     }
 }
 
 
-auto operator ""_code(char const* str, size_t)-> sgm::spec::_code_description;
-auto operator ""_mdo(char const* str, size_t)-> sgm::spec::_tabless_description;
+auto operator ""_code(wchar_t const* str, size_t)-> sgm::spec::_code_description;
+auto operator ""_mdo(wchar_t const* str, size_t)-> sgm::spec::_tabless_description;
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -324,15 +329,15 @@ auto operator ""_mdo(char const* str, size_t)-> sgm::spec::_tabless_description;
 class sgm::spec::_tabless_description
 {
 public:
-	_tabless_description(std::string&& s);
+	_tabless_description(std::wstring&& s);
 
 private:
     template<class T, class _T, int>
 	friend struct sgm::spec::_MD_Stream_Helper;
 
-	std::string _str;
+	std::wstring _str;
 
-	static auto _tabless_string(std::string&& s)-> std::string;
+	static auto _tabless_string(std::wstring&& s)-> std::wstring;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -340,13 +345,13 @@ private:
 class sgm::spec::_code_description
 {
 public:
-	_code_description(std::string&& s);
+	_code_description(std::wstring&& s);
 
 private:
     template<class T, class _T, int>
     friend struct sgm::spec::_MD_Stream_Helper;
 
-	std::string _str;
+	std::wstring _str;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -359,13 +364,13 @@ public:
 
 	static auto instance()-> _MD_Stream&;
 
-    void open(std::string const working_filepath);
+    void open(std::wstring const working_filepath);
     bool is_open() const;
 
     auto ever_used() const-> bool;
-    auto working_filepath() const-> std::string const&;
-    auto md_filepath() const-> std::string const&;
-    auto md_materials_dir() const-> std::string const&;
+    auto working_filepath() const-> std::wstring const&;
+    auto md_filepath() const-> std::wstring const&;
+    auto md_materials_dir() const-> std::wstring const&;
 
 	void close();
 	void print_and_close();
@@ -381,11 +386,11 @@ private:
 
 	struct _Contents;
 
-	std::string _working_filepath, _md_filepath, _md_materials_dir;
+	std::wstring _working_filepath, _md_filepath, _md_materials_dir;
 	_Contents *_pcnts;
 
-	void _push(std::string const& str);
-	void _push(std::string&& str);
+	void _push(std::wstring const& str);
+	void _push(std::wstring&& str);
 };
 
 
@@ -403,7 +408,7 @@ template<class T, class _T, int>
 struct sgm::spec::_MD_Stream_Helper : Unconstructible
 {
     template<class Q>
-    static auto calc(Q&& q)-> std::string{  return Forward<Q>(q);  }    
+    static auto calc(Q&& q)-> std::wstring{  return Forward<Q>(q);  }    
 };
 
 template<class T, class _T>
@@ -416,14 +421,14 @@ struct sgm::spec::_MD_Stream_Helper<T, _T, 1> : Unconstructible
 template<class T, class _T>
 struct sgm::spec::_MD_Stream_Helper<T, _T, 2> : Unconstructible
 {
-    static auto calc(_T const b)-> std::string{  return b ? "true" : "false";  }
+    static auto calc(_T const b)-> std::wstring{  return b ? L"true" : L"false";  }
 };
 
 template<class T, class _T>
 struct sgm::spec::_MD_Stream_Helper<T, _T, 3> : Unconstructible
 {
     template<class Q>
-    static auto calc(Q const s)-> std::string{  return std::to_string(s);  }
+    static auto calc(Q const s)-> std::wstring{  return std::to_wstring(s);  }
 };
 
 template<class T, class _T>
@@ -431,7 +436,7 @@ struct sgm::spec::_MD_Stream_Helper<T, _T, 4> : Unconstructible
 {
     template<class P>
     static auto calc(P const p)
-    ->  std::string{  return std::to_string( reinterpret_cast<long long>(p) );  }
+    ->  std::wstring{  return std::to_wstring( reinterpret_cast<long long>(p) );  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -440,7 +445,8 @@ class sgm::spec::_Singleton_MD_Streamer
 {
 public:
     template<class T>
-    auto operator<<(T&& t) const-> _MD_Stream&{  return _MD_Stream::instance() << Forward<T>(t);  }
+    auto operator<<(T&& t) const
+    ->  _MD_Stream&{  return _MD_Stream::instance() << Forward<T>(t);  }
 
     auto operator->() const-> _MD_Stream*{  return &_MD_Stream::instance();  }
 };
@@ -454,8 +460,8 @@ namespace sgm
 
 	    static _Singleton_MD_Streamer const mdo = {};
 
-	    static std::string const newl = "  \n";
-	    static std::string const empty_line = Empty_lines(1);
+	    static std::wstring const newl = L"  \n";
+	    static std::wstring const empty_line = Empty_lines(1);
 
     }
 }
@@ -465,7 +471,9 @@ namespace sgm
 class sgm::spec::_MD_Stream_Guard
 {
 public:
-	_MD_Stream_Guard(std::string working_filepath);
+	_MD_Stream_Guard(std::wstring working_filepath);
+    _MD_Stream_Guard(std::string working_filepath);
+
 	~_MD_Stream_Guard();
 
 	bool is_successful;
@@ -476,12 +484,12 @@ public:
 class sgm::spec::md_guard
 {
 public:
-	md_guard(std::string begin);
-	md_guard(std::string begin, std::string end);
+	md_guard(std::wstring begin);
+	md_guard(std::wstring begin, std::wstring end);
 	~md_guard();
 
 private:
-	std::string _end;
+	std::wstring _end;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -489,20 +497,20 @@ private:
 class sgm::spec::md_block_guard : public md_guard
 {
 public:
-	md_block_guard(std::string s = "");
+	md_block_guard(std::wstring s = L"");
 };
 
 
 class sgm::spec::html_block_guard
 {
 public:
-	html_block_guard(std::string const& tags);
+	html_block_guard(std::wstring const& tags);
 	~html_block_guard();
 
 private:
-	std::string _end = {};
+	std::wstring _end = {};
 
-	static auto _bracket(std::string const& s)-> std::string;
+	static auto _bracket(std::wstring const& s)-> std::wstring;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -523,16 +531,16 @@ private:
                 _test(); \
             \
             guard.is_successful = true;    \
-            std::cout << #TITLE << " test complete.\n"; \
+            std::wcout << L#TITLE << L" test complete.\n"; \
         }   \
         catch(sgm::Exception const& e)  \
         {   \
-            std::cout << '\n' << #TITLE << " test failed.\n\t" << e.what() << std::endl;    \
+            std::wcout << L'\n' << L#TITLE << L" test failed.\n\t" << e.what() << std::endl; \
             guard.is_successful = false;    \
         }   \
         catch(...)  \
         {   \
-            std::cout << '\n' << #TITLE << " test failed.\n\t" << "unexpected error.\n";    \
+            std::wcout << L'\n' << L#TITLE << L" test failed.\n\t" << L"unexpected error.\n"; \
             guard.is_successful = false;    \
         }   \
     }   \

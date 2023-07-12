@@ -7,9 +7,10 @@
 namespace wt
 {
 
-    bool Tests(char const*const module_title) noexcept;
+    bool Tests(wchar_t const*const module_title) noexcept;
 
 }
 
 
-#define SGM_WORLD_TEST(TITLE)  int main(){  return wt::Tests(#TITLE),  (int)0;  }
+#define SGM_WORLD_TEST(TITLE) \
+    int wmain(int const, wchar_t const* const[]){  return wt::Tests(L#TITLE),  (int)0;  }

@@ -204,16 +204,16 @@ static void Structured_Binding()
 		);
 	}
 	{
-		auto trio = sgm::Family<int, double, char>(3, 3.14, ' ');
+		auto trio = sgm::Family<int, double, wchar_t>(3, 3.14, ' ');
 		auto [a, b, c] = trio;
 		
 		static_assert
 		(	sgm::is_Same<decltype(a), int>::value
 		&&	sgm::is_Same<decltype(b), double>::value
-		&&	sgm::is_Same<decltype(c), char>::value
+		&&	sgm::is_Same<decltype(c), wchar_t>::value
 		&&	sgm::is_Same<decltype(trio.first()), int&>::value
 		&&	sgm::is_Same<decltype(trio.second()), double&>::value
-		&&	sgm::is_Same<decltype(trio.third()), char&>::value
+		&&	sgm::is_Same<decltype(trio.third()), wchar_t&>::value
 		);
 	}
 #endif

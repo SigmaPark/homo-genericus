@@ -595,7 +595,7 @@ void Performance::insertion()
 #if 0
 	std::size_t const N = 100'000'000;
 
-	std::cout << "insertion test\n";
+	std::wcout << "insertion test\n";
 	
 	{
 		std::vector<sgm::spec::Specimen> vec;
@@ -605,7 +605,7 @@ void Performance::insertion()
 		for(size_t n = 10;  n-->0;)
 		{
 			{
-				std::cout << "\tstd::vector emplace_back : ";
+				std::wcout << "\tstd::vector emplace_back : ";
 				
 				auto start_tp = std::chrono::system_clock::now();
 
@@ -614,10 +614,10 @@ void Performance::insertion()
 
 				auto time = (std::chrono::system_clock::now() - start_tp).count();
 
-				std::cout << time << " nanosec\n";
+				std::wcout << time << " nanosec\n";
 			}
 			{
-				std::cout << "\tstd::vector pop_back : ";
+				std::wcout << "\tstd::vector pop_back : ";
 				auto start_tp = std::chrono::system_clock::now();
 
 				for(std::size_t i = 0;  i < N;  ++i)
@@ -625,7 +625,7 @@ void Performance::insertion()
 
 				auto time = (std::chrono::system_clock::now() - start_tp).count();
 
-				std::cout << time << " nanosec\n";
+				std::wcout << time << " nanosec\n";
 			}
 		}
 	}
@@ -635,7 +635,7 @@ void Performance::insertion()
 		for(size_t n = 10; n-->0;)
 		{
 			{
-				std::cout << "\tsgm::Array emplace_back : ";
+				std::wcout << "\tsgm::Array emplace_back : ";
 				auto start_tp = std::chrono::system_clock::now();
 
 				for(std::size_t i = 0;  i < N;  ++i)
@@ -643,17 +643,17 @@ void Performance::insertion()
 
 				auto time = (std::chrono::system_clock::now() - start_tp).count();
 
-				std::cout << time << " nanosec.\n";
+				std::wcout << time << " nanosec.\n";
 			}
 			{
-				std::cout << "\tsgm::Array pop_back : ";
+				std::wcout << "\tsgm::Array pop_back : ";
 				auto start_tp = std::chrono::system_clock::now();
 
 				arr.pop_back(N);
 
 				auto time = (std::chrono::system_clock::now() - start_tp).count();
 
-				std::cout << time << " nanosec\n";
+				std::wcout << time << " nanosec\n";
 			}
 		}
 	}
@@ -666,7 +666,7 @@ void Performance::random_access()
 #if 0
 	std::size_t const N = 1'000'000;
 
-	std::cout << "random access test\n";
+	std::wcout << "random access test\n";
 	
 	{
 		std::vector<sgm::spec::Specimen> vec;
@@ -677,7 +677,7 @@ void Performance::random_access()
 		for(std::size_t i = 0;  i < N;  ++i)
 			vec.emplace_back( static_cast<int>(i) );
 
-		std::cout << "\tstd::vector random_access : ";
+		std::wcout << "\tstd::vector random_access : ";
 
 		auto start_tp = std::chrono::system_clock::now();
 		
@@ -690,7 +690,7 @@ void Performance::random_access()
 			(	std::chrono::system_clock::now() - start_tp
 			) .	count();
 
-		std::cout << time << " millisec\n";		
+		std::wcout << time << " millisec\n";		
 	}
 	{
 		sgm::Array<sgm::spec::Specimen> arr(N);
@@ -699,7 +699,7 @@ void Performance::random_access()
 		for(std::size_t i = 0;  i < N;  ++i)
 			arr.emplace_back( static_cast<int>(i) );
 
-		std::cout << "\tsgm::Array random_access : ";
+		std::wcout << "\tsgm::Array random_access : ";
 
 		auto start_tp = std::chrono::system_clock::now();
 		
@@ -712,7 +712,7 @@ void Performance::random_access()
 			(	std::chrono::system_clock::now() - start_tp
 			) .	count();
 
-		std::cout << time << " millisec\n";		
+		std::wcout << time << " millisec\n";		
 	}
 #endif
 }

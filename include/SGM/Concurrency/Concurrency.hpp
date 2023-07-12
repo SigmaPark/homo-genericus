@@ -184,7 +184,7 @@ class sgm::FnJ_Fail_to_get_Nof_Core : public Exception
 {
 public:
 	auto what() const noexcept
-	->	char const* override{  return "Failed to get the number of hardware cores.";  }
+	->	wchar_t const* override{  return L"Failed to get the number of hardware cores.";  }
 
 private:
 	friend struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC>;

@@ -270,15 +270,15 @@ static void Plait_Test()
 
 	Array<int> arr_int{1, 3, 5, 7, 9};
 	Array<Specimen> arr_spec{Specimen(0), Specimen(2), Specimen(4), Specimen(6), Specimen(8)};
-	std::initializer_list<char> iL{'a', 'b', 'c', 'd', 'e'};
+	std::initializer_list<wchar_t> iL{'a', 'b', 'c', 'd', 'e'};
 
 	auto answer
-	=	Array< Family<int, Specimen, char> >
-		{	Family<int, Specimen, char>(1, Specimen(0), 'a')
-		,	Family<int, Specimen, char>(3, Specimen(2), 'b')
-		,	Family<int, Specimen, char>(5, Specimen(4), 'c')
-		,	Family<int, Specimen, char>(7, Specimen(6), 'd')
-		,	Family<int, Specimen, char>(9, Specimen(8), 'e')
+	=	Array< Family<int, Specimen, wchar_t> >
+		{	Family<int, Specimen, wchar_t>(1, Specimen(0), 'a')
+		,	Family<int, Specimen, wchar_t>(3, Specimen(2), 'b')
+		,	Family<int, Specimen, wchar_t>(5, Specimen(4), 'c')
+		,	Family<int, Specimen, wchar_t>(7, Specimen(6), 'd')
+		,	Family<int, Specimen, wchar_t>(9, Specimen(8), 'e')
 		};
 
 	sgm::spec::Are_Equivalent_Ranges( sgm::Plait(arr_int, arr_spec, iL), answer );
@@ -286,7 +286,7 @@ static void Plait_Test()
 	{
 		int i2 = 1;
 		Specimen s2{0};
-		char c2 = 'a';
+		wchar_t c2 = 'a';
 		
 
 		for( auto&& [i, s, c] : sgm::Plait(arr_int, arr_spec, iL) )
