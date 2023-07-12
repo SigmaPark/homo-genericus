@@ -101,7 +101,7 @@ void sgm::spec::_MD_Stream::print_and_close()
 		return;
 
 	for
-	(	std::wofstream ofs(_md_filepath)
+	(	std::wofstream ofs(_md_filepath.c_str())
 	;	!_pcnts->q.empty()
 	;	ofs << _pcnts->q.front(),  _pcnts->q.pop() 
 	);
@@ -224,7 +224,7 @@ static auto _is_empty_line(wstring const& line)-> bool
 
 static auto _file_exists(dir_t const& filepath)-> bool
 {
-	return std::ifstream(filepath).is_open();
+	return std::wifstream(filepath).is_open();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -360,7 +360,7 @@ auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> 
 	if( !::_file_exists(mdo->working_filepath()) )
 		throw Exception(L"the file to be loaded doesn't exist.");
 
-	std::wifstream file(mdo->working_filepath());
+	std::wifstream file(mdo->working_filepath().c_str());
 
 	wstring const
 		cb_begin = wstring(L"BEGIN_CODE_BLOCK(") + code_block_tag + L")",
@@ -427,7 +427,7 @@ auto sgm::spec::Load_description_file(wstring const& filename) noexcept(false)->
 	
 	std::queue<wstring> qs;
 	size_t nof_char = 0;
-	std::wifstream file(filepath);
+	std::wifstream file(filepath.c_str());
 
 	for
 	(	wstring buf
