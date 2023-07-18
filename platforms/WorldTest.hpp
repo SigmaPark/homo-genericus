@@ -4,6 +4,10 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+#pragma once
+#include "../include/SGM/Letter/Letter.hpp"
+
+
 namespace wt
 {
 
@@ -12,12 +16,8 @@ namespace wt
 }
 
 
-#define __MAKE_WSTRING_LITERAL_TITLE_HELPER__(PRE, TITLE) PRE##TITLE
-#define __MAKE_WSTRING_LITERAL_TITLE__(TITLE) __MAKE_WSTRING_LITERAL_TITLE_HELPER__(L, TITLE)
-
-
 #define SGM_WORLD_TEST(TITLE) \
-    int wmain(int const, wchar_t const* const[])    \
+    int main(int const, char const* const[])    \
     {   \
-        return wt::Tests( __MAKE_WSTRING_LITERAL_TITLE__(#TITLE) ),  (int)0;\
+        return wt::Tests( sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE).c_str() ),  (int)0;\
     }

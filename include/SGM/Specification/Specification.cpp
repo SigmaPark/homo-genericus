@@ -6,7 +6,6 @@
 
 #include "Specification.hpp"
 #include <fstream>
-#include <cstdio>
 #include <queue>
 
 
@@ -101,7 +100,7 @@ void sgm::spec::_MD_Stream::print_and_close()
 		return;
 
 	for
-	(	std::wofstream ofs(_md_filepath.c_str())
+	(	std::wofstream ofs( Letter_Conversion::Wcs_to_Mbs(_md_filepath).c_str() )
 	;	!_pcnts->q.empty()
 	;	ofs << _pcnts->q.front(),  _pcnts->q.pop() 
 	);
@@ -122,19 +121,6 @@ void sgm::spec::_MD_Stream::_push(wstring&& str)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-static auto Mbs_to_Wcs(std::string const& s)-> std::wstring
-{
-	std::size_t constexpr buf_size = 0x1000;
-	std::size_t n = 0;
-	wchar_t buf[buf_size];
-
-
-	mbstowcs_s(&n, buf, buf_size, s.c_str(), buf_size);
-
-	return buf;
-}
-
-
 sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(dir_t working_filepath) : is_successful(true)
 {
 	for(auto& c : working_filepath)
@@ -146,7 +132,7 @@ sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(dir_t working_filepath) : is_succe
 
 
 sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(std::string working_filepath)
-:	_MD_Stream_Guard( ::Mbs_to_Wcs(working_filepath) ){}
+:	_MD_Stream_Guard( Letter_Conversion::Mbs_to_Wcs(working_filepath) ){}
 
 
 sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
@@ -154,17 +140,8 @@ sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
 	if(is_successful && mdo->ever_used())
 		mdo->print_and_close();
 	else
-	{
-		size_t constexpr buf_size = 0x1000;
-		size_t n = 0;
-		char str[buf_size];
-
-		wcstombs_s(&n, str, buf_size, mdo->md_filepath().c_str(), buf_size);
-
-		std::remove(str);
-		
+		std::remove( Letter_Conversion::Wcs_to_Mbs(mdo->md_filepath()).c_str() ),
 		mdo->close();
-	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -224,7 +201,7 @@ static auto _is_empty_line(wstring const& line)-> bool
 
 static auto _file_exists(dir_t const& filepath)-> bool
 {
-	return std::wifstream(filepath).is_open();
+	return std::wifstream( sgm::Letter_Conversion::Wcs_to_Mbs(filepath).c_str() ).is_open();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -360,7 +337,7 @@ auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> 
 	if( !::_file_exists(mdo->working_filepath()) )
 		throw Exception(L"the file to be loaded doesn't exist.");
 
-	std::wifstream file(mdo->working_filepath().c_str());
+	std::wifstream file( Letter_Conversion::Wcs_to_Mbs(mdo->working_filepath()).c_str() );
 
 	wstring const
 		cb_begin = wstring(L"BEGIN_CODE_BLOCK(") + code_block_tag + L")",
@@ -427,7 +404,7 @@ auto sgm::spec::Load_description_file(wstring const& filename) noexcept(false)->
 	
 	std::queue<wstring> qs;
 	size_t nof_char = 0;
-	std::wifstream file(filepath.c_str());
+	std::wifstream file( Letter_Conversion::Wcs_to_Mbs(filepath).c_str() );
 
 	for
 	(	wstring buf
@@ -461,7 +438,7 @@ auto sgm::spec::_Code_writing(wstring const& str, wstring const& lang)-> wstring
 		};
 
 
-	size_t constexpr max_nof_tabs = 1024;
+	size_t constexpr max_nof_tabs = 0x1000;
 
 	std::queue<wstring> qs;
 	size_t total_str_len = 0,  min_nof_tab = max_nof_tabs;

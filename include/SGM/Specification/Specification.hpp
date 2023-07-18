@@ -13,7 +13,7 @@
 #include "../iterable/iterable.hpp"
 #include <initializer_list>
 #include <iostream>
-#include <string>
+#include "../Letter/Letter.hpp"
 
 
 namespace sgm
@@ -267,7 +267,9 @@ namespace sgm
 
 #define BEGIN_CODE_BLOCK(TAG) /* nothing */
 #define END_CODE_BLOCK(TAG) /* nothing */
-#define END_CODE_BLOCK_AND_LOAD(TAG)  sgm::spec::mdo << sgm::spec::Load_code_block(L#TAG);
+
+#define END_CODE_BLOCK_AND_LOAD(TAG)  \
+    sgm::spec::mdo << sgm::spec::Load_code_block( sgm::Letter_Conversion::Mbs_to_Wcs(#TAG) );
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -531,16 +533,22 @@ private:
                 _test(); \
             \
             guard.is_successful = true;    \
-            std::wcout << L#TITLE << L" test complete.\n"; \
+            std::wcout << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) << L" test complete.\n"; \
         }   \
         catch(sgm::Exception const& e)  \
         {   \
-            std::wcout << L'\n' << L#TITLE << L" test failed.\n\t" << e.what() << std::endl; \
+            std::wcout \
+            <<  L'\n' << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) \
+            <<  L" test failed.\n\t" << e.what() << std::endl; \
+            \
             guard.is_successful = false;    \
         }   \
         catch(...)  \
         {   \
-            std::wcout << L'\n' << L#TITLE << L" test failed.\n\t" << L"unexpected error.\n"; \
+            std::wcout \
+            <<  L'\n' << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) \
+            <<  L" test failed.\n\t" << L"unexpected error.\n"; \
+            \
             guard.is_successful = false;    \
         }   \
     }   \
