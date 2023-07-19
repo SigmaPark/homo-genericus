@@ -332,6 +332,43 @@ auto sgm::spec::Title(wstring const& title, unsigned const level)-> wstring
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
+{
+	wbuf.reserve(sgm::Letter_Conversion::string_buffer_size_v);
+	wbuf.clear();
+
+	std::wistream::sentry wse(wis, true);
+	std::wstreambuf& wsbuf = *wis.rdbuf();
+
+	auto constexpr	
+		cr = static_cast<unsigned short>(L'\r'),
+		Lf = static_cast<unsigned short>(L'\n'),
+		eof = std::wstreambuf::traits_type::eof();
+		
+	while(true)
+	{
+		auto const c = wsbuf.sbumpc();
+
+		switch(c)
+		{
+		case Lf: return wis;
+		case cr: 
+			if(wsbuf.sgetc() == Lf)
+				wsbuf.sbumpc();
+
+			return wis;
+		case eof:
+			if(wbuf.empty())
+				wis.setstate(std::ios::eofbit);
+
+			return wis;
+		default:
+			wbuf += static_cast<wchar_t>(c);
+		}
+	}
+}
+
+
 auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> wstring
 {
 	if( !::_file_exists(mdo->working_filepath()) )
@@ -373,14 +410,14 @@ auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> 
 	std::queue<wstring> qs;
 	size_t nof_char = 0;
 
-	for(wstring buf;  std::getline(file, buf);  )
+	for(wstring buf;  ::Getline(file, buf);  )
 		if(  are_same_str_f( trimmed_str_f(buf), cb_begin, cb_begin.size() )  )
 			for
-			(	std::getline(file, buf)
+			(	::Getline(file, buf)
 			;	(	!are_same_str_f( trimmed_str_f(buf), cb_end, cb_end.size() ) 
 				&&	!are_same_str_f( trimmed_str_f(buf), cb_end2, cb_end2.size() )
 				)
-			;	std::getline(file, buf) 
+			;	::Getline(file, buf) 
 			)
 				qs.push(buf + L"\n"),  
 				nof_char += buf.size() + 1;
@@ -408,7 +445,7 @@ auto sgm::spec::Load_description_file(wstring const& filename) noexcept(false)->
 
 	for
 	(	wstring buf
-	;	std::getline(file, buf)
+	;	::Getline(file, buf)
 	;	qs.push(buf+L"  \n"),  nof_char += buf.size() + 4 
 	);
 
