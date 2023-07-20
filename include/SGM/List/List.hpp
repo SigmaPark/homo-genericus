@@ -74,11 +74,8 @@ struct sgm::List_Node
 	
 	template<class...ARGS>
 	List_Node(List_Node* fp, List_Node* bp, ARGS&&...args) 
-	noexcept(  Aleph_Check<ARGS&&...>::value && noexcept( T(Mock<ARGS&&>()...) )  )
+	noexcept(  Aleph_Check<ARGS&&...>::value || noexcept( T(Mock<ARGS&&>()...) )  )
 	:	front_ptr(fp), back_ptr(bp), value( Forward<ARGS>(args)... ){}
-
-
-	~List_Node(){  front_ptr = back_ptr = nullptr;  }
 
 
 	List_Node *front_ptr, *back_ptr;
@@ -658,12 +655,12 @@ private:
 
 		union _Mem 
 		{
-			ptrdiff_t null;
+			ptrdiff_t undefined;
 			T value;
 
-			_Mem() noexcept : null(0){}
-			~_Mem(){}
-		}	nullable_value;
+			_Mem() noexcept{}
+			~_Mem() noexcept{}
+		}	mem;
 	};
 
 
@@ -671,7 +668,7 @@ private:
 
 
 public:
-	auto has_gone() const noexcept-> bool{  return N == _header.cur_idx;  }
+	auto has_gone() const noexcept-> bool{  return _header.cur_idx == N;  }
 
 
 	template<class...ARGS>
@@ -684,7 +681,7 @@ public:
 		new(cur_ptr) _indexed_Memory{};
 
 		cur_ptr->from_header = _diff_from_header(cur_ptr);
-		new(&cur_ptr->nullable_value) T{Forward<ARGS>(args)...};
+		new(&cur_ptr->mem) T{Forward<ARGS>(args)...};
 
 		++_header.cur_idx,  ++_header.nof_elem;
 	}
@@ -694,26 +691,25 @@ public:
 	{
 		assert(p);
 
-		ptrdiff_t& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
+		auto& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
 
 		if(from_header == 0)
 			return nullptr;
 
-		_indexed_Memory& cur_mem = *reinterpret_cast<_indexed_Memory*>(&from_header);
-		_Header& header = *reinterpret_cast<_Header*>(&cur_mem.from_header - from_header);
-
+		auto& chunk = *reinterpret_cast<_Chunk_Memory*>(&from_header - from_header);
+		
 		Allocator<T>::Destroy(*p);
-		cur_mem.nullable_value.null = from_header = 0;
 
-		if(--header.nof_elem == 0)
-			return header.cur_idx = N,  reinterpret_cast<_Chunk_Memory*>(&header);
+		from_header = 0;
+
+		if(--chunk._header.nof_elem == 0)
+			return chunk._header.cur_idx = N,  &chunk;
 		else
 			return nullptr;
 	}
 
 
-	auto get() noexcept
-	->	T*{  return &_mem_arr[_header.cur_idx].nullable_value.value;  }
+	auto get() noexcept-> T*{  return &_mem_arr[_header.cur_idx].mem.value;  }
 
 
 private:
@@ -803,7 +799,7 @@ public:
 		_chunk_t* chunk_ptr = _chunk_t::Pop(p);
 
 		if(chunk_ptr)
-			_chunk_alloc_t::Destroy(chunk_ptr),
+			_chunk_alloc_t::Destroy(*chunk_ptr),
 			_chunk_alloc_t::Deallocate(chunk_ptr, 1);
 
 		if(_cur_chunk == chunk_ptr)

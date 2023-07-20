@@ -500,7 +500,7 @@ struct Performance : sgm::Unconstructible
 
 void Performance::Push_and_Pop()
 {
-#if 0
+#if 1
 	using namespace std::chrono;
 	
 	int constexpr N = 100'000'000;
