@@ -263,7 +263,7 @@ public:
 	T _fv;
 
 
-	constexpr Family() noexcept = default;
+	constexpr Family() = default;
 
 	constexpr Family(T t, TYPES...types)
 	:	_upper_t( static_cast<TYPES>(types)... ), _fv( Forward<T>(t) ){}
