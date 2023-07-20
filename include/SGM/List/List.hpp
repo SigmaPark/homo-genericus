@@ -649,9 +649,12 @@ template<class T, std::size_t N>
 class sgm::_Chunk_Memory
 {
 private:
+	struct _Header{  size_t cur_idx = 0, nof_elem = 0;  };
+
+
 	struct _indexed_Memory
 	{
-		ptrdiff_t from_header = 0;
+		_Header* header_ptr = nullptr;
 
 		union _Mem 
 		{
@@ -664,11 +667,10 @@ private:
 	};
 
 
-	struct _Header{  size_t cur_idx = 0, nof_elem = 0;  };
-
-
 public:
 	auto has_gone() const noexcept-> bool{  return _header.cur_idx == N;  }
+
+	auto get() noexcept-> T*{  return &_mem_arr[_header.cur_idx].mem.value;  }
 
 
 	template<class...ARGS>
@@ -678,9 +680,7 @@ public:
 
 		_indexed_Memory* cur_ptr = &_mem_arr[_header.cur_idx];
 
-		new(cur_ptr) _indexed_Memory{};
-
-		cur_ptr->from_header = _diff_from_header(cur_ptr);
+		cur_ptr->header_ptr = &_header;
 		new(&cur_ptr->mem) T{Forward<ARGS>(args)...};
 
 		++_header.cur_idx,  ++_header.nof_elem;
@@ -691,16 +691,16 @@ public:
 	{
 		assert(p);
 
-		auto& from_header = *( reinterpret_cast<ptrdiff_t*>(p) - 1 );
+		auto& header_ptr = *reinterpret_cast<_Header**>( reinterpret_cast<ptrdiff_t*>(p) - 1 );
 
-		if(from_header == 0)
+		if(!header_ptr)
 			return nullptr;
 
-		auto& chunk = *reinterpret_cast<_Chunk_Memory*>(&from_header - from_header);
-		
 		Allocator<T>::Destroy(*p);
 
-		from_header = 0;
+		auto& chunk = *reinterpret_cast<_Chunk_Memory*>(&*header_ptr);
+
+		header_ptr = nullptr;
 
 		if(--chunk._header.nof_elem == 0)
 			return chunk._header.cur_idx = N,  &chunk;
@@ -709,21 +709,9 @@ public:
 	}
 
 
-	auto get() noexcept-> T*{  return &_mem_arr[_header.cur_idx].mem.value;  }
-
-
 private:
 	_Header _header;
 	_indexed_Memory _mem_arr[N];
-
-
-	auto _diff_from_header(_indexed_Memory const* p) const noexcept-> ptrdiff_t
-	{
-		return 
-		(	reinterpret_cast<ptrdiff_t const*>(p)
-		-	reinterpret_cast<ptrdiff_t const*>(&_header) 
-		);
-	}
 };
 
 
