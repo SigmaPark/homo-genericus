@@ -291,8 +291,12 @@ namespace sgm
             \
             auto const log_msg \
             =   (   std::wstring{L"[Failure case] \n"} \
-                +   L"\tFile : " + file_path + L'\n'  \
-                +   L"\tLine : " + error_line + L'\n' \
+                +   L"  File : " + file_path + L'\n'  \
+                +   L"  Line : " + error_line + L'\n' \
+                +   L"  sgm::spec::" \
+                +   sgm::Letter_Conversion::Mbs_to_Wcs(#ASSERT_METHOD) \
+                +   L"( " + sgm::Letter_Conversion::Mbs_to_Wcs(#__VA_ARGS__) \
+                +   L" );\n\n" \
                 );  \
             \
             std::wcout << log_msg; \
