@@ -49,7 +49,7 @@ BEGIN_CODE_BLOCK(code_block_ex)
 	for(int i = 1;  i <= 10;  ++i)
 		sum += i;
 
-	sgm::spec::is_True(sum == 55);
+	SGM_SPEC_ASSERT_IS_TRUE(sum == 55);
 END_CODE_BLOCK(code_block_ex)
 
 END_CODE_BLOCK(code_block_example_show)

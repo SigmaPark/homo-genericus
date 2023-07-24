@@ -27,6 +27,15 @@ namespace sgm
 
     }
 }
+
+
+#define _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
+
+#define BEGIN_CODE_BLOCK(TAG) /* nothing */
+#define END_CODE_BLOCK(TAG) /* nothing */
+
+#define END_CODE_BLOCK_AND_LOAD(TAG)  \
+    sgm::spec::mdo << sgm::spec::Load_code_block( sgm::Letter_Conversion::Mbs_to_Wcs(#TAG) );
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -263,13 +272,53 @@ namespace sgm
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-#define _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
+#define __SGM_SPEC_ASSERTION_PATTERN(ASSERT_METHOD, ...) \
+    [&] \
+    {   \
+        try \
+        {   \
+            sgm::spec::ASSERT_METHOD(__VA_ARGS__);   \
+        }   \
+        catch(...)  \
+        {   \
+            auto const file_path \
+            =   sgm::Letter_Conversion::Mbs_to_Wcs  \
+                (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
+                );  \
+            \
+            auto const error_line \
+            =   std::to_wstring( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) );  \
+            \
+            auto const log_msg \
+            =   (   std::wstring{L"[Failure case] \n"} \
+                +   L"\tFile : " + file_path + L'\n'  \
+                +   L"\tLine : " + error_line + L'\n' \
+                );  \
+            \
+            std::wcout << log_msg; \
+            \
+            throw sgm::Exception();  \
+        }   \
+    }()
 
-#define BEGIN_CODE_BLOCK(TAG) /* nothing */
-#define END_CODE_BLOCK(TAG) /* nothing */
 
-#define END_CODE_BLOCK_AND_LOAD(TAG)  \
-    sgm::spec::mdo << sgm::spec::Load_code_block( sgm::Letter_Conversion::Mbs_to_Wcs(#TAG) );
+#define SGM_SPEC_ASSERT_IS_TRUE(...) \
+    __SGM_SPEC_ASSERTION_PATTERN(is_True, __VA_ARGS__)
+
+#define SGM_SPEC_ASSERT_ARE_ALL_TRUE(...) \
+    __SGM_SPEC_ASSERTION_PATTERN(Are_All_True, __VA_ARGS__)
+
+#define SGM_SPEC_ASSERT_ARE_N_TRUE(...) \
+    __SGM_SPEC_ASSERTION_PATTERN(Are_N_True, __VA_ARGS__)
+
+#define SGM_SPEC_ASSERT_ARE_EQUIVALENT_RANGES(...)  \
+    __SGM_SPEC_ASSERTION_PATTERN(Are_Equivalent_Ranges, __VA_ARGS__)
+
+#define SGM_SPEC_ASSERT_ARE_ALL_EQUIVALENT_TO(...)  \
+    __SGM_SPEC_ASSERTION_PATTERN(Are_All_Equivalent_to, __VA_ARGS__)
+
+#define SGM_SPEC_ASSERT_ARE_N_EQUIVALENT_TO(...)  \
+    __SGM_SPEC_ASSERTION_PATTERN(Are_N_Equivalent_to, __VA_ARGS__)
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -285,7 +334,6 @@ namespace sgm
 
 	    auto Load_description_file(std::wstring const& filename) noexcept(false)-> std::wstring;
         auto Load_code_block(std::wstring const code_block_tag) noexcept(false)-> std::wstring;
-	    
 
 	    class md_guard;
 	    class html_block_guard;
@@ -527,30 +575,30 @@ private:
     {   \
         sgm::spec::_MD_Stream_Guard guard( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) );  \
         \
-        try     \
+        guard.is_successful = true;    \
+        \
+        auto const title_wstr = sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE); \
+        \
+        std::wcout << title_wstr << L" test starts.\n";    \
+        \
+        for(auto _test : __##TITLE##_Helper::test_list)  \
         {   \
-            for(auto _test : __##TITLE##_Helper::test_list)  \
+            try     \
+            {   \
                 _test(); \
-            \
-            guard.is_successful = true;    \
-            std::wcout << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) << L" test complete.\n"; \
+            }   \
+            catch(sgm::Exception const)  \
+            {   \
+                guard.is_successful = false;    \
+            }   \
         }   \
-        catch(sgm::Exception const& e)  \
-        {   \
-            std::wcout \
-            <<  L'\n' << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) \
-            <<  L" test failed.\n\t" << e.what() << std::endl; \
-            \
-            guard.is_successful = false;    \
-        }   \
-        catch(...)  \
-        {   \
-            std::wcout \
-            <<  L'\n' << sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE) \
-            <<  L" test failed.\n\t" << L"unexpected error.\n"; \
-            \
-            guard.is_successful = false;    \
-        }   \
+        \
+        std::wcout << title_wstr << L" test ends.\n";   \
+        \
+        if(guard.is_successful)    \
+            std::wcout << L"All cases pass! \n"; \
+        \
+        std::wcout << L"//--------//--------//--------//--------//--------\n";    \
     }   \
     \
     std::initializer_list<void(*)()> __##TITLE##_Helper::test_list =
