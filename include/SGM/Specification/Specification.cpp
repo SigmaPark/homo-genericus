@@ -353,7 +353,7 @@ static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
 		{
 		case Lf: return wis;
 		case cr: 
-			if(wsbuf.sgetc() == Lf)
+			if( static_cast<wchar_t>(wsbuf.sgetc()) == Lf )
 				wsbuf.sbumpc();
 
 			return wis;

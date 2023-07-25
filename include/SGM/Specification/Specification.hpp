@@ -267,10 +267,8 @@ namespace sgm
 
 
 #define SGM_SPEC_ASSERT(...) \
+    if( !(__VA_ARGS__) )  \
     {   \
-        if(__VA_ARGS__)  \
-            return;\
-        \
         auto const file_path \
         =   sgm::Letter_Conversion::Mbs_to_Wcs  \
             (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
