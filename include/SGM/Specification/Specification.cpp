@@ -341,13 +341,13 @@ static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
 	std::wstreambuf& wsbuf = *wis.rdbuf();
 
 	auto constexpr	
-		cr = static_cast<unsigned short>(L'\r'),
-		Lf = static_cast<unsigned short>(L'\n'),
-		eof = std::wstreambuf::traits_type::eof();
+		cr = static_cast<wchar_t>(L'\r'),
+		Lf = static_cast<wchar_t>(L'\n'),
+		eof = static_cast<wchar_t>(std::wstreambuf::traits_type::eof());
 		
 	while(true)
 	{
-		auto const c = wsbuf.sbumpc();
+		auto const c = static_cast<wchar_t>(wsbuf.sbumpc());
 
 		switch(c)
 		{
@@ -363,7 +363,7 @@ static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
 
 			return wis;
 		default:
-			wbuf += static_cast<wchar_t>(c);
+			wbuf += c;
 		}
 	}
 }

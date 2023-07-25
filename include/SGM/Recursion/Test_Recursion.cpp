@@ -8,9 +8,6 @@
 #include "Test_Recursion.hpp"
 
 
-using sgm::spec::is_True;
-
-
 static void Factorial()
 {
 	auto factorial_f
@@ -23,7 +20,7 @@ static void Factorial()
 		} FROM_INITIAL_FUNCTION(int n){  return recursion(n, 1);  };
 
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	factorial_f(1) == 1
 	&&	factorial_f(2) == 2*1
 	&&	factorial_f(3) == 3*2*1
@@ -32,7 +29,7 @@ static void Factorial()
 	&&	factorial_f(6) == 6*5*4*3*2*1
 	);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	[] SGM_RECURSION(n, res)
 		{	
 			if(n == 1)
@@ -57,7 +54,7 @@ static void Fibonacci_Test()
 		} FROM_INITIAL_FUNCTION(auto n){  return recursion(n, 0, 1);  };
 
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	fibonacci_f(1) == 1
 	&&	fibonacci_f(2) == 1	
 	&&	fibonacci_f(3) == 2	
@@ -67,7 +64,7 @@ static void Fibonacci_Test()
 	&&	fibonacci_f(7) == 13
 	);
 	
-	is_True
+	SGM_SPEC_ASSERT
 	(	[] SGM_RECURSION(n, prev, next)
 		{	
 			if(n > 1)
@@ -101,7 +98,7 @@ static void Upper_Bound_Test()
 	=	[pbegin = arr](int const* const ptr, long long const answer_diff)
 		->	bool{  return ptr - pbegin == answer_diff;  };
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	test_f( upper_bound_f(0), 0 )
 	&&	test_f( upper_bound_f(1), 1 )
 	&&	test_f( upper_bound_f(2), 2 )

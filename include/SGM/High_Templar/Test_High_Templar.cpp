@@ -11,30 +11,32 @@
 
 
 using sgm::spec::Specimen;
-
+using sgm::spec::Are_Equivalent_Ranges;
 
 static void Countable_Test()
 {
-	sgm::spec::Are_Equivalent_Ranges
-	(	sgm::Countable<int>(5)
-	,	std::initializer_list<int>{0, 1, 2, 3, 4}
-	);
-
-	sgm::spec::Are_Equivalent_Ranges
-	(	sgm::Countable<int>(5, 1)
-	,	std::initializer_list<int>{1, 2, 3, 4, 5}
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	sgm::Countable<int>(5)
+		,	std::initializer_list<int>{0, 1, 2, 3, 4}
+		)
+	&&	Are_Equivalent_Ranges
+		(	sgm::Countable<int>(5, 1)
+		,	std::initializer_list<int>{1, 2, 3, 4, 5}
+		)
 	);
 
 	{
 		auto const seq = sgm::Countable<int>(5);
 		auto const rseq_arr = sgm::Array<int>(seq.rbegin(), seq.rend());
 	
-		sgm::spec::Are_Equivalent_Ranges
-		(	rseq_arr
-		,	std::initializer_list<int>{4, 3, 2, 1, 0}
+		SGM_SPEC_ASSERT
+		(	Are_Equivalent_Ranges
+			(	rseq_arr
+			,	std::initializer_list<int>{4, 3, 2, 1, 0}
+			)
 		);
 	}
-
 }
 
 
@@ -72,16 +74,18 @@ static void Morph_Test()
 	{	Specimen(0), Specimen(3), Specimen(6), Specimen(9), Specimen(12)
 	};
 
-	{
-		sgm::spec::Are_Equivalent_Ranges
+	
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
 		(	sgm::Morph( sgm::Countable<int>(5), triple_f ), answer  
-		);
-	}
+		)
+	);
+	
 	{
 		auto itr = answer.begin();
 
 		for(  auto&& x : sgm::Morph( sgm::Countable<int>(5), triple_f )  )
-			sgm::spec::is_True(x == *itr++);
+			SGM_SPEC_ASSERT(x == *itr++);
 	}
 	{
 		auto arr = sgm::Morph( sgm::Countable<int>(5), triple_f ).eval();
@@ -93,7 +97,7 @@ static void Morph_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		int count = 0;
@@ -108,8 +112,8 @@ static void Morph_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
-		sgm::spec::is_True(count == 5);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_SPEC_ASSERT(count == 5);
 	}
 	{
 		auto arr 
@@ -120,14 +124,14 @@ static void Morph_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		std::forward_list<int> fLi{0, 1, 2, 3, 4};
 
 		auto arr = sgm::Morph(fLi, triple_f).eval();
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 #if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
 	{
@@ -140,7 +144,7 @@ static void Morph_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 #endif
 }
@@ -182,9 +186,11 @@ static void Function_Sequence_Test()
 	for(auto &x : fseq)
 		x *= 2;
 
-	sgm::spec::Are_Equivalent_Ranges
-	(	aa.val
-	,	sgm::Array<int, 5>{8, 6, 4, 2, 0}
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	aa.val
+		,	sgm::Array<int, 5>{8, 6, 4, 2, 0}
+		)
 	);
 }
 
@@ -201,14 +207,14 @@ static void Filter_Test()
 	{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)
 	};
 
-	{
-		sgm::spec::Are_Equivalent_Ranges( sgm::Filter(inputs, is_odd_f), answer );
-	}
+	
+	SGM_SPEC_ASSERT(  Are_Equivalent_Ranges( sgm::Filter(inputs, is_odd_f), answer )  );
+	
 	{
 		auto itr = answer.begin();
 
 		for( auto&& x : sgm::Filter(inputs, is_odd_f) )
-			sgm::spec::is_True(x == *itr++);
+			SGM_SPEC_ASSERT(x == *itr++);
 	}
 	{
 		auto arr = sgm::Filter(inputs, is_odd_f).eval();
@@ -218,7 +224,7 @@ static void Filter_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		int count = 0;
@@ -232,8 +238,8 @@ static void Filter_Test()
 		,	""
 		);
 
-		sgm::spec::Are_Equivalent_Ranges(arr, answer);
-		sgm::spec::is_True(count == 5);		
+		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_SPEC_ASSERT(count == 5);		
 	}
 }
 
@@ -243,9 +249,9 @@ static void Fold_Test()
 	auto const seq = sgm::Countable<int>(100, 1);
 	auto add_f = [](int x1, int x2)-> int{  return x1 + x2;  };
 	int const answer = 5050;
-
-	{
-		sgm::spec::Are_All_Equivalent_to
+	
+	SGM_SPEC_ASSERT
+	(	sgm::spec::Are_All_Equivalent_to
 		(	std::initializer_list<int>
 			{	sgm::Fold(seq, add_f)
 			,	sgm::Fold(seq, add_f, 0)
@@ -257,8 +263,8 @@ static void Fold_Test()
 			,	sgm::rFold<sgm::Fork_and_Join_Flag<>>(seq, add_f, 0)
 			}
 		,	answer
-		);
-	}
+		)
+	);
 }
 
 
@@ -281,7 +287,7 @@ static void Plait_Test()
 		,	Family<int, Specimen, wchar_t>(9, Specimen(8), 'e')
 		};
 
-	sgm::spec::Are_Equivalent_Ranges( sgm::Plait(arr_int, arr_spec, iL), answer );
+	SGM_SPEC_ASSERT(  Are_Equivalent_Ranges( sgm::Plait(arr_int, arr_spec, iL), answer )  );
 
 	{
 		int i2 = 1;
@@ -290,8 +296,11 @@ static void Plait_Test()
 		
 
 		for( auto&& [i, s, c] : sgm::Plait(arr_int, arr_spec, iL) )
-			sgm::spec::is_True(i == i2 && s == s2 && c == c2),
+		{
+			SGM_SPEC_ASSERT(i == i2 && s == s2 && c == c2);
+
 			i2 += 2,  s2.value() += 2,  c2++;
+		}
 	}
 		
 }

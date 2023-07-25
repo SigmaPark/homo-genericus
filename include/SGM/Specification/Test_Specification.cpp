@@ -49,7 +49,7 @@ BEGIN_CODE_BLOCK(code_block_ex)
 	for(int i = 1;  i <= 10;  ++i)
 		sum += i;
 
-	SGM_SPEC_ASSERT_IS_TRUE(sum == 55);
+	SGM_SPEC_ASSERT(sum == 55);
 END_CODE_BLOCK(code_block_ex)
 
 END_CODE_BLOCK(code_block_example_show)
@@ -75,13 +75,13 @@ static void Assertions()
 
 
 	sgm::spec::mdo
-	<<	sgm::spec::Title(L"sgm::spec::is_True", 2)
-	<<	L"\"sgm::spec::is_True\" checks an boolean expression is true." << sgm::spec::newl;
+	<<	sgm::spec::Title(L"SGM_SPEC_ASSERT", 2)
+	<<	L"\"SGM_SPEC_ASSERT\" checks an boolean expression is true." << sgm::spec::newl;
 
 BEGIN_CODE_BLOCK(is_true_ex)
 	int result = 1 + 1;
 
-	sgm::spec::is_True(result == 2);
+	SGM_SPEC_ASSERT(result == 2);
 END_CODE_BLOCK_AND_LOAD(is_true_ex)
 
 	sgm::spec::mdo << sgm::spec::empty_line;
@@ -101,8 +101,10 @@ BEGIN_CODE_BLOCK(are_all_true_ex)
 		auto are_even_f = [](int n)-> bool{  return n % 2 == 0;  };
 		auto are_less_than_10_f = [](int n)-> bool{  return n < 10;  };
 
-		sgm::spec::Are_All_True(range, are_even_f);
-		sgm::spec::Are_N_True(range.begin(), 4, are_less_than_10_f);
+		SGM_SPEC_ASSERT
+		(	sgm::spec::Are_All_True(range, are_even_f)
+		&&	sgm::spec::Are_N_True(range.begin(), 4, are_less_than_10_f)
+		);
 	}
 END_CODE_BLOCK_AND_LOAD(are_all_true_ex)
 
@@ -137,11 +139,12 @@ BEGIN_CODE_BLOCK(are_all_equivalent_ex)
 				return abs_n0 == abs_n1;
 			};
 
-		sgm::spec::Are_All_Equivalent_to(range0, 7, abs_value_are_same_f);
-
-		sgm::spec::Are_N_Equivalent_to(range0.begin(), 3, 7);
-		sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 3, 7);
-		sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 5, 7, abs_value_are_same_f);
+		SGM_SPEC_ASSERT
+		(	sgm::spec::Are_All_Equivalent_to(range0, 7, abs_value_are_same_f)
+		&&	sgm::spec::Are_N_Equivalent_to(range0.begin(), 3, 7)
+		&&	sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 3, 7)
+		&&	sgm::spec::Are_N_Equivalent_to(range1.begin() + 2, 5, 7, abs_value_are_same_f)
+		);
 	}
 END_CODE_BLOCK_AND_LOAD(are_all_equivalent_ex)
 
@@ -171,8 +174,10 @@ BEGIN_CODE_BLOCK(are_equivalent_ranges_ex)
 				return abs_n0 == abs_n1;
 			};	
 
-		sgm::spec::Are_Equivalent_Ranges(range0, range1);
-		sgm::spec::Are_Equivalent_Ranges(range1, range2, abs_value_are_same_f);
+		SGM_SPEC_ASSERT
+		(	sgm::spec::Are_Equivalent_Ranges(range0, range1)
+		&&	sgm::spec::Are_Equivalent_Ranges(range1, range2, abs_value_are_same_f)
+		);
 	}
 END_CODE_BLOCK_AND_LOAD(are_equivalent_ranges_ex)
 

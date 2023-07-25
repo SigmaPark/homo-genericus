@@ -9,7 +9,6 @@
 #include "SGM/Mathexpr/Mathexpr.hpp"
 
 
-using sgm::spec::is_True;
 using s3d::Vector;
 using s3d::UnitVec;
 
@@ -18,7 +17,7 @@ auto constexpr Pi = sgm::Mathexpr::pi<float>();
 template<class...ARGS>
 static void _identical(ARGS...args)
 {
-	is_True( s3d::spec::_Equivalent<s3d::spec::_Equiv_Quaternion_Tag>::calc(args...) );
+	SGM_SPEC_ASSERT( s3d::spec::_Equivalent<s3d::spec::_Equiv_Quaternion_Tag>::calc(args...) );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

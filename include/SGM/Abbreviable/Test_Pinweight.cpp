@@ -9,7 +9,6 @@
 
 
 using sgm::spec::Specimen;
-using sgm::spec::is_True;
 
 
 static void Test01()
@@ -18,7 +17,7 @@ static void Test01()
 
 	pw = Specimen(3);
 
-	is_True(pw == 3 && pw.share_count() == 1);
+	SGM_SPEC_ASSERT(pw == 3 && pw.share_count() == 1);
 }
 
 
@@ -27,12 +26,12 @@ static void Test02()
 	Specimen const cs(3);
 	sgm::Pinweight<Specimen> pw1(5), pw2(cs);
 
-	is_True(pw1 == 5 && pw2 == 3);
+	SGM_SPEC_ASSERT(pw1 == 5 && pw2 == 3);
 
 	pw1 = 7, pw2 = 9;
 
-	is_True(pw1 == 7 && pw2 == 9 && cs == 3);
-	is_True(pw1.share_count() == 1 && pw2.share_count() == 1);
+	SGM_SPEC_ASSERT(pw1 == 7 && pw2 == 9 && cs == 3);
+	SGM_SPEC_ASSERT(pw1.share_count() == 1 && pw2.share_count() == 1);
 }
 
 
@@ -40,13 +39,13 @@ static void Test03()
 {
 	sgm::Pinweight<Specimen> pw1(3), pw2 = pw1;
 
-	is_True(pw1 == 3 && pw2 == 3);
-	is_True( pw1.share_with(pw2) && pw1.share_count() == 2 && pw2.share_count() == 2 );
+	SGM_SPEC_ASSERT(pw1 == 3 && pw2 == 3);
+	SGM_SPEC_ASSERT( pw1.share_with(pw2) && pw1.share_count() == 2 && pw2.share_count() == 2 );
 
 	pw2 = Specimen(3);
 
-	is_True(pw1 == 3 && pw2 == 3);
-	is_True( !pw1.share_with(pw2) && pw1.share_count() == 1 && pw2.share_count() == 1 );
+	SGM_SPEC_ASSERT(pw1 == 3 && pw2 == 3);
+	SGM_SPEC_ASSERT( !pw1.share_with(pw2) && pw1.share_count() == 1 && pw2.share_count() == 1 );
 }
 
 
@@ -54,13 +53,13 @@ static void Test04()
 {
 	sgm::Pinweight<Specimen> pw1(3), pw2 = sgm::Pinweight<Specimen>(pw1);
 
-	is_True( pw1.share_with(pw2) );
+	SGM_SPEC_ASSERT( pw1.share_with(pw2) );
 
 	sgm::Pinweight<Specimen> const pw3 = pw1;
 	sgm::Pinweight<Specimen const> cpw = pw3;
 
-	is_True( pw1.share_with(pw3) && pw2.share_with(pw3) );
-	is_True(pw1.share_count() == 4);
+	SGM_SPEC_ASSERT( pw1.share_with(pw3) && pw2.share_with(pw3) );
+	SGM_SPEC_ASSERT(pw1.share_count() == 4);
 }
 
 
@@ -68,7 +67,7 @@ static void Test05()
 {
 	sgm::constPinweight<Specimen> cpw1(3);
 
-	is_True(cpw1.v().value() == 3);
+	SGM_SPEC_ASSERT(cpw1.v().value() == 3);
 }
 
 
@@ -133,11 +132,11 @@ static void Test07()
 	,	""
 	);
 
-	is_True( pw1.share_with(pw2) );
+	SGM_SPEC_ASSERT( pw1.share_with(pw2) );
 
 	pw1.mut().set(3);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	!pw1.share_with(pw2) 
 	&&	pw1.v().value() == 3
 	&&	pw3.v().value() == 1
@@ -161,15 +160,15 @@ static void Test08()
 	,	""
 	);
 
-	is_True(y1 == 8 && y2 == 2 && b == true);
+	SGM_SPEC_ASSERT(y1 == 8 && y2 == 2 && b == true);
 	
 	sgm::Pinweight<int> pw3 = pwi2;
 
-	is_True( pw3.share_with(pwi2) );
+	SGM_SPEC_ASSERT( pw3.share_with(pwi2) );
 	
 	pw3.mut()++;
 
-	is_True( pwi2 == 5 && pw3 == 5+1 && !pw3.share_with(pwi2) );
+	SGM_SPEC_ASSERT( pwi2 == 5 && pw3 == 5+1 && !pw3.share_with(pwi2) );
 }
 
 
@@ -188,14 +187,14 @@ static void Test09()
 		[[maybe_unused]] auto pw3 = pw1;
 		sgm::Pinweight<Specimen> pw4(8);
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	pw1 == i && pw2 == i
 		&&	&pw1.v() == reinterpret_cast<Specimen const*>(&buf[0])
 		&&	&pw2.v() == reinterpret_cast<Specimen const*>(&buf[1])
 		);
 	}
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	reinterpret_cast<Specimen*>(buf[0])->state() == Specimen::State::DESTRUCTION
 	&&	reinterpret_cast<Specimen*>(buf[1])->state() == Specimen::State::DESTRUCTION
 	);

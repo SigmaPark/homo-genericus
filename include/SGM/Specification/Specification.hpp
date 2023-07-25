@@ -175,37 +175,30 @@ namespace sgm
     namespace spec
     {
 
-        inline static void is_True(bool const b, Exception const& e = {}) noexcept(false)
-        {
-            if(!b)
-                throw e;
-        }
-
-        inline static void is_False(bool const b, Exception const& e = {}) noexcept(false)
-        {
-            is_True(!b, e);
-        }
-
-
         template<class RG, class TEST>
-        static void Are_All_True(RG const& rg, TEST&& test) noexcept(false)
+        static auto Are_All_True(RG const& rg, TEST&& test)-> bool
         {
             for(auto const& x : rg)
-                is_True( test(x) );
+                if( !test(x) )
+                    return false;
+
+            return true;
         }
 
 
         template<class ITR, class TEST>
-        static void Are_N_True(ITR itr, size_t n, TEST&& test) noexcept(false)
+        static auto Are_N_True(ITR itr, size_t n, TEST&& test)-> bool
         {
             while(n-->0)
-                is_True( test(*itr++) );
+                if( !test(*itr++) )
+                    return false;
+
+            return true;
         }
 
 
         template<class RG1, class RG2, class EQ>
-        static void Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2, EQ&& eq) 
-        noexcept(false)
+        static auto Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2, EQ&& eq)-> bool
         {
             auto itr1 = Begin(rg1);
             auto itr2 = Begin(rg2);
@@ -214,15 +207,16 @@ namespace sgm
 
             for( ;  itr1 != end1 && itr2 != end2 && eq(*itr1, *itr2);  itr1++,  itr2++ );
 
-            is_True(itr1 == end1 && itr2 == end2);
+            return itr1 == end1 && itr2 == end2;
         }
 
         template<class RG1, class RG2>
-        static void Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2) noexcept(false)
+        static auto Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2)-> bool
         {
             using _T1 = decltype( *Begin(rg1) );
             using _T2 = decltype( *Begin(rg2) );
 
+            return 
             Are_Equivalent_Ranges
             (   rg1, rg2, [](_T1 const& t1, _T2 const& t2)-> bool{  return t1 == t2;  }
             );
@@ -230,38 +224,39 @@ namespace sgm
 
 
         template<class RG, class T, class EQ>
-        static void Are_All_Equivalent_to(RG const& rg, T const& t, EQ&& eq) noexcept(false)
+        static auto Are_All_Equivalent_to(RG const& rg, T const& t, EQ&& eq)-> bool
         {
             using _T = decltype( *Begin(rg) );
 
-            Are_All_True( rg, [t, eq](_T const& _t)-> bool{  return eq(_t, t);  } );
+            return Are_All_True( rg, [t, eq](_T const& _t)-> bool{  return eq(_t, t);  } );
         }
 
         template<class RG, class T>
-        static void Are_All_Equivalent_to(RG const& rg, T const& t) noexcept(false)
+        static auto Are_All_Equivalent_to(RG const& rg, T const& t)-> bool
         {
             using _T = decltype( *Begin(rg) );
             
+            return
             Are_All_Equivalent_to
             (   rg, t, [](_T const& t1, T const& t2)-> bool{  return t1 == t2;  }  
             );
         }
 
         template<class ITR, class T, class EQ>
-        static void Are_N_Equivalent_to(ITR const itr, size_t const n, T const& t, EQ&& eq)
-        noexcept(false)
+        static auto Are_N_Equivalent_to(ITR const itr, size_t const n, T const& t, EQ&& eq)
+        ->  bool
         {
             using _T = decltype(*itr);
 
-            Are_N_True( itr, n, [t, eq](_T const& _t)-> bool{  return eq(_t, t);  } );            
+            return Are_N_True( itr, n, [t, eq](_T const& _t)-> bool{  return eq(_t, t);  } );            
         }
 
         template<class ITR, class T>
-        static void Are_N_Equivalent_to(ITR const itr, size_t const n, T const& t)
-        noexcept(false)
+        static auto Are_N_Equivalent_to(ITR const itr, size_t const n, T const& t)-> bool
         {
             using _T = decltype(*itr);
 
+            return
             Are_N_Equivalent_to
             (   itr, n, t, [](_T const& t1, T const& t2)-> bool{  return t1 == t2;  }   
             );            
@@ -269,60 +264,34 @@ namespace sgm
 
     }
 }
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-#define __SGM_SPEC_ASSERTION_PATTERN(ASSERT_METHOD, ...) \
-    [&] \
+#define SGM_SPEC_ASSERT(...) \
     {   \
-        try \
-        {   \
-            sgm::spec::ASSERT_METHOD(__VA_ARGS__);   \
-        }   \
-        catch(...)  \
-        {   \
-            auto const file_path \
-            =   sgm::Letter_Conversion::Mbs_to_Wcs  \
-                (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
-                );  \
-            \
-            auto const error_line \
-            =   std::to_wstring( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) );  \
-            \
-            auto const log_msg \
-            =   (   std::wstring{L"[Failure case] \n"} \
-                +   L"  File : " + file_path + L'\n'  \
-                +   L"  Line : " + error_line + L'\n' \
-                +   L"  sgm::spec::" \
-                +   sgm::Letter_Conversion::Mbs_to_Wcs(#ASSERT_METHOD) \
-                +   L"( " + sgm::Letter_Conversion::Mbs_to_Wcs(#__VA_ARGS__) \
-                +   L" );\n\n" \
-                );  \
-            \
-            std::wcout << log_msg; \
-            \
-            throw sgm::Exception();  \
-        }   \
-    }()
-
-
-#define SGM_SPEC_ASSERT_IS_TRUE(...) \
-    __SGM_SPEC_ASSERTION_PATTERN(is_True, __VA_ARGS__)
-
-#define SGM_SPEC_ASSERT_ARE_ALL_TRUE(...) \
-    __SGM_SPEC_ASSERTION_PATTERN(Are_All_True, __VA_ARGS__)
-
-#define SGM_SPEC_ASSERT_ARE_N_TRUE(...) \
-    __SGM_SPEC_ASSERTION_PATTERN(Are_N_True, __VA_ARGS__)
-
-#define SGM_SPEC_ASSERT_ARE_EQUIVALENT_RANGES(...)  \
-    __SGM_SPEC_ASSERTION_PATTERN(Are_Equivalent_Ranges, __VA_ARGS__)
-
-#define SGM_SPEC_ASSERT_ARE_ALL_EQUIVALENT_TO(...)  \
-    __SGM_SPEC_ASSERTION_PATTERN(Are_All_Equivalent_to, __VA_ARGS__)
-
-#define SGM_SPEC_ASSERT_ARE_N_EQUIVALENT_TO(...)  \
-    __SGM_SPEC_ASSERTION_PATTERN(Are_N_Equivalent_to, __VA_ARGS__)
+        if(__VA_ARGS__)  \
+            return;\
+        \
+        auto const file_path \
+        =   sgm::Letter_Conversion::Mbs_to_Wcs  \
+            (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
+            );  \
+        \
+        auto const error_line \
+        =   std::to_wstring( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) );  \
+        \
+        auto const log_msg \
+        =   (   std::wstring{L"[Failure case] \n"} \
+            +   L"  File : " + file_path + L'\n'  \
+            +   L"  Line : " + error_line + L'\n' \
+            +   L"  " + sgm::Letter_Conversion::Mbs_to_Wcs(#__VA_ARGS__) \
+            +   L"\n\n" \
+            );  \
+        \
+        std::wcout << log_msg; \
+        \
+        throw sgm::Exception();  \
+    }   \
+    (void)0
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

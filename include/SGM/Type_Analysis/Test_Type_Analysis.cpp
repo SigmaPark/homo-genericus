@@ -265,7 +265,7 @@ static void Member_Function_Test()
 	auto const foo_xf = sgm::Memfunc(foo, &Foo::get_x);
 	auto const foo_nx_xf = sgm::Memfunc(foo, &Foo::nx_get_x);
 
-	sgm::spec::is_True(foo_xf() == 5 && foo_nx_xf() == 5);
+	SGM_SPEC_ASSERT(foo_xf() == 5 && foo_nx_xf() == 5);
 
 	static_assert
 	(	!noexcept(foo_xf()) && noexcept(foo_nx_xf())

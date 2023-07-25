@@ -8,7 +8,6 @@
 #include "Test_Nullable.hpp"
 
 
-using sgm::spec::is_True;
 using sgm::spec::Specimen;
 
 
@@ -28,7 +27,7 @@ static void Null_type()
 	,	""
 	);
 
-	is_True(!null.has_value());
+	SGM_SPEC_ASSERT(!null.has_value());
 }
 
 
@@ -37,7 +36,7 @@ static void Constructions()
 	{
 		auto const n = sgm::Nullable<double>{};
 
-		is_True(!n.has_value());
+		SGM_SPEC_ASSERT(!n.has_value());
 	}
 	{
 		sgm::Nullable<Specimen>
@@ -46,7 +45,7 @@ static void Constructions()
 			nb3(4),
 			nb4 = sgm::Null_t{};
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	!nb1.has_value()
 		&&	nb2.has_value() && nb2 == Specimen(2)
 		&&	nb3.has_value() && nb3 == Specimen(4)
@@ -62,7 +61,7 @@ static void Constructions()
 		,	""
 		);
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	nb1 == Specimen(2)
 		&&	nb1 == nb2
 		&&	nb2 == Specimen::State::COPY_CONSTRUCTION
@@ -77,7 +76,7 @@ static void Constructions()
 		,	""
 		);
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	nb1 == Specimen(2)
 		&&	nb1 == nb2
 		&&	nb2 == Specimen::State::MOVE_CONSTRUCTION
@@ -94,7 +93,7 @@ static void Conversions()
 		Specimen s = nb;
 		Specimen const cs = nb;
 
-		is_True( s == Specimen(2) && cs == Specimen(2) );
+		SGM_SPEC_ASSERT( s == Specimen(2) && cs == Specimen(2) );
 	}
 	{
 		sgm::constNullable<Specimen> nb{2};
@@ -102,7 +101,7 @@ static void Conversions()
 		Specimen s = nb;
 		Specimen const cs = nb;
 
-		is_True( s == Specimen(2) && cs == Specimen(2) );
+		SGM_SPEC_ASSERT( s == Specimen(2) && cs == Specimen(2) );
 	}
 	{
 		sgm::Nullable<double> nb{0.25};
@@ -110,7 +109,7 @@ static void Conversions()
 		double d = nb,  &rd = nb;
 		double const cd = nb, &crd = nb;
 
-		is_True(d == 0.25 && cd == 0.25 && rd == 0.25 && crd == 0.25);
+		SGM_SPEC_ASSERT(d == 0.25 && cd == 0.25 && rd == 0.25 && crd == 0.25);
 	}
 	{
 		sgm::constNullable<double> nb{0.25};
@@ -118,28 +117,28 @@ static void Conversions()
 		double d = nb;
 		double const cd = nb, &crd = nb;
 
-		is_True(d == 0.25 && cd == 0.25 && crd == 0.25);
+		SGM_SPEC_ASSERT(d == 0.25 && cd == 0.25 && crd == 0.25);
 	}
 	{
 		sgm::Nullable<Specimen> nb{2};
 		
 		Specimen s = nb.move();
 
-		is_True( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+		SGM_SPEC_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
 	}
 	{
 		sgm::Nullable<Specimen> nb{2};
 		
 		Specimen const s = nb.move();
 
-		is_True( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+		SGM_SPEC_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
 	}
 	{
 		sgm::constNullable<Specimen> nb{2};
 		
 		Specimen s = nb.move();
 
-		is_True( s == Specimen(2) && nb.v() != Specimen::State::MOVE_AWAY );
+		SGM_SPEC_ASSERT( s == Specimen(2) && nb.v() != Specimen::State::MOVE_AWAY );
 	}
 }
 
@@ -149,126 +148,126 @@ static void Substitutions()
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		is_True( nb.has_value() && nb == Specimen(2) );
+		SGM_SPEC_ASSERT( nb.has_value() && nb == Specimen(2) );
 
 		nb = sgm::Null_t{};
 
-		is_True(!nb.has_value());
+		SGM_SPEC_ASSERT(!nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		is_True( nb == Specimen(2) );
+		SGM_SPEC_ASSERT( nb == Specimen(2) );
 
 		nb = 4;
 
-		is_True( nb == Specimen(4) );
+		SGM_SPEC_ASSERT( nb == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		is_True( nb1 == Specimen(2) );
+		SGM_SPEC_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = nb2;
 
-		is_True( nb1 == Specimen(4) );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		is_True( nb1 == Specimen(2) );
+		SGM_SPEC_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		is_True( nb1 == Specimen(4) );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		is_True( nb1 == Specimen(2) );
+		SGM_SPEC_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = nb2;
 
-		is_True( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_ASSIGNMENT );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_ASSIGNMENT );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		is_True( nb1 == Specimen(2) );
+		SGM_SPEC_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		is_True( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_ASSIGNMENT );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_ASSIGNMENT );		
 	}
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		is_True( nb.has_value() && nb == Specimen(2) );
+		SGM_SPEC_ASSERT( nb.has_value() && nb == Specimen(2) );
 
 		nb = sgm::Null_t{};
 
-		is_True(!nb.has_value());
+		SGM_SPEC_ASSERT(!nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb = sgm::Null_t{};
 
-		is_True(!nb.has_value());
+		SGM_SPEC_ASSERT(!nb.has_value());
 
 		nb = 4;
 
-		is_True( nb == Specimen(4) );
+		SGM_SPEC_ASSERT( nb == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		is_True(!nb1.has_value());
+		SGM_SPEC_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = nb2;
 
-		is_True( nb1 == Specimen(4) );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		is_True(!nb1.has_value());
+		SGM_SPEC_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		is_True( nb1 == Specimen(4) );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		is_True(!nb1.has_value());
+		SGM_SPEC_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = nb2;
 
-		is_True( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_CONSTRUCTION );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_CONSTRUCTION );		
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		is_True(!nb1.has_value());
+		SGM_SPEC_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		is_True( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_CONSTRUCTION );		
+		SGM_SPEC_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_CONSTRUCTION );		
 	}
 }
 
@@ -281,7 +280,7 @@ static void Get()
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{}, nb2( Specimen(2) );
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	!nb1.has_value()
 		//&&	nb1.v()		// fragment error in run time
 		&&	nb2.has_value() && nb2 == nb2.v() && nb2.v() == Specimen(2)
@@ -305,7 +304,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True(exception_occured);
+		SGM_SPEC_ASSERT(exception_occured);
 	}
 	{
 		sgm::Null_t constexpr null{};
@@ -321,7 +320,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True( !exception_occured && s == Specimen(4) );
+		SGM_SPEC_ASSERT( !exception_occured && s == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb = sgm::Null_t{};
@@ -336,7 +335,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True(exception_occured && !nb.has_value());
+		SGM_SPEC_ASSERT(exception_occured && !nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb = sgm::Null_t{};
@@ -352,7 +351,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True( !exception_occured && s == Specimen(4) );
+		SGM_SPEC_ASSERT( !exception_occured && s == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb( Specimen(2) );
@@ -367,7 +366,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True(!exception_occured && nb.has_value());
+		SGM_SPEC_ASSERT(!exception_occured && nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb( Specimen(2) );
@@ -383,7 +382,7 @@ static void Get_or()
 			exception_occured = true;
 		}
 
-		is_True( !exception_occured && nb.has_value() && s == Specimen(2) );
+		SGM_SPEC_ASSERT( !exception_occured && nb.has_value() && s == Specimen(2) );
 	}
 }
 
@@ -413,18 +412,18 @@ static void Operations()
 
 		AA const aa2 = nb + AA( Specimen(10) );
 
-		is_True( *nb == Specimen(2) && aa2.get_spec() == Specimen(12) );
+		SGM_SPEC_ASSERT( *nb == Specimen(2) && aa2.get_spec() == Specimen(12) );
 
 		*nb = Specimen(4);
 
-		is_True( *nb == Specimen(4) && nb.v().get_spec() == *nb );
+		SGM_SPEC_ASSERT( *nb == Specimen(4) && nb.v().get_spec() == *nb );
 	}
 	{
 		sgm::constNullable<AA> nb(  AA( Specimen(2) )  );
 
 		AA const aa2 = nb + AA( Specimen(10) );
 
-		is_True( *nb == Specimen(2) && aa2.get_spec() == Specimen(12) );
+		SGM_SPEC_ASSERT( *nb == Specimen(2) && aa2.get_spec() == Specimen(12) );
 
 		// *nb = Specimen(4);	// compile error
 	}
@@ -439,7 +438,7 @@ static void invoked()
 
 		invoke_f(nb);
 
-		is_True( nb.v() == Specimen(4) );
+		SGM_SPEC_ASSERT( nb.v() == Specimen(4) );
 	}
 	{
 		sgm::constNullable<Specimen> cnb( Specimen(2) );

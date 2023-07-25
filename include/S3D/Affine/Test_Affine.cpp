@@ -9,7 +9,6 @@
 #include <vector>
 
 
-using sgm::spec::is_True;
 using s3d::Matrix;
 using s3d::Vector;
 using s3d::UnitVec;
@@ -21,7 +20,7 @@ auto constexpr Pi = sgm::Mathexpr::pi<float>();
 template<class...TYPES>
 static void _identical(TYPES...types)
 {
-	is_True( s3d::spec::_Equivalent<s3d::spec::_Equiv_Affine_Tag>::calc(types...) );
+	SGM_SPEC_ASSERT( s3d::spec::_Equivalent<s3d::spec::_Equiv_Affine_Tag>::calc(types...) );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

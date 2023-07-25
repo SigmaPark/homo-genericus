@@ -8,13 +8,10 @@
 #include <vector>
 
 
-using sgm::spec::is_True;
-
-
 template<class...TYPES>
 static void _identical(TYPES...types)
 {
-	is_True( s3d::spec::_Equivalent<s3d::spec::_Equiv_Hamilton_Tag>::calc(types...) );
+	SGM_SPEC_ASSERT( s3d::spec::_Equivalent<s3d::spec::_Equiv_Hamilton_Tag>::calc(types...) );
 }
 
 
@@ -23,13 +20,13 @@ static void _Construction_and_Resize()
 	{
 		s3d::Matrix<float, 2, 2> Mat;
 
-		is_True(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
+		SGM_SPEC_ASSERT(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
 		::_identical(Mat, s3d::Matrix<float, 2, 2>::Zero());
 	}
 	{
 		s3d::Matrix<float> Mat(2, 2);
 
-		is_True(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
+		SGM_SPEC_ASSERT(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
 		::_identical( Mat, s3d::Matrix<float>::Zero(2, 2) );
 	}
 	{
@@ -38,14 +35,14 @@ static void _Construction_and_Resize()
 		,	8, 10, 12
 		};
 
-		is_True(Mat.rows() == 2 && Mat.cols() == 3 && Mat.size() == 2*3);
+		SGM_SPEC_ASSERT(Mat.rows() == 2 && Mat.cols() == 3 && Mat.size() == 2*3);
 	}
 	{
 		s3d::Matrix<float> Mat;
 
 		Mat.resize(2, 3);
 
-		is_True(Mat.rows() == 2 && Mat.cols() == 3 && Mat.size() == 2*3);
+		SGM_SPEC_ASSERT(Mat.rows() == 2 && Mat.cols() == 3 && Mat.size() == 2*3);
 		::_identical( Mat, s3d::Matrix<float>::Zero(2, 3) );
 	}
 	{
@@ -53,7 +50,7 @@ static void _Construction_and_Resize()
 
 		s3d::Matrix<float, 2, 2> const Mat = iterable;
 
-		is_True(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
+		SGM_SPEC_ASSERT(Mat.rows() == 2 && Mat.cols() == 2 && Mat.size() == 2*2);
 	}
 	{
 		s3d::Matrix<float, 2, 2>
@@ -66,15 +63,15 @@ static void _Construction_and_Resize()
 	{
 		s3d::Vector<float, 2> Vec;
 
-		is_True(Vec.rows() == 2 && Vec.cols() == 1 && Vec.size() == 2);
+		SGM_SPEC_ASSERT(Vec.rows() == 2 && Vec.cols() == 1 && Vec.size() == 2);
 		::_identical(Vec, s3d::Vector<float, 2>::Zero());
 	}
 	{
 		s3d::RowVec<float, 2> RVec;
 		s3d::ColVec<float, 2> CVec;
 
-		is_True(RVec.rows() == 1 && RVec.cols() == 2 && RVec.size() == 2);
-		is_True(CVec.rows() == 2 && CVec.cols() == 1 && CVec.size() == 2);
+		SGM_SPEC_ASSERT(RVec.rows() == 1 && RVec.cols() == 2 && RVec.size() == 2);
+		SGM_SPEC_ASSERT(CVec.rows() == 2 && CVec.cols() == 1 && CVec.size() == 2);
 
 		::_identical(RVec, s3d::Matrix<float, 1, 2>::Zero());
 		::_identical(CVec, s3d::Matrix<float, 2, 1>::Zero());
@@ -130,11 +127,11 @@ static void _Construction_and_Resize()
 	{
 		s3d::Matrix<float, 3, s3d::DYNAMIC> Mat(s3d::FIXED_SIZE, 5);
 
-		is_True(Mat.rows() == 3 && Mat.cols() == 5);
+		SGM_SPEC_ASSERT(Mat.rows() == 3 && Mat.cols() == 5);
 
 		Mat.resize(s3d::FIXED_SIZE, 10);
 
-		is_True(Mat.rows() == 3 && Mat.cols() == 10);
+		SGM_SPEC_ASSERT(Mat.rows() == 3 && Mat.cols() == 10);
 	}
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -797,15 +794,16 @@ static void _invalid_when_divided_by_0()
 
 	s3d::Vector<float, 3> const Vec1{1, 3, 5};
 
-	is_True( s3d::is_valid(Mat0) && s3d::is_valid(Mat1) && s3d::is_valid(Vec1) );
+	SGM_SPEC_ASSERT( s3d::is_valid(Mat0) && s3d::is_valid(Mat1) && s3d::is_valid(Vec1) );
 
-	sgm::spec::is_False
-	(	s3d::is_valid(Mat1/0) || s3d::is_valid( Mat1/std::complex<float>(0) )
-	||	s3d::is_valid(Vec1/0) || s3d::is_valid( Vec1/std::complex<float>(0) )
-	||	s3d::is_valid(s3d::Matrix<float, 2, 2>::Zero().normalized())
+	SGM_SPEC_ASSERT
+	(	!(	s3d::is_valid(Mat1/0) || s3d::is_valid( Mat1/std::complex<float>(0) )
+		||	s3d::is_valid(Vec1/0) || s3d::is_valid( Vec1/std::complex<float>(0) )
+		||	s3d::is_valid(s3d::Matrix<float, 2, 2>::Zero().normalized())
+		)
 	);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	std::isnan(s3d::NaN< std::complex<float> >)
 	&&	std::isnan( 1.f / std::complex<float>(0.f) )
 	&&	std::isnan( std::complex<float>(1.f) / 0.f )
@@ -824,7 +822,7 @@ static void _invalid_Matrix()
 
 	Mat3 = s3d::NULLMAT;
 
-	sgm::spec::is_False( s3d::is_valid(Mat1) || s3d::is_valid(Mat2) || s3d::is_valid(Mat3) );
+	SGM_SPEC_ASSERT(  !( s3d::is_valid(Mat1) || s3d::is_valid(Mat2) || s3d::is_valid(Mat3) )  );
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -857,7 +855,7 @@ static void _as_Vector_iterable()
 
 		for( auto const& rv : s3d::as_row_space(Mat) )
 			for(size_t i = 0;  i < 3;  ++i)
-				is_True( rv(i) > 0 );
+				SGM_SPEC_ASSERT( rv(i) > 0 );
 	}
 	{
 		auto Mat 

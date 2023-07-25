@@ -24,7 +24,7 @@ static void Construction()
 
 		sgm::Convoy<Specimen> cvy = sgm::Move(s);
 
-		sgm::spec::is_True
+		SGM_SPEC_ASSERT
 		(	cvy == 3
 		&&	s == Specimen::State::MOVE_AWAY
 		);

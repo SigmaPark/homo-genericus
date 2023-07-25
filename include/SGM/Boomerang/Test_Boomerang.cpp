@@ -8,7 +8,6 @@
 #include "Test_Boomerang.hpp"
 
 
-using sgm::spec::is_True;
 using sgm::spec::Specimen;
 
 
@@ -19,12 +18,12 @@ static void Test01()
 	{
 		auto&& bar = sgm::throw_Boomerang( x, [&y](int const& t){  y = 2*t;  } );
 
-		is_True(bar == 5);
+		SGM_SPEC_ASSERT(bar == 5);
 
 		sgm::Move(bar) = 10;
 	}
 
-	is_True(y == 2*10);
+	SGM_SPEC_ASSERT(y == 2*10);
 }
 
 
@@ -35,7 +34,7 @@ static void Test02()
 
 	sgm::throw_Boomerang( s, [&y](Specimen const& s){  y = s.value() * 2;  } ).value() = 3;
 
-	is_True(y == 3*2);
+	SGM_SPEC_ASSERT(y == 3*2);
 }
 
 
@@ -52,7 +51,7 @@ static void Test03()
 	(	std::ref(  sgm::throw_Boomerang( x, [&s](int const t){  s.value() = t;  } )  )
 	);
 
-	is_True(s.value() == 5);
+	SGM_SPEC_ASSERT(s.value() == 5);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

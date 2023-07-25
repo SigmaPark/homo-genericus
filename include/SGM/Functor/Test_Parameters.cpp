@@ -74,7 +74,7 @@ static void Apply()
 		(	Specimen_sum_f, sgm::fp::Parameters( s0, s1, sgm::Move(s2) )  
 		);
 
-	sgm::spec::is_True(res.value() == 246);
+	SGM_SPEC_ASSERT(res.value() == 246);
 }
 
 

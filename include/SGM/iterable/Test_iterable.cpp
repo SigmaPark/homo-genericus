@@ -12,9 +12,6 @@
 #include <forward_list>
 
 
-using sgm::spec::is_True;
-
-
 static void is_iterable_Test()
 {
 	static_assert
@@ -72,7 +69,7 @@ static void Reverse_iterator_Test()
 	auto ritr2 = sgm::rBegin(numbers);
 
 	for(;  ritr1 != numbers.rend();  ++ritr1,  ++ritr2)
-		is_True(*ritr1 == *ritr2);
+		SGM_SPEC_ASSERT(*ritr1 == *ritr2);
 }
 
 
@@ -83,7 +80,7 @@ static void Size_Test()
 	std::list<int> li{0, 1, 2, 3, 4};
 	std::forward_list<int> fli{0, 1, 2, 3, 4};
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	(	sgm::Size(arr) == 5
 		&&	sgm::Size(vec) == 5
 		&&	sgm::Size(li) == 5

@@ -84,8 +84,6 @@ public:
 
 static void Test01()
 {
-	using sgm::spec::is_True;
-
 	Specimen s{3};
 	::Foo foo{&s};
 	::Bar b(foo);
@@ -100,129 +98,129 @@ static void Test01()
 		};
 	
 	{
-		is_True( *cb == Specimen(3) );
+		SGM_SPEC_ASSERT( *cb == Specimen(3) );
 		
 		*b = Specimen(33);
 
-		is_True( *b == Specimen(33) );
+		SGM_SPEC_ASSERT( *b == Specimen(33) );
 	}
 
 	reset_f();
 	
 	{
-		is_True(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
+		SGM_SPEC_ASSERT(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
 	}
 	{
-		is_True( *(++b) == Specimen(3 + 1) );  reset_f();
-		is_True( *(--b) == Specimen(3 - 1) );  reset_f();
+		SGM_SPEC_ASSERT( *(++b) == Specimen(3 + 1) );  reset_f();
+		SGM_SPEC_ASSERT( *(--b) == Specimen(3 - 1) );  reset_f();
 
 		b++;
-		is_True( *b == Specimen(3 + 1) );  reset_f();
+		SGM_SPEC_ASSERT( *b == Specimen(3 + 1) );  reset_f();
 
 		b--;
-		is_True( *b == Specimen(3 - 1) ); 
+		SGM_SPEC_ASSERT( *b == Specimen(3 - 1) ); 
 	}
 	
 	reset_f();
 
 	{
-		is_True(&cb == &s);
+		SGM_SPEC_ASSERT(&cb == &s);
 
 		&b = nullptr;
 
-		is_True(&b == nullptr);
+		SGM_SPEC_ASSERT(&b == nullptr);
 	}
 	
 	reset_f();
 	
 	{
-		is_True(!b == false && ~b == false);
+		SGM_SPEC_ASSERT(!b == false && ~b == false);
 	}
 	{
-		is_True(cb->value() == 3);
+		SGM_SPEC_ASSERT(cb->value() == 3);
 
 		b->value() = -4;
 
-		is_True(b->value() == -4 && ~b == true);
+		SGM_SPEC_ASSERT(b->value() == -4 && ~b == true);
 	}
 
 	reset_f();
 
 	{
-		is_True(cb[1] == 3);
+		SGM_SPEC_ASSERT(cb[1] == 3);
 
 		b[4] = -5;  
 
-		is_True(b->value() == -5);
+		SGM_SPEC_ASSERT(b->value() == -5);
 	}
 
 	reset_f();
 
 	{
-		is_True
+		SGM_SPEC_ASSERT
 		(	cb + 30 == 33 && cb - 30 == -27 
 		&&	cb * 5 == 15 && cb / 2 == 1 && cb % 2 == 1
 		);
 	}
 	{
-		is_True(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
+		SGM_SPEC_ASSERT(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
 	}
 	{
-		is_True(cb && true); 
-		is_True(cb || false);
+		SGM_SPEC_ASSERT(cb && true); 
+		SGM_SPEC_ASSERT(cb || false);
 
-		is_True
+		SGM_SPEC_ASSERT
 		(	( (cb & 2) == 23 ) && ( (cb | 4) == 403 ) && ( (cb ^ 6) == 6003 )
 		&&	( (cb << 8) == 80003 ) && ( (cb >> 9) == 900003 )
 		);
 	}
 	{
-		is_True( cb->*Specimen(30) == 33 );
+		SGM_SPEC_ASSERT( cb->*Specimen(30) == 33 );
 
 		b->*Specimen(30);
 
-		is_True(b->value() == 33);
+		SGM_SPEC_ASSERT(b->value() == 33);
 	}
 
 	reset_f();
 
 	{
 		b += 10;
-		is_True(b->value() == 13);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 13);  reset_f();
 
 		b -= 10;
-		is_True(b->value() == -7);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == -7);  reset_f();
 
 		b *= 10;
-		is_True(b->value() == 30);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 30);  reset_f();
 
 		b /= 2;
-		is_True(b->value() == 1);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 1);  reset_f();
 
 		b %= 2;
-		is_True(b->value() == 1);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 1);  reset_f();
 
 		b &= 4;
-		is_True(b->value() == 43);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 43);  reset_f();
 
 		b |= 4;
-		is_True(b->value() == 403);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 403);  reset_f();
 
 		b ^= 6;
-		is_True(b->value() == 6003);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 6003);  reset_f();
 
 		b <<= 8;
-		is_True(b->value() == 80003);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 80003);  reset_f();
 
 		b >>= 8;
-		is_True(b->value() == 800003);  reset_f();
+		SGM_SPEC_ASSERT(b->value() == 800003);  reset_f();
 	}
 	{
-		is_True(cb() == 777);
+		SGM_SPEC_ASSERT(cb() == 777);
 
 		b(1, 23.0, 4);
 
-		is_True(b->value() == -999);
+		SGM_SPEC_ASSERT(b->value() == -999);
 	}
 
 	reset_f();

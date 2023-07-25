@@ -9,7 +9,6 @@
 
 
 using sgm::spec::Specimen;
-using sgm::spec::is_True;
 
 
 static void Test01()
@@ -17,7 +16,7 @@ static void Test01()
 	//{
 	//	sgm::Avatar<int> constexpr avt{};
 
-	//	is_True(!avt.is_valid());
+	//	SGM_SPEC_ASSERT(!avt.is_valid());
 	//}
 	{
 		Specimen s(2);
@@ -25,7 +24,7 @@ static void Test01()
 
 		s = 22;
 
-		is_True(avt == s && s == 22);
+		SGM_SPEC_ASSERT(avt == s && s == 22);
 	}
 	{
 		Specimen s(2);
@@ -35,7 +34,7 @@ static void Test01()
 
 		//cavt = 44;	// Compile Ban
 
-		is_True(cavt == cs);
+		SGM_SPEC_ASSERT(cavt == cs);
 	}
 	{
 		Specimen s(2);
@@ -83,7 +82,7 @@ static void Test04()
 
 	x = 4;
 
-	is_True(avt1 == 4);
+	SGM_SPEC_ASSERT(avt1 == 4);
 }
 
 
@@ -109,7 +108,7 @@ static void Test05()
 
 	auto avt2 = sgm::Refer(avt1);
 
-	is_True(avt1 == 2 && avt2 == 2);
+	SGM_SPEC_ASSERT(avt1 == 2 && avt2 == 2);
 
 	static_assert( sgm::is_Same<decltype(avt2.v()), Specimen const&>::value, "" );
 }
@@ -135,7 +134,7 @@ static void Test06()
 	,	""
 	);
 
-	is_True(y1 == 2+4 && y2 == 4-2 && b == false && avts.v().value() == 6);
+	SGM_SPEC_ASSERT(y1 == 2+4 && y2 == 4-2 && b == false && avts.v().value() == 6);
 }
 
 
@@ -146,7 +145,7 @@ static void Test07()
 
 	[](Specimen t1, Specimen& t2, Specimen const& t3, Specimen&& t4, Specimen const&& t5)
 	{
-		is_True(t1 == 2 && t2 == 4 && t3 == 6 && t4 == 8 && t5 == 10);
+		SGM_SPEC_ASSERT(t1 == 2 && t2 == 4 && t3 == 6 && t4 == 8 && t5 == 10);
 	}( s1, s2, s3, sgm::Move(s4), sgm::Move(s5) );
 }
 
@@ -159,7 +158,7 @@ static void Test08()
 
 	static_assert( sgm::is_Same<decltype(&s), decltype(&avt)>::value, "" );
 
-	is_True(&s == &avt);
+	SGM_SPEC_ASSERT(&s == &avt);
 }
 
 
@@ -172,7 +171,7 @@ static void Test09()
 
 		Specimen s2 = sgm::Move(avt);
 
-		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+		SGM_SPEC_ASSERT(s2 == 2 && s == Specimen::State::MOVE_AWAY);
 	}
 	{
 		Specimen s(2);
@@ -181,7 +180,7 @@ static void Test09()
 
 		Specimen s2 = sgm::Move(avt);
 
-		is_True(s2 == 2 && s == Specimen::State::MOVE_AWAY);
+		SGM_SPEC_ASSERT(s2 == 2 && s == Specimen::State::MOVE_AWAY);
 	}
 }
 
@@ -195,7 +194,7 @@ static void Test10()
 
 		static_cast<Specimen&>(va).value() = 5;
 
-		is_True(s == 5);
+		SGM_SPEC_ASSERT(s == 5);
 	}
 	{
 		Specimen s(2);
@@ -204,11 +203,11 @@ static void Test10()
 
 		Specimen const& rs = static_cast<Specimen const&>(cva);
 
-		is_True(rs == 2);
+		SGM_SPEC_ASSERT(rs == 2);
 		
 		s.value() = 5;
 
-		is_True(rs == 5);
+		SGM_SPEC_ASSERT(rs == 5);
 	}
 	{
 		Specimen s(2);
@@ -217,7 +216,7 @@ static void Test10()
 
 		static_cast<Specimen&>(va).value() = 5;
 
-		is_True(s == 5);
+		SGM_SPEC_ASSERT(s == 5);
 	}
 	{
 		Specimen s(2);
@@ -226,11 +225,11 @@ static void Test10()
 
 		Specimen const& rs = static_cast<Specimen const&>(cva);
 
-		is_True(rs == 2);
+		SGM_SPEC_ASSERT(rs == 2);
 		
 		s.value() = 5;
 
-		is_True(rs == 5);
+		SGM_SPEC_ASSERT(rs == 5);
 	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#

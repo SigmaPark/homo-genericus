@@ -9,7 +9,6 @@
 #include "Decomposition.hpp"
 
 
-using sgm::spec::is_True;
 using s3d::Matrix;
 using s3d::Vector;
 
@@ -17,7 +16,7 @@ using s3d::Vector;
 template<class...TYPES>
 static void _identical(TYPES...types)
 {
-	is_True( s3d::spec::_Equivalent<s3d::spec::_Equiv_Hamilton_Tag>::calc(types...) );
+	SGM_SPEC_ASSERT( s3d::spec::_Equivalent<s3d::spec::_Equiv_Hamilton_Tag>::calc(types...) );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -127,7 +126,7 @@ static void Singular_Value_Decomp()
 		{	
 			for(size_t i = 0;  i < D.rows();  ++i)
 				for(size_t j = 0;  j < D.cols();  ++j)
-					is_True(  i == j || s3d::Are_almost_same<float>( D(i, j), 0 )  );
+					SGM_SPEC_ASSERT(  i == j || s3d::Are_almost_same<float>( D(i, j), 0 )  );
 		};
 
 	auto orthonormal_columns_f
@@ -146,7 +145,7 @@ static void Singular_Value_Decomp()
 		sv2 = svd0.singularval(1),
 		sv3 = svd0.singularval(2);
 
-	is_True(sv1 >= sv2 && sv2 >= sv3);
+	SGM_SPEC_ASSERT(sv1 >= sv2 && sv2 >= sv3);
 
 	{
 		s3d::Singular_Value_Decomposition svd(A);
@@ -192,7 +191,7 @@ static void Singular_Value_Decomp()
 		
 		size_t const nof_sv = svd.nof_singularvals();
 
-		is_True(nof_sv == 2);
+		SGM_SPEC_ASSERT(nof_sv == 2);
 
 		::_identical(U.rows(), A.rows());
 		::_identical(U.cols(), D.rows(), D.cols(), V.cols(), nof_sv);
@@ -211,7 +210,7 @@ static void Singular_Value_Decomp()
 		
 		size_t const nof_sv = svd.nof_singularvals();
 
-		is_True(nof_sv == 2);
+		SGM_SPEC_ASSERT(nof_sv == 2);
 
 		::_identical(U.rows(), A.rows());
 		::_identical(U.cols(), D.rows(), D.cols(), V.cols(), nof_sv);
@@ -226,11 +225,11 @@ static void Singular_Value_Decomp()
 		(	A, sgm::Flag_Set<s3d::flag::UMat_Only, s3d::flag::ThinMat>{}
 		);
 
-		is_True(svd.Vmat().size() == 0);
+		SGM_SPEC_ASSERT(svd.Vmat().size() == 0);
 
 		svd(A, sgm::Flag_Set<s3d::flag::VMat_Only, s3d::flag::ThinMat>{});
 
-		is_True(svd.Umat().size() == 0);
+		SGM_SPEC_ASSERT(svd.Umat().size() == 0);
 	}
 }
 

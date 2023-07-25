@@ -12,9 +12,6 @@
 #include <type_traits>
 
 
-using sgm::spec::is_True;
-
-
 static void Parallel_Sum_with_Static_Fork_n_Join()
 {
 	size_t constexpr NTASK = 4;
@@ -43,7 +40,7 @@ static void Parallel_Sum_with_Static_Fork_n_Join()
 			return res;
 		}();
 
-	is_True(answer == 5050);
+	SGM_SPEC_ASSERT(answer == 5050);
 }
 
 
@@ -77,7 +74,7 @@ static void Parallel_Sum_with_Dynamic_Fork_n_Join()
 			return res;
 		}();
 
-	is_True(answer == 5050);	
+	SGM_SPEC_ASSERT(answer == 5050);	
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

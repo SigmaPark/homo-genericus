@@ -11,7 +11,6 @@
 
 
 using sgm::spec::Specimen;
-using sgm::spec::is_True;
 using sgm::spec::Are_Equivalent_Ranges;
 using sgm::spec::Are_All_Equivalent_to;
 
@@ -54,12 +53,16 @@ void Static::Construction()
 		arr2{Specimen(2), Specimen(4), Specimen(6)},
 		arr3 = arr2;
 
-
-	Are_All_Equivalent_to(arr1, Specimen::State::DEFAULT_CONSTRUCTION);
-	Are_All_Equivalent_to(arr2, Specimen::State::MANUAL_CONSTRUCTION);
-	Are_Equivalent_Ranges( arr2, sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} );
-	Are_All_Equivalent_to(arr3, Specimen::State::COPY_CONSTRUCTION);
-	Are_Equivalent_Ranges(arr2, arr3);
+	SGM_SPEC_ASSERT
+	(	Are_All_Equivalent_to(arr1, Specimen::State::DEFAULT_CONSTRUCTION)
+	&&	Are_All_Equivalent_to(arr2, Specimen::State::MANUAL_CONSTRUCTION)
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	&&	Are_All_Equivalent_to(arr3, Specimen::State::COPY_CONSTRUCTION)
+	&&	Are_Equivalent_Ranges(arr2, arr3)
+	);
 }
 
 
@@ -69,8 +72,13 @@ void Static::No_Move_Construction()
 		_arr1{Specimen(2), Specimen(4), Specimen(6)},
 		arr1 = std::move(_arr1);
 
-	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION);
-	Are_Equivalent_Ranges( arr1, sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} );
+	SGM_SPEC_ASSERT
+	(	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION)
+	&&	Are_Equivalent_Ranges
+		(	arr1
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	);
 }
 
 
@@ -82,8 +90,10 @@ void Static::Assignment()
 
 	arr2 = arr1;
 
-	Are_Equivalent_Ranges(arr2, arr1);
-	Are_All_Equivalent_to(arr2, Specimen::State::COPY_ASSIGNMENT);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(arr2, arr1)
+	&&	Are_All_Equivalent_to(arr2, Specimen::State::COPY_ASSIGNMENT)
+	);
 	
 
 	std::vector<Specimen> 
@@ -92,12 +102,17 @@ void Static::Assignment()
 
 	arr1 = vec1,  arr2 = vec2;
 	
-	is_True(arr1.size() != vec1.size()); 
-	Are_Equivalent_Ranges( arr1, std::vector<Specimen>{Specimen(777), Specimen(4), Specimen(6)} );
-	is_True(arr2.size() != vec2.size()); 
-
-	Are_Equivalent_Ranges
-	(	arr2, std::vector<Specimen>{Specimen(-2), Specimen(-4), Specimen(-6)} 
+	SGM_SPEC_ASSERT
+	(	arr1.size() != vec1.size()
+	&&	Are_Equivalent_Ranges
+		(	arr1
+		,	std::vector<Specimen>{Specimen(777), Specimen(4), Specimen(6)} 
+		)
+	&&	arr2.size() != vec2.size()
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	std::vector<Specimen>{Specimen(-2), Specimen(-4), Specimen(-6)} 
+		)
 	);
 }
 
@@ -110,18 +125,26 @@ void Static::Move_Assignment()
 
 	arr1 = std::move(_arr);
 	
-	Are_Equivalent_Ranges( arr1, std::vector<Specimen>{Specimen(2), Specimen(4), Specimen(6)} );
-	Are_All_Equivalent_to(arr1, Specimen::State::MOVE_ASSIGNMENT);
-	is_True(_arr.size() != 0);
-	Are_All_Equivalent_to(_arr, Specimen::State::MOVE_AWAY);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr1
+		,	std::vector<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	&&	Are_All_Equivalent_to(arr1, Specimen::State::MOVE_ASSIGNMENT)
+	&&	_arr.size() != 0
+	&&	Are_All_Equivalent_to(_arr, Specimen::State::MOVE_AWAY)
+	);
 	
 
 	sgm::Array<Specimen, 3> arr2{Specimen(3), Specimen(6), Specimen(9)};
 
 	arr2 = {Specimen(-3), Specimen(-6), Specimen(-9)};
 	
-	Are_Equivalent_Ranges
-	(	arr2, std::vector<Specimen>{Specimen(-3), Specimen(-6), Specimen(-9)} 
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr2
+		,	std::vector<Specimen>{Specimen(-3), Specimen(-6), Specimen(-9)} 
+		)
 	);
 	
 
@@ -132,15 +155,16 @@ void Static::Move_Assignment()
 
 	arr2 = std::move(vec2),  arr3 = std::move(vec3);
 	
-	Are_Equivalent_Ranges
-	(	arr2, std::vector<Specimen>{Specimen(777), Specimen(-6), Specimen(-9)} 
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr2
+		,	std::vector<Specimen>{Specimen(777), Specimen(-6), Specimen(-9)} 
+		)
+	&&	Are_Equivalent_Ranges
+		(	arr3, std::vector<Specimen>{Specimen(-2), Specimen(-4), Specimen(-6)} 
+		)
+	&&	Are_All_Equivalent_to(arr3, Specimen::State::MOVE_ASSIGNMENT)
 	);
-
-	Are_Equivalent_Ranges
-	(	arr3, std::vector<Specimen>{Specimen(-2), Specimen(-4), Specimen(-6)} 
-	);
-
-	Are_All_Equivalent_to(arr3, Specimen::State::MOVE_ASSIGNMENT);
 }
 
 
@@ -150,8 +174,10 @@ void Static::Destruction()
 	
 	arr1.~Array();
 	
-	is_True(arr1.size() != 0); 
-	Are_All_Equivalent_to(arr1, Specimen::State::DESTRUCTION);
+	SGM_SPEC_ASSERT
+	(	arr1.size() != 0
+	&&	Are_All_Equivalent_to(arr1, Specimen::State::DESTRUCTION)
+	); 
 }
 
 
@@ -159,16 +185,18 @@ void Static::Element()
 {
 	sgm::Array<Specimen, 3> arr1{Specimen(2), Specimen(4), Specimen(6)};
 
-	is_True( arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) );
+	SGM_SPEC_ASSERT
+	(	arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) 
+	);
 
 	arr1[1] = arr1[0],  arr1[2] = Specimen(-6);
 	
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1[1] == Specimen(2) && arr1[1] == Specimen::State::COPY_ASSIGNMENT
 	&&	arr1[2] == Specimen(-6) && arr1[2] == Specimen::State::MOVE_ASSIGNMENT
 	);
 
-	is_True(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
+	SGM_SPEC_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
 }
 
 
@@ -180,14 +208,30 @@ void Static::Swap()
 
 	arr1.swap(arr2);
 	
-	Are_Equivalent_Ranges( arr1, sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} );
-	Are_Equivalent_Ranges( arr2, sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} );
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr1
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} 
+		)
+	);
 	
 
 	std::swap(arr1, arr2);
-	
-	Are_Equivalent_Ranges( arr1, sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} );
-	Are_Equivalent_Ranges( arr2, sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} );
+
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr1
+		,	sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} 
+		)
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	);
 }
 
 
@@ -199,15 +243,18 @@ void Static::Type_Conversion_into_iterable()
 
 	std::vector<Specimen> vec = arr1;
 
-	
-	Are_Equivalent_Ranges(vec, arr1);
-	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(vec, arr1)
+	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
+	);
 	
 
 	vec = sgm::iterable_cast< std::vector<Specimen> >(arr2);
 
-	Are_Equivalent_Ranges(vec, arr2);
-	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(vec, arr2)
+	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
+	);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -222,23 +269,21 @@ void Dynamic::Construction()
 		arr5(arr4.begin(), arr4.end()),
 		arr6(arr4.rbegin(), arr4.rend());
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.is_null()
 	&&	arr2.capacity() == 3 && arr2.is_empty()
 	&&	arr3.capacity() == 3 && arr3.size() == 3 
-	);
-	
-	Are_All_Equivalent_to( arr3, Specimen(555) );
-	
-	Are_Equivalent_Ranges
-	(	arr4, std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
-	);
-	
-	Are_Equivalent_Ranges(arr5, arr4);
-	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION);
-	
-	Are_Equivalent_Ranges
-	(	arr6, std::initializer_list<Specimen>{Specimen(6), Specimen(4), Specimen(2)} 
+	&&	Are_All_Equivalent_to( arr3, Specimen(555) )
+	&&	Are_Equivalent_Ranges
+		(	arr4
+		,	std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		)
+	&&	Are_Equivalent_Ranges(arr5, arr4)
+	&&	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION)
+	&&	Are_Equivalent_Ranges
+		(	arr6
+		,	std::initializer_list<Specimen>{Specimen(6), Specimen(4), Specimen(2)} 
+		)
 	);
 }
 
@@ -252,10 +297,12 @@ void Dynamic::Copy_Construction()
 		arr2 = arr1,
 		arr3 = Lvalue_iterable;
 
-	Are_Equivalent_Ranges(arr2, arr1);
-	Are_All_Equivalent_to(arr2, Specimen::State::COPY_CONSTRUCTION);
-	Are_Equivalent_Ranges(arr3, Lvalue_iterable);
-	Are_All_Equivalent_to(arr3, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(arr2, arr1)
+	&&	Are_All_Equivalent_to(arr2, Specimen::State::COPY_CONSTRUCTION)
+	&&	Are_Equivalent_Ranges(arr3, Lvalue_iterable)
+	&&	Are_All_Equivalent_to(arr3, Specimen::State::COPY_CONSTRUCTION)
+	);
 }
 
 
@@ -270,21 +317,20 @@ void Dynamic::Move_Construction()
 		arr1 = std::move(_arr1),
 		arr2 = std::vector<Specimen>{Specimen(2), Specimen(4), Specimen(6)};
 
-	
-	Are_All_Equivalent_to(arr1, _prev_arr1_state);
-	is_True(arr1.cdata() == internal_data_address);
-
-	Are_Equivalent_Ranges
-	(	arr1, std::initializer_list<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+	SGM_SPEC_ASSERT
+	(	Are_All_Equivalent_to(arr1, _prev_arr1_state)
+	&&	arr1.cdata() == internal_data_address
+	&&	Are_Equivalent_Ranges
+		(	arr1
+		,	std::initializer_list<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
+		)
+	&&	_arr1.is_null()
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)}
+		)
+	&&	Are_All_Equivalent_to(arr2, Specimen::State::MOVE_CONSTRUCTION)
 	);
-
-	is_True(_arr1.is_null());
-
-	Are_Equivalent_Ranges
-	(	arr2, std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)}
-	);
-
-	Are_All_Equivalent_to(arr2, Specimen::State::MOVE_CONSTRUCTION);
 }
 
 
@@ -303,24 +349,28 @@ void Dynamic::Assignment()
 
 	arr1 = vec,  arr2 = vec;
 
-	Are_Equivalent_Ranges(arr1, vec);
-	Are_Equivalent_Ranges(arr2, vec);
-	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION);
-	Are_All_Equivalent_to(arr2, Specimen::State::COPY_ASSIGNMENT);
-	is_True(arr2.capacity() == 6);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(arr1, vec)
+	&&	Are_Equivalent_Ranges(arr2, vec)
+	&&	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION)
+	&&	Are_All_Equivalent_to(arr2, Specimen::State::COPY_ASSIGNMENT)
+	&&	arr2.capacity() == 6
+	);
 	
 
 	sgm::Array<Specimen> arr3(6);
 
-	arr3 = {Specimen(1), Specimen(4)},
-	is_True(arr3.capacity() == 6 && arr3.size() == 2);
+	arr3 = {Specimen(1), Specimen(4)};
+	SGM_SPEC_ASSERT(arr3.capacity() == 6 && arr3.size() == 2);
 
 	arr3 = vec;
 
-	Are_Equivalent_Ranges(arr3, vec);
-	Are_N_Equivalent_to(arr3.cbegin(), 2, Specimen::State::COPY_ASSIGNMENT);
-	Are_N_Equivalent_to(arr3.crbegin(), 2, Specimen::State::COPY_CONSTRUCTION);
-	is_True(arr3.capacity() == 6);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(arr3, vec)
+	&&	Are_N_Equivalent_to(arr3.cbegin(), 2, Specimen::State::COPY_ASSIGNMENT)
+	&&	Are_N_Equivalent_to(arr3.crbegin(), 2, Specimen::State::COPY_CONSTRUCTION)
+	&&	arr3.capacity() == 6
+	);
 
 
 	sgm::Array<Specimen> arr4(10), arr5(6);
@@ -328,16 +378,18 @@ void Dynamic::Assignment()
 	arr4 = {Specimen(3), Specimen(6)};
 	arr5 = {Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr4.capacity() == 10 && arr4.size() == 2
 	&&	arr5.capacity() == 6 && arr5.size() == 4
 	);
 
 	arr5 = arr4;
 
-	Are_Equivalent_Ranges(arr5, arr4);
-	is_True(arr5.capacity() == 10 && arr5.size() == 2);
-	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(arr5, arr4)
+	&&	arr5.capacity() == 10 && arr5.size() == 2
+	&&	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION)
+	);
 }
 
 
@@ -348,7 +400,7 @@ void Dynamic::Move_Assignment()
 	arr1 = {Specimen(3), Specimen(6)};
 	arr2 = {Specimen(2), Specimen(4), Specimen(6), Specimen(8)};
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.capacity() == 10 && arr1.size() == 2
 	&&	arr2.capacity() == 6 && arr2.size() == 4
 	);
@@ -357,7 +409,7 @@ void Dynamic::Move_Assignment()
 
 	arr2 = std::move(arr1);
 	
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr2.capacity() == 10 && arr2.size() == 2
 	&&	arr2.cdata() == internal_data_address
 	&&	arr1.is_null()
@@ -372,7 +424,7 @@ void Dynamic::Clear_and_Destruction()
 
 	arr1.clear(),  arr2.~Array();
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == 0 && arr1.is_empty() && arr1.capacity() == 4 && !arr1.is_null()
 	&&	arr2.size() == 0 && arr2.is_empty() && arr2.capacity() == 0 && arr2.is_null()
 	);
@@ -383,16 +435,18 @@ void Dynamic::Element()
 {
 	sgm::Array<Specimen> arr1{2, 4, 6};
 
-	is_True( arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) );
+	SGM_SPEC_ASSERT
+	(	arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) 
+	);
 
 	arr1[1] = arr1[0],  arr1[2] = Specimen(-6);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1[1] == Specimen(2) && arr1[1] == Specimen::State::COPY_ASSIGNMENT
 	&&	arr1[2] == Specimen(-6) && arr1[2] == Specimen::State::MOVE_ASSIGNMENT
 	);
 
-	is_True(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
+	SGM_SPEC_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
 }
 
 
@@ -408,15 +462,31 @@ void Dynamic::Swap()
 
 	arr1.swap(arr2);
 
-	Are_Equivalent_Ranges( arr1, sgm::Array<Specimen>{Specimen(2), Specimen(4)} );
-	Are_Equivalent_Ranges( arr2, sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} );
-	is_True(arr1.cdata() == internal_data_address2 && arr2.cdata() == internal_data_address1);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr1
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4)} 
+		)
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} 
+		)
+	&&	arr1.cdata() == internal_data_address2 && arr2.cdata() == internal_data_address1
+	);
 
 	std::swap(arr1, arr2);
 	
-	Are_Equivalent_Ranges( arr1, sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} );
-	Are_Equivalent_Ranges( arr2, sgm::Array<Specimen>{Specimen(2), Specimen(4)} );
-	is_True(arr1.cdata() == internal_data_address1 && arr2.cdata() == internal_data_address2);	
+	SGM_SPEC_ASSERT
+	(	arr1.cdata() == internal_data_address1 && arr2.cdata() == internal_data_address2
+	&&	Are_Equivalent_Ranges
+		(	arr1
+		,	sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} 
+		)
+	&&	Are_Equivalent_Ranges
+		(	arr2
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4)} 
+		)
+	);	
 }
 
 
@@ -428,13 +498,17 @@ void Dynamic::Type_Conversion_into_iterable()
 	
 	std::vector<Specimen> vec = arr1;
 
-	Are_Equivalent_Ranges(vec, arr1);
-	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(vec, arr1)
+	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
+	);
 
 	vec = sgm::iterable_cast< std::vector<Specimen> >(arr2);
 	
-	Are_Equivalent_Ranges(vec, arr2);
-	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION);
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges(vec, arr2)
+	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
+	);
 }
 
 
@@ -443,11 +517,11 @@ void Dynamic::Push()
 	sgm::Array<Specimen> arr1(100);
 	auto current_size = arr1.size(); 
 
-	is_True(current_size == 0);
+	SGM_SPEC_ASSERT(current_size == 0);
 
 	arr1.emplace_back(3);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += 1)
 	&&	arr1.back() == Specimen(3) && arr1.back() == Specimen::State::MANUAL_CONSTRUCTION 
 	);
@@ -457,12 +531,14 @@ void Dynamic::Push()
 
 	arr1.emplace_back(5).emplace_back(7).emplace_back(val).emplace_back( Specimen(99) );
 
-
-	Are_Equivalent_Ranges
-	(	arr1, std::vector<Specimen>{Specimen(3), Specimen(5), Specimen(7), val, Specimen(99)}
+	SGM_SPEC_ASSERT
+	(	Are_Equivalent_Ranges
+		(	arr1
+		,	std::vector<Specimen>{Specimen(3), Specimen(5), Specimen(7), val, Specimen(99)}
+		)
 	);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += 4)
 	&&	arr1.rbegin()[0] == Specimen::State::MOVE_CONSTRUCTION
 	&&	arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -471,14 +547,14 @@ void Dynamic::Push()
 
 	arr1 >> val;
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += 1)
 	&&	arr1.back() == val
 	);
 
 	arr1 >> Specimen(-1) >> val;
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += 2)
 	&&	arr1.rbegin()[0] == val && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == -1 && arr1.rbegin()[1] == Specimen::State::MOVE_CONSTRUCTION
@@ -491,7 +567,7 @@ void Dynamic::Push()
 
 	arr1.merge_back(arr2.begin(), arr2.end());
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += arr2.size())
 	&&	arr1.rbegin()[0] == -7 && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == -5 && arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -501,7 +577,7 @@ void Dynamic::Push()
 
 	arr1.merge_back(arr3.begin(), arr3.end()).merge_back(arr3.rbegin(), arr3.rend());
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size += 2*arr3.size())
 	&&	arr1.rbegin()[0] == 10 && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == 20 && arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -523,32 +599,32 @@ void Dynamic::Pop()
 
 	size_t current_size = arr1.size();
 
-	is_True(current_size == capa);
+	SGM_SPEC_ASSERT(current_size == capa);
 
 	arr1.pop_back();
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 1) 
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back().pop_back();
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 2) 
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 3) 
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3).pop_back(2).pop_back(1);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 3 + 2 + 1) 
 	&&	arr1.back() == fn(current_size)
 	);
@@ -558,7 +634,7 @@ void Dynamic::Pop()
 
 	arr1.pop_back_from(itr);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 4) 
 	&&	arr1.back() == fn(current_size)
 	);
@@ -571,14 +647,14 @@ void Dynamic::Pop()
 
 	arr1.pop_back_from(itr1).pop_back_from(itr2).pop_back_from(itr3);
 
-	is_True
+	SGM_SPEC_ASSERT
 	(	arr1.size() == (current_size -= 2 + 3 + 1) 
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.clear();
 
-	is_True(arr1.is_empty() && arr1.capacity() == capa);
+	SGM_SPEC_ASSERT(arr1.is_empty() && arr1.capacity() == capa);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
