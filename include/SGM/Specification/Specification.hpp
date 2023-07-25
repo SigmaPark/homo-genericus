@@ -267,8 +267,11 @@ namespace sgm
 
 
 #define SGM_SPEC_ASSERT(...) \
-    if( !(__VA_ARGS__) )  \
+    [](bool const assertion_pass)  \
     {   \
+        if(assertion_pass)  \
+            return; \
+        \
         auto const file_path \
         =   sgm::Letter_Conversion::Mbs_to_Wcs  \
             (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
@@ -288,8 +291,7 @@ namespace sgm
         std::wcout << log_msg; \
         \
         throw sgm::Exception();  \
-    }   \
-    (void)0
+    }(  static_cast<bool>( (__VA_ARGS__) )  )
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

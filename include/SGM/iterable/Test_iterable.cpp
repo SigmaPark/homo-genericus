@@ -81,12 +81,10 @@ static void Size_Test()
 	std::forward_list<int> fli{0, 1, 2, 3, 4};
 
 	SGM_SPEC_ASSERT
-	(	(	sgm::Size(arr) == 5
-		&&	sgm::Size(vec) == 5
-		&&	sgm::Size(li) == 5
-		&&	sgm::Size(fli) == 5
-		)
-	,	L""
+	(	sgm::Size(arr) == 5
+	&&	sgm::Size(vec) == 5
+	&&	sgm::Size(li) == 5
+	&&	sgm::Size(fli) == 5
 	);
 }
 
