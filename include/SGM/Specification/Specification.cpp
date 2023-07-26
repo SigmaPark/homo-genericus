@@ -4,6 +4,7 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+#include "../Exception/Exception.hpp"
 #include "Specification.hpp"
 #include <fstream>
 #include <queue>

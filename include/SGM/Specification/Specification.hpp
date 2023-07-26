@@ -9,7 +9,6 @@
 #define _SGM_SPECIFICATION_
 
 
-#include "../Exception/Exception.hpp"
 #include "../iterable/iterable.hpp"
 #include <initializer_list>
 #include <iostream>
@@ -262,12 +261,15 @@ namespace sgm
             );            
         }
 
+
+        enum class Test_Assertion_Failure{};
+
     }
 }
 
 
 #define SGM_SPEC_ASSERT(...) \
-    [](bool const assertion_pass)  \
+    [](bool const assertion_pass) noexcept(false)-> void \
     {   \
         if(assertion_pass)  \
             return; \
@@ -290,7 +292,7 @@ namespace sgm
         \
         std::wcout << log_msg; \
         \
-        throw sgm::Exception();  \
+        throw sgm::spec::Test_Assertion_Failure{};  \
     }(  static_cast<bool>( (__VA_ARGS__) )  )
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -555,16 +557,8 @@ private:
         std::wcout << title_wstr << L" test starts.\n";    \
         \
         for(auto _test : __##TITLE##_Helper::test_list)  \
-        {   \
-            try     \
-            {   \
-                _test(); \
-            }   \
-            catch(sgm::Exception const)  \
-            {   \
-                guard.is_successful = false;    \
-            }   \
-        }   \
+            try{  _test();  }   \
+            catch(sgm::spec::Test_Assertion_Failure const){  guard.is_successful = false;  } \
         \
         std::wcout << title_wstr << L" test ends.\n";   \
         \
