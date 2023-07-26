@@ -27,9 +27,6 @@ namespace sgm
     }
 }
 
-
-#define _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
-
 #define BEGIN_CODE_BLOCK(TAG) /* nothing */
 #define END_CODE_BLOCK(TAG) /* nothing */
 
@@ -293,7 +290,7 @@ namespace sgm
         std::wcout << log_msg; \
         \
         throw sgm::spec::Test_Assertion_Failure{};  \
-    }(  static_cast<bool>( (__VA_ARGS__) )  )
+    }( static_cast<bool>(__VA_ARGS__) )
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 

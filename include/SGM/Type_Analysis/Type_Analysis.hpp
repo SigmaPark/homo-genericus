@@ -22,6 +22,8 @@
     #define SGM_MACROPACK(...)  __VA_ARGS__
 #endif
 
+#define _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
+
 
 #ifndef SGM_DECLTYPE_AUTO
     #define SGM_DECLTYPE_AUTO(...)  decltype(__VA_ARGS__){  return __VA_ARGS__;  }
