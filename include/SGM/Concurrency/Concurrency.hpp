@@ -79,7 +79,7 @@ private:
 struct sgm::_Fork_and_Join_Helper
 {
 protected:
-	_Fork_and_Join_Helper() = default;
+	_Fork_and_Join_Helper() noexcept = default;
 
 
 	template<unsigned IDX>
@@ -91,7 +91,7 @@ protected:
 
 	static auto Create_Partial_Range
 	(	_Range const whole_range, size_t const nof_task, size_t const task_id
-	)->	_Range
+	)	noexcept-> _Range
 	{
 		size_t const 
 			whole_len = whole_range.end_idx - whole_range.begin_idx,
@@ -113,8 +113,8 @@ protected:
 template<unsigned IDX>
 struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
 {	
-	template<class FUNC>
-	static auto calc(FUNC&& func)-> void
+	template< class FUNC, bool _NXCT = noexcept( Mock<FUNC&&>()(unsigned{}) ) >
+	static auto calc(FUNC&& func) noexcept(_NXCT)-> void
 	{
 		Task_Guard(func, IDX - 1),  _Static_Nof_Loop<IDX-1>::calc(func);
 	}
@@ -135,14 +135,18 @@ struct sgm::Fork_and_Join : private _Fork_and_Join_Helper
 {
 	static unsigned constexpr NUMBER_OF_TASK = NOF_TASK;
 
-	auto constexpr number_of_task() const-> unsigned{  return NUMBER_OF_TASK;  }
+	auto constexpr number_of_task() const noexcept-> unsigned{  return NUMBER_OF_TASK;  }
 
 
-	template<class FUNC>
-	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const-> void
+	template
+	<	class FUNC
+	,	bool _NXCT = noexcept( Mock<FUNC&&>()(size_t{}, size_t{}, unsigned{}) )  	
+	>
+	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
+	noexcept(_NXCT)-> void
 	{
 		_Fork_and_Join_Helper::_Static_Nof_Loop<NOF_TASK>::calc
-		(	[&func, begin_idx, end_idx](size_t const task_id)
+		(	[&func, begin_idx, end_idx](size_t const task_id) noexcept(_NXCT)
 			{
 				auto const rg 
 				=	_Fork_and_Join_Helper::Create_Partial_Range
@@ -154,8 +158,11 @@ struct sgm::Fork_and_Join : private _Fork_and_Join_Helper
 		);
 	}
 
-	template<class FUNC>
-	auto operator()(size_t const loops, FUNC&& func) const
+	template
+	<	class FUNC
+	,	bool _NXCT = noexcept( Mock<FUNC&&>()(size_t{}, size_t{}, unsigned{}) )  	
+	>
+	auto operator()(size_t const loops, FUNC&& func) const noexcept(_NXCT)
 	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -166,15 +173,21 @@ struct sgm::Fork_and_Join<1> : private _Fork_and_Join_Helper
 {
 	static unsigned constexpr NUMBER_OF_TASK = 1;
 
-	auto constexpr number_of_task() const-> unsigned{  return 1;  }
+	auto constexpr number_of_task() const noexcept-> unsigned{  return 1;  }
 
 
-	template<class FUNC>
+	template
+	<	class FUNC
+	,	bool _NXCT = noexcept( Mock<FUNC&&>()(size_t{}, size_t{}, unsigned{}) )  	
+	>
 	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
-	->	void{  func( begin_idx, end_idx, unsigned(0) );  }
+	noexcept(_NXCT)-> void{  func( begin_idx, end_idx, unsigned(0) );  }
 
-	template<class FUNC>
-	auto operator()(size_t const loops, FUNC&& func) const
+	template
+	<	class FUNC
+	,	bool _NXCT = noexcept( Mock<FUNC&&>()(size_t{}, size_t{}, unsigned{}) )  	
+	>
+	auto operator()(size_t const loops, FUNC&& func) const noexcept(_NXCT)
 	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -189,7 +202,7 @@ public:
 private:
 	friend struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC>;
 
-	FnJ_Fail_to_get_Nof_Core() = default;
+	FnJ_Fail_to_get_Nof_Core() noexcept = default;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
