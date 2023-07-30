@@ -644,6 +644,35 @@ namespace sgm
 #else
     #error SGM_USER_DEFINED_TYPE_CHECK was already defined somewhere else.
 #endif
+//========//========//========//========//=======#//========//========//========//========//=======#
+
+
+namespace sgm
+{
+    namespace nxct
+    {
+
+        template
+        <   class DES, class SRC
+        ,   int 
+            =   is_Reference<DES>::value || is_Pointer<DES>::value ? 1
+            :   is_Convertible<SRC, DES>::value ? 2
+            :   /* otherwise */ 0
+        >
+        struct is_Nxct_initialization;
+
+        template<class DES, class SRC>
+        struct is_Nxct_initialization<DES, SRC, 0> : True_t{};        
+
+        template<class DES, class SRC>
+        struct is_Nxct_initialization<DES, SRC, 1> : True_t{};
+
+        template<class DES, class SRC>
+        struct is_Nxct_initialization<DES, SRC, 2> 
+        :   Boolean< noexcept( Decay_t<DES>(Mock<SRC>()) ) >{};
+
+    }
+}
 
 
 #endif // end of #ifndef _SGM_TYPE_ANALYSIS_

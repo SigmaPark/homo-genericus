@@ -41,6 +41,10 @@ namespace sgm
 	template<  class FAM, bool = is_Same< FAM, Decay_t<FAM> >::value  >
 	struct _Has_Any_Object;
 
+
+	template<class SRC_FAM, class DES_FAM>
+	struct _is_Convertible_Family;
+
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -226,6 +230,34 @@ public:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+template<class SRC, class DES>
+struct sgm::_is_Convertible_Family
+:	Selective_t
+	<	is_Same< SRC, Decay_t<SRC> >::value && is_Same< DES, Decay_t<DES> >::value
+	,	False_t
+	,	_is_Convertible_Family< Decay_t<SRC>, Decay_t<DES> >
+	>
+{};
+
+template<>
+struct sgm::_is_Convertible_Family<sgm::Family<>, sgm::Family<>> : True_t{};
+
+template<class T, class...ARGS>
+struct sgm::_is_Convertible_Family< sgm::Family<T, ARGS...>, sgm::Family<> > : False_t{};
+
+template<class T, class...ARGS>
+struct sgm::_is_Convertible_Family< sgm::Family<>, sgm::Family<T, ARGS...> > : False_t{};
+
+template<class T0, class T1, class...ARGS0, class...ARGS1>
+struct sgm::_is_Convertible_Family< sgm::Family<T0, ARGS0...>, sgm::Family<T1, ARGS1...> >
+:	Boolean_And
+	<	is_Convertible<T0, T1>
+	,	_is_Convertible_Family< Family<ARGS0...>, Family<ARGS1...> >
+	>
+{};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<> 
 struct sgm::Family_member<0, sgm::Family<>> 
 :	As_type_itself<None>{  using family_type = Family<>;  };
@@ -265,11 +297,28 @@ public:
 
 	constexpr Family() = default;
 
-	constexpr Family(T t, TYPES...types)
-	:	_upper_t( static_cast<TYPES>(types)... ), _fv( Forward<T>(t) ){}
+	template
+	<	class Q, class...ARGS
+	,	class 
+		=	Enable_if_t
+			<	!Has_Same_Origin<Q, Family>::value
+			&&	sizeof...(ARGS) + 1 == size_v
+			&&	is_Convertible<Q&&, T>::value
+			>
+	>
+	Family(Q&& q, ARGS&&...args)
+	noexcept
+	(	nxct::is_Nxct_initialization<T, Q&&>::value 
+	&&	noexcept( _upper_t(Mock<ARGS&&>()...) )
+	)
+	:	_upper_t( Forward<ARGS>(args)... ), _fv( Forward<Q>(q) ){}
 
 
 	Family(Family const& fam) 
+	noexcept
+	(	nxct::is_Nxct_initialization<T, T const&>::value
+	&&	noexcept( _upper_t(Mock<_upper_t const&>()) )
+	)
 	:	_upper_t( static_cast<_upper_t const&>(fam) ), _fv(fam._fv){}
 
 	Family(Family&& fam) noexcept
@@ -279,20 +328,26 @@ public:
 	template
 	<	class FAM, class FAM_UPPER = typename Decay_t<FAM>::_upper_t
 	,	class 
-		=	Enable_if_t<  is_Family<FAM>::value && !is_Same< Decay_t<FAM>, Family >::value  >
+		=	Enable_if_t
+			<	is_Family<FAM>::value 
+			&&	!is_Same< Decay_t<FAM>, Family >::value  
+			&&	_is_Convertible_Family< Decay_t<FAM>, Family >::value
+			>
 	>
-	Family(FAM&& fam) noexcept(Aleph_Check<FAM&&>::value)
-	:	_upper_t( Qualify_Like_t<FAM&&, FAM_UPPER>(fam) )
-	,	_fv(fam.template forward<0>())
-	{
-		static_assert
-		(	is_Convertible<decltype(fam.first()), T>::value
-		,	"no method to convert family member."
-		);
-	}
+	Family(FAM&& fam)
+	noexcept
+	(	nxct::is_Nxct_initialization< T, decltype(Mock<FAM&&>().template forward<0>()) >::value
+	&&	noexcept( _upper_t(Mock< Qualify_Like_t<FAM&&, FAM_UPPER> >()) )
+	)
+	:	_upper_t( Qualify_Like_t<FAM&&, FAM_UPPER>(fam) ), _fv(fam.template forward<0>()){}
 
 	
-	auto operator=(Family const& fam)-> Family&
+	auto operator=(Family const& fam)
+	noexcept
+	(	noexcept(Mock<T&>() = Mock<T const&>())
+	&&	noexcept(Mock<_upper_t&>() = Mock<_upper_t const&>())
+	)
+	->	Family&
 	{
 		first() = fam.template forward<0>(),
 		_upper_of_this() = static_cast<_upper_t const&>(fam);
@@ -322,7 +377,12 @@ public:
 				>::	value
 			>
 	>
-	auto operator=(FAM&& fam) noexcept(Aleph_Check<FAM&&>::value)-> Family&
+	auto operator=(FAM&& fam)
+	noexcept
+	(	noexcept(Mock<T&>() = Mock< typename Family_member<0, FAM>::type >())
+	&&	noexcept(Mock<_upper_t&>() = Mock< Qualify_Like_t<FAM&&, FAM_UPPER> >())
+	)
+	->	Family&
 	{
 		first() = Move_if< is_Rvalue_Reference<FAM&&>::value >(fam.first());
 		_upper_of_this() = Qualify_Like_t<FAM&&, FAM_UPPER>(fam);
@@ -454,6 +514,14 @@ template<>
 class sgm::Family<>
 {
 public:
+	constexpr Family() noexcept = default;
+
+	Family(Family const&) noexcept = default;
+	Family(Family&&) noexcept = default;
+
+	auto operator=(Family const&) noexcept-> Family& = default;
+	auto operator=(Family&&) noexcept-> Family& = default;
+
 	bool constexpr operator==(Family) const noexcept{  return true;  }
 	bool constexpr operator!=(Family) const noexcept{  return false;  }
 };
