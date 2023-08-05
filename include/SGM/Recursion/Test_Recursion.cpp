@@ -91,7 +91,11 @@ static void Upper_Bound_Test()
 				return_RECURSION(bp, mp, val);
 			else
 				return_RECURSION(mp+1, ep, val);
-		} FROM_INITIAL_FUNCTION(auto const val_){  return recursion(arr, arr + 6, val_);  };
+		} 
+		FROM_INITIAL_FUNCTION(auto const val_)
+		{  
+			return recursion(arr + 0, arr + 6, val_);  
+		};
 
 
 	auto test_f

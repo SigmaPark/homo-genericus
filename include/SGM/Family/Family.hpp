@@ -691,46 +691,43 @@ namespace sgm
 namespace sgm
 {
 
-	template< bool, template<class...> class TFAM, class...TYPES >
+	template<bool, class FAM>
 	struct _Harden_Fam_Helper;
-	
-
-	template< template<class...> class TFAM, class...TYPES >
-	static auto Harden(TFAM<TYPES...>& fam_like) noexcept
-	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t;
-
-	template< template<class...> class TFAM, class...TYPES >
-	static auto Harden(TFAM<TYPES...>&& fam_like) noexcept
-	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t;
 
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-template< template<class...> class TFAM, class...TYPES >
-struct sgm::_Harden_Fam_Helper<true, TFAM, TYPES...> : Unconstructible
+template<class...TYPES>
+struct sgm::_Harden_Fam_Helper< true, sgm::Family<TYPES...> > : Unconstructible
 {
-	using res_t = TFAM< Alephless_t<TYPES>... >;
+	using res_t = Family< Alephless_t<TYPES>... >;
 	
 
-	template<class FAM, class...ARGS>
-	static auto calc(FAM&&, ARGS&&...args) noexcept-> res_t{  return {Forward<ARGS>(args)...};  }
+	template
+	<	class FAM, class...ARGS
+	,	bool _NXCT 
+		=	Boolean_And
+			<	nxct::is_Nxct_initialization< ARGS&&, Alephless_t<TYPES> >...  
+			>::	value
+	>
+	static auto calc(FAM&&, ARGS&&...args) noexcept(_NXCT)
+	->	res_t{  return {Forward<ARGS>(args)...};  }
 };
 
-template< template<class...> class TFAM, class...TYPES >
-struct sgm::_Harden_Fam_Helper<false, TFAM, TYPES...> : Unconstructible
+template<class...TYPES>
+struct sgm::_Harden_Fam_Helper< false, sgm::Family<TYPES...> > : Unconstructible
 {
 	template<class FAM, class...ARGS>
 	static auto calc(FAM&& fam, ARGS&&...args) noexcept
-	->	typename sgm::_Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
+	->	typename sgm::_Harden_Fam_Helper< true, Family<TYPES...> >::res_t
 	{
 		size_t constexpr idx_v = sizeof...(ARGS);
 		bool constexpr extracted_all_v = idx_v + 1 == sizeof...(TYPES);
 
 		return
-		sgm::_Harden_Fam_Helper<extracted_all_v, TFAM, TYPES...>::calc
-		(	Forward<FAM>(fam), Forward<ARGS>(args)..., fam.template forward<idx_v>()
-		);
+		sgm::_Harden_Fam_Helper< extracted_all_v, sgm::Family<TYPES...> >
+		::	calc( Forward<FAM>(fam), Forward<ARGS>(args)..., fam.template forward<idx_v>() );
 	}
 };
 
@@ -738,28 +735,29 @@ struct sgm::_Harden_Fam_Helper<false, TFAM, TYPES...> : Unconstructible
 namespace sgm
 {
 
-	template< template<class...> class TFAM, class...TYPES >
-	auto Harden(TFAM<TYPES...>& fam_like) noexcept
-	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
-	{
-		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc(fam_like);
-	}
-	
-	template< template<class...> class TFAM, class...TYPES >
-	auto Harden(TFAM<TYPES...>&& fam_like) noexcept
-	->	typename _Harden_Fam_Helper<true, TFAM, TYPES...>::res_t
-	{
-		return _Harden_Fam_Helper<sizeof...(TYPES) == 0, TFAM, TYPES...>::calc( Move(fam_like) );
-	}
+	template
+	<	class FAM, class _F = Decay_t<FAM>
+	,	class _RES = typename _Harden_Fam_Helper<true, _F>::res_t
+	,	class _HFH = _Harden_Fam_Helper< std::tuple_size<_F>::value == 0, _F >
+	,	bool _NXCT = noexcept( _HFH::calc(Mock<FAM&&>()) )
+	>
+	static auto Harden(FAM&& fam) noexcept(_NXCT)
+	->	_RES{  return _HFH::calc( Forward<FAM>(fam) );  }
 
 
-	template<class...TYPES>
-	auto Make_Family(TYPES...types)	noexcept(!_Has_Any_Object< Family<TYPES...> >::value)
-	->	Family<TYPES...>{  return {types...};  }
+	template
+	<	class...TYPES
+	,	bool _NXCT 
+		=	Boolean_And
+			<	nxct::is_Nxct_initialization< TYPES&&, Decay_t<TYPES> >...  
+			>::	value
+	>
+	auto Make_Family(TYPES&&...types) noexcept(_NXCT)
+	->	Family< Decay_t<TYPES>... >{  return {Forward<TYPES>(types)...};  }
 	
 	
 	template<class...TYPES>
-	auto Forward_as_Family(TYPES&&...types) noexcept(Aleph_Check<TYPES&&...>::value)
+	auto Forward_as_Family(TYPES&&...types) noexcept
 	->	Family<TYPES&&...>{  return {Forward<TYPES>(types)...};  }
 	
 	
