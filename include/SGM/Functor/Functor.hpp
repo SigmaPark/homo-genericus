@@ -705,20 +705,21 @@ namespace sgm::fp::_Lambda_detail
 #ifndef SGM_LAMBDA
 	#define SGM_LAMBDA(...)		\
 	sgm::fp::Functor	\
-	{	[&](auto&&...args)-> decltype(auto)	\
+	{	[&](auto&&...args) noexcept-> decltype(auto)	\
 		{	\
 			using sgm::fp::_Lambda_detail::Try_Nth_Param;	\
+			using sgm::Forward;	\
 			\
-			[[maybe_unused]] auto&& _0 = Try_Nth_Param<0>(args...);	\
-			[[maybe_unused]] auto&& _1 = Try_Nth_Param<1>(args...);	\
-			[[maybe_unused]] auto&& _2 = Try_Nth_Param<2>(args...);	\
-			[[maybe_unused]] auto&& _3 = Try_Nth_Param<3>(args...);	\
-			[[maybe_unused]] auto&& _4 = Try_Nth_Param<4>(args...);	\
-			[[maybe_unused]] auto&& _5 = Try_Nth_Param<5>(args...);	\
-			[[maybe_unused]] auto&& _6 = Try_Nth_Param<6>(args...);	\
-			[[maybe_unused]] auto&& _7 = Try_Nth_Param<7>(args...);	\
-			[[maybe_unused]] auto&& _8 = Try_Nth_Param<8>(args...);	\
-			[[maybe_unused]] auto&& _9 = Try_Nth_Param<9>(args...);	\
+			[[maybe_unused]] auto&& _0 = Try_Nth_Param<0>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _1 = Try_Nth_Param<1>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _2 = Try_Nth_Param<2>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _3 = Try_Nth_Param<3>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _4 = Try_Nth_Param<4>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _5 = Try_Nth_Param<5>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _6 = Try_Nth_Param<6>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _7 = Try_Nth_Param<7>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _8 = Try_Nth_Param<8>( Forward<decltype(args)>(args)... );\
+			[[maybe_unused]] auto&& _9 = Try_Nth_Param<9>( Forward<decltype(args)>(args)... );\
 			\
 			return __VA_ARGS__;	\
 		}	\
