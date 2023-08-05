@@ -653,7 +653,7 @@ namespace sgm
     {
 
         template
-        <   class DES, class SRC
+        <   class SRC, class DES
         ,   int 
             =   is_Reference<DES>::value || is_Pointer<DES>::value ? 1
             :   is_Convertible<SRC, DES>::value ? 2
@@ -661,14 +661,14 @@ namespace sgm
         >
         struct is_Nxct_initialization;
 
-        template<class DES, class SRC>
-        struct is_Nxct_initialization<DES, SRC, 0> : True_t{};        
+        template<class SRC, class DES>
+        struct is_Nxct_initialization<SRC, DES, 0> : True_t{};        
 
-        template<class DES, class SRC>
-        struct is_Nxct_initialization<DES, SRC, 1> : True_t{};
+        template<class SRC, class DES>
+        struct is_Nxct_initialization<SRC, DES, 1> : True_t{};
 
-        template<class DES, class SRC>
-        struct is_Nxct_initialization<DES, SRC, 2> 
+        template<class SRC, class DES>
+        struct is_Nxct_initialization<SRC, DES, 2> 
         :   Boolean< noexcept( Decay_t<DES>(Mock<SRC>()) ) >{};
 
     }

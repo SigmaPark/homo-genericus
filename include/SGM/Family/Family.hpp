@@ -20,7 +20,7 @@ namespace sgm
 	class Family;
 
 
-	enum class _As_it_is_t{} constexpr as_it_is{};
+	enum class _As_it_is_t{} inline constexpr as_it_is{};
 
 
 	template<size_t N, class...FAM>
@@ -308,7 +308,7 @@ public:
 	>
 	Family(Q&& q, ARGS&&...args)
 	noexcept
-	(	nxct::is_Nxct_initialization<T, Q&&>::value 
+	(	nxct::is_Nxct_initialization<Q&&, T>::value
 	&&	noexcept( _upper_t(Mock<ARGS&&>()...) )
 	)
 	:	_upper_t( Forward<ARGS>(args)... ), _fv( Forward<Q>(q) ){}
@@ -316,7 +316,7 @@ public:
 
 	Family(Family const& fam) 
 	noexcept
-	(	nxct::is_Nxct_initialization<T, T const&>::value
+	(	nxct::is_Nxct_initialization<T const&, T>::value
 	&&	noexcept( _upper_t(Mock<_upper_t const&>()) )
 	)
 	:	_upper_t( static_cast<_upper_t const&>(fam) ), _fv(fam._fv){}
@@ -336,7 +336,10 @@ public:
 	>
 	Family(FAM&& fam)
 	noexcept
-	(	nxct::is_Nxct_initialization< T, decltype(Mock<FAM&&>().template forward<0>()) >::value
+	(	nxct::is_Nxct_initialization
+		<	decltype(Mock<FAM&&>().template forward<0>()) 
+		,	T
+		>::	value
 	&&	noexcept( _upper_t(Mock< Qualify_Like_t<FAM&&, FAM_UPPER> >()) )
 	)
 	:	_upper_t( Qualify_Like_t<FAM&&, FAM_UPPER>(fam) ), _fv(fam.template forward<0>()){}
@@ -547,12 +550,6 @@ namespace sgm
 	>
 	struct _Merge_Fam_Helper;
 
-
-	template<class FAM1, class FAM2>
-	auto Merge_Families(FAM1&& fam1, FAM2&& fam2) 
-	noexcept(!_Has_Any_Object<FAM1>::value && !_Has_Any_Object<FAM2>::value)
-	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t;
-
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -585,7 +582,12 @@ public:
 		return
 		_upper_t::calc
 		(	Forward<_FAM1>(fam1), Forward<_FAM2>(fam2), Forward<ARGS>(args)...
-		,	Forward<_next_t>( std::get<IDX>(fam1) )
+		,	Move_if
+			<	is_Rvalue_Reference<_FAM1&&>::value 
+			&&	!is_Reference<_next_t>::value 
+			&&	!is_Const<_next_t>::value
+			>
+			( std::get<IDX>(fam1) )
 		);
 	}
 };
@@ -622,7 +624,12 @@ public:
 		return
 		_upper_t::calc
 		(	Forward<_FAM1>(fam1), Forward<_FAM2>(fam2), Forward<ARGS>(args)...
-		,	Forward<_next_t>( std::get<IDX>(fam2) )
+		,	Move_if
+			<	is_Rvalue_Reference<_FAM2&&>::value 
+			&&	!is_Reference<_next_t>::value 
+			&&	!is_Const<_next_t>::value
+			>
+			( std::get<IDX>(fam2) )
 		);
 	}
 };
@@ -633,28 +640,48 @@ struct sgm::_Merge_Fam_Helper
 <	sgm::Family<TYPES1...>, sgm::Family<TYPES2...>, sgm::Family<RES_TYPES...>
 ,	2
 >
+:	Unconstructible
 {
+private:
+	template< class TO, class FROM, bool _NXCT = noexcept( TO(Mock<FROM&&>()) ) >
+	static auto _Cast(FROM&& t) noexcept(_NXCT)
+	->	Enable_if_t<  is_Same< TO, Decay_t<TO> >::value, FROM&&  >	
+	{	
+		return Forward<FROM>(t);
+	}
+
+	template<class TO, class FROM>
+	static auto _Cast(FROM&& t) noexcept
+	->	Enable_if_t<  !is_Same< TO, Decay_t<TO> >::value, TO  >
+	{
+		return static_cast<TO>(t);
+	}
+
+
+public:
 	using res_t = Family<RES_TYPES...>;
 
-
-	template<class _FAM1, class _FAM2, class...ARGS>
-	static auto calc(_FAM1&&, _FAM2&&, ARGS&&...args) noexcept
-	->	SGM_DECLTYPE_AUTO(  res_t( Forward<ARGS>(args)... )  )
+	template
+	<	class _FAM1, class _FAM2, class...ARGS
+	,	bool _NXCT = noexcept( res_t{_Cast<RES_TYPES>(Mock<ARGS&&>())...} )
+	>
+	static auto calc(_FAM1&&, _FAM2&&, ARGS&&...args) noexcept(_NXCT)-> res_t
+	{
+		return { _Cast<RES_TYPES>( Forward<ARGS>(args) )... };
+	}
 };
 
 
 namespace sgm
 {
 
-	template<class FAM1, class FAM2>
-	auto Merge_Families(FAM1&& fam1, FAM2&& fam2)
-	noexcept(!_Has_Any_Object<FAM1>::value && !_Has_Any_Object<FAM2>::value)
-	->	typename _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::res_t
+	template
+	<	class FAM1, class FAM2, class _MFH = _Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >
+	,	bool _NXCT = noexcept( _MFH::calc(Mock<FAM1&&>(), Mock<FAM2&&>()) )
+	>
+	static auto Merge_Families(FAM1&& fam1, FAM2&& fam2) noexcept(_NXCT)-> typename _MFH::res_t
 	{
-		return
-		_Merge_Fam_Helper< Decay_t<FAM1>, Decay_t<FAM2> >::calc
-		(	Forward<FAM1>(fam1), Forward<FAM2>(fam2)
-		);
+		return _MFH::calc( Forward<FAM1>(fam1), Forward<FAM2>(fam2) );
 	}
 
 }
