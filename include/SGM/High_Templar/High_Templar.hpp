@@ -173,6 +173,11 @@ struct sgm::Fork_and_Join_Flag<sgm::Nof_Task::AUTO_OR, 0>
 :	Fork_and_Join<Nof_Hardware_Core::DYNAMIC>
 {
 	Fork_and_Join_Flag() 
+	noexcept
+	(	noexcept
+		(	Fork_and_Join<Nof_Hardware_Core::DYNAMIC>(Mock<Nof_Hardware_Core::When_Fails>()) 
+		)
+	)
 	:	Fork_and_Join<Nof_Hardware_Core::DYNAMIC>(Nof_Hardware_Core::When_Fails::THROW){}
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -191,8 +196,14 @@ struct sgm::ht::_Array_Evaluation<_D, sgm::ht::_Evaluation_Mode::SEQUANCIAL> : U
 	template
 	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
+	,	bool _NXCT
+		=	noexcept
+			(	Array<ELEM>::by
+				(	Mock<ALC&&>(), fBegin<RG>(Mock<RG&&>()), fEnd<RG>(Mock<RG&&>())
+				)
+			)
 	>
-	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
+	static auto Calc(RG&& rg, ALC&& allocator = {}) noexcept(_NXCT)
 	->	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
 	{
 		return Array<ELEM>::by( Forward<ALC>(allocator), fBegin<RG>(rg), fEnd<RG>(rg) );
@@ -208,7 +219,7 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
-	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
+	static auto Calc(RG&& rg, ALC&& allocator = {}) noexcept
 	->	Enable_if_t
 		<	is_Fork_and_Join_Flag<FNJ_FLAG>::value
 		,	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
@@ -223,7 +234,8 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 
 		FNJ_FLAG()
 		(	nof_elem
-		,	[&rg, &allocator, pdata](size_t begin_idx, size_t const end_idx, unsigned const)
+		,	[&rg, &allocator, pdata]
+			(size_t begin_idx, size_t const end_idx, unsigned const) noexcept
 			{	
 				for
 				(	auto itr = Next( fBegin<RG>(rg), begin_idx )
@@ -244,7 +256,7 @@ struct sgm::ht::_Array_Evaluation<FNJ_FLAG, sgm::ht::_Evaluation_Mode::FORK_AND_
 	<	class RG, class ELEM = Decay_t< decltype( *Begin(Mock<RG>()) ) >  
 	,	class ALC = _Default_Array_Allocator_t<ELEM>
 	>
-	static auto calc(RG&& rg, ALC&& allocator = {}) noexcept
+	static auto Calc(RG&& rg, ALC&& allocator = {}) noexcept
 	->	Enable_if_t
 		<	std::is_execution_policy<FNJ_FLAG>::value
 		,	Array< ELEM, arrSize::DYNAMIC, Decay_t<ALC> >
@@ -540,8 +552,14 @@ public:
 	using value_type = Decay_t< decltype(*Mock<iterator>()) >;
 
 
-	template<class RG_, class FUNC_>
-	Morph_Range(RG_&& rg, FUNC_&& func) noexcept(Aleph_Check<RG_&&, FUNC_&&>::value)
+	template
+	<	class RG_, class FUNC_
+	,	bool _NXCT
+		=	(	nxct::is_Nxct_initialization<RG_&&, RG>::value 
+			&&	nxct::is_Nxct_initialization<FUNC_&&, FUNC>::value
+			)
+	>
+	Morph_Range(RG_&& rg, FUNC_&& func) noexcept(_NXCT)
 	:	_rg( Forward<RG_>(rg) ), _func( Forward<FUNC_>(func) ){}
 
 
@@ -566,7 +584,7 @@ public:
 	auto eval(ALC&& allocator = {}) const noexcept
 	->	Array< value_type, arrSize::DYNAMIC, Decay_t<ALC> >
 	{  
-		return _Array_Evaluation<EVAL_FLAG>::calc( *this, Forward<ALC>(allocator) );
+		return _Array_Evaluation<EVAL_FLAG>::Calc( *this, Forward<ALC>(allocator) );
 	}
 
 
@@ -619,7 +637,7 @@ private:
 		_is_noexcept_copy_constructible_func_v 
 		=	noexcept( ITR_FUNC(Mock<ITR_FUNC const&>()) ),
 		_is_noexcept_copy_assignable_func_v
-		=	noexcept(Mock<ITR_FUNC>() = Mock<ITR_FUNC const&>()),
+		=	noexcept(Mock<ITR_FUNC&>() = Mock<ITR_FUNC const&>()),
 		_is_noexcept_deref_operator_v = noexcept(*Mock<ITR>());
 
 
@@ -711,34 +729,36 @@ public:
 	using value_type = Decay_t< decltype(*Mock<_xitr_t>()) >;
 
 
-	template<class RG_, class FUNC_>
-	Filter_Range(RG_&& rg, FUNC_&& fn)
-	noexcept
-	(	Aleph_Check<RG_&&, FUNC_&&>::value 
-	||	(  noexcept( RG_(rg) ) && noexcept( FUNC_(fn) )  )
-	)
+	template
+	<	class RG_, class FUNC_
+	,	bool _NXCT
+		=	(	nxct::is_Nxct_initialization<RG_&&, RG>::value 
+			&&	nxct::is_Nxct_initialization<FUNC_&&, FUNC>::value
+			)
+	>
+	Filter_Range(RG_&& rg, FUNC_&& fn) noexcept(_NXCT)
 	:	_rg( Forward<RG_>(rg) ), _fn( Forward<FUNC_>(fn) ){}
 
 
-	auto cbegin() const noexcept-> const_iterator{  return {Begin(_rg), _fitr_func(this)};  }
+	auto cbegin() const noexcept-> const_iterator{  return {Begin(_rg), _Fitr_func(this)};  }
 	auto begin() const noexcept-> SGM_DECLTYPE_AUTO(  cbegin()  )
-	auto begin() noexcept-> iterator{  return {Begin(_rg), _fitr_func(this)};  }
+	auto begin() noexcept-> iterator{  return {Begin(_rg), _Fitr_func(this)};  }
 
-	auto cend() const noexcept-> const_iterator{  return {End(_rg), _fitr_func(this)};  }
+	auto cend() const noexcept-> const_iterator{  return {End(_rg), _Fitr_func(this)};  }
 	auto end() const noexcept-> SGM_DECLTYPE_AUTO(  cend()  )
-	auto end() noexcept-> iterator{  return {End(_rg), _fitr_func(this)};  }
+	auto end() noexcept-> iterator{  return {End(_rg), _Fitr_func(this)};  }
 
 	auto crbegin() const noexcept
-	->	const_reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
+	->	const_reverse_iterator{  return {rBegin(_rg), _Fritr_func(this)};  }
 	
 	auto rbegin() const noexcept-> SGM_DECLTYPE_AUTO(  crbegin()  )
-	auto rbegin() noexcept-> reverse_iterator{  return {rBegin(_rg), _fritr_func(this)};  }
+	auto rbegin() noexcept-> reverse_iterator{  return {rBegin(_rg), _Fritr_func(this)};  }
 
 	auto crend() const noexcept
-	->	const_reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
+	->	const_reverse_iterator{  return {rEnd(_rg), _Fritr_func(this)};  }
 	
 	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
-	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
+	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _Fritr_func(this)};  }
 
 
 	template< class ALC = _Default_Array_Allocator_t<value_type> >
@@ -750,7 +770,7 @@ public:
 		,	"Filter_Range does NOT have fork and join evaluation method."
 		);
 
-		return _Array_Evaluation<None>::calc( *this, Forward<ALC>(allocator) );
+		return _Array_Evaluation<None>::Calc( *this, Forward<ALC>(allocator) );
 	}
 
 
@@ -764,11 +784,11 @@ private:
 
 
 	template<  class ME, class itr_t = Decay_t< decltype( End(Mock<ME>()._rg) ) >  >
-	static auto _fitr_func(ME* p) noexcept
+	static auto _Fitr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, End(p->_rg)};  }
 
 	template<  class ME, class itr_t = Decay_t< decltype( rEnd(Mock<ME>()._rg) ) >  >
-	static auto _fritr_func(ME* p) noexcept
+	static auto _Fritr_func(ME* p) noexcept
 	->	_filter_itr_func_t<itr_t>{  return {&p->_fn, rEnd(p->_rg)};  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -779,12 +799,15 @@ namespace sgm
 	namespace _ht_Fold_impl_helper
 	{
 		
-		template<class ITR, class FUNC, class RES>
-		static auto Accumulate(ITR itr, ITR const eitr, FUNC&& func, RES res)
-		noexcept
-		(	noexcept(*itr) && noexcept(itr++) 
-		&&	noexcept( func(res, *itr) ) && noexcept(res = res)
-		)
+		template
+		<	class ITR, class FUNC, class RES
+		,	bool _NXCT
+			=	(	noexcept( ITR(Mock<ITR>()) ) && noexcept(Mock<ITR>() != Mock<ITR>())
+				&&	noexcept( RES(Mock<RES>()) ) 
+				&&	noexcept( Mock<RES&>() = Mock<FUNC&&>()(Mock<RES>(), *Mock<ITR>()++) )
+				)
+		>
+		static auto Accumulate(ITR itr, ITR const eitr, FUNC&& func, RES res) noexcept(_NXCT)
 		->	RES
 		{
 			while(itr != eitr)
@@ -801,14 +824,17 @@ namespace sgm
 		struct Direction_Dependent<true> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fBegin<RG>(rg)  )
+			static auto Begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fBegin<RG>(rg)  )
 
 			template<class RG> 
-			static auto end(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fEnd<RG>(rg)  )
+			static auto End(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  fEnd<RG>(rg)  )
 
 
-			template<class FUNC, class L, class FOLDED>
-			static auto last_fold(FUNC&& func, L&& last, FOLDED&& folded) noexcept
+			template
+			<	class FUNC, class L, class FOLDED
+			,	bool _NXCT = noexcept( Mock<FUNC&&>()(Mock<L&&>(), Mock<FOLDED&&>()) )
+			>
+			static auto Last_fold(FUNC&& func, L&& last, FOLDED&& folded) noexcept(_NXCT)
 			->	SGM_DECLTYPE_AUTO(  func( Forward<L>(last), Forward<FOLDED>(folded) )  )
 		};
 	
@@ -816,15 +842,17 @@ namespace sgm
 		struct Direction_Dependent<false> : Unconstructible
 		{
 			template<class RG> 
-			static auto begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frBegin<RG>(rg)  )
+			static auto Begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frBegin<RG>(rg)  )
 			
 			template<class RG> 
-			static auto end(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frEnd<RG>(rg)  )
+			static auto End(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  frEnd<RG>(rg)  )
 
 
-			template<class FUNC, class L, class FOLDED>
-			static auto last_fold(FUNC&& func, L&& last, FOLDED&& folded)
-			noexcept(  Aleph_Check<L&&, FOLDED&&>::value || noexcept( func(folded, last) )  )
+			template
+			<	class FUNC, class L, class FOLDED
+			,	bool _NXCT = noexcept( Mock<FUNC&&>()(Mock<FOLDED&&>(), Mock<L&&>()) )
+			>
+			static auto Last_fold(FUNC&& func, L&& last, FOLDED&& folded) noexcept(_NXCT)
 			->	SGM_DECLTYPE_AUTO(  func( Forward<FOLDED>(folded), Forward<L>(last) )  )
 		};
 
@@ -837,24 +865,22 @@ template<bool IS_FORWARD, class FNJ_FLAG>
 struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode::SEQUANCIAL>
 :	Unconstructible
 {
-	template<class RG, class FUNC, class RES>
-	static auto calc(RG&& rg, FUNC&& func, RES&& res)
-	noexcept
-	(	Aleph_Check<RG&&, FUNC&&, RES&&>::value
-	||	noexcept
-		(	_ht_Fold_impl_helper::Accumulate	
-			(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
-			,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg)
-			,	func, res
-			)	
-		)
-	)
-	->	RES
+	template
+	<	class RG, class FUNC, class RES
+	,	class _DD = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>
+	,	bool _NXCT
+		=	noexcept
+			(	_ht_Fold_impl_helper::Accumulate	
+				(	_DD::Begin(Mock<RG&&>()), _DD::End(Mock<RG&&>())
+				,	Mock<FUNC&&>(), Mock<RES&&>()
+				)
+			)
+	>
+	static auto Calc(RG&& rg, FUNC&& func, RES&& res) noexcept(_NXCT)-> RES
 	{
 		return
 		_ht_Fold_impl_helper::Accumulate
-		(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin( Forward<RG>(rg) )
-		,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end( Forward<RG>(rg) )
+		(	_DD::Begin( Forward<RG>(rg) ), _DD::End( Forward<RG>(rg) )
 		,	Forward<FUNC>(func), Forward<RES>(res)
 		);
 	}
@@ -865,23 +891,21 @@ template<bool IS_FORWARD, class FNJ_FLAG>
 struct sgm::ht::_Fold_impl<false, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode::SEQUANCIAL>
 :	Unconstructible
 {
-	template<class RG, class FUNC>
-	static auto calc(RG&& rg, FUNC&& func, None)
-	noexcept
-	(	Aleph_Check<RG&&, FUNC&&>::value
-	||	noexcept
-		(	_ht_Fold_impl_helper::Accumulate	
-			(	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
-			,	_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end(rg)
-			,	func, *_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg)
+	template
+	<	class RG, class FUNC
+	,	class _DD = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>
+	,	class _DEREF = decltype( *_DD::Begin(Mock<RG&&>()) )
+	,	bool _NXCT
+		=	noexcept
+			(	_ht_Fold_impl_helper::Accumulate	
+				(	_DD::Begin(Mock<RG&&>()), _DD::End(Mock<RG&&>())
+				,	Mock<FUNC&&>(), Mock<_DEREF>()
+				)
 			)
-		)	
-	)
-	->	Decay_t< decltype( *_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin(rg) ) >
+	>
+	static auto Calc(RG&& rg, FUNC&& func, None) noexcept(_NXCT)-> Decay_t<_DEREF>
 	{
-		auto const 
-			bi = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::begin( Forward<RG>(rg) ), 
-			ei = _ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::end( Forward<RG>(rg) );
+		auto const bi = _DD::Begin( Forward<RG>(rg) ), ei = _DD::End( Forward<RG>(rg) );
 
 		assert(bi != ei && L"the container has nothing to fold .\n");
 
@@ -895,21 +919,14 @@ struct sgm::ht::_Fold_impl<false, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mod
 :	Unconstructible
 {
 private:
-	template<class RG, class FUNC>
-	static auto _sequancial_fold(RG&& rg, FUNC&& func)
-	noexcept
-	(	Aleph_Check<RG&&, FUNC&&>::value
-	||	noexcept
-		(	_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::SEQUANCIAL>::calc
-			(	rg, func, None{}
-			)
-		)
-	)
-	->	SGM_DECLTYPE_AUTO
+	template
+	<	class RG, class FUNC
+	,	class _FM = _Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::SEQUANCIAL>
+	,	bool _NXCT = noexcept( _FM::Calc(Mock<RG&&>(), Mock<FUNC&&>(), Mock<None>()) )
+	>
+	static auto _Sequancial_fold(RG&& rg, FUNC&& func) noexcept(_NXCT)-> SGM_DECLTYPE_AUTO
 	(
-		_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::SEQUANCIAL>::calc
-		(	Forward<RG>(rg), Forward<FUNC>(func), None{}
-		)
+		_FM::Calc( Forward<RG>(rg), Forward<FUNC>(func), None{} )
 	)
 
 
@@ -918,14 +935,14 @@ public:
 	<	class RG, class FUNC
 	,	class RES = Decay_t<  decltype( *Begin(Mock< Decay_t<RG> >()) )  >
 	>
-	static auto calc(RG&& rg, FUNC&& func, None) noexcept-> RES
+	static auto Calc(RG&& rg, FUNC&& func, None) noexcept-> RES
 	{
 		auto const fnj = FNJ_FLAG{};
 		size_t const nof_elem = Size(rg),  nof_task = fnj.number_of_task();
 		
 
 		if(nof_elem <= nof_task)
-			return _sequancial_fold( Forward<RG>(rg), Forward<FUNC>(func) );
+			return _Sequancial_fold( Forward<RG>(rg), Forward<FUNC>(func) );
 		else
 		{
 			_Default_Array_Allocator_t<RES> allocator{};
@@ -935,7 +952,7 @@ public:
 			(	nof_elem
 			,	[&rg, &func, &allocator, partial_sum_arr]
 				(	size_t const begin_idx, size_t const end_idx, unsigned const task_id
-				)
+				)	noexcept
 				{	
 					auto const 
 						bi = Next( fBegin<RG>(rg), begin_idx ), bi_next = Next(bi), 
@@ -949,10 +966,9 @@ public:
 			);
 
 			return 
-			_sequancial_fold
-			(	Unsafe_Construction_for_Array::create
-				(	partial_sum_arr, nof_task, nof_task, allocator
-				)
+			_Sequancial_fold
+			(	Unsafe_Construction_for_Array
+				::	create(partial_sum_arr, nof_task, nof_task, allocator)
 			,	Forward<FUNC>(func) 
 			);
 		}
@@ -965,7 +981,7 @@ struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode
 :	Unconstructible
 {
 	template<class RG, class FUNC, class RES>
-	static auto calc(RG&& rg, FUNC&& func, RES&& res) noexcept-> RES
+	static auto Calc(RG&& rg, FUNC&& func, RES&& res) noexcept-> RES
 	{
 		static_assert
 		(	is_Convertible< RES, Decay_t<decltype( *Begin(rg) )> >::value
@@ -973,11 +989,10 @@ struct sgm::ht::_Fold_impl<true, IS_FORWARD, FNJ_FLAG, sgm::ht::_Evaluation_Mode
 		);
 
 		return 
-		_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::last_fold
+		_ht_Fold_impl_helper::Direction_Dependent<IS_FORWARD>::Last_fold
 		(	func, Forward<RES>(res)
-		,	_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::FORK_AND_JOIN>::calc
-			(	Forward<RG>(rg), func, None{}
-			)
+		,	_Fold_impl<false, IS_FORWARD, FNJ_FLAG, _Evaluation_Mode::FORK_AND_JOIN>
+			::	Calc( Forward<RG>(rg), func, None{} )
 		);
 	}
 };
@@ -995,10 +1010,10 @@ namespace sgm
 			using res_t = typename Deref<ITR_FAM, TRY_MUTABLE, 0>::res_t;
 
 			template<class ME, class...ARGS>
-			static auto calc(ME& me, ARGS&&...args)-> res_t
+			static auto Calc(ME& me, ARGS&&...args)-> res_t
 			{
 				return
-				Deref<ITR_FAM, TRY_MUTABLE, N-1>::calc
+				Deref<ITR_FAM, TRY_MUTABLE, N-1>::Calc
 				(	me
 				,	*std::get<N-1>(me._itr_fam), Forward<ARGS>(args)...
 				);
@@ -1013,7 +1028,7 @@ namespace sgm
 			using _member_t = Alephless_t< ht::_Try_Mutable_t<T, TRY_MUTABLE> >;
 
 			template<class...ITRS> /* Declaration Only */
-			static auto _res(Family<ITRS...>)
+			static auto _res(Family<ITRS...>) noexcept
 			->	Family<  _member_t< decltype(*Mock<ITRS>()) >...  >;
 
 
@@ -1021,7 +1036,7 @@ namespace sgm
 			using res_t = decltype( _res(Mock<ITR_FAM>()) );
 
 			template<class ME, class...ARGS>
-			static auto calc(ME&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
+			static auto Calc(ME&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
 		};
 
 
@@ -1112,7 +1127,7 @@ namespace sgm
 
 
 			template<class...ITRS>
-			static auto calc(_try_mut_t< Family<RGS...> >&, ITRS&&...itrs)-> res_t
+			static auto Calc(_try_mut_t< Family<RGS...> >&, ITRS&&...itrs)-> res_t
 			{
 				return { Family< Decay_t<ITRS>... >{Forward<ITRS>(itrs)...} };
 			}
@@ -1125,10 +1140,10 @@ namespace sgm
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, true, true, 0, false >::res_t;
 
 			template<class RG_FAM, class...ITRS>
-			static auto calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
 			{
 				return
-				Boundary< Family<RGS...>, TRY_MUTABLE, true, true, N-1 >::calc
+				Boundary< Family<RGS...>, TRY_MUTABLE, true, true, N-1 >::Calc
 				(	rg_fam, Begin( std::get<N-1>(rg_fam) ), Forward<ITRS>(itrs)...
 				);
 			}
@@ -1141,10 +1156,10 @@ namespace sgm
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, true, false, 0, false >::res_t;
 
 			template<class RG_FAM, class...ITRS>
-			static auto calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
 			{
 				return
-				Boundary< Family<RGS...>, TRY_MUTABLE, true, false, N-1 >::calc
+				Boundary< Family<RGS...>, TRY_MUTABLE, true, false, N-1 >::Calc
 				(	rg_fam, End( std::get<N-1>(rg_fam) ), Forward<ITRS>(itrs)...
 				);
 			}
@@ -1157,10 +1172,10 @@ namespace sgm
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, false, true, 0, false >::res_t;
 
 			template<class RG_FAM, class...ITRS>
-			static auto calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
 			{
 				return
-				Boundary< Family<RGS...>, TRY_MUTABLE, false, true, N-1 >::calc
+				Boundary< Family<RGS...>, TRY_MUTABLE, false, true, N-1 >::Calc
 				(	rg_fam, rBegin( std::get<N-1>(rg_fam) ), Forward<ITRS>(itrs)...
 				);
 			}
@@ -1173,10 +1188,10 @@ namespace sgm
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, false, false, 0, false >::res_t;
 
 			template<class RG_FAM, class...ITRS>
-			static auto calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
 			{
 				return
-				Boundary< Family<RGS...>, TRY_MUTABLE, false, false, N-1 >::calc
+				Boundary< Family<RGS...>, TRY_MUTABLE, false, false, N-1 >::Calc
 				(	rg_fam, rEnd( std::get<N-1>(rg_fam) ), Forward<ITRS>(itrs)...
 				);
 			}
@@ -1284,7 +1299,7 @@ public:
 
 	auto operator*() const-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
 	{
-		return _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::calc(*this);
+		return _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::Calc(*this);
 	}
 
 
@@ -1468,12 +1483,12 @@ public:
 
 	auto cbegin() const-> const_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, false, true, true >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, false, true, true >::Calc(_rg_fam);
 	}
 
 	auto cend() const-> const_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, false, true, false >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, false, true, false >::Calc(_rg_fam);
 	}
 
 	auto begin() const-> SGM_DECLTYPE_AUTO(  cbegin()  )
@@ -1481,12 +1496,12 @@ public:
 
 	auto crbegin() const-> const_reverse_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, false, false, true >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, false, false, true >::Calc(_rg_fam);
 	}
 
 	auto crend() const-> const_reverse_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, false, false, false >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, false, false, false >::Calc(_rg_fam);
 	}
 
 	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
@@ -1495,7 +1510,7 @@ public:
 
 	template<class FNJ_FLAG>
 	auto eval() const
-	->	Array<value_type>{  return _Array_Evaluation<FNJ_FLAG>::calc(*this);  }
+	->	Array<value_type>{  return _Array_Evaluation<FNJ_FLAG>::Calc(*this);  }
 
 	operator Array<value_type>() const{  return eval();  }
 
@@ -1536,28 +1551,28 @@ public:
 
 	auto begin()-> iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, true, true, true >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, true, true, true >::Calc(_rg_fam);
 	}
 
 	auto end()-> iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, true, true, false >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, true, true, false >::Calc(_rg_fam);
 	}
 
 	auto rbegin()-> reverse_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, true, false, true >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, true, false, true >::Calc(_rg_fam);
 	}
 
 	auto rend()-> reverse_iterator
 	{
-		return _ht_Plait_detail::Boundary< Family<RGS...>, true, false, false >::calc(_rg_fam);
+		return _ht_Plait_detail::Boundary< Family<RGS...>, true, false, false >::Calc(_rg_fam);
 	}
 
 	template<class FNJ_FLAG>
 	auto eval() const-> Array< typename cPlait_Range<RGS...>::value_type >
 	{
-		return _Array_Evaluation<FNJ_FLAG>::calc(*this);  
+		return _Array_Evaluation<FNJ_FLAG>::Calc(*this);  
 	}
 
 	operator Array< typename cPlait_Range<RGS...>::value_type >() const{  return eval();  }
@@ -1568,56 +1583,64 @@ public:
 namespace sgm
 {
 
-	template<class RG, class FUNC>
-	static auto Morph(RG&& rg, FUNC&& func) noexcept(Aleph_Check<RG&&, FUNC&&>::value)
-	->	ht::Morph_Range< Alephless_t<RG>, Alephless_t<FUNC>, !is_immutable<RG>::value >
-	{
-		return {Forward<RG>(rg), Forward<FUNC>(func)};
-	}
+	template
+	<	class RG, class FUNC
+	,	class _MRG 
+		=	ht::Morph_Range< Alephless_t<RG>, Alephless_t<FUNC>, !is_immutable<RG>::value >
+	,	bool _NXCT = noexcept( _MRG(Mock<RG&&>(), Mock<FUNC&&>()) )
+	>
+	static auto Morph(RG&& rg, FUNC&& func) noexcept(_NXCT)
+	->	_MRG{  return {Forward<RG>(rg), Forward<FUNC>(func)};  }
 
 
-	template<class RG, class FUNC>
-	static auto Filter(RG&& rg, FUNC&& func) noexcept(Aleph_Check<RG&&, FUNC&&>::value)
-	->	ht::Filter_Range< Alephless_t<RG>, Alephless_t<FUNC>, !is_immutable<RG>::value >
-	{
-		return {Forward<RG>(rg), Forward<FUNC>(func)};
-	}
+	template
+	<	class RG, class FUNC
+	,	class _FRG 
+		=	ht::Filter_Range< Alephless_t<RG>, Alephless_t<FUNC>, !is_immutable<RG>::value >
+	,	bool _NXCT = noexcept( _FRG(Mock<RG&&>(), Mock<FUNC&&>()) )
+	>
+	static auto Filter(RG&& rg, FUNC&& func) noexcept(_NXCT)
+	->	_FRG{  return {Forward<RG>(rg), Forward<FUNC>(func)};  }
 
 
-	template<class FNJ_FLAG = None, class RG, class FUNC, class INIT>
-	static auto Fold(RG&& rg, FUNC&& func, INIT&& init)
-	noexcept(Aleph_Check<RG&&, FUNC&&, INIT&&>::value)-> SGM_DECLTYPE_AUTO
+	template
+	<	class FNJ_FLAG = None, class RG, class FUNC, class INIT
+	,	class _FM = ht::_Fold_impl<true, true, FNJ_FLAG>
+	,	bool _NXCT = noexcept( _FM::Calc(Mock<RG&&>(), Mock<FUNC&&>(), Mock<INIT&&>()) )
+	>
+	static auto Fold(RG&& rg, FUNC&& func, INIT&& init) noexcept(_NXCT)-> SGM_DECLTYPE_AUTO
 	(
-		ht::_Fold_impl<true, true, FNJ_FLAG>::calc
-		(	Forward<RG>(rg), Forward<FUNC>(func), Forward<INIT>(init)
-		)
+		_FM::Calc( Forward<RG>(rg), Forward<FUNC>(func), Forward<INIT>(init) )
 	)
 	
-	template<class FNJ_FLAG = None, class RG, class FUNC>
-	static auto Fold(RG&& rg, FUNC&& func) noexcept(Aleph_Check<RG&&, FUNC&&>::value)
-	->	SGM_DECLTYPE_AUTO
+	template
+	<	class FNJ_FLAG = None, class RG, class FUNC
+	,	class _FM = ht::_Fold_impl<false, true, FNJ_FLAG>
+	,	bool _NXCT = noexcept( _FM::Calc(Mock<RG&&>(), Mock<FUNC&&>(), None{}) )
+	>
+	static auto Fold(RG&& rg, FUNC&& func) noexcept(_NXCT)-> SGM_DECLTYPE_AUTO
 	(
-		ht::_Fold_impl<false, true, FNJ_FLAG>::calc
-		(	Forward<RG>(rg), Forward<FUNC>(func), None{}
-		)
+		_FM::Calc( Forward<RG>(rg), Forward<FUNC>(func), None{} )
 	)
 	
-	template<class FNJ_FLAG = None, class RG, class FUNC, class INIT>
-	static auto rFold(RG&& rg, FUNC&& func, INIT&& init)
-	noexcept(Aleph_Check<RG&&, FUNC&&, INIT&&>::value)-> SGM_DECLTYPE_AUTO
+	template
+	<	class FNJ_FLAG = None, class RG, class FUNC, class INIT
+	,	class _FM = ht::_Fold_impl<true, false, FNJ_FLAG>
+	,	bool _NXCT = noexcept( _FM::Calc(Mock<RG&&>(), Mock<FUNC&&>(), Mock<INIT&&>()) )
+	>
+	static auto rFold(RG&& rg, FUNC&& func, INIT&& init) noexcept(_NXCT)-> SGM_DECLTYPE_AUTO
 	(
-		ht::_Fold_impl<true, false, FNJ_FLAG>::calc
-		(	Forward<RG>(rg), Forward<FUNC>(func), Forward<INIT>(init)
-		)
+		_FM::Calc( Forward<RG>(rg), Forward<FUNC>(func), Forward<INIT>(init) )
 	)
 	
-	template<class FNJ_FLAG = None, class RG, class FUNC>
-	static auto rFold(RG&& rg, FUNC&& func) noexcept(Aleph_Check<RG&&, FUNC&&>::value)
-	->	SGM_DECLTYPE_AUTO
+	template
+	<	class FNJ_FLAG = None, class RG, class FUNC
+	,	class _FM = ht::_Fold_impl<false, false, FNJ_FLAG>
+	,	bool _NXCT = noexcept( _FM::Calc(Mock<RG&&>(), Mock<FUNC&&>(), None{}) )
+	>
+	static auto rFold(RG&& rg, FUNC&& func) noexcept(_NXCT)-> SGM_DECLTYPE_AUTO
 	(
-		ht::_Fold_impl<false, false, FNJ_FLAG>::calc
-		(	Forward<RG>(rg), Forward<FUNC>(func), None{}
-		)
+		_FM::Calc( Forward<RG>(rg), Forward<FUNC>(func), None{} )
 	)
 
 	
