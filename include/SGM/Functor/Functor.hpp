@@ -690,7 +690,7 @@ namespace sgm::fp::_Lambda_detail
 //	All parameters of args... don't have to be used .
 #pragma warning(disable : 4100)
 	template<size_t IDX, class...ARGS>
-	static decltype(auto) Try_Nth_Param([[maybe_unused]] ARGS&&...args) noexcept
+	static decltype(auto) constexpr Try_Nth_Param([[maybe_unused]] ARGS&&...args) noexcept
 	{
 		if constexpr( IDX < sizeof...(ARGS) )
 			return Nth_Param<IDX>(args...);
@@ -705,7 +705,7 @@ namespace sgm::fp::_Lambda_detail
 #ifndef SGM_LAMBDA
 	#define SGM_LAMBDA(...)		\
 	sgm::fp::Functor	\
-	{	[&](auto&&...args) noexcept-> decltype(auto)	\
+	{	[&](auto&&...args) constexpr noexcept-> decltype(auto)	\
 		{	\
 			using sgm::fp::_Lambda_detail::Try_Nth_Param;	\
 			using sgm::Forward;	\
