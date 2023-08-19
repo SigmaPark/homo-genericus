@@ -104,16 +104,20 @@ namespace sgm
 {
 
     template<class T>  /* Declaration Only */
-    static auto Mock() noexcept-> T;
+    static auto constexpr Mock() noexcept-> T;
 
     template<class TEST, class T = True_t>
     using SFINAE_t = decltype( (void)Mock<TEST>(),  Mock<T>() );
 
 
     template<class...>
-    using Void_t = void;
+    struct _Voidness : As_type_itself<void>{};
+     
+    template<class...ARGS>
+    using Void_t = typename _Voidness<ARGS...>::type;
 
-    struct None{  constexpr None() = default;  };
+
+    struct None{  constexpr None() noexcept = default;  };
 
 
     template<bool B, class T = void>
@@ -388,8 +392,8 @@ namespace sgm
     static auto immut(T const&&)-> T const&& = delete;
 
 
-    template<class T>
-    static auto Decay(T&& t) noexcept-> Decay_t<T>{  return t;  }
+    template< class T, bool _NXCT = noexcept( Decay_t<T>(Mock<T&&>()) ) >
+    static auto Decay(T&& t) noexcept(_NXCT)-> Decay_t<T>{  return t;  }
 
 
 	template<class T>
