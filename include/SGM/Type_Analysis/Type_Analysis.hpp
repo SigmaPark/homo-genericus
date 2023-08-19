@@ -671,6 +671,14 @@ namespace sgm
         struct is_Nxct_initialization<SRC, DES, 2> 
         :   Boolean< noexcept( Decay_t<DES>(Mock<SRC>()) ) >{};
 
+
+        template<class SRC, class DES, class = void>
+        struct is_Nxct_Assignment : True_t{};
+
+        template<class SRC, class DES>
+        struct is_Nxct_Assignment<  SRC, DES, Void_t< decltype(Mock<DES>() = Mock<SRC>()) >  >
+        :   Boolean< noexcept(Mock<DES>() = Mock<SRC>()) >{};
+
     }
 }
 
