@@ -1010,7 +1010,7 @@ namespace sgm
 			using res_t = typename Deref<ITR_FAM, TRY_MUTABLE, 0>::res_t;
 
 			template<class ME, class...ARGS>
-			static auto Calc(ME& me, ARGS&&...args)-> res_t
+			static auto Calc(ME& me, ARGS&&...args) noexcept-> res_t
 			{
 				return
 				Deref<ITR_FAM, TRY_MUTABLE, N-1>::Calc
@@ -1025,7 +1025,7 @@ namespace sgm
 		{
 		private:	
 			template<class T>
-			using _member_t = Alephless_t< ht::_Try_Mutable_t<T, TRY_MUTABLE> >;
+			using _member_t = ht::_Try_Mutable_t<T, TRY_MUTABLE>;
 
 			template<class...ITRS> /* Declaration Only */
 			static auto _res(Family<ITRS...>) noexcept
@@ -1035,38 +1035,69 @@ namespace sgm
 		public:
 			using res_t = decltype( _res(Mock<ITR_FAM>()) );
 
-			template<class ME, class...ARGS>
-			static auto Calc(ME&, ARGS&&...args)-> res_t{  return {Forward<ARGS>(args)...};  }
+			template
+			<	class ME, class...ARGS
+			,	bool _NXCT = noexcept( res_t(Mock<ARGS&&>()...) )
+			>
+			static auto Calc(ME&, ARGS&&...args) noexcept(_NXCT)
+			->	res_t{  return {Forward<ARGS>(args)...};  }
 		};
 
 
+		template<size_t N, class PLT_ITR, bool INCREASE, bool = N != 0>
+		struct _Nxct_Step;
+
+		template<class PLT_ITR, bool INC>
+		struct _Nxct_Step<0, PLT_ITR, INC, false> : True_t{};
+
+		template<size_t N, class PLT_ITR>
+		struct _Nxct_Step<N, PLT_ITR, true, true> 
+		:	Boolean< noexcept( ++std::get<N - 1>(Mock<PLT_ITR&>()._itr_fam) ) >{};
+
+		template<size_t N, class PLT_ITR>
+		struct _Nxct_Step<N, PLT_ITR, false, true>
+		:	Boolean< noexcept( --std::get<N - 1>(Mock<PLT_ITR&>()._itr_fam) ) >{};
+
+
 		template<size_t N, bool IS_PLUS_DIR, class PLT_ITR>
-		static auto Step(PLT_ITR& plt_itr)-> Enable_if_t<N==0, PLT_ITR&>
+		static auto Step(PLT_ITR& plt_itr) noexcept-> Enable_if_t<N==0, PLT_ITR&>
 		{
 			return plt_itr;
 		}
 
 		template<size_t N, bool IS_PLUS_DIR, class PLT_ITR>
-		static auto Step(PLT_ITR& plt_itr)
+		static auto Step(PLT_ITR& plt_itr) noexcept(_Nxct_Step<N, PLT_ITR, true>::value)
 		->	Enable_if_t<N != 0 && IS_PLUS_DIR, PLT_ITR&>
 		{
-			std::get<N-1>(plt_itr._itr_fam)++;
+			++std::get<N-1>(plt_itr._itr_fam);
 
 			return Step<N-1, true>(plt_itr);  
 		}
 
 		template<size_t N, bool IS_PLUS_DIR, class PLT_ITR>
-		static auto Step(PLT_ITR& plt_itr)
+		static auto Step(PLT_ITR& plt_itr) noexcept(_Nxct_Step<N, PLT_ITR, false>::value)
 		->	Enable_if_t<N != 0 && !IS_PLUS_DIR, PLT_ITR&>
 		{
-			std::get<N-1>(plt_itr._itr_fam)--;
+			--std::get<N-1>(plt_itr._itr_fam);
 
 			return Step<N-1, false>(plt_itr);  
 		}
 
 
+		template<size_t N, class PLT_ITR, bool = N != 0>
+		struct _Nxct_Next_Diff;
+
+		template<class PLT_ITR>
+		struct _Nxct_Next_Diff<0, PLT_ITR, false> : True_t{};
+
+		template<size_t N, class PLT_ITR>
+		struct _Nxct_Next_Diff<N, PLT_ITR, true> 
+		:	Boolean< noexcept( std::get<N - 1>(Mock<PLT_ITR&>()) * ptrdiff_t{} ) >{};
+
+
 		template<size_t N, class PLT_ITR, class...ITRS>
 		static auto Next_Diff(PLT_ITR& plt_itr, ptrdiff_t const diff, ITRS&&...itrs)
+		noexcept(_Nxct_Next_Diff<N, PLT_ITR>::value)
 		->	Enable_if_t<N != 0, PLT_ITR>
 		{
 			return 
@@ -1077,15 +1108,18 @@ namespace sgm
 		}
 
 		template<size_t N, class PLT_ITR, class...ITRS>
-		static auto Next_Diff(PLT_ITR&, ptrdiff_t const, ITRS&&...itrs)
+		static auto Next_Diff(PLT_ITR&, ptrdiff_t const, ITRS&&...itrs) noexcept
 		->	Enable_if_t<N == 0, PLT_ITR>
 		{
 			return { Family< Decay_t<ITRS>... >{Forward<ITRS>(itrs)...} };
 		}
 
 
-		template<class RG, class...RGS>
-		static auto Range_Size(Family<RGS...> const& rg_fam)
+		template
+		<	class RG, class...RGS
+		,	bool _NXCT = noexcept(  Size( std::get<0>(Mock< Family<RGS...> const& >()) )  )
+		>
+		static auto Range_Size(Family<RGS...> const& rg_fam) noexcept(_NXCT)
 		->	Enable_if_t< is_None<RG>::value, size_t >
 		{
 			static_assert( sizeof...(RGS) != 0, "No ranges." );
@@ -1094,7 +1128,7 @@ namespace sgm
 		}
 
 		template<class RG, class...RGS>
-		static auto Range_Size(Family<RGS...> const& rg_fam)
+		static auto Range_Size(Family<RGS...> const& rg_fam) noexcept
 		->	Enable_if_t< !is_None<RG>::value, size_t >
 		{
 			return Size( std::get<RG>(rg_fam) );
@@ -1126,8 +1160,11 @@ namespace sgm
 			using res_t = ht::Plait_iterator<_itr_fam_t, TRY_MUTABLE>;
 
 
-			template<class...ITRS>
-			static auto Calc(_try_mut_t< Family<RGS...> >&, ITRS&&...itrs)-> res_t
+			template
+			<	class...ITRS
+			,	bool _NXCT = noexcept(Family< Decay_t<ITRS>... >{Mock<ITRS&&>()...})
+			>
+			static auto Calc(_try_mut_t< Family<RGS...> >&, ITRS&&...itrs) noexcept(_NXCT)-> res_t
 			{
 				return { Family< Decay_t<ITRS>... >{Forward<ITRS>(itrs)...} };
 			}
@@ -1139,8 +1176,11 @@ namespace sgm
 			using res_t
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, true, true, 0, false >::res_t;
 
-			template<class RG_FAM, class...ITRS>
-			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			template
+			<	class RG_FAM, class...ITRS
+			,	bool _NXCT = noexcept(  Begin( std::get<N-1>(Mock<RG_FAM&>()) )  )
+			>
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs) noexcept(_NXCT)-> res_t
 			{
 				return
 				Boundary< Family<RGS...>, TRY_MUTABLE, true, true, N-1 >::Calc
@@ -1155,8 +1195,11 @@ namespace sgm
 			using res_t
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, true, false, 0, false >::res_t;
 
-			template<class RG_FAM, class...ITRS>
-			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			template
+			<	class RG_FAM, class...ITRS
+			,	bool _NXCT = noexcept(  End( std::get<N-1>(Mock<RG_FAM&>()) )  )
+			>
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs) noexcept(_NXCT)-> res_t
 			{
 				return
 				Boundary< Family<RGS...>, TRY_MUTABLE, true, false, N-1 >::Calc
@@ -1171,8 +1214,11 @@ namespace sgm
 			using res_t
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, false, true, 0, false >::res_t;
 
-			template<class RG_FAM, class...ITRS>
-			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			template
+			<	class RG_FAM, class...ITRS
+			,	bool _NXCT = noexcept(  rBegin( std::get<N-1>(Mock<RG_FAM&>()) )  )
+			>
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs) noexcept(_NXCT)-> res_t
 			{
 				return
 				Boundary< Family<RGS...>, TRY_MUTABLE, false, true, N-1 >::Calc
@@ -1187,8 +1233,11 @@ namespace sgm
 			using res_t
 			=	typename Boundary< Family<RGS...>, TRY_MUTABLE, false, false, 0, false >::res_t;
 
-			template<class RG_FAM, class...ITRS>
-			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs)-> res_t
+			template
+			<	class RG_FAM, class...ITRS
+			,	bool _NXCT = noexcept(  rEnd( std::get<N-1>(Mock<RG_FAM&>()) )  )
+			>
+			static auto Calc(RG_FAM& rg_fam, ITRS&&...itrs) noexcept(_NXCT)-> res_t
 			{
 				return
 				Boundary< Family<RGS...>, TRY_MUTABLE, false, false, N-1 >::Calc
@@ -1293,11 +1342,30 @@ public:
 	static_assert(NUMBER_OF_ITERATORS != 0, "the number of iterators should be greater than 0");
 
 
-	Plait_iterator(FAM const& fam) : _itr_fam(fam){}
+	Plait_iterator(FAM const& fam) noexcept(  noexcept( FAM(Mock<FAM const&>()) )  )
+	:	_itr_fam(fam){}
+	
 	Plait_iterator(FAM&& fam) noexcept : _itr_fam( Move(fam) ){}
 
+	Plait_iterator(Plait_iterator const&)
+	noexcept(  noexcept( FAM(Mock<FAM const&>()) )  )
+	=	default;
 
-	auto operator*() const-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
+	Plait_iterator(Plait_iterator&&) noexcept = default;
+
+
+	auto operator=(Plait_iterator const&) noexcept( noexcept(Mock<FAM&>() = Mock<FAM const&>()) )
+	->	_self_t&
+	=	default;
+
+	auto operator=(Plait_iterator&&) noexcept-> _self_t& = default;
+
+
+	auto operator*() const
+	noexcept
+	(	noexcept( _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::Calc(Mock<_self_t const&>()) )
+	)
+	-> typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t
 	{
 		return _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::Calc(*this);
 	}
@@ -1314,9 +1382,18 @@ public:
 
 
 	auto operator++()
+	noexcept
+	(	noexcept( _ht_Plait_detail::Step<NUMBER_OF_ITERATORS, true>(Mock<_self_t&>()) )
+	)
 	->	_self_t&{  return _ht_Plait_detail::Step<NUMBER_OF_ITERATORS, true>(*this);  }
 
-	auto operator++(int)-> _self_t
+
+	auto operator++(int)
+	noexcept
+	(	noexcept( Plait_iterator(Mock<_self_t const&>()) )
+	&&	noexcept(++Mock<_self_t&>())
+	)
+	-> _self_t
 	{
 		auto const clone = *this;  
 		
@@ -1337,25 +1414,24 @@ private:
 
 
 public:
-	template<class...ARGS>
-	Plait_iterator(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	:	_Lv1_t( Forward<ARGS>(args)... ){}
-
-
-	auto operator++()-> _self_t&{  return _Lv1_t::operator++(),  *this;  }
-
-	auto operator++(int)-> _self_t
-	{
-		auto const clone = *this;  
-		
-		return ++*this,  clone;  
-	}
+	using _Lv1_t::_Lv1_t;
+	using _Lv1_t::operator=;
+	using _Lv1_t::operator++;
 
 
 	auto operator--()
+	noexcept
+	(	noexcept( _ht_Plait_detail::Step<_Lv1_t::NUMBER_OF_ITERATORS, false>(Mock<_self_t&>()) )
+	)
 	->	_self_t&{  return _ht_Plait_detail::Step<_Lv1_t::NUMBER_OF_ITERATORS, false>(*this);  }
 
-	auto operator--(int)-> _self_t
+
+	auto operator--(int)
+	noexcept
+	(	noexcept( Plait_iterator(Mock<_self_t const&>()) )
+	&&	noexcept(--Mock<_self_t&>())
+	)
+	-> _self_t
 	{
 		auto const clone = *this;  
 		
@@ -1374,61 +1450,76 @@ private:
 
 
 public:
-	template<class...ARGS>
-	Plait_iterator(ARGS&&...args) noexcept(Aleph_Check<ARGS&&...>::value)
-	:	_Lv2_t( Forward<ARGS>(args)... ){}
-
-
-	auto operator++()-> _self_t&{  return _Lv2_t::operator++(),  *this;  }
-
-	auto operator++(int)-> _self_t
-	{
-		auto const clone = *this;  
-		
-		return ++*this,  clone;  
-	}
-
-
-	auto operator--()-> _self_t&{  return _Lv2_t::operator--(),  *this;  }
-
-	auto operator--(int)-> _self_t
-	{
-		auto const clone = *this;  
-		
-		return --*this,  clone;  
-	}
+	using _Lv2_t::_Lv2_t;
+	using _Lv2_t::operator=;
+	using _Lv2_t::operator++;
+	using _Lv2_t::operator--;
 
 
 	auto operator+(ptrdiff_t const d) const
+	noexcept
+	(	noexcept
+		(	_ht_Plait_detail
+			::	Next_Diff<_Lv1_t::NUMBER_OF_ITERATORS>(Mock<_self_t const&>(), ptrdiff_t{})
+		)
+	)
 	->	_self_t{  return _ht_Plait_detail::Next_Diff<_Lv1_t::NUMBER_OF_ITERATORS>(*this, d);  }
 
-	auto operator-(ptrdiff_t const d) const-> _self_t{  return *this + -d;  }
+	auto operator-(ptrdiff_t const d) const
+	noexcept( noexcept(Mock<_self_t const&>() + ptrdiff_t{}) )
+	->	_self_t{  return *this + -d;  }
 
-	auto operator+=(ptrdiff_t const d)-> _self_t&{  return *this = *this + d;  }
-	auto operator-=(ptrdiff_t const d)-> _self_t&{  return *this = *this - d;  }
+
+	auto operator+=(ptrdiff_t const d)
+	noexcept(  noexcept( Mock<_self_t&>() = Mock<_self_t const&>() + ptrdiff_t{} )  )
+	->	_self_t&{  return *this = *this + d;  }
+	
+	auto operator-=(ptrdiff_t const d)
+	noexcept(  noexcept( Mock<_self_t&>() = Mock<_self_t const&>() - ptrdiff_t{} )  )
+	->	_self_t&{  return *this = *this - d;  }
+
 
 	auto operator[](ptrdiff_t const d) const
+	noexcept(  noexcept( *(Mock<_self_t const&>() + ptrdiff_t{}) )  )
 	->	typename _ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t{  return *(*this + d);  }
 
 
-	template<class _ITR_FAM, bool M>
-	auto operator-(Plait_iterator<_ITR_FAM, M, 3> const itr) const
+	template
+	<	class _ITR_FAM, bool M
+	,	bool _NXCT 
+		=	noexcept(Mock<_self_t const&>() - Mock< Plait_iterator<_ITR_FAM, M> const& >())
+	>
+	auto operator-(Plait_iterator<_ITR_FAM, M, 3> const& itr) const noexcept(_NXCT)
 	->	ptrdiff_t{  return std::get<0>(_Lv1_t::_itr_fam) - std::get<0>(itr._itr_fam);  }
 
 
-	template<class _ITR_FAM, bool M>
-	auto operator<(Plait_iterator<_ITR_FAM, M> const itr) const noexcept
+	template
+	<	class _ITR_FAM, bool M
+	,	bool _NXCT
+		=	noexcept(Mock<_self_t const&>() - Mock< Plait_iterator<_ITR_FAM, M> const& >())	
+	>
+	auto operator<(Plait_iterator<_ITR_FAM, M> const& itr) const noexcept(_NXCT)
 	->	bool{  return *this - itr < 0;  }
 
-	template<class _ITR_FAM, bool M>
-	auto operator>(Plait_iterator<_ITR_FAM, M> const itr) const noexcept
+	template
+	<	class _ITR_FAM, bool M
+	,	bool _NXCT
+	=	noexcept(Mock<_self_t const&>() - Mock< Plait_iterator<_ITR_FAM, M> const& >())
+	>
+	auto operator>(Plait_iterator<_ITR_FAM, M> const itr) const noexcept(_NXCT)
 	->	bool{  return *this - itr > 0;  }
 
-	template<class Q>
-	auto operator<=(Q const& q) const noexcept-> bool{  return !(*this > q);  }
+	template
+	<	class Q
+	,	bool _NXCT = noexcept(Mock<_self_t const&>() > Mock<Q const&>())
+	>
+	auto operator<=(Q const& q) const noexcept(_NXCT)-> bool{  return !(*this > q);  }
 
-	template<class Q>
-	auto operator>=(Q const& q) const noexcept-> bool{  return !(*this < q);  }
+	template
+	<	class Q
+	,	bool _NXCT = noexcept(Mock<_self_t const&>() < Mock<Q const&>())
+	>
+	auto operator>=(Q const& q) const noexcept(_NXCT)-> bool{  return !(*this < q);  }
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
