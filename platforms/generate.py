@@ -3,6 +3,7 @@
 #=========#=========#=========#=========#=========#=========#=========#=========#=========#=========
 
 
+import platform
 import sys
 import os
 import subprocess
@@ -59,6 +60,10 @@ def Posix_platforms(exe_list):
     Build("", "Clang", "Unix Makefiles", "make", exe_list)
 
 
+def Mac_platforms(exe_list):
+    Build("", "Apple_Clang", "Unix Makefiles", "make", exe_list)
+
+
 def NT_platforms(exe_list, vs_ver):
     null_list = []
 
@@ -103,14 +108,17 @@ def Ask_Visual_Studio_Version(vs_ver):
 def main():
     exe_list = []
 
-    if os.name == "nt":
+    if platform.system() == "Windows":
         vs_ver = Ask_Visual_Studio_Version("" if len(sys.argv) == 1 else sys.argv[1])
         if vs_ver != 'q':
             NT_platforms(exe_list, vs_ver)
 
 
     if os.name == "posix":
-        Posix_platforms(exe_list)
+        if platform.system() == "Linux":
+            Posix_platforms(exe_list)
+        elif platform.system() == "Darwin":
+            Mac_platforms(exe_list)
 
     print("generate.py ends.")
 

@@ -4,7 +4,7 @@
 
 
 import os
-import subprocess
+import platform
 
 
 def execute_if_exist(file_dir):
@@ -24,7 +24,10 @@ def main():
         execute_if_exist("VCPP/build/Release/VCPP_Solution.exe")
 
     if os.name == "posix":
-        execute_if_exist("GPP/build/GPP_Solution")
-        execute_if_exist("Clang/build/Clang_Solution")
+        if platform.system() == "Linux":
+            execute_if_exist("GPP/build/GPP_Solution")
+            execute_if_exist("Clang/build/Clang_Solution")
+        elif platform.system() == "Darwin":
+            execute_if_exist("Apple_Clang/build/Apple_Clang_Solution")
 
 main()

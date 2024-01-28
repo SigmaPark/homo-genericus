@@ -12,6 +12,10 @@
 #include <limits>
 #include "../Type_Analysis/Type_Analysis.hpp"
 
+#ifdef __APPLE__
+#include <tuple>
+#endif
+
 
 namespace sgm
 {
@@ -48,7 +52,7 @@ namespace sgm
 namespace std
 {
 
-#ifndef _UTILITY_
+#if !( defined(_UTILITY_) || defined(__APPLE__) )
 	template<class>
 	struct tuple_size;
 

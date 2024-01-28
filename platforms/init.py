@@ -18,6 +18,7 @@ def remove_if_exists(dir):
 def main():
     remove_if_exists("GPP/build")
     remove_if_exists("Clang/build")
+    remove_if_exists("Apple_Clang/build")
     remove_if_exists("VCPP/build")
     remove_if_exists("VisualStudio2019/x64")
     remove_if_exists("VisualStudio2019/VisualStudio2019/x64")  
