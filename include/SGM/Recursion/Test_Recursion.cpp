@@ -8,8 +8,80 @@
 #include "Test_Recursion.hpp"
 
 
+static void intro()
+{
+	sgm::spec::mdo
+	<<	sgm::spec::Title(L"Introduction")
+	<<	L"There are many cases that recursions are easier to understand and "
+	<<	L"more effective to express than loop . "
+	<<	L"However, implementations for recursion consume lots of callstack depth . "
+	<<	L"The callstack depth is so limited that one should be careful "
+	<<	L"to avoid stack overflow error when a recursive algorithm is used . "
+	<<	L"SGM_RECURSION macro system gives you a fancy way to implement recursion codes "
+	<<	L"without consuming any callstack . "
+	<<	sgm::spec::empty_line;
+}
+
+
+static void How_to_use()
+{
+	sgm::spec::mdo 
+	<<	sgm::spec::Title(L"How to Use")
+	<<	L"SGM_RECURSION method consists of 2 lambdas . " << sgm::spec::newl;
+
+	sgm::spec::mdo
+	<<	LR"(
+			[/* capture here like lambda does */] 
+			SGM_RECURSION(param1, param2, param3)		// input parameter names without type
+			{
+				// ...
+
+				if( /* halting condition */ )
+				{
+					// ...
+
+					return /* result */ ;
+				}
+				else  /* recursion condition */
+				{
+					// ...
+
+					return_RECURSION( new_param1, new_param2, new_param_3 ); // recursion here
+				}
+			}
+			FROM_INITIAL_FUNCTION( /* input parameters declarations like general function */ )
+			{
+				// ...
+
+				return recursion(initial_param1, initial_param2, initial_param3);
+			};
+		)"_code
+	<<	sgm::spec::newl;
+
+	sgm::spec::mdo
+	<<	L"1st lambda-like macro starting with \" [...] SGM_RECURSION(...) \" defines "
+	<<	L"how the recursion behaves . When you recurse again, be careful so that you must "
+	<<	L"write \"return_RECURSION\", not \"return RECURSION\" or \"return recursion\" . "
+	<<	sgm::spec::newl
+	<<	L"2nd lambda starting with macro \"FROM_INITIAL_FUNCTION(...)\" enable you to set "
+	<<	L"pre-actions and initial conditions for the recursion . "
+	<<	L"Here, you can start recursion with a pre-defined function "
+	<<	L"whose name is \"recursion()\" . "
+	<<	sgm::spec::newl
+	<<	L"Let's take a look how it works with some examples ."
+	<<	sgm::spec::empty_line;
+
+	sgm::spec::mdo << sgm::spec::Title(L"Examples");
+}
+
+
 static void Factorial()
 {
+	sgm::spec::mdo 
+	<<	sgm::spec::Title(L"Factorial", 2)
+	<<	sgm::spec::Load_code_block(L"factorial_example") << sgm::spec::newl;
+
+BEGIN_CODE_BLOCK(factorial_example)
 	auto factorial_f
 	=	[] SGM_RECURSION(n, res)
 		{
@@ -29,21 +101,31 @@ static void Factorial()
 	&&	factorial_f(6) == 6*5*4*3*2*1
 	);
 
-	SGM_SPEC_ASSERT
-	(	[] SGM_RECURSION(n, res)
+
+	int const factorial6
+	=	[] SGM_RECURSION(n, res)
 		{	
 			if(n == 1)
 				return res;
 			else 
 				return_RECURSION(n-1, n*res);
-		} FROM_INITIAL_FUNCTION{  return recursion(6, 1);  }()
-	==	6*5*4*3*2*1
-	);
+		} FROM_INITIAL_FUNCTION{  return recursion(6, 1);  }();
+
+
+	SGM_SPEC_ASSERT(factorial6 == 6*5*4*3*2*1);
+END_CODE_BLOCK(factorial_example)
+
+	sgm::spec::mdo << sgm::spec::empty_line;
 }
 
 
 static void Fibonacci_Test()
 {
+	sgm::spec::mdo 
+	<<	sgm::spec::Title(L"Fibonacci Sequence", 2)
+	<<	sgm::spec::Load_code_block(L"fibonacci_example") << sgm::spec::newl;
+
+BEGIN_CODE_BLOCK(fibonacci_example)
 	auto fibonacci_f
 	=	[] SGM_RECURSION(n, prev, next)
 		{	
@@ -63,22 +145,32 @@ static void Fibonacci_Test()
 	&&	fibonacci_f(6) == 8	
 	&&	fibonacci_f(7) == 13
 	);
-	
-	SGM_SPEC_ASSERT
-	(	[] SGM_RECURSION(n, prev, next)
+
+
+	int const fibonacci7th
+	=	[] SGM_RECURSION(n, prev, next)
 		{	
 			if(n > 1)
 				return_RECURSION(n-1, next, prev+next);
 			else
 				return next;
-		} FROM_INITIAL_FUNCTION{  return recursion(7, 0, 1);  }()
-	==	13
-	);
+		} FROM_INITIAL_FUNCTION{  return recursion(7, 0, 1);  }();
+	
+
+	SGM_SPEC_ASSERT(fibonacci7th == 13);
+END_CODE_BLOCK(fibonacci_example)
+
+	sgm::spec::mdo << sgm::spec::empty_line;
 }
 
 
 static void Upper_Bound_Test()
 {
+	sgm::spec::mdo 
+	<<	sgm::spec::Title(L"Upper Bound of a Sequence", 2)
+	<<	sgm::spec::Load_code_block(L"upperbound_example") << sgm::spec::newl;	
+
+BEGIN_CODE_BLOCK(upperbound_example)
 	int const arr[] = {1, 2, 4, 5, 5, 6};
 
 
@@ -108,12 +200,17 @@ static void Upper_Bound_Test()
 	&&	test_f( upper_bound_f(6), 6 )
 	&&	test_f( upper_bound_f(7), 6 )
 	);
+END_CODE_BLOCK(upperbound_example)
+
+	sgm::spec::mdo << sgm::spec::empty_line;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
 SGM_SPECIFICATION_TEST(sgm::spec::Test_, Recursion, /**/)
-{	::Factorial
+{	::intro
+,	::How_to_use
+,	::Factorial
 ,	::Fibonacci_Test
 ,	::Upper_Bound_Test
 };
