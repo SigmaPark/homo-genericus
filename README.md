@@ -2,29 +2,11 @@
 	Generic Purpose Template Library
 
 # Minimum C++ Syntex Requirements
-	## C++11
-	-	SGM/Abbreviable
-	-	SGM/Allocator
-	-	SGM/Array
-	-	SGM/Boomerang
-	-	SGM/Concurrency
-	-	SGM/Exception
-	-	SGM/Family
-	-	SGM/Flag_Set
-	-	SGM/High_Templar
-	-	SGM/interface_Traits
-	-	SGM/iterable
-	-	SGM/List
-	-	SGM/Mathexpr
-	-	SGM/Operator_of
-	-	SGM/Queue
-	-	SGM/Span
-	-	SGM/Specification
-	-	SGM/Type_Analysis
+	C++11 or higher. Some libraries need C++17 features.
 
 	## C++17
-	-	SGM/Recursion
-	-	SGM/Functor
+	-	Recursion
+	-	Functor
 
 # Minimum Compiler Requirements
 	-	MSVC 19.14 (Visual Studio 2017)
