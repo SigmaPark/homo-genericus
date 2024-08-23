@@ -1,10 +1,5 @@
 # SGM  
 	Generic Purpose Template Library
-	
-# S3D  
-	Library for 3D Geometric Algorithms  
-	Set system environment valriable $EIGEN_DIR for 3rd party library "Eigen" Directory.
-
 
 # Minimum C++ Syntex Requirements
 	## C++11
@@ -30,9 +25,6 @@
 	## C++17
 	-	SGM/Recursion
 	-	SGM/Functor
-
-	-	S3D
-
 
 # Minimum Compiler Requirements
 	-	MSVC 19.14 (Visual Studio 2017)

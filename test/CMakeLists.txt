@@ -23,3 +23,4 @@ add_executable(Sigma_test ${SRC_FILES})
 
 target_link_libraries(Sigma_test PRIVATE Sigma_lib)
 target_compile_features(Sigma_test PRIVATE cxx_std_17)
+target_compile_definitions(Sigma_test PRIVATE SGM_CXX_STANDARD=2017)
