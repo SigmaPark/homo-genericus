@@ -441,17 +441,29 @@ FodyWeavers.xsd
 # VIM 
 *.swp
 
-# VisualStudio IDE
-[Vv]isual[Ss]tudio*/
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
 
 # CMake idiom
 [Bb]uild/
 [Oo]ut/
-
-# etc
-_private_*.*
-_debug_*.*
-_test_*.*
 
 # prefix convention
 \[*\]_*.*
