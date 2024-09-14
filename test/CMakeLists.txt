@@ -13,10 +13,13 @@ if(UNIX)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
 
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 file(
 	GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
+	${INCLUDE_DIR}/*.hpp
 )
 
 add_executable(Sigma_test ${SRC_FILES})
