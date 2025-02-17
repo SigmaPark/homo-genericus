@@ -4,10 +4,10 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#include "SGM/Exception/Exception.hpp"
 #include "SGM/Specification/Specification.hpp"
 #include <fstream>
 #include <queue>
+#include <stdexcept>
 
 
 using std::size_t;
@@ -299,7 +299,7 @@ auto sgm::spec::HTML_tag(wstring const& contents, wstring const& tag)-> wstring
 auto sgm::spec::Load_image(wstring const& image_name, size_t const image_width)-> wstring
 {
 	if( !::_file_exists(mdo->md_materials_dir() + L'/' + image_name) )
-		throw sgm::Exception(L"Cannot find the image file in ./md_materials directory.");
+		throw std::runtime_error("Cannot find the image file in ./md_materials directory.");
 
 	auto const size_str
 	=	image_width == 0 
@@ -373,7 +373,7 @@ static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
 auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> wstring
 {
 	if( !::_file_exists(mdo->working_filepath()) )
-		throw Exception(L"the file to be loaded doesn't exist.");
+		throw std::runtime_error("the file to be loaded doesn't exist.");
 
 	std::wifstream file( Letter_Conversion::Wcs_to_Mbs(mdo->working_filepath()).c_str() );
 
@@ -438,7 +438,7 @@ auto sgm::spec::Load_description_file(wstring const& filename) noexcept(false)->
 
 
 	if( !::_file_exists(filepath) )
-		throw sgm::Exception(L"Cannot find the file in ./md_materials directory.");
+		throw std::runtime_error("Cannot find the file in ./md_materials directory.");
 	
 	std::queue<wstring> qs;
 	size_t nof_char = 0;
