@@ -10,9 +10,8 @@
 
 
 #include "SGM/iterable/iterable.hpp"
-#include <initializer_list>
+#include <string>
 #include <iostream>
-#include "SGM/Letter/Letter.hpp"
 
 
 namespace sgm
@@ -31,7 +30,7 @@ namespace sgm
 #define END_CODE_BLOCK(TAG) /* nothing */
 
 #define END_CODE_BLOCK_AND_LOAD(TAG)  \
-    sgm::spec::mdo << sgm::spec::Load_code_block( sgm::Letter_Conversion::Mbs_to_Wcs(#TAG) );
+    sgm::spec::mdo << sgm::spec::Load_code_block( sgm::spec::_Mbs_to_Wcs(#TAG) );
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -272,7 +271,7 @@ namespace sgm
             return; \
         \
         auto const file_path \
-        =   sgm::Letter_Conversion::Mbs_to_Wcs  \
+        =   sgm::spec::_Mbs_to_Wcs  \
             (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
             );  \
         \
@@ -283,7 +282,7 @@ namespace sgm
         =   (   std::wstring{L"[Failure case] \n"} \
             +   L"  File : " + file_path + L'\n'  \
             +   L"  Line : " + error_line + L'\n' \
-            +   L"  " + sgm::Letter_Conversion::Mbs_to_Wcs(#__VA_ARGS__) \
+            +   L"  " + sgm::spec::_Mbs_to_Wcs(#__VA_ARGS__) \
             +   L"\n\n" \
             );  \
         \
@@ -337,6 +336,29 @@ namespace sgm
 
 	    auto _Code_writing(std::wstring const& code, std::wstring const &lang = L"")
         ->  std::wstring;
+
+
+    #pragma warning(push)
+    #pragma warning(disable : 4996)
+    	static auto _Mbs_to_Wcs(std::string const& mbs)-> std::wstring
+    	{
+    		std::wstring res(mbs.size(), L'\0');
+    
+    		mbstowcs(res.data(), mbs.c_str(), res.size());
+    		
+    		return res;
+    	}
+    	
+    	
+    	static auto _Wcs_to_Mbs(std::wstring const& wcs)-> std::string
+    	{
+    		std::string res(wcs.size(), '\0');
+    
+    		wcstombs(res.data(), wcs.c_str(), res.size());
+    
+    		return res;
+    	}
+    #pragma warning(pop)
     
     }
 }
@@ -549,7 +571,7 @@ private:
         \
         guard.is_successful = true;    \
         \
-        auto const title_wstr = sgm::Letter_Conversion::Mbs_to_Wcs(#TITLE); \
+        auto const title_wstr = sgm::spec::_Mbs_to_Wcs(#TITLE); \
         \
         std::wcout << title_wstr << L" test starts.\n";    \
         \

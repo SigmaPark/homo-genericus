@@ -101,7 +101,7 @@ void sgm::spec::_MD_Stream::print_and_close()
 		return;
 
 	for
-	(	std::wofstream ofs( Letter_Conversion::Wcs_to_Mbs(_md_filepath).c_str() )
+	(	std::wofstream ofs( _Wcs_to_Mbs(_md_filepath).c_str() )
 	;	!_pcnts->q.empty()
 	;	ofs << _pcnts->q.front(),  _pcnts->q.pop() 
 	);
@@ -133,7 +133,7 @@ sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(dir_t working_filepath) : is_succe
 
 
 sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(std::string working_filepath)
-:	_MD_Stream_Guard( Letter_Conversion::Mbs_to_Wcs(working_filepath) ){}
+:	_MD_Stream_Guard( _Mbs_to_Wcs(working_filepath) ){}
 
 
 sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
@@ -141,7 +141,7 @@ sgm::spec::_MD_Stream_Guard::~_MD_Stream_Guard()
 	if(is_successful && mdo->ever_used())
 		mdo->print_and_close();
 	else
-		std::remove( Letter_Conversion::Wcs_to_Mbs(mdo->md_filepath()).c_str() ),
+		std::remove( _Wcs_to_Mbs(mdo->md_filepath()).c_str() ),
 		mdo->close();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
@@ -202,7 +202,7 @@ static auto _is_empty_line(wstring const& line)-> bool
 
 static auto _file_exists(dir_t const& filepath)-> bool
 {
-	return std::wifstream( sgm::Letter_Conversion::Wcs_to_Mbs(filepath).c_str() ).is_open();
+	return std::wifstream( sgm::spec::_Wcs_to_Mbs(filepath).c_str() ).is_open();
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -335,7 +335,9 @@ auto sgm::spec::Title(wstring const& title, unsigned const level)-> wstring
 
 static auto Getline(std::wifstream& wis, std::wstring& wbuf)-> std::wifstream&
 {
-	wbuf.reserve(sgm::Letter_Conversion::string_buffer_size_v);
+	static size_t constexpr String_buffer_size = 0x1'000;
+
+	wbuf.reserve(String_buffer_size);
 	wbuf.clear();
 
 	std::wistream::sentry wse(wis, true);
@@ -375,7 +377,7 @@ auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> 
 	if( !::_file_exists(mdo->working_filepath()) )
 		throw std::runtime_error("the file to be loaded doesn't exist.");
 
-	std::wifstream file( Letter_Conversion::Wcs_to_Mbs(mdo->working_filepath()).c_str() );
+	std::wifstream file( _Wcs_to_Mbs(mdo->working_filepath()).c_str() );
 
 	wstring const
 		cb_begin = wstring(L"BEGIN_CODE_BLOCK(") + code_block_tag + L")",
@@ -442,7 +444,7 @@ auto sgm::spec::Load_description_file(wstring const& filename) noexcept(false)->
 	
 	std::queue<wstring> qs;
 	size_t nof_char = 0;
-	std::wifstream file( Letter_Conversion::Wcs_to_Mbs(filepath).c_str() );
+	std::wifstream file( _Wcs_to_Mbs(filepath).c_str() );
 
 	for
 	(	wstring buf
