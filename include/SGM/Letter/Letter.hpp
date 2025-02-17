@@ -26,27 +26,25 @@ struct sgm::Letter_Conversion
 {
 	Letter_Conversion() = delete;
 
-	static std::size_t constexpr string_buffer_size_v = 0x1000;
-
 #pragma warning(push)
 #pragma warning(disable : 4996)
 	static auto Mbs_to_Wcs(std::string const& mbs)-> std::wstring
 	{
-		static wchar_t buf[string_buffer_size_v];
+		std::wstring res(mbs.size(), L'\0');
 
-		mbstowcs(buf, mbs.c_str(), string_buffer_size_v);
+		mbstowcs(res.data(), mbs.c_str(), res.size());
 		
-		return buf;
+		return res;
 	}
 	
 	
 	static auto Wcs_to_Mbs(std::wstring const& wcs)-> std::string
 	{
-		static char buf[string_buffer_size_v];
+		std::string res(wcs.size(), '\0');
 
-		wcstombs(buf, wcs.c_str(), string_buffer_size_v);
+		wcstombs(res.data(), wcs.c_str(), res.size());
 
-		return buf;
+		return res;
 	}
 #pragma warning(pop)
 };
