@@ -117,7 +117,7 @@ void sgm::spec::_MD_Stream::_push(wstring const& str)
 
 void sgm::spec::_MD_Stream::_push(wstring&& str)
 {
-	_pcnts->q.push( Move(str) );  
+	_pcnts->q.push( std::move(str) );  
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -128,7 +128,7 @@ sgm::spec::_MD_Stream_Guard::_MD_Stream_Guard(dir_t working_filepath) : is_succe
 		if(c == L'\\')
 			c = L'/';
 
-	mdo->open( Move(working_filepath) ); 
+	mdo->open( std::move(working_filepath) ); 
 }
 
 
@@ -208,7 +208,7 @@ static auto _file_exists(dir_t const& filepath)-> bool
 
 
 sgm::spec::_tabless_description::_tabless_description(wstring&& s) 
-:	_str(  _tabless_string( Move(s) )  ){}
+:	_str(  _tabless_string( std::move(s) )  ){}
 
 
 auto sgm::spec::_tabless_description::_tabless_string(wstring&& str)-> wstring
@@ -226,9 +226,9 @@ auto sgm::spec::_tabless_description::_tabless_string(wstring&& str)-> wstring
 
 			wstring s(itr1, itr2);
 
-			qs.emplace( Move(s) );
+			qs.emplace( std::move(s) );
 
-			total_str_len += Difference(itr1, itr2);
+			total_str_len += std::distance(itr1, itr2);
 		};
 
 	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)
@@ -391,7 +391,7 @@ auto sgm::spec::Load_code_block(wstring const code_block_tag) noexcept(false)-> 
 				return s;
 			
 			auto fitr = s.cbegin();
-			auto bitr = Prev(s.cend());
+			auto bitr = std::prev(s.cend());
 
 			for(;  *fitr == L' ' || *fitr == L'\t';  ++fitr);
 			for(;  *bitr == L' ' || *bitr == L'\t';  --bitr);
@@ -496,9 +496,9 @@ auto sgm::spec::_Code_writing(wstring const& str, wstring const& lang)-> wstring
 			if( !_is_empty_line(s) )
 				min_nof_tab = min_f( min_nof_tab, tab_count_f(s) );
 
-			qs.emplace( Move(s) );
+			qs.emplace( std::move(s) );
 
-			total_str_len += Difference(itr1, itr2);
+			total_str_len += std::distance(itr1, itr2);
 		};
 
 	for(auto itr1 = str.cbegin(),  itr2 = itr1;  ;  ++itr2)

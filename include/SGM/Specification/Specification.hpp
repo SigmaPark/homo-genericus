@@ -9,7 +9,7 @@
 #define _SGM_SPECIFICATION_
 
 
-#include "SGM/iterable/iterable.hpp"
+#include <type_traits>
 #include <string>
 #include <iostream>
 
@@ -128,7 +128,7 @@ public:
 
     static void Begin_log(Specimen_Logger& logger) noexcept
     {  
-        _Logger_ptr() = Address_of(logger);  
+        _Logger_ptr() = std::addressof(logger);  
     }
     
     static void End_log() noexcept{  _Logger_ptr() = nullptr;  }
@@ -195,10 +195,10 @@ namespace sgm
         template<class RG1, class RG2, class EQ>
         static auto Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2, EQ&& eq)-> bool
         {
-            auto itr1 = Begin(rg1);
-            auto itr2 = Begin(rg2);
-            auto const end1 = End(rg1);
-            auto const end2 = End(rg2);
+            auto itr1 = std::begin(rg1);
+            auto itr2 = std::begin(rg2);
+            auto const end1 = std::end(rg1);
+            auto const end2 = std::end(rg2);
 
             for( ;  itr1 != end1 && itr2 != end2 && eq(*itr1, *itr2);  itr1++,  itr2++ );
 
@@ -208,8 +208,8 @@ namespace sgm
         template<class RG1, class RG2>
         static auto Are_Equivalent_Ranges(RG1 const& rg1, RG2 const& rg2)-> bool
         {
-            using _T1 = decltype( *Begin(rg1) );
-            using _T2 = decltype( *Begin(rg2) );
+            using _T1 = decltype( *std::begin(rg1) );
+            using _T2 = decltype( *std::begin(rg2) );
 
             return 
             Are_Equivalent_Ranges
@@ -221,7 +221,7 @@ namespace sgm
         template<class RG, class T, class EQ>
         static auto Are_All_Equivalent_to(RG const& rg, T const& t, EQ&& eq)-> bool
         {
-            using _T = decltype( *Begin(rg) );
+            using _T = decltype( *std::begin(rg) );
 
             return Are_All_True( rg, [t, eq](_T const& _t)-> bool{  return eq(_t, t);  } );
         }
@@ -229,7 +229,7 @@ namespace sgm
         template<class RG, class T>
         static auto Are_All_Equivalent_to(RG const& rg, T const& t)-> bool
         {
-            using _T = decltype( *Begin(rg) );
+            using _T = decltype( *std::begin(rg) );
             
             return
             Are_All_Equivalent_to
@@ -264,6 +264,9 @@ namespace sgm
 }
 
 
+#define _SGM_SPEC_DOUBLE_UNDERBAR_MACRO_HELPER(MACRO)  __##MACRO##__
+
+
 #define SGM_SPEC_ASSERT(...) \
     [](bool const assertion_pass) noexcept(false)-> void \
     {   \
@@ -272,11 +275,11 @@ namespace sgm
         \
         auto const file_path \
         =   sgm::spec::_Mbs_to_Wcs  \
-            (   _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
+            (   _SGM_SPEC_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) \
             );  \
         \
         auto const error_line \
-        =   std::to_wstring( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) );  \
+        =   std::to_wstring( _SGM_SPEC_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) );  \
         \
         auto const log_msg \
         =   (   std::wstring{L"[Failure case] \n"} \
@@ -318,14 +321,15 @@ namespace sgm
 
 
         template
-        <   class T, class _T = Decay_t<T>
+        <   class T
+        ,   class _T = std::remove_cv_t< std::remove_reference_t<T> >
         ,   int 
-            =   (   is_Same<_T, _tabless_description>::value 
-                ||  is_Same<_T, _code_description>::value
+            =   (   std::is_same<_T, _tabless_description>::value 
+                ||  std::is_same<_T, _code_description>::value
                 ) ? 1
-            :   is_Same<_T, bool>::value ? 2
-            :   is_Convertible<_T, double>::value ? 3
-            :   is_Pointer<_T>::value ? 4
+            :   std::is_same<_T, bool>::value ? 2
+            :   std::is_convertible<_T, double>::value ? 3
+            :   std::is_pointer<_T>::value ? 4
             :   /* otherwise */ 0
         >
         struct _MD_Stream_Helper;
@@ -337,6 +341,8 @@ namespace sgm
 	    auto _Code_writing(std::wstring const& code, std::wstring const &lang = L"")
         ->  std::wstring;
 
+
+        struct _No_instance;
 
     #pragma warning(push)
     #pragma warning(disable : 4996)
@@ -441,42 +447,48 @@ private:
 template<class T>
 auto sgm::spec::_MD_Stream::operator<<(T&& t)-> _MD_Stream&
 {
-    _push(  _MD_Stream_Helper<T>::calc( Forward<T>(t) )  );
+    _push(  _MD_Stream_Helper<T>::calc( std::forward<T>(t) )  );
 
 	return *this;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+struct sgm::spec::_No_instance
+{
+    _No_instance() = delete;
+};
+
+
 template<class T, class _T, int>
-struct sgm::spec::_MD_Stream_Helper : Unconstructible
+struct sgm::spec::_MD_Stream_Helper : _No_instance
 {
     template<class Q>
-    static auto calc(Q&& q)-> std::wstring{  return Forward<Q>(q);  }    
+    static auto calc(Q&& q)-> std::wstring{  return std::forward<Q>(q);  }    
 };
 
 template<class T, class _T>
-struct sgm::spec::_MD_Stream_Helper<T, _T, 1> : Unconstructible
+struct sgm::spec::_MD_Stream_Helper<T, _T, 1> : _No_instance
 {
     template<class Q>
-    static auto calc(Q&& q)-> SGM_DECLTYPE_AUTO(  q._str  )
+    static auto calc(Q&& q)-> decltype(q._str){  return q._str;  }
 };
 
 template<class T, class _T>
-struct sgm::spec::_MD_Stream_Helper<T, _T, 2> : Unconstructible
+struct sgm::spec::_MD_Stream_Helper<T, _T, 2> : _No_instance
 {
     static auto calc(_T const b)-> std::wstring{  return b ? L"true" : L"false";  }
 };
 
 template<class T, class _T>
-struct sgm::spec::_MD_Stream_Helper<T, _T, 3> : Unconstructible
+struct sgm::spec::_MD_Stream_Helper<T, _T, 3> : _No_instance
 {
     template<class Q>
     static auto calc(Q const s)-> std::wstring{  return std::to_wstring(s);  }
 };
 
 template<class T, class _T>
-struct sgm::spec::_MD_Stream_Helper<T, _T, 4> : Unconstructible
+struct sgm::spec::_MD_Stream_Helper<T, _T, 4> : _No_instance
 {
     template<class P>
     static auto calc(P const p)
@@ -490,7 +502,7 @@ class sgm::spec::_Singleton_MD_Streamer
 public:
     template<class T>
     auto operator<<(T&& t) const
-    ->  _MD_Stream&{  return _MD_Stream::instance() << Forward<T>(t);  }
+    ->  _MD_Stream&{  return _MD_Stream::instance() << std::forward<T>(t);  }
 
     auto operator->() const-> _MD_Stream*{  return &_MD_Stream::instance();  }
 };
@@ -567,7 +579,7 @@ private:
     \
     void PREFIX##TITLE##SUFFIX::test()  \
     {   \
-        sgm::spec::_MD_Stream_Guard guard( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) );  \
+        sgm::spec::_MD_Stream_Guard guard( _SGM_SPEC_DOUBLE_UNDERBAR_MACRO_HELPER(FILE) );  \
         \
         guard.is_successful = true;    \
         \

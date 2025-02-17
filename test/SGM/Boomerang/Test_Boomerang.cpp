@@ -6,6 +6,7 @@
 
 #include "SGM/Boomerang/Boomerang.hpp"
 #include "Test_Boomerang.hpp"
+#include "SGM/interface_Traits/interface_Traits.hpp"
 
 
 using sgm::spec::Specimen;

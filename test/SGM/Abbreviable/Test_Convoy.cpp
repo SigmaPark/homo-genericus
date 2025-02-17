@@ -6,6 +6,7 @@
 
 #include "SGM/Abbreviable/Convoy.hpp"
 #include "Test_Convoy.hpp"
+#include "SGM/interface_Traits/interface_Traits.hpp"
 
 
 using sgm::spec::Specimen;

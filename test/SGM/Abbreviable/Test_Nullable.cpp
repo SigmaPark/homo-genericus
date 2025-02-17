@@ -6,6 +6,7 @@
 
 #include "SGM/Abbreviable/Nullable.hpp"
 #include "Test_Nullable.hpp"
+#include "SGM/interface_Traits/interface_Traits.hpp"
 
 
 using sgm::spec::Specimen;
