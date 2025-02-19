@@ -1,3 +1,7 @@
+#	SPDX-FileCopyrightText: (c) 2021 Jin-Eon Park <greengb@naver.com> <sigma@gm.gist.ac.kr>
+#	SPDX-License-Identifier: MIT License
+#=========#=========#=========#=========#=========#=========#=========#=========#=========#=========
+
 cmake_minimum_required(VERSION 3.5)
 
 project(
