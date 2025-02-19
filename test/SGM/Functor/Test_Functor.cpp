@@ -9,7 +9,7 @@
 #include <cmath>
 
 
-using sgm::spec::Specimen;
+using sgm::h2u::Specimen;
 
 
 struct Test : sgm::Unconstructible
@@ -29,7 +29,7 @@ void Test::Lambda()
 	int x = 5;
 	Specimen s{20};
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	SGM_LAMBDA( 10*(_0 + _1) - _2.value() )(x, 3, s) 
 	==	10*(x + 3) - s.value()
 	);
@@ -44,7 +44,7 @@ void Test::Functor()
 
 		sgm::fp::Functor ftr = SGM_LAMBDA( 10*(_0 + _1) - _2.value() );
 
-		SGM_SPEC_ASSERT( ftr(x, 3, s) == 10*(x + 3) - s.value() );
+		SGM_H2U_ASSERT( ftr(x, 3, s) == 10*(x + 3) - s.value() );
 	}
 	{
 		int x = 5;
@@ -52,7 +52,7 @@ void Test::Functor()
 
 		sgm::fp::Functor ftr = [x, &s](int y)-> int{  return 10*(x + y) - s.value();  };
 
-		SGM_SPEC_ASSERT( ftr(3) == 10*(x + 3) - s.value() );		
+		SGM_H2U_ASSERT( ftr(3) == 10*(x + 3) - s.value() );		
 	}
 }
 
@@ -63,7 +63,7 @@ void Test::Blank()
 
 	sgm::fp::Functor ftr = SGM_LAMBDA(100*_0 + 10*_1 + _2);
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	ftr(_, 3, 5)(1) == 135
 	&&	ftr(1, _, _)(3, 5) == 135
 	&&	ftr(_, _, 5)(1, 3) == 135
@@ -79,7 +79,7 @@ void Test::Composition()
 		sgm::fp::Functor ftr2 = SGM_LAMBDA(-10*_0);
 		auto composed_ftr = ftr2*ftr1;
 
-		SGM_SPEC_ASSERT( composed_ftr(4, 2) == -10*(10*4 + 2) );
+		SGM_H2U_ASSERT( composed_ftr(4, 2) == -10*(10*4 + 2) );
 	}
 	{
 		sgm::Array<Specimen> arr{Specimen(1), Specimen(2), Specimen(3)};
@@ -87,8 +87,8 @@ void Test::Composition()
 
 		auto const res = sgm::fp::Morph_f(arr, func);
 
-		SGM_SPEC_ASSERT
-		(	sgm::spec::Are_Equivalent_Ranges
+		SGM_H2U_ASSERT
+		(	sgm::h2u::Are_Equivalent_Ranges
 			(	res
 			,	sgm::Array<int, 3>{2, 4, 6}
 			)
@@ -103,8 +103,8 @@ void Test::Composition()
 			,	( SGM_LAMBDA(2*_0) * SGM_LAMBDA(_0.value()) ).eval()
 			);
 
-		SGM_SPEC_ASSERT
-		(	sgm::spec::Are_Equivalent_Ranges
+		SGM_H2U_ASSERT
+		(	sgm::h2u::Are_Equivalent_Ranges
 			(	res
 			,	sgm::Array<int, 3>{2, 4, 6}
 			)
@@ -146,12 +146,12 @@ void Test::Basel_Problem()
 		pi = std::acos(0)*2,
 		answer = pi*pi/6;
 
-	SGM_SPEC_ASSERT( std::abs(res - answer) < 1e-4 );
+	SGM_H2U_ASSERT( std::abs(res - answer) < 1e-4 );
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::fp::spec::Test_, Functor, /**/)
+SGM_HOW2USE_TESTS(sgm::fp::h2u::Test_, Functor, /**/)
 {	::Test::Lambda
 ,	::Test::Functor
 ,	::Test::Blank

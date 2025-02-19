@@ -1,3 +1,11 @@
+include(FetchContent)
+FetchContent_Declare(
+	How2use
+	GIT_REPOSITORY https://github.com/SigmaPark/How2use.git
+	GIT_TAG v2.1.0
+)
+FetchContent_MakeAvailable(How2use)
+
 if(MSVC)
 	add_definitions(-D_WINDOWS_SOLUTION_)
 
@@ -24,4 +32,5 @@ file(
 
 add_executable(Sigma_test ${SRC_FILES})
 
-target_link_libraries(Sigma_test PRIVATE Sigma_lib)
+target_include_directories(Sigma_test PRIVATE ${INCLUDE_DIR})
+target_link_libraries(Sigma_test PRIVATE How2use_lib)

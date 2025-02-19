@@ -10,8 +10,8 @@
 
 static void intro()
 {
-	sgm::spec::mdo
-	<<	sgm::spec::Title(L"Introduction")
+	sgm::h2u::mdo
+	<<	sgm::h2u::Title(L"Introduction")
 	<<	L"There are many cases that recursions are easier to understand and "
 	<<	L"more effective to express than loop . "
 	<<	L"However, implementations for recursion consume lots of callstack depth . "
@@ -19,17 +19,17 @@ static void intro()
 	<<	L"to avoid stack overflow error when a recursive algorithm is used . "
 	<<	L"SGM_RECURSION macro system gives you a fancy way to implement recursion codes "
 	<<	L"without consuming any callstack . "
-	<<	sgm::spec::empty_line;
+	<<	sgm::h2u::empty_line;
 }
 
 
 static void How_to_use()
 {
-	sgm::spec::mdo 
-	<<	sgm::spec::Title(L"How to Use")
-	<<	L"SGM_RECURSION method consists of 2 lambdas . " << sgm::spec::newl;
+	sgm::h2u::mdo 
+	<<	sgm::h2u::Title(L"How to Use")
+	<<	L"SGM_RECURSION method consists of 2 lambdas . " << sgm::h2u::newl;
 
-	sgm::spec::mdo
+	sgm::h2u::mdo
 	<<	LR"(
 			[/* capture here like lambda does */] 
 			SGM_RECURSION(param1, param2, param3)		// input parameter names without type
@@ -56,30 +56,30 @@ static void How_to_use()
 				return recursion(initial_param1, initial_param2, initial_param3);
 			};
 		)"_code
-	<<	sgm::spec::newl;
+	<<	sgm::h2u::newl;
 
-	sgm::spec::mdo
+	sgm::h2u::mdo
 	<<	L"1st lambda-like macro starting with \" [...] SGM_RECURSION(...) \" defines "
 	<<	L"how the recursion behaves . When you recurse again, be careful so that you must "
 	<<	L"write \"return_RECURSION\", not \"return RECURSION\" or \"return recursion\" . "
-	<<	sgm::spec::newl
+	<<	sgm::h2u::newl
 	<<	L"2nd lambda starting with macro \"FROM_INITIAL_FUNCTION(...)\" enable you to set "
 	<<	L"pre-actions and initial conditions for the recursion . "
 	<<	L"Here, you can start recursion with a pre-defined function "
 	<<	L"whose name is \"recursion()\" . "
-	<<	sgm::spec::newl
+	<<	sgm::h2u::newl
 	<<	L"Let's take a look how it works with some examples ."
-	<<	sgm::spec::empty_line;
+	<<	sgm::h2u::empty_line;
 
-	sgm::spec::mdo << sgm::spec::Title(L"Examples");
+	sgm::h2u::mdo << sgm::h2u::Title(L"Examples");
 }
 
 
 static void Factorial()
 {
-	sgm::spec::mdo 
-	<<	sgm::spec::Title(L"Factorial", 2)
-	<<	sgm::spec::Load_code_block(L"factorial_example") << sgm::spec::newl;
+	sgm::h2u::mdo 
+	<<	sgm::h2u::Title(L"Factorial", 2)
+	<<	sgm::h2u::Load_code_block(L"factorial_example") << sgm::h2u::newl;
 
 BEGIN_CODE_BLOCK(factorial_example)
 	auto factorial_f
@@ -92,7 +92,7 @@ BEGIN_CODE_BLOCK(factorial_example)
 		} FROM_INITIAL_FUNCTION(int n){  return recursion(n, 1);  };
 
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	factorial_f(1) == 1
 	&&	factorial_f(2) == 2*1
 	&&	factorial_f(3) == 3*2*1
@@ -112,18 +112,18 @@ BEGIN_CODE_BLOCK(factorial_example)
 		} FROM_INITIAL_FUNCTION{  return recursion(6, 1);  }();
 
 
-	SGM_SPEC_ASSERT(factorial6 == 6*5*4*3*2*1);
+	SGM_H2U_ASSERT(factorial6 == 6*5*4*3*2*1);
 END_CODE_BLOCK(factorial_example)
 
-	sgm::spec::mdo << sgm::spec::empty_line;
+	sgm::h2u::mdo << sgm::h2u::empty_line;
 }
 
 
 static void Fibonacci_Test()
 {
-	sgm::spec::mdo 
-	<<	sgm::spec::Title(L"Fibonacci Sequence", 2)
-	<<	sgm::spec::Load_code_block(L"fibonacci_example") << sgm::spec::newl;
+	sgm::h2u::mdo 
+	<<	sgm::h2u::Title(L"Fibonacci Sequence", 2)
+	<<	sgm::h2u::Load_code_block(L"fibonacci_example") << sgm::h2u::newl;
 
 BEGIN_CODE_BLOCK(fibonacci_example)
 	auto fibonacci_f
@@ -136,7 +136,7 @@ BEGIN_CODE_BLOCK(fibonacci_example)
 		} FROM_INITIAL_FUNCTION(auto n){  return recursion(n, 0, 1);  };
 
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	fibonacci_f(1) == 1
 	&&	fibonacci_f(2) == 1	
 	&&	fibonacci_f(3) == 2	
@@ -157,18 +157,18 @@ BEGIN_CODE_BLOCK(fibonacci_example)
 		} FROM_INITIAL_FUNCTION{  return recursion(7, 0, 1);  }();
 	
 
-	SGM_SPEC_ASSERT(fibonacci7th == 13);
+	SGM_H2U_ASSERT(fibonacci7th == 13);
 END_CODE_BLOCK(fibonacci_example)
 
-	sgm::spec::mdo << sgm::spec::empty_line;
+	sgm::h2u::mdo << sgm::h2u::empty_line;
 }
 
 
 static void Upper_Bound_Test()
 {
-	sgm::spec::mdo 
-	<<	sgm::spec::Title(L"Upper Bound of a Sequence", 2)
-	<<	sgm::spec::Load_code_block(L"upperbound_example") << sgm::spec::newl;	
+	sgm::h2u::mdo 
+	<<	sgm::h2u::Title(L"Upper Bound of a Sequence", 2)
+	<<	sgm::h2u::Load_code_block(L"upperbound_example") << sgm::h2u::newl;	
 
 BEGIN_CODE_BLOCK(upperbound_example)
 	int const arr[] = {1, 2, 4, 5, 5, 6};
@@ -190,7 +190,7 @@ BEGIN_CODE_BLOCK(upperbound_example)
 	=	[pbegin = arr](int const* const ptr, long long const answer_diff)
 		->	bool{  return ptr - pbegin == answer_diff;  };
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	test_f( upper_bound_f(0), 0 )
 	&&	test_f( upper_bound_f(1), 1 )
 	&&	test_f( upper_bound_f(2), 2 )
@@ -202,12 +202,12 @@ BEGIN_CODE_BLOCK(upperbound_example)
 	);
 END_CODE_BLOCK(upperbound_example)
 
-	sgm::spec::mdo << sgm::spec::empty_line;
+	sgm::h2u::mdo << sgm::h2u::empty_line;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Recursion, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Recursion, /**/)
 {	::intro
 ,	::How_to_use
 ,	::Factorial

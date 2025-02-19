@@ -8,8 +8,8 @@
 #include "Test_List.hpp"
 
 
-using sgm::spec::Are_Equivalent_Ranges;
-using sgm::spec::Specimen;
+using sgm::h2u::Are_Equivalent_Ranges;
+using sgm::h2u::Specimen;
 
 
 static void Construction()
@@ -17,14 +17,14 @@ static void Construction()
 	{
 		sgm::List<Specimen> Li;
 
-		SGM_SPEC_ASSERT(Li.is_empty() && Li.size() == 0);
+		SGM_H2U_ASSERT(Li.is_empty() && Li.size() == 0);
 	}
 	{
 		sgm::List<Specimen> Li{Specimen(1), Specimen(3), Specimen(5)};
 
-		SGM_SPEC_ASSERT(Li.size() == 3);
+		SGM_H2U_ASSERT(Li.size() == 3);
 		
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>{Specimen(1), Specimen(3), Specimen(5)}
@@ -47,7 +47,7 @@ static void Emplacement()
 
 		Li.emplace_front(7);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -63,9 +63,9 @@ static void Emplacement()
 
 		auto new_itr = Li.emplace_prev( itr, Specimen(9) );
 
-		SGM_SPEC_ASSERT( *new_itr == Specimen(9) );
+		SGM_H2U_ASSERT( *new_itr == Specimen(9) );
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -81,9 +81,9 @@ static void Emplacement()
 
 		auto new_itr = Li.emplace_prev( itr, Specimen(9) );
 
-		SGM_SPEC_ASSERT( *new_itr == Specimen(9) );
+		SGM_H2U_ASSERT( *new_itr == Specimen(9) );
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -99,9 +99,9 @@ static void Emplacement()
 
 		auto new_itr = Li.emplace_next( itr, Specimen(9) );
 
-		SGM_SPEC_ASSERT( *new_itr == Specimen(9) );
+		SGM_H2U_ASSERT( *new_itr == Specimen(9) );
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -117,9 +117,9 @@ static void Emplacement()
 
 		auto new_itr = Li.emplace_next( itr, Specimen(9) );
 
-		SGM_SPEC_ASSERT( *new_itr == Specimen(9) );
+		SGM_H2U_ASSERT( *new_itr == Specimen(9) );
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -140,7 +140,7 @@ static void Pop()
 	{
 		Li.pop_back();
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -152,7 +152,7 @@ static void Pop()
 	{
 		Li.pop_front();
 	
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -164,13 +164,13 @@ static void Pop()
 	{
 		auto citr = sgm::Next(Li.begin());
 
-		SGM_SPEC_ASSERT( *citr == Specimen(5) );
+		SGM_H2U_ASSERT( *citr == Specimen(5) );
 
 		auto itr = Li.pop(citr);
 
-		SGM_SPEC_ASSERT( *itr == Specimen(7) );
+		SGM_H2U_ASSERT( *itr == Specimen(7) );
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>
@@ -191,13 +191,13 @@ static void Pop_Range()
 		
 		auto first = sgm::Next(Li.begin()),  last = sgm::Next(first, 3);
 
-		SGM_SPEC_ASSERT( *first == Specimen(3) && *last == Specimen(9) );
+		SGM_H2U_ASSERT( *first == Specimen(3) && *last == Specimen(9) );
 
 		auto itr = Li.pop(first, last);
 
-		SGM_SPEC_ASSERT(itr == last);
+		SGM_H2U_ASSERT(itr == last);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	std::initializer_list<Specimen>{Specimen(1), Specimen(9), Specimen(11)}
@@ -211,13 +211,13 @@ static void Pop_Range()
 
 		auto first = sgm::Next(Li.begin()),  last = first;
 
-		SGM_SPEC_ASSERT( *first == Specimen(3) && *last == Specimen(3) );
+		SGM_H2U_ASSERT( *first == Specimen(3) && *last == Specimen(3) );
 
 		auto itr = Li.pop(first, last);
 
-		SGM_SPEC_ASSERT(itr == last);
+		SGM_H2U_ASSERT(itr == last);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li
 			,	sgm::List<Specimen>
@@ -286,25 +286,25 @@ static void Allocator()
 
 	Li.emplace_back(1);
 
-	SGM_SPEC_ASSERT( node_arr[0].value == Specimen(1) );
+	SGM_H2U_ASSERT( node_arr[0].value == Specimen(1) );
 
 	Li.emplace_back(3);
 
-	SGM_SPEC_ASSERT( node_arr[1].value == Specimen(3) );
+	SGM_H2U_ASSERT( node_arr[1].value == Specimen(3) );
 
 	Li.emplace_front(5);
 
-	SGM_SPEC_ASSERT( node_arr[2].value == Specimen(5) );
+	SGM_H2U_ASSERT( node_arr[2].value == Specimen(5) );
 
 	Li.emplace_front(7);
 
-	SGM_SPEC_ASSERT( node_arr[3].value == Specimen(7) );
+	SGM_H2U_ASSERT( node_arr[3].value == Specimen(7) );
 
 	Li.emplace_next( sgm::Next(Li.begin()), Specimen(9) );
 
-	SGM_SPEC_ASSERT( node_arr[4].value == Specimen(9) );
+	SGM_H2U_ASSERT( node_arr[4].value == Specimen(9) );
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	Li
 		,	std::initializer_list<Specimen>
@@ -322,12 +322,12 @@ static void End_iterator()
 	{
 		auto itr = Li.end();
 
-		SGM_SPEC_ASSERT( &*Li.rbegin() == &*sgm::Prev(itr) );
+		SGM_H2U_ASSERT( &*Li.rbegin() == &*sgm::Prev(itr) );
 	}
 	{
 		auto itr = Li.rend();
 
-		SGM_SPEC_ASSERT( &*Li.begin() == &*sgm::Prev(itr) );
+		SGM_H2U_ASSERT( &*Li.begin() == &*sgm::Prev(itr) );
 	}
 }
 
@@ -341,7 +341,7 @@ static void Swap()
 
 		Li0.swap(Li1);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li0
 			,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
@@ -359,7 +359,7 @@ static void Swap()
 
 		sgm::Swap(Li0, Li1);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	Li0
 			,	sgm::List<Specimen>{Specimen(7), Specimen(9)}
@@ -407,10 +407,10 @@ void Performance::push_iterate_and_pop()
 		auto list	
 		=	sgm::List<Specimen>::by
 			(	sgm::_Test_List_Allocator_detail
-				::	Test_Allocator<sgm::spec::Specimen>(node_arr)
+				::	Test_Allocator<sgm::h2u::Specimen>(node_arr)
 			);
 	#else
-		sgm::List<sgm::spec::Specimen> list;
+		sgm::List<sgm::h2u::Specimen> list;
 	#endif
 
 		std::wcout << "\tsgm::List\n";
@@ -427,7 +427,7 @@ void Performance::push_iterate_and_pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			sgm::spec::Specimen s;
+			sgm::h2u::Specimen s;
 
 			std::wcout << "\t\titerate : ";
 
@@ -453,7 +453,7 @@ void Performance::push_iterate_and_pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
-		SGM_SPEC_ASSERT(list.is_empty());
+		SGM_H2U_ASSERT(list.is_empty());
 
 		//delete[] buffer;
 	}	
@@ -463,7 +463,7 @@ void Performance::push_iterate_and_pop()
 	{
 		std::wcout << "\tstd::list\n";
 
-		std::list<sgm::spec::Specimen> list;
+		std::list<sgm::h2u::Specimen> list;
 
 		{
 			std::wcout << "\t\templace_back : ";
@@ -477,7 +477,7 @@ void Performance::push_iterate_and_pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 		{
-			sgm::spec::Specimen s;
+			sgm::h2u::Specimen s;
 
 			std::wcout << "\t\titerate : ";
 
@@ -502,14 +502,14 @@ void Performance::push_iterate_and_pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
-		SGM_SPEC_ASSERT(list.empty());
+		SGM_H2U_ASSERT(list.empty());
 	}
 #endif
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, List, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, List, /**/)
 {	::Construction
 ,	::Emplacement
 ,	::Pop

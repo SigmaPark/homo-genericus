@@ -66,19 +66,19 @@ namespace sgm
 
 		struct Foo
 		{
-			spec::Specimen s = {10};
+			h2u::Specimen s = {10};
 		};
 		
 		struct Bar1
 		{
-			spec::Specimen s = {10};
+			h2u::Specimen s = {10};
 
 			auto operator=(Bar1 const&)-> Bar1& = delete;
 		};
 
 		struct Bar2
 		{
-			spec::Specimen s = {10};
+			h2u::Specimen s = {10};
 
 			auto operator=(Bar2 const&)-> Bar2& = delete;
 
@@ -187,12 +187,12 @@ namespace sgm
 	namespace _test_is_invocable_detail
 	{
 
-		auto Lambda_f = [](spec::Specimen, int const* p)-> int{  return *p;  };
+		auto Lambda_f = [](h2u::Specimen, int const* p)-> int{  return *p;  };
 
 		class Foo
 		{
 		public:
-			auto operator()(spec::Specimen, int const* p)-> int{  return *p;  }
+			auto operator()(h2u::Specimen, int const* p)-> int{  return *p;  }
 		};
 
 	}
@@ -205,8 +205,8 @@ static void Test05()
 	using Lambda_t = decltype(sgm::_test_is_invocable_detail::Lambda_f);
 
 	static_assert
-	(	(	sgm::Has_Operator_invocation<Foo, sgm::spec::Specimen, int const*>::value
-		&&	sgm::Has_Operator_invocation<Lambda_t, sgm::spec::Specimen, int const*>::value
+	(	(	sgm::Has_Operator_invocation<Foo, sgm::h2u::Specimen, int const*>::value
+		&&	sgm::Has_Operator_invocation<Lambda_t, sgm::h2u::Specimen, int const*>::value
 		&&	!sgm::Has_Operator_invocation<Foo>::value
 		&&	!sgm::Has_Operator_invocation<Lambda_t>::value
 		&&	!sgm::Has_Operator_invocation<Lambda_t, double**>::value
@@ -217,7 +217,7 @@ static void Test05()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, interface_Traits, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, interface_Traits, /**/)
 {	::Test01
 ,	::Test02
 ,	::Test03

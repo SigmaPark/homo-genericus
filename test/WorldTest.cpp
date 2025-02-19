@@ -65,8 +65,6 @@ bool wt::Tests(wchar_t const* const module_title) noexcept
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#include "SGM/Specification/Test_Specification.hpp"
-
 #include "SGM/Array/Test_Array.hpp"
 #include "SGM/Abbreviable/Test_Avatar.hpp"
 #include "SGM/Abbreviable/Test_Convoy.hpp"
@@ -93,29 +91,27 @@ bool wt::Tests(wchar_t const* const module_title) noexcept
 
 void test() noexcept(false)
 {
-    sgm::spec::Test_Specification::test();
-
-    sgm::spec::Test_Array::test();
-    sgm::spec::Test_Avatar::test();
-    sgm::spec::Test_Convoy::test();
-    sgm::spec::Test_Nullable::test();
-    sgm::spec::Test_Pinweight::test();
-    sgm::spec::Test_Boomerang::test();
-    sgm::spec::Test_Concurrency::test();
-    sgm::spec::Test_Family::test();
-    sgm::spec::Test_Flag_Set::test();
-    sgm::spec::Test_High_Templar::test();
-    sgm::spec::Test_interface_Traits::test();
-    sgm::spec::Test_iterable::test();    
-    sgm::spec::Test_List::test();
-    sgm::spec::Test_Mathexpr::test();
-    sgm::spec::Test_Operators_of::test();
-    sgm::spec::Test_Queue::test();
-    sgm::spec::Test_Recursion::test();
-	sgm::spec::Test_Span::test();
-    sgm::spec::Test_Type_Analysis::test();
-    sgm::fp::spec::Test_Functor::test();
-    sgm::fp::spec::Test_Parameters::test();
+    sgm::h2u::Test_Array::test();
+    sgm::h2u::Test_Avatar::test();
+    sgm::h2u::Test_Convoy::test();
+    sgm::h2u::Test_Nullable::test();
+    sgm::h2u::Test_Pinweight::test();
+    sgm::h2u::Test_Boomerang::test();
+    sgm::h2u::Test_Concurrency::test();
+    sgm::h2u::Test_Family::test();
+    sgm::h2u::Test_Flag_Set::test();
+    sgm::h2u::Test_High_Templar::test();
+    sgm::h2u::Test_interface_Traits::test();
+    sgm::h2u::Test_iterable::test();    
+    sgm::h2u::Test_List::test();
+    sgm::h2u::Test_Mathexpr::test();
+    sgm::h2u::Test_Operators_of::test();
+    sgm::h2u::Test_Queue::test();
+    sgm::h2u::Test_Recursion::test();
+	sgm::h2u::Test_Span::test();
+    sgm::h2u::Test_Type_Analysis::test();
+    sgm::fp::h2u::Test_Functor::test();
+    sgm::fp::h2u::Test_Parameters::test();
 }
 
 

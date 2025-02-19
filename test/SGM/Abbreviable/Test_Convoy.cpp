@@ -9,7 +9,7 @@
 #include "SGM/interface_Traits/interface_Traits.hpp"
 
 
-using sgm::spec::Specimen;
+using sgm::h2u::Specimen;
 
 
 static void Construction()
@@ -25,7 +25,7 @@ static void Construction()
 
 		sgm::Convoy<Specimen> cvy = sgm::Move(s);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	cvy == 3
 		&&	s == Specimen::State::MOVE_AWAY
 		);
@@ -36,6 +36,6 @@ static void Construction()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Convoy, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Convoy, /**/)
 {	Construction
 };

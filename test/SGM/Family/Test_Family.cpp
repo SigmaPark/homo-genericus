@@ -8,7 +8,7 @@
 #include "Test_Family.hpp"
 
 
-using sgm::spec::Specimen;
+using sgm::h2u::Specimen;
 
 
 static void Constructor()
@@ -20,7 +20,7 @@ static void Constructor()
 
 	auto fam2 = fam1;
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	fam1 == sgm::Make_Family( Specimen(-1), s1, cs1 )
 	&&	fam2 == sgm::Make_Family( Specimen(-1), s1, cs1 )
 	);
@@ -38,7 +38,7 @@ static void Move_Rvalue_Member()
 
 	auto fam2 = sgm::Move(fam1);
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	fam2 == sgm::Make_Family( Specimen(-1), s1, cs1, Specimen(3) )
 	&&	std::get<0>(fam1) == Specimen::State::MOVE_AWAY
 	&&	std::get<1>(fam1) == s1
@@ -57,7 +57,7 @@ static void Assignment()
 
 	fam2 = fam1;
 
-	SGM_SPEC_ASSERT( fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 1} );
+	SGM_H2U_ASSERT( fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 1} );
 }
 
 
@@ -71,7 +71,7 @@ static void Move_Assignment()
 
 	fam2 = sgm::Move(fam1);
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 3}
 	&&	std::get<0>(fam1) == Specimen::State::MOVE_AWAY
 	&&	std::get<1>(fam1) == 1
@@ -129,7 +129,7 @@ static void Merge_Family_Test()
 	,	""
 	);
 
-	SGM_SPEC_ASSERT(fam3 == sgm::Family<Specimen, Specimen, Specimen, Specimen>{s2, 3, -4, 1});
+	SGM_H2U_ASSERT(fam3 == sgm::Family<Specimen, Specimen, Specimen, Specimen>{s2, 3, -4, 1});
 }
 
 
@@ -145,7 +145,7 @@ static void Harden_Test()
 	,	""
 	);
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	std::get<0>(fam2) == s1
 	&&	std::get<1>(fam2) == 3
 	&&	s2 == Specimen::State::MOVE_AWAY
@@ -159,7 +159,7 @@ static void As_it_is_Test()
 
 	sgm::Tie(s1, s2) = sgm::Forward_as_Family(5, sgm::as_it_is);
 
-	SGM_SPEC_ASSERT( s1 == Specimen(5) && s2 == 3 );
+	SGM_H2U_ASSERT( s1 == Specimen(5) && s2 == 3 );
 }
 
 
@@ -219,7 +219,7 @@ static void Structured_Binding()
 }
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Family, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Family, /**/)
 {	::Constructor
 ,	::Move_Rvalue_Member
 ,	::Assignment

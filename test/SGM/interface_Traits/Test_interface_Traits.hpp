@@ -5,15 +5,15 @@
 
 
 #pragma once
-#include "SGM/Specification/Specification.hpp"
+#include "SGM/How2use.hpp"
 
 
 namespace sgm
 {
-	namespace spec
+	namespace h2u
 	{
 
-		SGM_SPECIFICATION_CLASS(Test_, interface_Traits, /**/);
+		SGM_HOW2USE_CLASS(Test_, interface_Traits, /**/);
 
 	}
 }

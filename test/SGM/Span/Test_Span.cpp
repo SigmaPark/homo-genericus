@@ -10,15 +10,15 @@
 #include "SGM/List/List.hpp"
 
 
-using sgm::spec::Are_Equivalent_Ranges;
-using sgm::spec::Specimen;
+using sgm::h2u::Are_Equivalent_Ranges;
+using sgm::h2u::Specimen;
 using sgm::Array;
 using sgm::List;
 
 
 static void intro()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo
     <<  Title(L"introduction")
@@ -71,7 +71,7 @@ static void Span_is_iterable()
 
 static void Primitive_Array()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo <<  Title(L"Span from Primitive Array") << newl;
     
@@ -81,12 +81,12 @@ BEGIN_CODE_BLOCK(primitive_array_ex)
 
         auto spn = sgm::Span(arr);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -100,14 +100,14 @@ END_CODE_BLOCK_AND_LOAD(primitive_array_ex)
 
         auto spn = sgm::Span<2>(arr);
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges( spn, Array<Specimen, 2>{Specimen(2), Specimen(4)} )
         );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -119,7 +119,7 @@ END_CODE_BLOCK_AND_LOAD(primitive_array_ex)
 
         auto cspn = sgm::Span<3>( sgm::immut(arr) );
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) );
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -136,7 +136,7 @@ END_CODE_BLOCK_AND_LOAD(primitive_array_ex)
 
 static void Static_Size_Array()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo
     <<  Title(L"Static-sized Span")
@@ -151,12 +151,12 @@ BEGIN_CODE_BLOCK(static_size_array_by_starting_pointer_ex)
 
         auto spn = sgm::Span<3>(arr.data());
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -168,7 +168,7 @@ BEGIN_CODE_BLOCK(static_size_array_by_starting_pointer_ex)
 
         auto cspn = sgm::Span<3>(arr.cdata()); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -191,12 +191,12 @@ BEGIN_CODE_BLOCK(static_size_array_by_iterable_ex)
 
         auto spn = sgm::Span<3>(arr); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -208,7 +208,7 @@ BEGIN_CODE_BLOCK(static_size_array_by_iterable_ex)
 
         auto cspn = sgm::Span<3>( sgm::immut(arr) );
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -226,7 +226,7 @@ END_CODE_BLOCK_AND_LOAD(static_size_array_by_iterable_ex)
 
 static void Dynamic_Size_Array()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo 
     <<  Title(L"Span by iterables with Size in Runtime")
@@ -242,12 +242,12 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_iterable_ex)
 
         auto spn = sgm::Span(arr);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -259,7 +259,7 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_iterable_ex)
 
         auto cspn = sgm::Span( sgm::immut(arr) ); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -282,12 +282,12 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_2_iterators_ex)
 
         auto spn = sgm::Span(arr.begin(), arr.end());
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -299,7 +299,7 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_2_iterators_ex)
 
         auto cspn = sgm::Span(arr.cbegin(), arr.cend()); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -322,12 +322,12 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_iterator_and_size)
 
         auto spn = sgm::Span(arr.begin(), 3); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -339,7 +339,7 @@ BEGIN_CODE_BLOCK(dynamic_size_array_by_iterator_and_size)
 
         auto cspn = sgm::Span(arr.cbegin(), 3); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -357,7 +357,7 @@ END_CODE_BLOCK_AND_LOAD(dynamic_size_array_by_iterator_and_size)
 
 static void Pointer_and_Size()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo
     <<  Title(L"Span refering to Contiguous Memories")
@@ -372,12 +372,12 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_pointer_and_size_ex)
 
         auto spn = sgm::Span(arr.data(), arr.size());
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -389,7 +389,7 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_pointer_and_size_ex)
 
         auto cspn = sgm::Span(arr.cdata(), arr.size()); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -404,7 +404,7 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_pointer_and_size_ex)
 
         auto cspn = sgm::Span(arr.data(), arr.size()); 
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -428,12 +428,12 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_2_pointer_ex)
         auto begin_ptr = arr.data(), end_ptr = arr.data() + arr.size();
         auto spn = sgm::Span(begin_ptr, end_ptr);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, arr) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, arr) );
 
         spn[0] = -1;
         spn[1] = -3;
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   arr
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -446,7 +446,7 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_2_pointer_ex)
         auto begin_cptr = arr.cdata(), end_cptr = arr.cdata() + arr.size();
         auto cspn = sgm::Span(begin_cptr, end_cptr);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, arr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -462,7 +462,7 @@ BEGIN_CODE_BLOCK(contiguous_memory_by_2_pointer_ex)
         auto begin_ptr = carr.data(), end_ptr = carr.data() + carr.size();
         auto cspn = sgm::Span(begin_ptr, end_ptr);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, carr) ); 
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, carr) ); 
 
         static_assert
         (   (   sgm::is_immutable<decltype(cspn[0])>::value
@@ -480,7 +480,7 @@ END_CODE_BLOCK_AND_LOAD(contiguous_memory_by_2_pointer_ex)
 
 static void Linked_List()
 {
-    using namespace sgm::spec;
+    using namespace sgm::h2u;
 
     mdo
     <<  Title(L"Linked List (Non-contiguous Memories)")
@@ -497,7 +497,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterable_ex)
 
         auto spn = sgm::Span(Li);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, Li) );
 
         {
             auto itr = spn.begin();
@@ -506,7 +506,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterable_ex)
             *itr = -3;
         }
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   Li
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -518,7 +518,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterable_ex)
 
         auto cspn = sgm::Span( sgm::immut(Li) );
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
 
         static_assert
         (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
@@ -540,7 +540,7 @@ BEGIN_CODE_BLOCK(linked_list_by_2_iterators_ex)
 
         auto spn = sgm::Span(Li.begin(), Li.end());
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, Li) );
 
         {
             auto itr = spn.begin();
@@ -549,7 +549,7 @@ BEGIN_CODE_BLOCK(linked_list_by_2_iterators_ex)
             *itr = -3;
         }
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   Li
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -561,7 +561,7 @@ BEGIN_CODE_BLOCK(linked_list_by_2_iterators_ex)
 
         auto cspn = sgm::Span(Li.cbegin(), Li.cend());
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
 
         static_assert
         (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
@@ -583,7 +583,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterator_and_size_ex)
 
         auto spn = sgm::Span(Li.begin(), 3);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(spn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(spn, Li) );
 
         {
             auto itr = spn.begin();
@@ -592,7 +592,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterator_and_size_ex)
             *itr = -3;
         }
 
-        SGM_SPEC_ASSERT
+        SGM_H2U_ASSERT
         (   Are_Equivalent_Ranges
             (   Li
             ,   Array<Specimen, 3>{Specimen(-1), Specimen(-3), Specimen(6)} 
@@ -604,7 +604,7 @@ BEGIN_CODE_BLOCK(linked_list_by_iterator_and_size_ex)
 
         auto cspn = sgm::Span(Li.cbegin(), 3);
 
-        SGM_SPEC_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
+        SGM_H2U_ASSERT( Are_Equivalent_Ranges(cspn, Li) );
 
         static_assert
         (   (   sgm::is_immutable<decltype(*cspn.begin())>::value
@@ -620,7 +620,7 @@ END_CODE_BLOCK_AND_LOAD(linked_list_by_iterator_and_size_ex)
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Span, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Span, /**/)
 {   ::intro
 ,   ::Span_is_iterable
 ,   ::Primitive_Array

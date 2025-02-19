@@ -8,7 +8,7 @@
 #include "Test_Mathexpr.hpp"
 
 
-using namespace sgm::spec;
+using namespace sgm::h2u;
 
 
 static void intro()
@@ -132,7 +132,7 @@ END_CODE_BLOCK_AND_LOAD(expoential_ex)
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Mathexpr, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Mathexpr, /**/)
 {	::intro
 ,	::constexpr_pi
 ,	::constexpr_factorial

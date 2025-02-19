@@ -8,7 +8,7 @@
 #include "Test_Operators_of.hpp"
 
 
-using sgm::spec::Specimen;
+using sgm::h2u::Specimen;
 
 
 struct Foo
@@ -98,129 +98,129 @@ static void Test01()
 		};
 	
 	{
-		SGM_SPEC_ASSERT( *cb == Specimen(3) );
+		SGM_H2U_ASSERT( *cb == Specimen(3) );
 		
 		*b = Specimen(33);
 
-		SGM_SPEC_ASSERT( *b == Specimen(33) );
+		SGM_H2U_ASSERT( *b == Specimen(33) );
 	}
 
 	reset_f();
 	
 	{
-		SGM_SPEC_ASSERT(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
+		SGM_H2U_ASSERT(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
 	}
 	{
-		SGM_SPEC_ASSERT( *(++b) == Specimen(3 + 1) );  reset_f();
-		SGM_SPEC_ASSERT( *(--b) == Specimen(3 - 1) );  reset_f();
+		SGM_H2U_ASSERT( *(++b) == Specimen(3 + 1) );  reset_f();
+		SGM_H2U_ASSERT( *(--b) == Specimen(3 - 1) );  reset_f();
 
 		b++;
-		SGM_SPEC_ASSERT( *b == Specimen(3 + 1) );  reset_f();
+		SGM_H2U_ASSERT( *b == Specimen(3 + 1) );  reset_f();
 
 		b--;
-		SGM_SPEC_ASSERT( *b == Specimen(3 - 1) ); 
+		SGM_H2U_ASSERT( *b == Specimen(3 - 1) ); 
 	}
 	
 	reset_f();
 
 	{
-		SGM_SPEC_ASSERT(&cb == &s);
+		SGM_H2U_ASSERT(&cb == &s);
 
 		&b = nullptr;
 
-		SGM_SPEC_ASSERT(&b == nullptr);
+		SGM_H2U_ASSERT(&b == nullptr);
 	}
 	
 	reset_f();
 	
 	{
-		SGM_SPEC_ASSERT(!b == false && ~b == false);
+		SGM_H2U_ASSERT(!b == false && ~b == false);
 	}
 	{
-		SGM_SPEC_ASSERT(cb->value() == 3);
+		SGM_H2U_ASSERT(cb->value() == 3);
 
 		b->value() = -4;
 
-		SGM_SPEC_ASSERT(b->value() == -4 && ~b == true);
+		SGM_H2U_ASSERT(b->value() == -4 && ~b == true);
 	}
 
 	reset_f();
 
 	{
-		SGM_SPEC_ASSERT(cb[1] == 3);
+		SGM_H2U_ASSERT(cb[1] == 3);
 
 		b[4] = -5;  
 
-		SGM_SPEC_ASSERT(b->value() == -5);
+		SGM_H2U_ASSERT(b->value() == -5);
 	}
 
 	reset_f();
 
 	{
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	cb + 30 == 33 && cb - 30 == -27 
 		&&	cb * 5 == 15 && cb / 2 == 1 && cb % 2 == 1
 		);
 	}
 	{
-		SGM_SPEC_ASSERT(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
+		SGM_H2U_ASSERT(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
 	}
 	{
-		SGM_SPEC_ASSERT(cb && true); 
-		SGM_SPEC_ASSERT(cb || false);
+		SGM_H2U_ASSERT(cb && true); 
+		SGM_H2U_ASSERT(cb || false);
 
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	( (cb & 2) == 23 ) && ( (cb | 4) == 403 ) && ( (cb ^ 6) == 6003 )
 		&&	( (cb << 8) == 80003 ) && ( (cb >> 9) == 900003 )
 		);
 	}
 	{
-		SGM_SPEC_ASSERT( cb->*Specimen(30) == 33 );
+		SGM_H2U_ASSERT( cb->*Specimen(30) == 33 );
 
 		b->*Specimen(30);
 
-		SGM_SPEC_ASSERT(b->value() == 33);
+		SGM_H2U_ASSERT(b->value() == 33);
 	}
 
 	reset_f();
 
 	{
 		b += 10;
-		SGM_SPEC_ASSERT(b->value() == 13);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 13);  reset_f();
 
 		b -= 10;
-		SGM_SPEC_ASSERT(b->value() == -7);  reset_f();
+		SGM_H2U_ASSERT(b->value() == -7);  reset_f();
 
 		b *= 10;
-		SGM_SPEC_ASSERT(b->value() == 30);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 30);  reset_f();
 
 		b /= 2;
-		SGM_SPEC_ASSERT(b->value() == 1);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 1);  reset_f();
 
 		b %= 2;
-		SGM_SPEC_ASSERT(b->value() == 1);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 1);  reset_f();
 
 		b &= 4;
-		SGM_SPEC_ASSERT(b->value() == 43);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 43);  reset_f();
 
 		b |= 4;
-		SGM_SPEC_ASSERT(b->value() == 403);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 403);  reset_f();
 
 		b ^= 6;
-		SGM_SPEC_ASSERT(b->value() == 6003);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 6003);  reset_f();
 
 		b <<= 8;
-		SGM_SPEC_ASSERT(b->value() == 80003);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 80003);  reset_f();
 
 		b >>= 8;
-		SGM_SPEC_ASSERT(b->value() == 800003);  reset_f();
+		SGM_H2U_ASSERT(b->value() == 800003);  reset_f();
 	}
 	{
-		SGM_SPEC_ASSERT(cb() == 777);
+		SGM_H2U_ASSERT(cb() == 777);
 
 		b(1, 23.0, 4);
 
-		SGM_SPEC_ASSERT(b->value() == -999);
+		SGM_H2U_ASSERT(b->value() == -999);
 	}
 
 	reset_f();
@@ -228,6 +228,6 @@ static void Test01()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Operators_of, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Operators_of, /**/)
 {	::Test01
 };

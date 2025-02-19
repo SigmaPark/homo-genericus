@@ -40,7 +40,7 @@ static void Parallel_Sum_with_Static_Fork_n_Join()
 			return res;
 		}();
 
-	SGM_SPEC_ASSERT(answer == 5050);
+	SGM_H2U_ASSERT(answer == 5050);
 }
 
 
@@ -74,7 +74,7 @@ static void Parallel_Sum_with_Dynamic_Fork_n_Join()
 			return res;
 		}();
 
-	SGM_SPEC_ASSERT(answer == 5050);	
+	SGM_H2U_ASSERT(answer == 5050);	
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -135,7 +135,7 @@ struct pipeline_test::Functor
 	auto operator()(INPUT t) const-> OUTPUT
 	{
 		for(auto d = amount_of_task;  d-->0;)
-			sgm::spec::Poiya_Problem(unit_kvalue_v);
+			sgm::h2u::Poiya_Problem(unit_kvalue_v);
 
 		return t;
 	}
@@ -159,7 +159,7 @@ public:
 	auto operator()(_input_t t) const-> _output_t
 	{
 		for(auto d = amount_of_task;  d-->0;)
-			sgm::spec::Poiya_Problem(unit_kvalue_v);
+			sgm::h2u::Poiya_Problem(unit_kvalue_v);
 
 		if(t.tag % Stride_for_Full_Cycle_v == 0)
 			return t;
@@ -312,7 +312,7 @@ static auto Unit_task_time_check(std::size_t const reps)-> double
 	auto const starting_time_point = system_clock::now();
 
 	for(auto d = reps;  d-->0;)
-		sgm::spec::Poiya_Problem(pipeline_test::unit_kvalue_v);
+		sgm::h2u::Poiya_Problem(pipeline_test::unit_kvalue_v);
 
 	auto const total_computing_time 
 	=	duration_cast<PREC>(system_clock::now() - starting_time_point);
@@ -428,7 +428,7 @@ static void Pipeline_Test()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, Concurrency, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Concurrency, /**/)
 {	::Parallel_Sum_with_Static_Fork_n_Join
 ,	::Parallel_Sum_with_Dynamic_Fork_n_Join
 ,	::Pipeline_Test

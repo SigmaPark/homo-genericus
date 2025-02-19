@@ -8,7 +8,7 @@
 #include "Test_Parameters.hpp"
 
 
-using sgm::spec::Specimen;
+using sgm::h2u::Specimen;
 
 
 static void Flatten()
@@ -74,7 +74,7 @@ static void Apply()
 		(	Specimen_sum_f, sgm::fp::Parameters( s0, s1, sgm::Move(s2) )  
 		);
 
-	SGM_SPEC_ASSERT(res.value() == 246);
+	SGM_H2U_ASSERT(res.value() == 246);
 }
 
 
@@ -109,7 +109,7 @@ static void Structured_Binding()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::fp::spec::Test_, Parameters, /**/)
+SGM_HOW2USE_TESTS(sgm::fp::h2u::Test_, Parameters, /**/)
 {	::Flatten
 ,	::Merge
 ,	::Apply

@@ -10,12 +10,12 @@
 #include <forward_list>
 
 
-using sgm::spec::Specimen;
-using sgm::spec::Are_Equivalent_Ranges;
+using sgm::h2u::Specimen;
+using sgm::h2u::Are_Equivalent_Ranges;
 
 static void Countable_Test()
 {
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	sgm::Countable<int>(5)
 		,	std::initializer_list<int>{0, 1, 2, 3, 4}
@@ -30,7 +30,7 @@ static void Countable_Test()
 		auto const seq = sgm::Countable<int>(5);
 		auto const rseq_arr = sgm::Array<int>(seq.rbegin(), seq.rend());
 	
-		SGM_SPEC_ASSERT
+		SGM_H2U_ASSERT
 		(	Are_Equivalent_Ranges
 			(	rseq_arr
 			,	std::initializer_list<int>{4, 3, 2, 1, 0}
@@ -75,7 +75,7 @@ static void Morph_Test()
 	};
 
 	
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	sgm::Morph( sgm::Countable<int>(5), triple_f ), answer  
 		)
@@ -85,7 +85,7 @@ static void Morph_Test()
 		auto itr = answer.begin();
 
 		for(  auto&& x : sgm::Morph( sgm::Countable<int>(5), triple_f )  )
-			SGM_SPEC_ASSERT(x == *itr++);
+			SGM_H2U_ASSERT(x == *itr++);
 	}
 	{
 		auto arr = sgm::Morph( sgm::Countable<int>(5), triple_f ).eval();
@@ -97,7 +97,7 @@ static void Morph_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		int count = 0;
@@ -112,8 +112,8 @@ static void Morph_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
-		SGM_SPEC_ASSERT(count == 5);
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT(count == 5);
 	}
 	{
 		auto arr 
@@ -124,14 +124,14 @@ static void Morph_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		std::forward_list<int> fLi{0, 1, 2, 3, 4};
 
 		auto arr = sgm::Morph(fLi, triple_f).eval();
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 #if SGM_CXX_STANDARD >= 2017 && defined(_MSC_VER)
 	{
@@ -144,7 +144,7 @@ static void Morph_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 #endif
 }
@@ -186,7 +186,7 @@ static void Function_Sequence_Test()
 	for(auto &x : fseq)
 		x *= 2;
 
-	SGM_SPEC_ASSERT
+	SGM_H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	aa.val
 		,	sgm::Array<int, 5>{8, 6, 4, 2, 0}
@@ -198,23 +198,23 @@ static void Function_Sequence_Test()
 static void Filter_Test()
 {
 	auto is_odd_f = [](Specimen s)-> bool{  return s.value() % 2 == 1;  };
-	auto make_spec_f = [](int x)-> Specimen{  return x;  };
+	auto make_h2u_f = [](int x)-> Specimen{  return x;  };
 
 	sgm::Array<Specimen> const inputs
-	=	sgm::Morph( sgm::Countable<int>(10), make_spec_f );
+	=	sgm::Morph( sgm::Countable<int>(10), make_h2u_f );
 
 	std::initializer_list<Specimen> const answer
 	{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)
 	};
 
 	
-	SGM_SPEC_ASSERT(  Are_Equivalent_Ranges( sgm::Filter(inputs, is_odd_f), answer )  );
+	SGM_H2U_ASSERT(  Are_Equivalent_Ranges( sgm::Filter(inputs, is_odd_f), answer )  );
 	
 	{
 		auto itr = answer.begin();
 
 		for( auto&& x : sgm::Filter(inputs, is_odd_f) )
-			SGM_SPEC_ASSERT(x == *itr++);
+			SGM_H2U_ASSERT(x == *itr++);
 	}
 	{
 		auto arr = sgm::Filter(inputs, is_odd_f).eval();
@@ -224,7 +224,7 @@ static void Filter_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
 	}
 	{
 		int count = 0;
@@ -238,8 +238,8 @@ static void Filter_Test()
 		,	""
 		);
 
-		SGM_SPEC_ASSERT( Are_Equivalent_Ranges(arr, answer) );
-		SGM_SPEC_ASSERT(count == 5);		
+		SGM_H2U_ASSERT( Are_Equivalent_Ranges(arr, answer) );
+		SGM_H2U_ASSERT(count == 5);		
 	}
 }
 
@@ -250,8 +250,8 @@ static void Fold_Test()
 	auto add_f = [](int x1, int x2)-> int{  return x1 + x2;  };
 	int const answer = 5050;
 	
-	SGM_SPEC_ASSERT
-	(	sgm::spec::Are_All_Equivalent_to
+	SGM_H2U_ASSERT
+	(	sgm::h2u::Are_All_Equivalent_to
 		(	std::initializer_list<int>
 			{	sgm::Fold(seq, add_f)
 			,	sgm::Fold(seq, add_f, 0)
@@ -272,10 +272,10 @@ static void Plait_Test()
 {
 	using sgm::Array;
 	using sgm::Family;
-	using sgm::spec::Specimen;
+	using sgm::h2u::Specimen;
 
 	Array<int> arr_int{1, 3, 5, 7, 9};
-	Array<Specimen> arr_spec{Specimen(0), Specimen(2), Specimen(4), Specimen(6), Specimen(8)};
+	Array<Specimen> arr_h2u{Specimen(0), Specimen(2), Specimen(4), Specimen(6), Specimen(8)};
 	std::initializer_list<wchar_t> iL{'a', 'b', 'c', 'd', 'e'};
 
 	auto answer
@@ -287,7 +287,7 @@ static void Plait_Test()
 		,	Family<int, Specimen, wchar_t>(9, Specimen(8), 'e')
 		};
 
-	SGM_SPEC_ASSERT(  Are_Equivalent_Ranges( sgm::Plait(arr_int, arr_spec, iL), answer )  );
+	SGM_H2U_ASSERT(  Are_Equivalent_Ranges( sgm::Plait(arr_int, arr_h2u, iL), answer )  );
 
 	{
 		int i2 = 1;
@@ -295,9 +295,9 @@ static void Plait_Test()
 		wchar_t c2 = 'a';
 		
 
-		for( auto&& [i, s, c] : sgm::Plait(arr_int, arr_spec, iL) )
+		for( auto&& [i, s, c] : sgm::Plait(arr_int, arr_h2u, iL) )
 		{
-			SGM_SPEC_ASSERT(i == i2 && s == s2 && c == c2);
+			SGM_H2U_ASSERT(i == i2 && s == s2 && c == c2);
 
 			i2 += 2,  s2.value() += 2,  c2++;
 		}
@@ -310,7 +310,7 @@ static void Plait_Test()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_SPECIFICATION_TEST(sgm::spec::Test_, High_Templar, /**/)
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, High_Templar, /**/)
 {	::Countable_Test
 ,	::Morph_Test
 ,	::Function_Sequence_Test
