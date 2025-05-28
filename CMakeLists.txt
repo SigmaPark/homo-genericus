@@ -15,8 +15,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(lib)
 
-option(BUILD_TEST_PROJ "Build Sigma's test suite" ON)
+option(BUILD_SIGMA_TEST_PROJ "Build Sigma's test suite" ON)
 
-if(BUILD_TEST_PROJ)
+if(BUILD_SIGMA_TEST_PROJ)
 	add_subdirectory(test)
 endif()
