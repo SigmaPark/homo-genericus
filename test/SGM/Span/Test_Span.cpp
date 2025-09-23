@@ -483,7 +483,7 @@ static void Linked_List()
     using namespace sgm::h2u;
 
     mdo
-    <<  Title(L"Linked List (Non-contiguous Memories)")
+    <<  Title(L"Range on Non-contiguous Memories")
     <<  L"sgm::Span doesn't care whether a refered range is on conteguous memories or not. "
     <<  L"Here's are exmples with non-contiguous memory ranges by linked list containers." 
     <<  empty_line;
