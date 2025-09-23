@@ -449,6 +449,9 @@ FodyWeavers.xsd
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
+## Claude code
+.claude/*
+
 # Local History for Visual Studio Code
 .history/
 
