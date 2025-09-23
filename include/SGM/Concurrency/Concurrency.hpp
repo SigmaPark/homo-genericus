@@ -17,7 +17,7 @@
 #include "SGM/Family/Family.hpp"
 #include "SGM/End_of_Life/EOL.hpp"
 #include "SGM/Abbreviable/Nullable.hpp"
-#include "SGM/Exception/Exception.hpp"
+#include <exception>
 
 
 namespace sgm
@@ -180,11 +180,11 @@ struct sgm::Fork_and_Join<1> : private _Fork_and_Join_Helper
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-class sgm::FnJ_Fail_to_get_Nof_Core : public Exception
+class sgm::FnJ_Fail_to_get_Nof_Core : public std::exception
 {
 public:
 	auto what() const noexcept
-	->	wchar_t const* override{  return L"Failed to get the number of hardware cores.";  }
+	->	char const* override{  return "Failed to get the number of hardware cores.";  }
 
 private:
 	friend struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC>;

@@ -11,7 +11,7 @@
 
 #include "Abbreviable.hpp"
 #include "SGM/Operators_of/Operators_of.hpp"
-#include "SGM/Exception/Exception.hpp"
+#include <exception>
 #include <new>
 #include <cassert>
 
@@ -37,10 +37,10 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-struct sgm::Bad_Access_to_Nullable : public Exception
+struct sgm::Bad_Access_to_Nullable : public std::exception
 {
 	auto what() const noexcept
-	->	wchar_t const* override{  return L"you accessed invalid sgm::Nullable .";  }
+	->	char const* override{  return "you accessed invalid sgm::Nullable .";  }
 
 private:
 	template<class T>
