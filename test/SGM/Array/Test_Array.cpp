@@ -15,6 +15,21 @@ using sgm::h2u::Are_Equivalent_Ranges;
 using sgm::h2u::Are_All_Equivalent_to;
 
 
+static void intro()
+{
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Introduction")
+	<<	L"sgm::Array is a high-performance container that provides both static "
+	<<	L"(fixed-size) and dynamic (variable-size) array implementations. It offers "
+	<<	L"better performance characteristics than std::vector while maintaining "
+	<<	L"compatibility with standard library algorithms and providing additional "
+	<<	L"convenience methods for efficient operations."
+	<<	empty_line;
+}
+
+
 struct Static : sgm::Unconstructible
 {
 	static void Construction();
@@ -48,6 +63,16 @@ struct Dynamic : sgm::Unconstructible
 
 void Static::Construction()
 {
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Static Array Construction")
+	<<	L"Static Arrays have fixed size determined at compile time, providing "
+	<<	L"zero-overhead abstraction over C-style arrays with enhanced safety "
+	<<	L"and convenience features."
+	<<	newl;
+
+BEGIN_CODE_BLOCK(static_construction_ex)
 	sgm::Array<Specimen, 3>
 		arr1,
 		arr2{Specimen(2), Specimen(4), Specimen(6)},
@@ -58,11 +83,14 @@ void Static::Construction()
 	&&	Are_All_Equivalent_to(arr2, Specimen::State::MANUAL_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges
 		(	arr2
-		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)}
 		)
 	&&	Are_All_Equivalent_to(arr3, Specimen::State::COPY_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges(arr2, arr3)
 	);
+END_CODE_BLOCK_AND_LOAD(static_construction_ex)
+
+	mdo << empty_line;
 }
 
 
@@ -261,6 +289,16 @@ void Static::Type_Conversion_into_iterable()
 
 void Dynamic::Construction()
 {
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Dynamic Array Construction")
+	<<	L"Dynamic Arrays provide flexible memory management with various "
+	<<	L"construction options including capacity pre-allocation, fill construction, "
+	<<	L"initializer lists, and iterator-based construction."
+	<<	newl;
+
+BEGIN_CODE_BLOCK(dynamic_construction_ex)
 	sgm::Array<Specimen>
 		arr1,
 		arr2(3),
@@ -272,19 +310,22 @@ void Dynamic::Construction()
 	SGM_H2U_ASSERT
 	(	arr1.is_null()
 	&&	arr2.capacity() == 3 && arr2.is_empty()
-	&&	arr3.capacity() == 3 && arr3.size() == 3 
+	&&	arr3.capacity() == 3 && arr3.size() == 3
 	&&	Are_All_Equivalent_to( arr3, Specimen(555) )
 	&&	Are_Equivalent_Ranges
 		(	arr4
-		,	std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
+		,	std::initializer_list<Specimen>{Specimen(2), Specimen(4), Specimen(6)}
 		)
 	&&	Are_Equivalent_Ranges(arr5, arr4)
 	&&	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges
 		(	arr6
-		,	std::initializer_list<Specimen>{Specimen(6), Specimen(4), Specimen(2)} 
+		,	std::initializer_list<Specimen>{Specimen(6), Specimen(4), Specimen(2)}
 		)
 	);
+END_CODE_BLOCK_AND_LOAD(dynamic_construction_ex)
+
+	mdo << empty_line;
 }
 
 
@@ -514,8 +555,18 @@ void Dynamic::Type_Conversion_into_iterable()
 
 void Dynamic::Push()
 {
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Dynamic Array Push Operations")
+	<<	L"Dynamic Arrays support various push operations including emplace_back(), "
+	<<	L"stream operator (>>), and merge_back() for efficient element insertion "
+	<<	L"with method chaining capabilities."
+	<<	newl;
+
+BEGIN_CODE_BLOCK(push_operations_ex)
 	sgm::Array<Specimen> arr1(100);
-	auto current_size = arr1.size(); 
+	auto current_size = arr1.size();
 
 	SGM_H2U_ASSERT(current_size == 0);
 
@@ -523,7 +574,7 @@ void Dynamic::Push()
 
 	SGM_H2U_ASSERT
 	(	arr1.size() == (current_size += 1)
-	&&	arr1.back() == Specimen(3) && arr1.back() == Specimen::State::MANUAL_CONSTRUCTION 
+	&&	arr1.back() == Specimen(3) && arr1.back() == Specimen::State::MANUAL_CONSTRUCTION
 	);
 
 
@@ -561,7 +612,7 @@ void Dynamic::Push()
 	);
 
 
-	sgm::Array<Specimen> 
+	sgm::Array<Specimen>
 		arr2{Specimen(-1), Specimen(-3), Specimen(-5), Specimen(-7)},
 		arr3{Specimen(10), Specimen(20)};
 
@@ -584,11 +635,79 @@ void Dynamic::Push()
 	&&	arr1.rbegin()[2] == 20 && arr1.rbegin()[2] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[3] == 10 && arr1.rbegin()[3] == Specimen::State::COPY_CONSTRUCTION
 	);
+END_CODE_BLOCK_AND_LOAD(push_operations_ex)
+
+	mdo << empty_line;
+}
+
+
+static void Performance_Philosophy()
+{
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Performance Philosophy: sgm::Array vs std::vector")
+	<<	L"A fundamental difference between sgm::Array and std::vector lies in their "
+	<<	L"approach to memory management and performance predictability. std::vector "
+	<<	L"prioritizes convenience through automatic memory management, but this can "
+	<<	L"introduce hidden performance costs that are difficult to track and debug."
+	<<	newl;
+
+BEGIN_CODE_BLOCK(performance_philosophy_ex)
+	// std::vector's hidden performance trap
+	std::vector<int> vec;
+	vec.reserve(1000);  // Initial capacity: 1000
+
+	// This line triggers expensive reallocation!
+	// std::vector silently allocates ~2000 elements, copies 1000 elements,
+	// then deallocates the old memory - a potentially expensive operation
+	// that may not be obvious in the source code
+	for(int i = 0; i < 1001; ++i)
+		vec.push_back(i);
+
+	// sgm::Array prevents such surprises through explicit memory management
+	sgm::Array<int> arr(1000);  // Explicit capacity: exactly 1000
+
+	// This would be caught at development time rather than causing
+	// unexpected performance degradation in production
+	for(int i = 0; i < 1000; ++i)  // Safe: within capacity
+		arr >> i;
+
+	// arr >> 1000;  // This would require explicit capacity management
+
+	SGM_H2U_ASSERT(arr.capacity() == 1000 && arr.size() == 1000);
+END_CODE_BLOCK_AND_LOAD(performance_philosophy_ex)
+
+	mdo
+	<<	L"The key insight is that std::vector's automatic reallocation, while "
+	<<	L"convenient, can cause unpredictable performance spikes. When the vector "
+	<<	L"exceeds its capacity, it typically allocates 1.5x to 2x more memory, "
+	<<	L"copies all existing elements, and deallocates the old buffer. This "
+	<<	L"operation has O(n) complexity and can cause significant latency spikes "
+	<<	L"in performance-critical applications."
+	<<	newl
+	<<	L"sgm::Array takes a different approach by making memory management explicit. "
+	<<	L"Dynamic Arrays require developers to think about capacity upfront, "
+	<<	L"preventing accidental performance degradation. This design philosophy "
+	<<	L"trades some convenience for predictable, consistent performance - making "
+	<<	L"it ideal for systems where performance characteristics must be well-understood "
+	<<	L"and controlled."
+	<<	empty_line;
 }
 
 
 void Dynamic::Pop()
 {
+	using namespace sgm::h2u;
+
+	mdo
+	<<	Title(L"Dynamic Array Pop Operations")
+	<<	L"Dynamic Arrays provide efficient pop operations including single element "
+	<<	L"removal, bulk removal with count, iterator-based removal, and method "
+	<<	L"chaining for multiple operations."
+	<<	newl;
+
+BEGIN_CODE_BLOCK(pop_operations_ex)
 	size_t const capa = 100;
 
 	sgm::Array<Specimen> arr1(capa);
@@ -604,28 +723,28 @@ void Dynamic::Pop()
 	arr1.pop_back();
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 1) 
+	(	arr1.size() == (current_size -= 1)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back().pop_back();
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 2) 
+	(	arr1.size() == (current_size -= 2)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3);
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 3) 
+	(	arr1.size() == (current_size -= 3)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3).pop_back(2).pop_back(1);
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 3 + 2 + 1) 
+	(	arr1.size() == (current_size -= 3 + 2 + 1)
 	&&	arr1.back() == fn(current_size)
 	);
 
@@ -635,26 +754,29 @@ void Dynamic::Pop()
 	arr1.pop_back_from(itr);
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 4) 
+	(	arr1.size() == (current_size -= 4)
 	&&	arr1.back() == fn(current_size)
 	);
 
 
-	auto 
-		itr1 = arr1.end() - 2, 
-		itr2 = itr1 - 3, 
+	auto
+		itr1 = arr1.end() - 2,
+		itr2 = itr1 - 3,
 		itr3 = itr2 - 1;
 
 	arr1.pop_back_from(itr1).pop_back_from(itr2).pop_back_from(itr3);
 
 	SGM_H2U_ASSERT
-	(	arr1.size() == (current_size -= 2 + 3 + 1) 
+	(	arr1.size() == (current_size -= 2 + 3 + 1)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.clear();
 
 	SGM_H2U_ASSERT(arr1.is_empty() && arr1.capacity() == capa);
+END_CODE_BLOCK_AND_LOAD(pop_operations_ex)
+
+	mdo << empty_line;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
@@ -795,8 +917,17 @@ void Performance::random_access()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
+static void outro()
+{
+	using namespace sgm::h2u;
+
+	mdo << empty_line;
+}
+
+
 SGM_HOW2USE_TESTS(sgm::h2u::Test_, Array, /**/)
-{	::Static::Construction
+{	::intro
+,	::Static::Construction
 ,	::Static::No_Move_Construction
 ,	::Static::Assignment
 ,	::Static::Move_Assignment
@@ -815,7 +946,9 @@ SGM_HOW2USE_TESTS(sgm::h2u::Test_, Array, /**/)
 ,	::Dynamic::Swap
 ,	::Dynamic::Type_Conversion_into_iterable
 ,	::Dynamic::Push
+,	::Performance_Philosophy
 ,	::Dynamic::Pop
 ,	::Performance::insertion
 ,	::Performance::random_access
+,	::outro
 };
