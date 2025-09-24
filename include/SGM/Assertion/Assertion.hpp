@@ -12,7 +12,6 @@
 #if defined(_DEBUG) || defined(SGM_ACTIVATE_ASSERTION)
 
 #include <iostream>
-#include <string>
 #include <cstdlib>
 #include "SGM/Type_Analysis/Type_Analysis.hpp"
 
@@ -25,7 +24,7 @@
 		\
 		sgm::_assertion_detail::Log_message	\
 		(	_SGM_DOUBLE_UNDERBAR_MACRO_HELPER(FILE)	\
-		,	std::to_string( _SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE) )	\
+		,	_SGM_DOUBLE_UNDERBAR_MACRO_HELPER(LINE)	\
 		,	#__VA_ARGS__	\
 		);	\
 		\
@@ -39,8 +38,8 @@ namespace sgm
 	{
 		
 		inline static auto Log_message
-		(	std::string const file_path, std::string const err_line
-		,	std::string const statement
+		(	char const (&file_path)[], char const (&err_line)[]
+		,	char const (&statement)[]
 		)-> void
 		{
 			std::cerr
@@ -55,12 +54,12 @@ namespace sgm
 
 		inline static auto User_guide()-> void
 		{
-			static std::string const guide_msg 
+			static char constexpr Guide_msg[]
 			=	"Enter \'c\' to continue, or enter any other character to exit.\n";
 
 			char user_input = ' ';	
 
-			std::cerr << guide_msg;
+			std::cerr << Guide_msg;
 			std::cin >> user_input;
 			
 			if(user_input == 'c' || user_input == 'C')
