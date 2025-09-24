@@ -49,7 +49,7 @@ private:
 	friend class sgm::Null_t;
 
 
-	constexpr Bad_Access_to_Nullable() noexcept = default;
+	Bad_Access_to_Nullable() = default;
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 

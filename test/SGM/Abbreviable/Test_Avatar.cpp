@@ -290,23 +290,25 @@ static void Move_Semantics()
 	<<	newl;
 
 BEGIN_CODE_BLOCK(move_semantics_ex)
-	Specimen s_move(2);
-
-	auto avt = sgm::Refer(s_move);
-
-	Specimen s2 = sgm::Move(avt);
-
-	SGM_H2U_ASSERT(s2 == 2 && s_move == Specimen::State::MOVE_AWAY);
+	{
+		Specimen s_move(2);
+	
+		auto avt = sgm::Refer(s_move);
+	
+		Specimen s2 = sgm::Move(avt);
+	
+		SGM_H2U_ASSERT(s2 == 2 && s_move == Specimen::State::MOVE_AWAY);
+	}
 END_CODE_BLOCK_AND_LOAD(move_semantics_ex)
 
 	{
-		Specimen s_move2(2);
+		Specimen s_move(2);
 
-		auto avt = sgm::Refer(s_move2);
+		auto avt = sgm::Refer(s_move);
 
-		Specimen s2 = sgm::Move(avt);
+		Specimen s = sgm::Move(avt);
 
-		SGM_H2U_ASSERT(s2 == 2 && s_move2 == Specimen::State::MOVE_AWAY);
+		SGM_H2U_ASSERT(s == 2 && s_move == Specimen::State::MOVE_AWAY);
 	}
 
 	mdo << empty_line;
@@ -338,13 +340,15 @@ static void Void_Avatar_Casting()
 	<<	newl;
 
 BEGIN_CODE_BLOCK(void_avatar_casting_ex)
-	Specimen s_void(2);
-
-	sgm::Avatar<void> va = s_void;
-
-	static_cast<Specimen&>(va).value() = 5;
-
-	SGM_H2U_ASSERT(s_void == 5);
+	{
+		Specimen s_void(2);
+	
+		sgm::Avatar<void> va = s_void;
+	
+		static_cast<Specimen&>(va).value() = 5;
+	
+		SGM_H2U_ASSERT(s_void == 5);
+	}
 END_CODE_BLOCK_AND_LOAD(void_avatar_casting_ex)
 
 	mdo
@@ -355,17 +359,19 @@ END_CODE_BLOCK_AND_LOAD(void_avatar_casting_ex)
 	<<	newl;
 
 BEGIN_CODE_BLOCK(const_void_avatar_ex)
-	Specimen s_cvoid(2);
-
-	sgm::constAvatar<void> cva = s_cvoid;
-
-	Specimen const& rs = static_cast<Specimen const&>(cva);
-
-	SGM_H2U_ASSERT(rs == 2);
-
-	s_cvoid.value() = 5;
-
-	SGM_H2U_ASSERT(rs == 5);
+	{
+		Specimen s_cvoid(2);
+	
+		sgm::constAvatar<void> cva = s_cvoid;
+	
+		Specimen const& rs = static_cast<Specimen const&>(cva);
+	
+		SGM_H2U_ASSERT(rs == 2);
+	
+		s_cvoid.value() = 5;
+	
+		SGM_H2U_ASSERT(rs == 5);
+	}
 END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 
 	{
@@ -393,10 +399,6 @@ END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 
 	mdo << empty_line;
 }
-static void outro()
-{
-
-}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -412,5 +414,4 @@ SGM_HOW2USE_TESTS(sgm::h2u::Test_, Avatar, /**/)
 ,	::Address_Access
 ,	::Move_Semantics
 ,	::Void_Avatar_Casting
-,	::outro
 };
