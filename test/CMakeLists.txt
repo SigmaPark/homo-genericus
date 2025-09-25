@@ -38,3 +38,10 @@ add_executable(Sigma_test ${SRC_FILES})
 
 target_link_libraries(Sigma_test PRIVATE Sigma_lib)
 target_link_libraries(Sigma_test PRIVATE How2use_lib)
+
+target_compile_options(
+	Sigma_test PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:
+		/permissive-; /W4; /WX;
+	>
+)
