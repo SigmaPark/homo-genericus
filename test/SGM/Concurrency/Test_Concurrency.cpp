@@ -221,7 +221,6 @@ public:
 	auto test(std::size_t const nof_cycle)-> std::chrono::milliseconds
 	{
 		using namespace std::chrono;
-		using std::move;
 
 		auto const starting_time_point = system_clock::now();
 	
@@ -231,18 +230,18 @@ public:
 
 			if( _is_valid(r1) )
 			{
-				auto r2 = _f12( move(r1) );
+				auto r2 = _f12( std::move(r1) );
 
 				if( _is_valid(r2) )
 				{
-					auto r3 = _f23( move(r2) );
+					auto r3 = _f23( std::move(r2) );
 
 					if( _is_valid(r3) )
 					{
-						auto r4 = _f34( move(r3) );
+						auto r4 = _f34( std::move(r3) );
 
 						if( _is_valid(r4) )	
-							this->_check_result(  _f45( move(r4) )  );
+							this->_check_result(  _f45( std::move(r4) )  );
 					}
 				}
 			}

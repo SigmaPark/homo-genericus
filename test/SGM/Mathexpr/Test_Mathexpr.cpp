@@ -35,7 +35,7 @@ BEGIN_CODE_BLOCK(constexpr_pi_ex)
 		&&	3.1415926535897 < pi_d && pi_d < 3.1415926535898
 		&&	3.1415926535897 < pi_ld && pi_ld < 3.1415926535898
 		)
-	,	L"sgm::Mathexpr::pi gives pi as a compile time constant."
+	,	"sgm::Mathexpr::pi gives pi as a compile time constant."
 	);
 END_CODE_BLOCK_AND_LOAD(constexpr_pi_ex)
 
@@ -57,7 +57,7 @@ BEGIN_CODE_BLOCK(factorial_ex)
 		&&	std::is_same<decltype(n1), unsigned int const>::value && n1 == 4*3*2*1
 		&&	std::is_same<decltype(n2), long long const>::value && n2 == 4*3*2*1
 		)
-	,	L"factorial function in compile time."
+	,	"factorial function in compile time."
 	);
 END_CODE_BLOCK_AND_LOAD(factorial_ex)
 
@@ -82,7 +82,7 @@ BEGIN_CODE_BLOCK(pow_with_real_base_ex)
 		&&	sgm::Mathexpr::pow<one_over_two, 3>() == 0.5*0.5*0.5
 		&&	sgm::Mathexpr::pow<one_over_two, -3>() == 1.0/(0.5*0.5*0.5)
 		)
-	,	L"power function with a base number object whose constexpr static member value is real."
+	,	"power function with a base number object whose constexpr static member value is real."
 	);
 END_CODE_BLOCK_AND_LOAD(pow_with_real_base_ex)
 
@@ -102,7 +102,7 @@ BEGIN_CODE_BLOCK(pow_with_int_base_ex)
 		&&	std::is_same<decltype(n3), long long const>::value 
 		&&	n3 == 2*2*2*2*2*2*2*2*2*2
 		)
-	,	L"sgm::Mathexpr::int_pow is easier to use when the base number is integral number."
+	,	"sgm::Mathexpr::int_pow is easier to use when the base number is integral number."
 	);
 END_CODE_BLOCK_AND_LOAD(pow_with_int_base_ex)
 
@@ -123,7 +123,7 @@ BEGIN_CODE_BLOCK(expoential_ex)
 		&&	2.71828f < e1_f && e1_f < 2.718289f
 		&&	e1_d*e1_d*e1_d - 1e-12 < e3_d && e3_d < e1_d*e1_d*e1_d + 1e-12
 		)
-	,	L"same to std::exp but operates in compile time."
+	,	"same to std::exp but operates in compile time."
 	);
 END_CODE_BLOCK_AND_LOAD(expoential_ex)
 
