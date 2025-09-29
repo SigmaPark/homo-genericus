@@ -26,6 +26,7 @@ static void intro()
 }
 
 
+BEGIN_CODE_BLOCK(member_detection_ex_decl)
 namespace sgm
 {
 	namespace _test_Foo_detail
@@ -56,6 +57,7 @@ namespace sgm
 
 	}
 }
+END_CODE_BLOCK(member_detection_ex_decl)
 
 
 static void Member_Detection()
@@ -67,6 +69,10 @@ static void Member_Detection()
 	<<	L"The interface_Traits library provides macros and templates to detect the presence "
 	<<	L"of various class members at compile time. This includes member functions, static "
 	<<	L"member functions, member variables, nested types, and operators."
+	<<	newl
+	<<	Load_code_block(L"member_detection_ex_decl")
+	<<	newl
+	<<	L"Using these test classes, we can verify the trait detection results:"
 	<<	newl;
 
 BEGIN_CODE_BLOCK(member_detection_ex)
@@ -90,6 +96,7 @@ END_CODE_BLOCK_AND_LOAD(member_detection_ex)
 }
 
 
+BEGIN_CODE_BLOCK(assignment_operators_ex_decl)
 namespace sgm
 {
 	namespace _test_Assignable_detail
@@ -121,6 +128,7 @@ namespace sgm
 
 	}
 }
+END_CODE_BLOCK(assignment_operators_ex_decl)
 
 
 static void Assignment_Operators()
@@ -132,6 +140,10 @@ static void Assignment_Operators()
 	<<	L"The library can detect whether a class supports copy assignment and move "
 	<<	L"assignment operators. This is particularly useful for generic programming "
 	<<	L"where different assignment semantics need to be handled appropriately."
+	<<	newl
+	<<	Load_code_block(L"assignment_operators_ex_decl")
+	<<	newl
+	<<	L"Using these test classes, we can verify the assignment operator detection:"
 	<<	newl;
 
 BEGIN_CODE_BLOCK(assignment_operators_ex)
@@ -155,6 +167,7 @@ END_CODE_BLOCK_AND_LOAD(assignment_operators_ex)
 }
 
 
+BEGIN_CODE_BLOCK(constructor_detection_ex_decl)
 namespace sgm
 {
 	namespace _test_Has_Operator_New_detail
@@ -178,6 +191,7 @@ namespace sgm
 
 	}
 }
+END_CODE_BLOCK(constructor_detection_ex_decl)
 
 
 static void Constructor_Detection()
@@ -189,6 +203,10 @@ static void Constructor_Detection()
 	<<	L"The Has_Operator_New trait can detect whether a class can be constructed "
 	<<	L"with specific argument types. This is essential for generic code that needs "
 	<<	L"to conditionally instantiate objects based on available constructors."
+	<<	newl
+	<<	Load_code_block(L"constructor_detection_ex_decl")
+	<<	newl
+	<<	L"Using these test classes, we can verify the constructor detection capabilities:"
 	<<	newl;
 
 BEGIN_CODE_BLOCK(constructor_detection_ex)
@@ -210,6 +228,7 @@ END_CODE_BLOCK_AND_LOAD(constructor_detection_ex)
 }
 
 
+BEGIN_CODE_BLOCK(destructor_detection_ex_decl)
 namespace sgm
 {
 	namespace _test_Has_Operator_Delete_detail
@@ -220,6 +239,7 @@ namespace sgm
 
 	}
 }
+END_CODE_BLOCK(destructor_detection_ex_decl)
 
 
 static void Destructor_Detection()
@@ -231,6 +251,10 @@ static void Destructor_Detection()
 	<<	L"The Has_Operator_Delete trait detects whether a class can be safely destroyed. "
 	<<	L"This is particularly important when working with dynamically allocated objects "
 	<<	L"and ensuring proper resource cleanup in generic contexts."
+	<<	newl
+	<<	Load_code_block(L"destructor_detection_ex_decl")
+	<<	newl
+	<<	L"Using these test classes, we can verify the destructor detection results:"
 	<<	newl;
 
 BEGIN_CODE_BLOCK(destructor_detection_ex)
@@ -251,6 +275,7 @@ END_CODE_BLOCK_AND_LOAD(destructor_detection_ex)
 }
 
 
+BEGIN_CODE_BLOCK(invocation_detection_ex_decl)
 namespace sgm
 {
 	namespace _test_is_invocable_detail
@@ -266,6 +291,7 @@ namespace sgm
 
 	}
 }
+END_CODE_BLOCK(invocation_detection_ex_decl)
 
 
 static void Invocation_Detection()
@@ -277,6 +303,10 @@ static void Invocation_Detection()
 	<<	L"The Has_Operator_invocation trait can detect whether an object can be called "
 	<<	L"as a function with specific argument types. This works with function objects, "
 	<<	L"lambdas, and any class that overloads the function call operator."
+	<<	newl
+	<<	Load_code_block(L"invocation_detection_ex_decl")
+	<<	newl
+	<<	L"Using these test classes, we can verify the function call operator detection:"
 	<<	newl;
 
 BEGIN_CODE_BLOCK(invocation_detection_ex)
