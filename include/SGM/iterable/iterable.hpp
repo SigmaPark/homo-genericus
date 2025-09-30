@@ -635,25 +635,9 @@ namespace sgm
 
 namespace sgm
 {
-	
+
 	template<class RG, class T = void>
-	struct is_iterable;
-
-
-	template
-	<	class RG1, class RG2
-	,	class 
-		=	Guaranteed_t
-			<	Boolean_And
-				<	is_iterable<RG1>, is_iterable<RG2>
-				,	is_Same
-					<	Decay_t< decltype( *Begin(Mock<RG1>()) ) >
-					,	Decay_t< decltype( *Begin(Mock<RG2>()) ) >
-					>
-				>::	value
-			>
-	>
-	static auto iterable_cast(RG2&& rg)-> RG1{  return RG1( Begin(rg), End(rg) );  }
+	struct is_iterable;	
 
 }
 
@@ -680,6 +664,114 @@ public:
 
 	using type = Boolean<value>;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace sgm
+{
+
+	template<int NXCT_FLAG, class RES_CON, class RG, class...ARGS>
+	struct Conversion_to_Container_impl;
+	
+}
+
+
+template<int NXCT_FLAG, class RES_CON, class RG, class...ARGS>
+struct sgm::Conversion_to_Container_impl
+{
+	static bool constexpr is_NXCT = true;
+
+	static_assert(NXCT_FLAG != 0, "Error : No suitable convertible container .");
+
+	static auto Calc(RG&&, ARGS&&...) noexcept-> RES_CON;
+};
+
+template<class RES_CON, class RG, class...ARGS>
+struct sgm::Conversion_to_Container_impl<1, RES_CON, RG, ARGS...> : Unconstructible
+{
+	static_assert
+	(	(	is_Reference<RG>::value 
+		&&	Check_if_All<is_Reference, ARGS...>::value
+		)
+	, 	""
+	);
+
+	static bool constexpr is_NXCT 
+	=	noexcept
+		(	::new( Mock<RES_CON*>() ) 
+			RES_CON( fBegin<RG>(Mock<RG>()), fEnd<RG>(Mock<RG>()), Mock<ARGS>()... )  
+		);
+
+	static auto Calc(RG&& rg, ARGS&&...args) noexcept(is_NXCT)-> RES_CON
+	{
+		return 
+		RES_CON
+		(	fBegin<RG>( Forward<RG>(rg) ), fEnd<RG>( Forward<RG>(rg) ), Forward<ARGS>(args)... 
+		);
+	}
+};
+
+template<class RES_CON, class RG, class...ARGS>
+struct sgm::Conversion_to_Container_impl<2, RES_CON, RG, ARGS...> : Unconstructible
+{
+	static_assert
+	(	(	is_Reference<RG>::value 
+		&&	Check_if_All<is_Reference, ARGS...>::value
+		)
+	, 	""
+	);
+
+	static bool constexpr is_NXCT 
+	=	noexcept
+		(	::new( Mock<RES_CON*>() ) 
+			RES_CON( Mock<ARGS&&>()..., fBegin<RG>(Mock<RG>()), fEnd<RG>(Mock<RG>()) )  
+		);
+
+	static auto Calc(RG&& rg, ARGS&&...args) noexcept(is_NXCT)-> RES_CON
+	{
+		return 
+		RES_CON
+		(	Forward<ARGS>(args)..., fBegin<RG>( Forward<RG>(rg) ), fEnd<RG>( Forward<RG>(rg) )
+		);
+	}
+};
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+namespace sgm
+{
+	
+	template
+	<	class RES_CON
+	, 	class RG, class...ARGS
+	,	int NXCT_FLAG
+		=	(	Has_Operator_New
+				<	RES_CON
+				, 	decltype( fBegin<RG>(Mock<RG&&>()) ), decltype( fEnd<RG>(Mock<RG&&>()) )
+				, 	ARGS&&...
+				>::	value 
+			? 	1
+			:	(	Has_Operator_New
+					<	RES_CON
+					, 	ARGS&&...
+					, 	decltype( fBegin<RG>(Mock<RG&&>()) ), decltype( fEnd<RG>(Mock<RG&&>()) )
+					>::	value
+				?	2
+				:	0
+				)
+			)
+	,	class = Enable_if_t< is_iterable<RG>::value && NXCT_FLAG != 0 >
+	>
+	static auto iterable_cast(RG&& rg, ARGS&&...args)
+	noexcept(Conversion_to_Container_impl<NXCT_FLAG, RES_CON, RG&&, ARGS&&...>::is_NXCT)
+	-> 	RES_CON
+	{
+		return 
+		Conversion_to_Container_impl<NXCT_FLAG, RES_CON, RG&&, ARGS&&...>
+		::	Calc( Forward<RG>(rg), Forward<ARGS>(args)... );
+	}
+
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
