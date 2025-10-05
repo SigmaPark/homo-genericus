@@ -52,7 +52,7 @@ namespace sgm
 namespace std
 {
 
-#if !( defined(_UTILITY_) || defined(__APPLE__) )
+#if !( defined(_UTILITY_) || defined(__APPLE__) || defined(_LIBCPP_VERSION) )
 	template<class>
 	struct tuple_size;
 
