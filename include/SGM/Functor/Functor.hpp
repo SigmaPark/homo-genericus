@@ -707,6 +707,8 @@ namespace sgm::fp::_Lambda_detail
 	sgm::fp::Functor	\
 	{	[&](auto&&...args)-> decltype(auto)	\
 		{	\
+			static_assert( sizeof...(args) <= 10, "Too many arguments to SGM_LAMBDA" );	\
+			\
 			using sgm::fp::_Lambda_detail::Try_Nth_Param;	\
 			\
 			[[maybe_unused]] auto&& _0 = Try_Nth_Param<0>(args...);	\
