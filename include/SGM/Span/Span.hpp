@@ -92,9 +92,9 @@ struct sgm::_Span_value_type_Helper::_value_type<ITR, false>
 template<class Q, std::size_t S, int ZERO>
 struct sgm::_Static_Span_Helper
 {
-	static bool constexpr compile_failed_v = static_cast<bool>(ZERO);
+	static bool constexpr Compile_failed_v = static_cast<bool>(ZERO);
 
-	static_assert(compile_failed_v, "No method to create sgm::Span_t" );
+	static_assert(Compile_failed_v, "No method to create sgm::Span_t" );
 };
 
 template<class Q, std::size_t S>
@@ -102,17 +102,17 @@ struct sgm::_Static_Span_Helper<Q, S, 1> : Unconstructible
 {
 private:
 	template<class A, std::size_t N>  /* Declaration Only */
-	static auto constexpr _try_arr_size( A(&)[N] ) 
+	static auto constexpr _Try_arr_size( A(&)[N] ) 
 	->	As_value_itself< std::size_t, (N <= S ? N : S) >;
 
-	static std::size_t constexpr size_v = decltype( _try_arr_size(Mock<Q>()) )::value;
+	static std::size_t constexpr Size_v = decltype( _Try_arr_size(Mock<Q>()) )::value;
 
 
 public:
-	using res_t = Span_t<  size_v, Decay_t< decltype( Address_of(Mock<Q>()[0]) ) >  >;
+	using res_t = Span_t<  Size_v, Decay_t< decltype( Address_of(Mock<Q>()[0]) ) >  >;
 
 	template<class ARR>
-	static auto calc(ARR arr, None = {})-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
+	static auto Calc(ARR arr, None = {})-> SGM_DECLTYPE_AUTO(  res_t(arr)  )
 };
 
 template<class Q, std::size_t S>
@@ -121,7 +121,7 @@ struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
 	using res_t = Span_t< S, Decay_t<Q> >;
 
 	template<class ITR>
-	static auto calc(ITR const bi, None = {})-> SGM_DECLTYPE_AUTO(  res_t(bi)  )
+	static auto Calc(ITR const bi, None = {})-> SGM_DECLTYPE_AUTO(  res_t(bi)  )
 };
 
 template<class Q, std::size_t S>
@@ -130,7 +130,7 @@ struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 	using res_t = Span_t<  S, Decay_t< decltype( Begin(Mock<Q>()) ) >  >;
 	
 	template<class RG>
-	static auto calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
+	static auto Calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -138,9 +138,9 @@ struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 template<class T1, class T2, int ZERO>
 struct sgm::_Dynamic_Span_Helper
 {
-	static bool constexpr compile_failed_v = static_cast<bool>(ZERO);
+	static bool constexpr Compile_failed_v = static_cast<bool>(ZERO);
 
-	static_assert(compile_failed_v, "No method to create sgm::Span_t" );
+	static_assert(Compile_failed_v, "No method to create sgm::Span_t" );
 };
 
 template<class T1, class T2>
@@ -149,7 +149,7 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 1> : Unconstructible
 	using res_t = Span_t< SpanSize::DYNAMIC, Decay_t<T1> >;
 
 	template<class ITR>
-	static auto calc(ITR const bi, ITR const ei)-> SGM_DECLTYPE_AUTO(  res_t(bi, ei)  )
+	static auto Calc(ITR const bi, ITR const ei)-> SGM_DECLTYPE_AUTO(  res_t(bi, ei)  )
 };
 
 template<class T1, class T2>
@@ -158,7 +158,7 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 2> : Unconstructible
 	using res_t = Span_t< SpanSize::DYNAMIC, Decay_t<T1> >;
 
 	template<class ITR, class S>
-	static auto calc(ITR const bi, S const s)
+	static auto Calc(ITR const bi, S const s)
 	->	SGM_DECLTYPE_AUTO(  res_t( bi, Next(bi, s) )  )
 };
 
@@ -174,7 +174,7 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( Begin(Mock<T1>()) ) >  >;
 
 	template<class RG, class _T2>
-	static auto calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
+	static auto Calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -197,7 +197,7 @@ protected:
 public:
 	using value_type = typename _Span_value_type_Helper::type<ITR>;
 
-	static size_t constexpr size_v = S;
+	static size_t constexpr Size_v = S;
 
 	ITR _begin;
 
@@ -207,7 +207,7 @@ public:
 
 	auto data() const-> ITR{  return _begin;  }
 
-	auto constexpr size() const-> size_t{  return size_v;  }
+	auto constexpr size() const-> size_t{  return Size_v;  }
 
 	auto begin() const-> ITR{  return data();  }
 	auto end() const-> ITR{  return Next(begin(), size());  }
@@ -263,7 +263,7 @@ private:
 template<std::size_t SIZE, class T1, class T2>
 auto sgm::Span(T1&& t1, T2&& t2)-> typename _Span_Helper<T1, T2, SIZE>::res_t
 {
-	return _Span_Helper<T1, T2, SIZE>::calc( Forward<T1>(t1), Forward<T2>(t2) );
+	return _Span_Helper<T1, T2, SIZE>::Calc( Forward<T1>(t1), Forward<T2>(t2) );
 }
 
 
