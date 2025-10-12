@@ -57,7 +57,7 @@ namespace sgm
 
 
 	template<size_t SIZE = SpanSize::DYNAMIC, class T1, class T2 = None>
-	static auto Span(T1&& t1, T2&& t2 = {})-> typename _Span_Helper<T1, T2, SIZE>::res_t;
+	static auto Span(T1&& t1, T2&& t2 = {})-> typename _Span_Helper<T1&&, T2&&, SIZE>::res_t;
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
@@ -127,10 +127,13 @@ struct sgm::_Static_Span_Helper<Q, S, 2> : Unconstructible
 template<class Q, std::size_t S>
 struct sgm::_Static_Span_Helper<Q, S, 3> : Unconstructible
 {
-	using res_t = Span_t<  S, Decay_t< decltype( Begin(Mock<Q>()) ) >  >;
+	using res_t = Span_t<  S, Decay_t< decltype( fBegin<Q>(Mock<Q>()) ) >  >;
 	
 	template<class RG>
-	static auto Calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg) )  )
+	static auto Calc(RG&& rg, None = {})-> SGM_DECLTYPE_AUTO
+	(  
+		res_t(  fBegin<RG>( Forward<RG>(rg) )  )  
+	)
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -171,10 +174,13 @@ template<class T1, class T2>
 struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 {
 	using res_t 
-	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( Begin(Mock<T1>()) ) >  >;
+	=	Span_t<  SpanSize::DYNAMIC, Decay_t< decltype( fBegin<T1>(Mock<T1&&>()) ) >  >;
 
 	template<class RG, class _T2>
-	static auto Calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO(  res_t( Begin(rg), End(rg) )  )
+	static auto Calc(RG&& rg, _T2)-> SGM_DECLTYPE_AUTO
+	(
+		res_t(  fBegin<RG>( Forward<RG>(rg) ), fEnd<RG>( Forward<RG>(rg) )  )  
+	)
 };
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -182,8 +188,11 @@ struct sgm::_Dynamic_Span_Helper<T1, T2, 4> : Unconstructible
 template<class T1, class T2>
 struct sgm::_Span_Helper<T1, T2, sgm::SpanSize::DYNAMIC, true> : _Dynamic_Span_Helper<T1, T2>{};
 
-template<class T, std::size_t SIZE>
-struct sgm::_Span_Helper<T, sgm::None, SIZE, false> : _Static_Span_Helper<T, SIZE>{};
+template<class T1, class T2, std::size_t SIZE>
+struct sgm::_Span_Helper<T1, T2, SIZE, false> : _Static_Span_Helper<T1, SIZE>
+{
+	static_assert(is_None<T2>::value, "");
+};
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -261,9 +270,9 @@ private:
 
 
 template<std::size_t SIZE, class T1, class T2>
-auto sgm::Span(T1&& t1, T2&& t2)-> typename _Span_Helper<T1, T2, SIZE>::res_t
+auto sgm::Span(T1&& t1, T2&& t2)-> typename _Span_Helper<T1&&, T2&&, SIZE>::res_t
 {
-	return _Span_Helper<T1, T2, SIZE>::Calc( Forward<T1>(t1), Forward<T2>(t2) );
+	return _Span_Helper<T1&&, T2&&, SIZE>::Calc( Forward<T1>(t1), Forward<T2>(t2) );
 }
 
 
