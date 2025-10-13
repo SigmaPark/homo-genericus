@@ -72,20 +72,20 @@ namespace sgm
 	struct _Begin_Helper<RG, 1> : Unconstructible
 	{
 		template<class _RG>  
-		static auto calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.begin()  )
+		static auto Calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.begin()  )
 	};
 
 	template<class RG>
 	struct _Begin_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>  
-		static auto calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) ){  return arr;  }
+		static auto Calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) ){  return arr;  }
 	};
 
 	template<class RG>
 	static auto Begin(RG&& rg) noexcept-> SGM_DECLTYPE_AUTO
 	(
-		_Begin_Helper<RG>::calc( Forward<RG>(rg) )  
+		_Begin_Helper<RG>::Calc( Forward<RG>(rg) )  
 	)
 
 	template<class RG>
@@ -108,7 +108,7 @@ namespace sgm
 	struct _End_Helper<RG, 1> : Unconstructible
 	{
 		template<class _RG>  
-		static auto calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.end()  )
+		static auto Calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.end()  )
 	};
 
 
@@ -123,7 +123,7 @@ namespace sgm
 	struct _End_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>
-		static auto calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) )
+		static auto Calc(A&& arr) noexcept-> decltype( Address_of(arr[0]) )
 		{
 			return arr + __Static_Array_Size< Decay_t<A> >::value;
 		}
@@ -131,7 +131,7 @@ namespace sgm
 
 	template<class RG>
 	static auto End(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(  _End_Helper<RG>::calc( Forward<RG>(rg) )  )
+	->	SGM_DECLTYPE_AUTO(  _End_Helper<RG>::Calc( Forward<RG>(rg) )  )
 
 	template<class RG>
 	static auto cEnd(RG const& rg) noexcept-> SGM_DECLTYPE_AUTO(  End(rg)  )
@@ -185,19 +185,19 @@ namespace sgm
 	struct _rBegin_Helper<RG, 1> : Unconstructible
 	{
 		template<class _RG>
-		static auto calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.rbegin()  )
+		static auto Calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.rbegin()  )
 	};
 
 	template<class RG>
 	struct _rBegin_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>
-		static auto calc(A&& arr) noexcept-> SGM_DECLTYPE_AUTO(  Reversing( End(arr) - 1 )  )
+		static auto Calc(A&& arr) noexcept-> SGM_DECLTYPE_AUTO(  Reversing( End(arr) - 1 )  )
 	};
 
 	template<class RG>
 	static auto rBegin(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(  _rBegin_Helper<RG>::calc( Forward<RG>(rg) )  )
+	->	SGM_DECLTYPE_AUTO(  _rBegin_Helper<RG>::Calc( Forward<RG>(rg) )  )
 
 	template<class RG>
 	static auto crBegin(RG const& rg) noexcept-> SGM_DECLTYPE_AUTO(  rBegin(rg)  )
@@ -222,20 +222,20 @@ namespace sgm
 	struct _rEnd_Helper<RG, 1> : Unconstructible
 	{
 		template<class _RG>
-		static auto calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.rend()  ) 
+		static auto Calc(_RG&& rg) noexcept-> SGM_DECLTYPE_AUTO(  rg.rend()  ) 
 	};
 
 	template<class RG>
 	struct _rEnd_Helper<RG, 2> : Unconstructible
 	{
 		template<class A>
-		static auto calc(A&& arr) noexcept
+		static auto Calc(A&& arr) noexcept
 		->	SGM_DECLTYPE_AUTO(  Reversing( Begin(arr) - 1 )  )
 	};
 
 	template<class RG>
 	static auto rEnd(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(  _rEnd_Helper<RG>::calc( Forward<RG>(rg) )  )
+	->	SGM_DECLTYPE_AUTO(  _rEnd_Helper<RG>::Calc( Forward<RG>(rg) )  )
 
 	template<class RG>
 	static auto crEnd(RG const& rg) noexcept-> SGM_DECLTYPE_AUTO(  rEnd(rg)  )
@@ -250,13 +250,13 @@ namespace sgm
 		{	\
 		private:	\
 			template<class Q>	\
-			static auto _calc(int)-> SFINAE_t<typename Q::XXX, typename Q::XXX>;	\
+			static auto _Calc(int) noexcept-> SFINAE_t<typename Q::XXX, typename Q::XXX>;	\
 			\
 			template<class>	\
-			static auto _calc(...)-> OTHER;	\
+			static auto _Calc(...) noexcept-> OTHER;	\
 			\
 		public:	\
-			using type = decltype( _calc<ITR>(0) );	\
+			using type = decltype( _Calc<ITR>(0) );	\
 		};	\
 		\
 		template<class ITR, class OTHER>		\
@@ -647,20 +647,20 @@ struct sgm::is_iterable : Unconstructible
 {
 private:
 	template<class Q>  /* Declaration Only */
-	static auto _begin(int)-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().begin()) ) >;
+	static auto _Begin(int) noexcept-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().begin()) ) >;
 
 	template<class Q>  /* Declaration Only */
-	static auto _begin(...)-> is_Bounded_Array< Referenceless_t<Q> >;
+	static auto _Begin(...) noexcept-> is_Bounded_Array< Referenceless_t<Q> >;
 
 	template<class Q>  /* Declaration Only */
-	static auto _end(int)-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().end()) ) >;
+	static auto _End(int) noexcept-> SFINAE_t< decltype( static_cast<T>(*Mock<Q>().end()) ) >;
 
 	template<class Q>  /* Declaration Only */
-	static auto _end(...)-> is_Bounded_Array< Referenceless_t<Q> >;
+	static auto _End(...) noexcept-> is_Bounded_Array< Referenceless_t<Q> >;
 
 public:
 	static bool constexpr value
-	=	decltype( _begin<RG>(0) )::value && decltype( _end<RG>(0) )::value;
+	=	decltype( _Begin<RG>(0) )::value && decltype( _End<RG>(0) )::value;
 
 	using type = Boolean<value>;
 };
@@ -789,7 +789,7 @@ namespace sgm
 	template<class ITR>
 	struct _Travel<ITR, false, false>
 	{
-		static auto _next(ITR itr, ptrdiff_t steps) noexcept-> ITR
+		static auto _Next(ITR itr, ptrdiff_t steps) noexcept-> ITR
 		{
 			while(steps-->0)
 				itr++;
@@ -802,7 +802,7 @@ namespace sgm
 	template<class ITR>
 	struct _Travel<ITR, true, false> : _Travel<ITR, false, false>
 	{
-		static auto _prev(ITR itr, ptrdiff_t steps) noexcept-> ITR
+		static auto _Prev(ITR itr, ptrdiff_t steps) noexcept-> ITR
 		{
 			while(steps-->0)
 				itr--;
@@ -815,35 +815,35 @@ namespace sgm
 	template<class ITR, bool IS_BIDIRECTIONAL>
 	struct _Travel<ITR, IS_BIDIRECTIONAL, true>
 	{
-		static auto _next(ITR const itr, ptrdiff_t const steps) noexcept
+		static auto _Next(ITR const itr, ptrdiff_t const steps) noexcept
 		->	SGM_DECLTYPE_AUTO(  itr + steps  )
 
-		static auto _prev(ITR const itr, ptrdiff_t const steps) noexcept
+		static auto _Prev(ITR const itr, ptrdiff_t const steps) noexcept
 		->	SGM_DECLTYPE_AUTO(  itr - steps  )
 	};
 
 
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto Next(ITR const itr, ptrdiff_t const steps = 1) noexcept
-	->	SGM_DECLTYPE_AUTO(  _Travel<ITR>::_next(itr, steps)  )
+	->	SGM_DECLTYPE_AUTO(  _Travel<ITR>::_Next(itr, steps)  )
 
 
 	template<  class ITR, class = Guaranteed_t< is_bidirectional_iterator<ITR>::value >  >
 	static auto Prev(ITR const itr, ptrdiff_t const steps = 1) noexcept
-	->	SGM_DECLTYPE_AUTO(  _Travel<ITR>::_prev(itr, steps)  )
+	->	SGM_DECLTYPE_AUTO(  _Travel<ITR>::_Prev(itr, steps)  )
 
 
 	struct _Difference_Helper : Unconstructible
 	{
 		template<class ITR>
-		static auto calc(ITR bi, ITR const ei) noexcept
+		static auto Calc(ITR bi, ITR const ei) noexcept
 		->	Enable_if_t< is_random_access_iterator<ITR>::value, ptrdiff_t >
 		{
 			return static_cast<ptrdiff_t>(ei - bi);
 		}
 
 		template<class ITR>
-		static auto calc(ITR bi, ITR const ei) noexcept
+		static auto Calc(ITR bi, ITR const ei) noexcept
 		->	Enable_if_t< !is_random_access_iterator<ITR>::value, ptrdiff_t >
 		{
 			ptrdiff_t diff = 0;
@@ -856,7 +856,7 @@ namespace sgm
 
 	template<  class ITR, class = Guaranteed_t< is_iterator<ITR>::value >  >
 	static auto constexpr Difference(ITR const bi, ITR const ei) noexcept
-	->	SGM_DECLTYPE_AUTO(  _Difference_Helper::calc(bi, ei)  )
+	->	SGM_DECLTYPE_AUTO(  _Difference_Helper::Calc(bi, ei)  )
 
 
 	struct _iterable_Size_Helper : Unconstructible
@@ -866,14 +866,14 @@ namespace sgm
 
 	public:
 		template<class RG>
-		static auto calc(RG&& rg) noexcept
+		static auto Calc(RG&& rg) noexcept
 		->	Enable_if_t< Has_MemFunc_size<RG>::value, size_t >
 		{
 			return static_cast<size_t>(rg.size());
 		}
 
 		template<class RG>
-		static auto calc(RG&& rg) noexcept
+		static auto Calc(RG&& rg) noexcept
 		->	Enable_if_t< !Has_MemFunc_size<RG>::value, size_t >
 		{
 			return static_cast<size_t>(  Difference( Begin(rg), End(rg) )  );	
@@ -882,7 +882,7 @@ namespace sgm
 
 	template<class RG>
 	static auto constexpr Size(RG&& rg) noexcept
-	->	SGM_DECLTYPE_AUTO(  _iterable_Size_Helper::calc( Forward<RG>(rg) )  )
+	->	SGM_DECLTYPE_AUTO(  _iterable_Size_Helper::Calc( Forward<RG>(rg) )  )
 
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
