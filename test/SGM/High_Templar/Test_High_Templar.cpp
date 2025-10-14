@@ -197,8 +197,8 @@ static void Function_Sequence_Test()
 
 static void Filter_Test()
 {
-	auto is_odd_f = [](Specimen s)-> bool{  return s.value() % 2 == 1;  };
-	auto make_h2u_f = [](int x)-> Specimen{  return x;  };
+	auto is_odd_f = [](Specimen const& s)-> bool{  return s.value() % 2 == 1;  };
+	auto make_h2u_f = [](int const& x)-> Specimen{  return x;  };
 
 	sgm::Array<Specimen> const inputs
 	=	sgm::Morph( sgm::Countable<int>(10), make_h2u_f );
