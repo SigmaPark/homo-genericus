@@ -29,6 +29,11 @@
     #define SGM_DECLTYPE_AUTO(...)  decltype(__VA_ARGS__){  return __VA_ARGS__;  }
 #endif
 
+#ifndef SGM_NOEXCEPT_DECLTYPE_AUTO
+    #define SGM_NOEXCEPT_DECLTYPE_AUTO(...) \
+        noexcept(  noexcept( (__VA_ARGS__) )  )-> SGM_DECLTYPE_AUTO(__VA_ARGS__)
+#endif
+
 
 namespace sgm
 {
