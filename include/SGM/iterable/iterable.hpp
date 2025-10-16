@@ -296,6 +296,8 @@ private:
 	using _itr_t = Reverse_iterator;
 	using _deref_t = decltype(*Mock<ITR>());	
 
+protected:
+	static bool constexpr _is_Nxct_constructible_v = noexcept( ITR(Mock<ITR const&>()) );
 
 public:
 	ITR base_itr;
@@ -307,26 +309,29 @@ public:
 	using reference = _detail::reference_or_t< ITR, Referenceless_t<_deref_t>& >;	
 
 
-	Reverse_iterator(ITR const& base_itr_) noexcept(  noexcept( ITR(Mock<ITR const&>()) )  )
+	Reverse_iterator(ITR const& base_itr_) noexcept(_is_Nxct_constructible_v)
 	:	base_itr(base_itr_){}
 
-	//auto base() const noexcept-> ITR const&{  return _itr;  }
-	//auto base() noexcept-> ITR&{  return _itr;  }
+	auto operator*() const noexcept( noexcept(*Mock<ITR const>()) )
+	->	SGM_DECLTYPE_AUTO(  *base_itr  )
 
-	auto operator*() const SGM_NOEXCEPT_DECLTYPE_AUTO(  *base_itr  )
-	auto operator->() const SGM_NOEXCEPT_DECLTYPE_AUTO(  Address_of(**this)  )
+	auto operator->() const noexcept( noexcept(*Mock<ITR const>()) )
+	->	SGM_DECLTYPE_AUTO(  Address_of(**this)  )
 
 	auto operator==(_itr_t const& itr) const
-	SGM_NOEXCEPT_DECLTYPE_AUTO(  base_itr == itr.base_itr  )
+	noexcept( noexcept(Mock<ITR const>() == Mock<ITR const&>()) )
+	->	SGM_DECLTYPE_AUTO(  base_itr == itr.base_itr  )
 
 	auto operator!=(_itr_t const& itr) const
-	SGM_NOEXCEPT_DECLTYPE_AUTO(  !(*this == itr)  )
+	noexcept( noexcept(Mock<ITR const>() == Mock<ITR const&>()) )
+	->	SGM_DECLTYPE_AUTO(  !(*this == itr)  )
 
 
-	auto operator--() SGM_NOEXCEPT_DECLTYPE_AUTO(  (++base_itr,  *this)  )
+	auto operator--() noexcept( noexcept(++Mock<ITR&>()) )
+	->	SGM_DECLTYPE_AUTO(  (++base_itr,  *this)  )
 
-	auto operator--(int) 
-	noexcept(  noexcept( ITR(Mock<ITR const&>()) ) && noexcept(--Mock<_itr_t&>())  )-> _itr_t
+	auto operator--(int) noexcept( _is_Nxct_constructible_v && noexcept(++Mock<ITR&>()) )
+	->	_itr_t
 	{
 		auto const res = *this;
 
@@ -351,10 +356,11 @@ public:
 	using _1st_t::operator--;
 
 
-	auto operator++() SGM_NOEXCEPT_DECLTYPE_AUTO(  (--_1st_t::base_itr,  *this)  )
+	auto operator++() noexcept( noexcept(--Mock<ITR&>()) )
+	->	SGM_DECLTYPE_AUTO(  (--_1st_t::base_itr,  *this)  )
 
-	auto operator++(int) 
-	noexcept(  noexcept( ITR(Mock<ITR const&>()) ) && noexcept(++Mock<_itr_t&>())  )-> _itr_t
+	auto operator++(int)
+	noexcept( _1st_t::_is_Nxct_constructible_v && noexcept(--Mock<ITR&>()) )-> _itr_t
 	{
 		auto const res = *this;
 
@@ -386,23 +392,23 @@ public:
 
 	auto operator+(difference_type const diff) const 
 	noexcept
-	(	noexcept(Mock<_1st_t const>().base_itr - Mock<difference_type const>())
-	&&	noexcept( _itr_t(Mock<ITR const&>()) )
+	(	noexcept(Mock<ITR const>() - Mock<difference_type const>())
+	&&	_1st_t::_is_Nxct_constructible_v
 	)->	_itr_t{  return {base_itr - diff};  }
 	
 	auto operator-(difference_type const diff) const 
 	noexcept
-	(	noexcept(Mock<_1st_t const>().base_itr + Mock<difference_type const>()) 
-	&&	noexcept( _itr_t(Mock<ITR const&>()) )
+	(	noexcept(Mock<ITR const>() + Mock<difference_type const>()) 
+	&&	_1st_t::_is_Nxct_constructible_v
 	)->	_itr_t{  return {base_itr + diff};  }
 
 	auto operator[](difference_type const diff) const 
-	noexcept(  noexcept( *(Mock<_itr_t const>() + Mock<difference_type const>()) )  )
+	noexcept( noexcept(Mock<ITR const>() - Mock<difference_type const>()) )
 	->	decltype(*Mock<ITR const>()){  return *(*this + diff);  }
 
 	
 	auto operator-(_itr_t const& itr) const 
-	noexcept( noexcept(Mock<ITR const&>() - Mock<ITR const&>()) )
+	noexcept( noexcept(Mock<ITR const&>() - Mock<ITR const>()) )
 	->	SGM_DECLTYPE_AUTO(  itr.base_itr - base_itr  )
 	
 
@@ -424,11 +430,11 @@ public:
 	->	SGM_DECLTYPE_AUTO(  base_itr < itr.base_itr  )
 
 	auto operator<=(_itr_t const& itr) const
-	noexcept( noexcept(Mock<_itr_t const>() > Mock<_itr_t const&>()) )
+	noexcept( noexcept(Mock<ITR const>() < Mock<ITR const&>()) )
 	->	bool{  return !(*this > itr);  }
 
 	auto operator>=(_itr_t const& itr) const
-	noexcept( noexcept(Mock<_itr_t const>() < Mock<_itr_t const&>()) )
+	noexcept( noexcept(Mock<ITR const>() > Mock<ITR const&>()) )
 	->	bool{  return !(*this < itr);  }
 };
 //========//========//========//========//=======#//========//========//========//========//=======#
