@@ -6,7 +6,7 @@ include(FetchContent)
 FetchContent_Declare(
 	How2use
 	GIT_REPOSITORY https://github.com/SigmaPark/How2use.git
-	GIT_TAG v2.2
+	GIT_TAG v2.2.1
 )
 
 set(BUILD_HOW2USE_TEST_PROJ OFF CACHE BOOL "Disable How2use's test project build" FORCE)
