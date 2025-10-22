@@ -40,9 +40,6 @@ public:
 	auto operator==(CV_Complete_Ptr const rhs) const volatile noexcept
 	->	bool{  return *this == rhs.get();  }
 
-	auto operator==(CV_Complete_Ptr const volatile rhs) const volatile noexcept
-	->	bool{  return *this == rhs.get();  }
-
 	template<class Q>
 	auto operator!=(Q& q) const volatile noexcept-> bool{  return !(*this == q);  }
 
