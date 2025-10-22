@@ -418,13 +418,16 @@ namespace sgm
     template<class SRC, class TGT>
     struct Qualify_Like
     {
+    private:
         using _refless_src = Referenceless_t<SRC>;
         using _t1 = Selective_t< is_Const<_refless_src>::value, TGT const, TGT >;
+        using _t2 = Selective_t< is_Volatile<_refless_src>::value, _t1 volatile, _t1 >;
         
+    public:
         using type
         =   Selective_t
-            <   is_Same<SRC, _refless_src>::value, _t1
-            ,   Selective_t< is_Rvalue_Reference<SRC>::value, _t1&&, _t1& >
+            <   is_Same<SRC, _refless_src>::value, _t2
+            ,   Selective_t< is_Rvalue_Reference<SRC>::value, _t2&&, _t2& >
             >;
     };
 
