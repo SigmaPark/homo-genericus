@@ -13,7 +13,7 @@ namespace sgm
 	namespace h2u
 	{
 
-		SGM_HOW2USE_CLASS(Test_, CV_Complete_Ptr, /**/);
+		SGM_HOW2USE_CLASS(Test_, CV_Complete, /**/);
 
 	}
 }

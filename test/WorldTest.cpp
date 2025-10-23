@@ -72,7 +72,7 @@ bool wt::Tests(wchar_t const* const module_title) noexcept
 #include "SGM/Abbreviable/Test_Pinweight.hpp"
 #include "SGM/Boomerang/Test_Boomerang.hpp"
 #include "SGM/Concurrency/Test_Concurrency.hpp"
-#include "SGM/CV_Complete_Ptr/Test_CV_Complete_Ptr.hpp"
+#include "SGM/CV_Complete/Test_CV_Complete.hpp"
 #include "SGM/Family/Test_Family.hpp"
 #include "SGM/Flag_Set/Test_Flag_Set.hpp"
 #include "SGM/Functor/Test_Functor.hpp"
@@ -99,7 +99,7 @@ void test() noexcept(false)
     sgm::h2u::Test_Pinweight::test();
     sgm::h2u::Test_Boomerang::test();
     sgm::h2u::Test_Concurrency::test();
-    sgm::h2u::Test_CV_Complete_Ptr::test();
+    sgm::h2u::Test_CV_Complete::test();
     sgm::h2u::Test_Family::test();
     sgm::h2u::Test_Flag_Set::test();
     sgm::h2u::Test_High_Templar::test();
