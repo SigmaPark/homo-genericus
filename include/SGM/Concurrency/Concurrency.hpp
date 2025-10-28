@@ -14,9 +14,9 @@
 #include <condition_variable>
 #include <mutex>
 #include <cassert>
-#include "SGM/Family/Family.hpp"
-#include "SGM/End_of_Life/EOL.hpp"
-#include "SGM/Abbreviable/Nullable.hpp"
+#include "SGM/Utility/Family.hpp"
+#include "SGM/Utility/Finally.hpp"
+#include "SGM/Wrapper/Nullable.hpp"
 #include <exception>
 
 
