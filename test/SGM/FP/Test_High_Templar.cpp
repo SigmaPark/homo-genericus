@@ -13,32 +13,6 @@
 using sgm::h2u::Specimen;
 using sgm::h2u::Are_Equivalent_Ranges;
 
-static void Countable_Test()
-{
-	SGM_H2U_ASSERT
-	(	Are_Equivalent_Ranges
-		(	sgm::Countable<int>(5)
-		,	std::initializer_list<int>{0, 1, 2, 3, 4}
-		)
-	&&	Are_Equivalent_Ranges
-		(	sgm::Countable<int>(5, 1)
-		,	std::initializer_list<int>{1, 2, 3, 4, 5}
-		)
-	);
-
-	{
-		auto const seq = sgm::Countable<int>(5);
-		auto const rseq_arr = sgm::Array<int>(seq.rbegin(), seq.rend());
-	
-		SGM_H2U_ASSERT
-		(	Are_Equivalent_Ranges
-			(	rseq_arr
-			,	std::initializer_list<int>{4, 3, 2, 1, 0}
-			)
-		);
-	}
-}
-
 
 class Testing_Allocator : public sgm::Allocator<Specimen>
 {
@@ -64,6 +38,34 @@ public:
 private:
 	int* _pcount;
 };
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
+static void Countable_Test()
+{
+	SGM_H2U_ASSERT
+	(	Are_Equivalent_Ranges
+		(	sgm::Countable<int>(5)
+		,	std::initializer_list<int>{0, 1, 2, 3, 4}
+		)
+	&&	Are_Equivalent_Ranges
+		(	sgm::Countable<int>(5, 1)
+		,	std::initializer_list<int>{1, 2, 3, 4, 5}
+		)
+	);
+
+	{
+		auto const seq = sgm::Countable<int>(5);
+		auto const rseq_arr = sgm::Array<int>(seq.rbegin(), seq.rend());
+	
+		SGM_H2U_ASSERT
+		(	Are_Equivalent_Ranges
+			(	rseq_arr
+			,	std::initializer_list<int>{4, 3, 2, 1, 0}
+			)
+		);
+	}
+}
 
 
 static void Morph_Test()
