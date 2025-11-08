@@ -5,264 +5,18 @@
 
 
 #pragma once
-#ifndef _SGM_CONCURRENCY_
-#define _SGM_CONCURRENCY_
+#ifndef _SGM_CONCURRENT_PIPELINE_
+#define _SGM_CONCURRENT_PIPELINE_
 
 
-#include <future>
-#include <limits>
 #include <condition_variable>
 #include <mutex>
 #include <cassert>
+#include <exception>
 #include "SGM/Utility/Family.hpp"
 #include "SGM/Utility/Finally.hpp"
 #include "SGM/Wrapper/Nullable.hpp"
-#include <exception>
-
-
-namespace sgm
-{
-	
-	struct Nof_Hardware_Core
-	{	
-		static unsigned constexpr DYNAMIC = std::numeric_limits<unsigned>::max();
-		
-		enum class When_Fails : unsigned{SEQUANCIAL = 1, THROW = DYNAMIC};
-	};
-
-
-	template<unsigned NOF_TASK = Nof_Hardware_Core::DYNAMIC>
-	struct Fork_and_Join;
-
-
-	class FnJ_Fail_to_get_Nof_Core;
-
-	class Task_Guard;
-	class Thread_Guard;
-
-	struct _Fork_and_Join_Helper;
-
-}
-//========//========//========//========//=======#//========//========//========//========//=======#
-
-
-class sgm::Task_Guard
-{
-public:
-	template<class FN, class...ARGS>
-	Task_Guard(FN&& fn, ARGS&&...args) 
-	:	_fut(  std::async( Forward<FN>(fn), Forward<ARGS>(args)... )  ){}
-
-	~Task_Guard(){  _fut.get();  }
-
-
-private:
-	std::future<void> _fut;
-};
-
-
-class sgm::Thread_Guard
-{
-public:
-	template<class FN, class...ARGS>
-	Thread_Guard(FN&& fn, ARGS&&...args) : _th( Forward<FN>(fn), Forward<ARGS>(args)... ){}
-
-	~Thread_Guard(){  _th.join();  }
-
-
-private:
-	std::thread _th;
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-struct sgm::_Fork_and_Join_Helper
-{
-protected:
-	_Fork_and_Join_Helper() = default;
-
-
-	template<unsigned IDX>
-	struct _Static_Nof_Loop;
-
-
-	struct _Range{  size_t begin_idx, end_idx;  };
-
-
-	static auto Create_Partial_Range
-	(	_Range const whole_range, size_t const nof_task, size_t const task_id
-	)->	_Range
-	{
-		size_t const 
-			whole_len = whole_range.end_idx - whole_range.begin_idx,
-			q = whole_len/nof_task, r = whole_len%nof_task;
-
-		_Range const offset_range
-		=	task_id < r 
-			?	_Range{task_id*(q+1), (task_id+1)*(q+1)}
-			:	_Range{task_id*q + r, (task_id+1)*q + r};
-
-		return 
-		{	whole_range.begin_idx + offset_range.begin_idx
-		,	whole_range.begin_idx + offset_range.end_idx
-		};		
-	}
-};
-
-
-template<unsigned IDX>
-struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop : Unconstructible
-{	
-	template<class FUNC>
-	static auto calc(FUNC&& func)-> void
-	{
-		Task_Guard(func, IDX - 1),  _Static_Nof_Loop<IDX-1>::calc(func);
-	}
-};
-
-
-template<>
-struct sgm::_Fork_and_Join_Helper::_Static_Nof_Loop<0> : Unconstructible
-{
-	template<class FUNC>
-	static auto calc(FUNC&&) noexcept-> void{}
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<unsigned NOF_TASK>
-struct sgm::Fork_and_Join : private _Fork_and_Join_Helper
-{
-	static unsigned constexpr NUMBER_OF_TASK = NOF_TASK;
-
-	auto constexpr number_of_task() const-> unsigned{  return NUMBER_OF_TASK;  }
-
-
-	template<class FUNC>
-	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const-> void
-	{
-		_Fork_and_Join_Helper::_Static_Nof_Loop<NOF_TASK>::calc
-		(	[&func, begin_idx, end_idx](size_t const task_id)
-			{
-				auto const rg 
-				=	_Fork_and_Join_Helper::Create_Partial_Range
-					(	_Range{begin_idx, end_idx}, NOF_TASK, task_id
-					);
-
-				func( rg.begin_idx, rg.end_idx, static_cast<unsigned>(task_id) );
-			}
-		);
-	}
-
-	template<class FUNC>
-	auto operator()(size_t const loops, FUNC&& func) const
-	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<>
-struct sgm::Fork_and_Join<1> : private _Fork_and_Join_Helper
-{
-	static unsigned constexpr NUMBER_OF_TASK = 1;
-
-	auto constexpr number_of_task() const-> unsigned{  return 1;  }
-
-
-	template<class FUNC>
-	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const
-	->	void{  func( begin_idx, end_idx, unsigned(0) );  }
-
-	template<class FUNC>
-	auto operator()(size_t const loops, FUNC&& func) const
-	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-class sgm::FnJ_Fail_to_get_Nof_Core : public std::exception
-{
-public:
-	auto what() const noexcept
-	->	char const* override{  return "Failed to get the number of hardware cores.";  }
-
-private:
-	friend struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC>;
-
-	FnJ_Fail_to_get_Nof_Core() = default;
-};
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
-template<>
-struct sgm::Fork_and_Join<sgm::Nof_Hardware_Core::DYNAMIC> : private _Fork_and_Join_Helper
-{
-private:
-	template<class FUNC>
-	static auto _Dynamic_Nof_Loop_calc(FUNC&& func, unsigned task_id)-> void
-	{
-		if(task_id-- == 0)
-			return;
-
-		Task_Guard(func, task_id),  _Dynamic_Nof_Loop_calc(func, task_id);
-	}
-
-public:
-	static unsigned constexpr NUMBER_OF_TASK = Nof_Hardware_Core::DYNAMIC;
-
-
-	Fork_and_Join(unsigned const nof_task) : _nof_task(nof_task){}
-
-	Fork_and_Join
-	(	Nof_Hardware_Core::When_Fails const wf_flag = Nof_Hardware_Core::When_Fails::SEQUANCIAL
-	)
-	:	_nof_task
-		(	[wf_flag](unsigned const nof_hw_core)-> unsigned
-			{
-				return 
-				(	nof_hw_core != 0 ? nof_hw_core 
-				:	wf_flag == Nof_Hardware_Core::When_Fails::SEQUANCIAL ? unsigned(1)
-				:	/* otherwise */ NUMBER_OF_TASK
-				);
-			}(std::thread::hardware_concurrency())
-		)
-	{
-		if(_nof_task == NUMBER_OF_TASK)
-			throw FnJ_Fail_to_get_Nof_Core{};
-	}
-
-
-	auto number_of_task() const-> unsigned{  return _nof_task;  }
-
-
-	template<class FUNC>
-	auto operator()(size_t const begin_idx, size_t const end_idx, FUNC&& func) const-> void
-	{
-		auto const ntask = _nof_task;
-
-		_Dynamic_Nof_Loop_calc
-		(	[&func, begin_idx, end_idx, ntask](size_t const task_id)
-			{
-				auto const rg 
-				=	_Fork_and_Join_Helper::Create_Partial_Range
-					(	_Range{begin_idx, end_idx}, ntask, task_id
-					);
-
-				func( rg.begin_idx, rg.end_idx, static_cast<unsigned>(task_id) );
-			}
-		,	ntask
-		);
-	}
-
-	template<class FUNC>
-	auto operator()(size_t const loops, FUNC&& func) const
-	->	void{  (*this)( 0, loops, Forward<FUNC>(func) );  }
-
-
-private:
-	unsigned const _nof_task;
-};
-//========//========//========//========//=======#//========//========//========//========//=======#
+#include "Fork_and_Join.hpp"
 
 
 namespace sgm
@@ -282,7 +36,7 @@ namespace sgm
 
 	enum class Pipeline_Data_State{UNDEF, VALID, STOP, RETRY};
 
-	static auto constexpr 
+	static auto constexpr
 		Pipeline_stop_cue_v = Pipeline_Data_State::STOP,
 		Pipeline_retry_cue_v = Pipeline_Data_State::RETRY;
 
@@ -322,7 +76,7 @@ public:
 
 	template
 	<	class Q
-	,	class 
+	,	class
 		=	Enable_if_t
 			<	!Has_Same_Origin<Q, Null_t>::value
 			&&	!Has_Same_Origin<Q, _state_t>::value
@@ -339,7 +93,7 @@ public:
 
 	template
 	<	class Q
-	,	class 
+	,	class
 		=	Enable_if_t
 			<	!Has_Same_Origin<Q, Null_t>::value
 			&&	!Has_Same_Origin<Q, _state_t>::value
@@ -368,14 +122,14 @@ private:
 
 
 template<class T>  template<class...ARGS, class>
-sgm::Pipeline_Data<T>::Pipeline_Data(ARGS&&...args) 
+sgm::Pipeline_Data<T>::Pipeline_Data(ARGS&&...args)
 :	_nb( Forward<ARGS>(args)... ), _state(_state_t::VALID){}
 
 template<class T>  template<class Q, class>
 sgm::Pipeline_Data<T>::Pipeline_Data(Q&& q) : _nb( Forward<Q>(q) ), _state(_state_t::VALID){}
 
 template<class T>
-sgm::Pipeline_Data<T>::Pipeline_Data(_state_t const s) 
+sgm::Pipeline_Data<T>::Pipeline_Data(_state_t const s)
 :	_nb(Null_t{}), _state(s){  assert(s != _state_t::VALID);  }
 
 
@@ -505,7 +259,7 @@ auto sgm::_Pipeline_Buffer<T>::give() noexcept-> T&
 
 template<class T>
 auto sgm::_Pipeline_Buffer<T>::_wait_until_buffer_is(bool const filled) noexcept
-->	std::unique_lock<std::mutex> 
+->	std::unique_lock<std::mutex>
 {
 	std::unique_lock<std::mutex> qL(_mx);
 
@@ -533,7 +287,7 @@ public:
 	template<class...ARGS>
 	auto operator()(ARGS&...args) noexcept
 	->	invocation_Result_t<FN, ARGS&...>{  return _fn(args...);  }
-	
+
 
 private:
 	FN& _fn;
@@ -571,7 +325,7 @@ struct sgm::_concurrent_pipeline_detail::_Loop<2> : Unconstructible
 {
 public:
 	template
-	<	class FAM, class...THS, size_t IDX = sizeof...(THS) 
+	<	class FAM, class...THS, size_t IDX = sizeof...(THS)
 	,	int _MODE = IDX == std::tuple_size< Decay_t<FAM> >::value - 1 ? 3 : 2
 	>
 	static auto calc(FAM& memfam, THS const&...ths) noexcept-> void
@@ -609,7 +363,7 @@ private:
 	static auto _loop(Pipeline_Member<T1, FN1>& mem1, Pipeline_Member<T2, FN2>& mem2) noexcept
 	->	Task_Guard
 	{
-		return 
+		return
 		[&mem1, &mem2]() noexcept
 		{
 			while(true)
@@ -681,7 +435,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<3> : Unconstructible
 {
 	template
 	<	class FAM, class...MEMS, size_t IDX = sizeof...(MEMS)
-	,	class _FAM = Decay_t<FAM>, class _FN = std::tuple_element_t<IDX, _FAM> 
+	,	class _FAM = Decay_t<FAM>, class _FN = std::tuple_element_t<IDX, _FAM>
 	,	int _MODE = IDX == std::tuple_size<_FAM>::value - 2 ? 2 : 3
 	,	class _INPUT = typename Decay_t< Last_t<MEMS&&...> >::value_type
 	,	class _OUTPUT = typename _PL_Data< invocation_Result_t<_FN, _INPUT> >::type
@@ -699,7 +453,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<1> : Unconstructible
 	template
 	<	class FAM
 	,	class _FAM = Decay_t<FAM>
-	,	class _FN = std::tuple_element_t<0, _FAM> 
+	,	class _FN = std::tuple_element_t<0, _FAM>
 	,	int _MODE = std::tuple_size<_FAM>::value == 2 ? 2 : 3
 	,	class _OUTPUT = typename _PL_Data< invocation_Result_t<_FN> >::type
 	>
@@ -714,7 +468,7 @@ struct sgm::_concurrent_pipeline_detail::_Pipe<1> : Unconstructible
 struct sgm::Concurrent_Pipeline : Unconstructible
 {
 	template< class...FS, class = Guaranteed_t<( sizeof...(FS) >= 2 )> >
-	static auto run(FS&&...fs) noexcept-> void 
+	static auto run(FS&&...fs) noexcept-> void
 	{
 		_concurrent_pipeline_detail::_Pipe<1>::calc( Forward_as_Family(fs...) );
 	}
@@ -722,4 +476,4 @@ struct sgm::Concurrent_Pipeline : Unconstructible
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-#endif // end of #ifndef _SGM_CONCURRENCY_
+#endif // end of #ifndef _SGM_CONCURRENT_PIPELINE_

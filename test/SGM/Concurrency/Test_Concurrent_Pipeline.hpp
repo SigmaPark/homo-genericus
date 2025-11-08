@@ -4,7 +4,7 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#pragma once 
+#pragma once
 #include "SGM/How2use.hpp"
 
 
@@ -12,8 +12,8 @@ namespace sgm
 {
 	namespace h2u
 	{
-		
-		SGM_HOW2USE_CLASS(Test_, Concurrency, /**/);
+
+		SGM_HOW2USE_CLASS(Test_, Concurrent_Pipeline, /**/);
 
 	}
 }

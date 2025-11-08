@@ -4,84 +4,17 @@
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-#include "SGM/Concurrency/Concurrency.hpp"
-#include "Test_Concurrency.hpp"
+#include "SGM/Concurrency/Concurrent_Pipeline.hpp"
+#include "Test_Concurrent_Pipeline.hpp"
 #include "Poiya_Problem.hpp"
 
 #include <chrono>
 #include <type_traits>
 
 
-static void Parallel_Sum_with_Static_Fork_n_Join()
-{
-	size_t constexpr NTASK = 4;
-
-	int results[NTASK] = {0,};
-
-	auto sum_f
-	=	[&results](size_t const bidx, size_t const eidx, unsigned const task_id)
-		{
-			auto& res = results[task_id];
-			auto const last_n = static_cast<int>(eidx);
-
-			for(auto n = static_cast<int>(bidx);  n < last_n;  res += ++n);
-		};
-
-	sgm::Fork_and_Join<4>()(100, sum_f);
-
-	int const answer 
-	=	[&results]
-		{
-			int res = 0;
-
-			for(auto const x : results)
-				res += x;
-				
-			return res;
-		}();
-
-	SGM_H2U_ASSERT(answer == 5050);
-}
-
-
-static void Parallel_Sum_with_Dynamic_Fork_n_Join()
-{
-	size_t constexpr NTASK = 4;
-
-	int results[NTASK] = {0,};
-
-	auto sum_f
-	=	[&results](size_t const bidx, size_t const eidx, unsigned const task_id)
-		{
-			auto& res = results[task_id];
-			auto const last_n = static_cast<int>(eidx);
-
-			for(auto n = static_cast<int>(bidx);  n < last_n;  res += ++n);
-		};
-
-	unsigned const tasks = 4;
-
-	sgm::Fork_and_Join<>{tasks}(100, sum_f);
-
-	int const answer 
-	=	[&results]
-		{
-			int res = 0;
-
-			for(auto const x : results)
-				res += x;
-				
-			return res;
-		}();
-
-	SGM_H2U_ASSERT(answer == 5050);	
-}
-//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
-
-
 namespace pipeline_test
 {
-	
+
 	template<int N>
 	struct Type;
 
@@ -97,7 +30,7 @@ namespace pipeline_test
 	static auto Time_per_Unit_Task()-> double;
 
 
-	static auto constexpr unit_kvalue_v 
+	static auto constexpr unit_kvalue_v
 #ifdef NDEBUG
 	=	std::size_t(2'000);
 #else
@@ -211,7 +144,7 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-class pipeline_test::Serial_Process : public Test_Process 
+class pipeline_test::Serial_Process : public Test_Process
 {
 public:
 	template<class Q>
@@ -223,7 +156,7 @@ public:
 		using namespace std::chrono;
 
 		auto const starting_time_point = system_clock::now();
-	
+
 		for(int i = 0;  i < nof_cycle;  ++i)
 		{
 			auto r1 = _f01( Type<0>(i) );
@@ -240,14 +173,14 @@ public:
 					{
 						auto r4 = _f34( std::move(r3) );
 
-						if( _is_valid(r4) )	
+						if( _is_valid(r4) )
 							this->_check_result(  _f45( std::move(r4) )  );
 					}
 				}
 			}
 		}
 
-		auto const total_computing_time 
+		auto const total_computing_time
 		=	duration_cast<milliseconds>(system_clock::now() - starting_time_point);
 
 		return total_computing_time;
@@ -294,7 +227,7 @@ public:
 
 		sgm::Concurrent_Pipeline::run(supplier_f, _f01, _f12, _f23, _f34, _f45, consumer_f);
 
-		auto const total_computing_time 
+		auto const total_computing_time
 		=	duration_cast<milliseconds>(system_clock::now() - starting_time_point);
 
 		return total_computing_time;
@@ -313,7 +246,7 @@ static auto Unit_task_time_check(std::size_t const reps)-> double
 	for(auto d = reps;  d-->0;)
 		sgm::h2u::Poiya_Problem(pipeline_test::unit_kvalue_v);
 
-	auto const total_computing_time 
+	auto const total_computing_time
 	=	duration_cast<PREC>(system_clock::now() - starting_time_point);
 
 	return static_cast<double>(total_computing_time.count())/reps;
@@ -330,9 +263,9 @@ auto pipeline_test::Time_per_Unit_Task()-> double
 
 	auto const coarse_result_by_millisec = ::Unit_task_time_check<nanoseconds>(10) * 1e-6;
 
-	std::size_t const fine_test_reps 
+	std::size_t const fine_test_reps
 	=	static_cast<std::size_t>(measuring_time_by_millisec_v/ coarse_result_by_millisec);
-	
+
 	auto const res = ::Unit_task_time_check<milliseconds>(fine_test_reps);
 
 	std::wcout << "\tTime_per_Unit_Task = " << res << '\n';
@@ -348,7 +281,7 @@ static void Pipeline_Test()
 	using std::wcout;
 
 	wcout << "\nPipeline Test Begins\n";
-	
+
 	wcout << "\tnof hardware cores = " << std::thread::hardware_concurrency() << '\n';
 
 	auto const unit_task_time_by_millisec = pipeline_test::Time_per_Unit_Task();
@@ -375,10 +308,10 @@ static void Pipeline_Test()
 			nof_full_cycle = (nof_cycle-1)/pipeline_test::Stride_for_Full_Cycle_v + 1,
 			nof_short_cycle = nof_cycle - nof_full_cycle;
 
-		auto const nof_short_task 
+		auto const nof_short_task
 		=	accumulated_task_f(pipeline_test::nof_Functors_in_Short_Cycle_v);
 
-		wcout 
+		wcout
 		<<	"\tExpected time for serial test = "
 		<<	(	nof_full_cycle*nof_full_task
 			+	nof_short_cycle*nof_short_task
@@ -427,8 +360,6 @@ static void Pipeline_Test()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Concurrency, /**/)
-{	::Parallel_Sum_with_Static_Fork_n_Join
-,	::Parallel_Sum_with_Dynamic_Fork_n_Join
-,	::Pipeline_Test
+SGM_HOW2USE_TESTS(sgm::h2u::Test_, Concurrent_Pipeline, /**/)
+{	::Pipeline_Test
 };
