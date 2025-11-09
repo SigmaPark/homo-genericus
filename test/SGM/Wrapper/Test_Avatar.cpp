@@ -9,12 +9,12 @@
 #include "SGM/TMP/interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -27,7 +27,7 @@ static void intro()
 
 static void Basic_Usage()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Basic Avatar Usage");
 
@@ -43,7 +43,7 @@ BEGIN_CODE_BLOCK(basic_reference_ex)
 
 	s_basic = 22;
 
-	SGM_H2U_ASSERT(avt == s_basic && s_basic == 22);
+	H2U_ASSERT(avt == s_basic && s_basic == 22);
 END_CODE_BLOCK_AND_LOAD(basic_reference_ex)
 
 	mdo
@@ -59,7 +59,7 @@ BEGIN_CODE_BLOCK(const_reference_ex)
 
 	//cavt_const = 44;	// Compile Ban
 
-	SGM_H2U_ASSERT(cavt_const == cs);
+	H2U_ASSERT(cavt_const == cs);
 END_CODE_BLOCK_AND_LOAD(const_reference_ex)
 
 	mdo
@@ -87,7 +87,7 @@ END_CODE_BLOCK_AND_LOAD(explicit_const_ref_ex)
 
 static void Const_Avatar_Types()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Const Avatar Types")
@@ -110,7 +110,7 @@ END_CODE_BLOCK_AND_LOAD(const_avatar_types_ex)
 
 static void Type_Conversions()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Type Conversions")
@@ -135,7 +135,7 @@ END_CODE_BLOCK_AND_LOAD(type_conversions_ex)
 
 static void Reference_Tracking()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Reference Tracking")
@@ -149,7 +149,7 @@ BEGIN_CODE_BLOCK(reference_tracking_ex)
 
 	x_track = 4;
 
-	SGM_H2U_ASSERT(avt1 == 4);
+	H2U_ASSERT(avt1 == 4);
 END_CODE_BLOCK_AND_LOAD(reference_tracking_ex)
 
 	mdo << empty_line;
@@ -158,7 +158,7 @@ END_CODE_BLOCK_AND_LOAD(reference_tracking_ex)
 
 static void Nested_Avatars()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 	using sgm::Avatar;
 	using sgm::constAvatar;
 
@@ -186,7 +186,7 @@ BEGIN_CODE_BLOCK(nested_avatars_ex)
 
 	auto avt2 = sgm::Refer(avt1);
 
-	SGM_H2U_ASSERT(avt1 == 2 && avt2 == 2);
+	H2U_ASSERT(avt1 == 2 && avt2 == 2);
 
 	static_assert( sgm::is_Same<decltype(avt2.v()), Specimen const&>::value, "" );
 END_CODE_BLOCK_AND_LOAD(nested_avatars_ex)
@@ -197,7 +197,7 @@ END_CODE_BLOCK_AND_LOAD(nested_avatars_ex)
 
 static void Arithmetic_Operations()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Arithmetic Operations")
@@ -224,7 +224,7 @@ BEGIN_CODE_BLOCK(arithmetic_operations_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT(y1 == 2+4 && y2 == 4-2 && b == false && avts.v().value() == 6);
+	H2U_ASSERT(y1 == 2+4 && y2 == 4-2 && b == false && avts.v().value() == 6);
 END_CODE_BLOCK_AND_LOAD(arithmetic_operations_ex)
 
 	mdo << empty_line;
@@ -233,7 +233,7 @@ END_CODE_BLOCK_AND_LOAD(arithmetic_operations_ex)
 
 static void Function_Parameters()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Function Parameters")
@@ -247,7 +247,7 @@ BEGIN_CODE_BLOCK(function_parameters_ex)
 
 	[](Specimen t1, Specimen& t2, Specimen const& t3, Specimen&& t4, Specimen const&& t5)
 	{
-		SGM_H2U_ASSERT(t1 == 2 && t2 == 4 && t3 == 6 && t4 == 8 && t5 == 10);
+		H2U_ASSERT(t1 == 2 && t2 == 4 && t3 == 6 && t4 == 8 && t5 == 10);
 	}( s1, s2, s3, sgm::Move(s4), sgm::Move(s5) );
 END_CODE_BLOCK_AND_LOAD(function_parameters_ex)
 
@@ -257,7 +257,7 @@ END_CODE_BLOCK_AND_LOAD(function_parameters_ex)
 
 static void Address_Access()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Address Access")
@@ -272,7 +272,7 @@ BEGIN_CODE_BLOCK(address_access_ex)
 
 	static_assert( sgm::is_Same<decltype(&s_addr), decltype(&avt)>::value, "" );
 
-	SGM_H2U_ASSERT(&s_addr == &avt);
+	H2U_ASSERT(&s_addr == &avt);
 END_CODE_BLOCK_AND_LOAD(address_access_ex)
 
 	mdo << empty_line;
@@ -281,7 +281,7 @@ END_CODE_BLOCK_AND_LOAD(address_access_ex)
 
 static void Move_Semantics()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Move Semantics")
@@ -297,7 +297,7 @@ BEGIN_CODE_BLOCK(move_semantics_ex)
 	
 		Specimen s2 = sgm::Move(avt);
 	
-		SGM_H2U_ASSERT(s2 == 2 && s_move == Specimen::State::MOVE_AWAY);
+		H2U_ASSERT(s2 == 2 && s_move == Specimen::State::MOVE_AWAY);
 	}
 END_CODE_BLOCK_AND_LOAD(move_semantics_ex)
 
@@ -308,7 +308,7 @@ END_CODE_BLOCK_AND_LOAD(move_semantics_ex)
 
 		Specimen s = sgm::Move(avt);
 
-		SGM_H2U_ASSERT(s == 2 && s_move == Specimen::State::MOVE_AWAY);
+		H2U_ASSERT(s == 2 && s_move == Specimen::State::MOVE_AWAY);
 	}
 
 	mdo << empty_line;
@@ -317,7 +317,7 @@ END_CODE_BLOCK_AND_LOAD(move_semantics_ex)
 
 static void Void_Avatar_Casting()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Void Avatar and Type Casting")
@@ -347,7 +347,7 @@ BEGIN_CODE_BLOCK(void_avatar_casting_ex)
 	
 		static_cast<Specimen&>(va).value() = 5;
 	
-		SGM_H2U_ASSERT(s_void == 5);
+		H2U_ASSERT(s_void == 5);
 	}
 END_CODE_BLOCK_AND_LOAD(void_avatar_casting_ex)
 
@@ -366,11 +366,11 @@ BEGIN_CODE_BLOCK(const_void_avatar_ex)
 	
 		Specimen const& rs = static_cast<Specimen const&>(cva);
 	
-		SGM_H2U_ASSERT(rs == 2);
+		H2U_ASSERT(rs == 2);
 	
 		s_cvoid.value() = 5;
 	
-		SGM_H2U_ASSERT(rs == 5);
+		H2U_ASSERT(rs == 5);
 	}
 END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 
@@ -381,7 +381,7 @@ END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 
 		static_cast<Specimen&>(va).value() = 5;
 
-		SGM_H2U_ASSERT(s_va == 5);
+		H2U_ASSERT(s_va == 5);
 	}
 	{
 		Specimen s_cva(2);
@@ -390,11 +390,11 @@ END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 
 		Specimen const& rs = static_cast<Specimen const&>(cva);
 
-		SGM_H2U_ASSERT(rs == 2);
+		H2U_ASSERT(rs == 2);
 
 		s_cva.value() = 5;
 
-		SGM_H2U_ASSERT(rs == 5);
+		H2U_ASSERT(rs == 5);
 	}
 
 	mdo << empty_line;
@@ -402,7 +402,7 @@ END_CODE_BLOCK_AND_LOAD(const_void_avatar_ex)
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Avatar, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Avatar, /**/)
 {	::intro
 ,	::Basic_Usage
 ,	::Const_Avatar_Types

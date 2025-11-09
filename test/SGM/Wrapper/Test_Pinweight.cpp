@@ -9,12 +9,12 @@
 #include "SGM/TMP/interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -39,7 +39,7 @@ static void intro()
 
 static void Basic_Usage()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Basic Pinweight Usage")
@@ -52,7 +52,7 @@ BEGIN_CODE_BLOCK(basic_usage_ex)
 
 	pw = Specimen(3);
 
-	SGM_H2U_ASSERT(pw == 3 && pw.share_count() == 1);
+	H2U_ASSERT(pw == 3 && pw.share_count() == 1);
 END_CODE_BLOCK_AND_LOAD(basic_usage_ex)
 
 	mdo << empty_line;
@@ -61,7 +61,7 @@ END_CODE_BLOCK_AND_LOAD(basic_usage_ex)
 
 static void Construction_and_Assignment()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Construction and Assignment")
@@ -73,12 +73,12 @@ BEGIN_CODE_BLOCK(construction_assignment_ex)
 	Specimen const cs(3);
 	sgm::Pinweight<Specimen> pw1(5), pw2(cs);
 
-	SGM_H2U_ASSERT(pw1 == 5 && pw2 == 3);
+	H2U_ASSERT(pw1 == 5 && pw2 == 3);
 
 	pw1 = 7, pw2 = 9;
 
-	SGM_H2U_ASSERT(pw1 == 7 && pw2 == 9 && cs == 3);
-	SGM_H2U_ASSERT(pw1.share_count() == 1 && pw2.share_count() == 1);
+	H2U_ASSERT(pw1 == 7 && pw2 == 9 && cs == 3);
+	H2U_ASSERT(pw1.share_count() == 1 && pw2.share_count() == 1);
 END_CODE_BLOCK_AND_LOAD(construction_assignment_ex)
 
 	mdo << empty_line;
@@ -87,7 +87,7 @@ END_CODE_BLOCK_AND_LOAD(construction_assignment_ex)
 
 static void Shared_Ownership()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Shared Ownership")
@@ -98,13 +98,13 @@ static void Shared_Ownership()
 BEGIN_CODE_BLOCK(shared_ownership_ex)
 	sgm::Pinweight<Specimen> pw1(3), pw2 = pw1;
 
-	SGM_H2U_ASSERT(pw1 == 3 && pw2 == 3);
-	SGM_H2U_ASSERT( pw1.share_with(pw2) && pw1.share_count() == 2 && pw2.share_count() == 2 );
+	H2U_ASSERT(pw1 == 3 && pw2 == 3);
+	H2U_ASSERT( pw1.share_with(pw2) && pw1.share_count() == 2 && pw2.share_count() == 2 );
 
 	pw2 = Specimen(3);
 
-	SGM_H2U_ASSERT(pw1 == 3 && pw2 == 3);
-	SGM_H2U_ASSERT( !pw1.share_with(pw2) && pw1.share_count() == 1 && pw2.share_count() == 1 );
+	H2U_ASSERT(pw1 == 3 && pw2 == 3);
+	H2U_ASSERT( !pw1.share_with(pw2) && pw1.share_count() == 1 && pw2.share_count() == 1 );
 END_CODE_BLOCK_AND_LOAD(shared_ownership_ex)
 
 	mdo << empty_line;
@@ -113,7 +113,7 @@ END_CODE_BLOCK_AND_LOAD(shared_ownership_ex)
 
 static void Copy_Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Copy Construction")
@@ -124,13 +124,13 @@ static void Copy_Construction()
 BEGIN_CODE_BLOCK(copy_construction_ex)
 	sgm::Pinweight<Specimen> pw1(3), pw2 = sgm::Pinweight<Specimen>(pw1);
 
-	SGM_H2U_ASSERT( pw1.share_with(pw2) );
+	H2U_ASSERT( pw1.share_with(pw2) );
 
 	sgm::Pinweight<Specimen> const pw3 = pw1;
 	sgm::Pinweight<Specimen const> cpw = pw3;
 
-	SGM_H2U_ASSERT( pw1.share_with(pw3) && pw2.share_with(pw3) );
-	SGM_H2U_ASSERT(pw1.share_count() == 4);
+	H2U_ASSERT( pw1.share_with(pw3) && pw2.share_with(pw3) );
+	H2U_ASSERT(pw1.share_count() == 4);
 END_CODE_BLOCK_AND_LOAD(copy_construction_ex)
 
 	mdo << empty_line;
@@ -139,7 +139,7 @@ END_CODE_BLOCK_AND_LOAD(copy_construction_ex)
 
 static void Const_Pinweight()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Const Pinweight")
@@ -150,7 +150,7 @@ static void Const_Pinweight()
 BEGIN_CODE_BLOCK(const_pinweight_ex)
 	sgm::constPinweight<Specimen> cpw1(3);
 
-	SGM_H2U_ASSERT(cpw1.v().value() == 3);
+	H2U_ASSERT(cpw1.v().value() == 3);
 END_CODE_BLOCK_AND_LOAD(const_pinweight_ex)
 
 	mdo << empty_line;
@@ -175,7 +175,7 @@ public:
 
 static void Nested_Pinweight()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Nested Pinweight (Abbreviable)")
@@ -216,7 +216,7 @@ struct Foo
 
 static void Copy_On_Write()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Copy-on-Write Semantics")
@@ -239,11 +239,11 @@ BEGIN_CODE_BLOCK(copy_on_write_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT( pw1.share_with(pw2) );
+	H2U_ASSERT( pw1.share_with(pw2) );
 
 	pw1.mut().set(3);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	!pw1.share_with(pw2)
 	&&	pw1.v().value() == 3
 	&&	pw3.v().value() == 1
@@ -256,7 +256,7 @@ END_CODE_BLOCK_AND_LOAD(copy_on_write_ex)
 
 static void Arithmetic_Operations()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Arithmetic Operations")
@@ -279,15 +279,15 @@ BEGIN_CODE_BLOCK(arithmetic_operations_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT(y1 == 8 && y2 == 2 && b == true);
+	H2U_ASSERT(y1 == 8 && y2 == 2 && b == true);
 
 	sgm::Pinweight<int> pw3 = pwi2;
 
-	SGM_H2U_ASSERT( pw3.share_with(pwi2) );
+	H2U_ASSERT( pw3.share_with(pwi2) );
 
 	pw3.mut()++;
 
-	SGM_H2U_ASSERT( pwi2 == 5 && pw3 == 5+1 && !pw3.share_with(pwi2) );
+	H2U_ASSERT( pwi2 == 5 && pw3 == 5+1 && !pw3.share_with(pwi2) );
 END_CODE_BLOCK_AND_LOAD(arithmetic_operations_ex)
 
 	mdo << empty_line;
@@ -296,7 +296,7 @@ END_CODE_BLOCK_AND_LOAD(arithmetic_operations_ex)
 
 static void Custom_Memory_Management()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Custom Memory Management")
@@ -318,14 +318,14 @@ BEGIN_CODE_BLOCK(custom_memory_ex)
 		[[maybe_unused]] auto pw3 = pw1;
 		sgm::Pinweight<Specimen> pw4(8);
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	pw1 == i && pw2 == i
 		&&	&pw1.v() == reinterpret_cast<Specimen const*>(&buf[0])
 		&&	&pw2.v() == reinterpret_cast<Specimen const*>(&buf[1])
 		);
 	}
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	reinterpret_cast<Specimen*>(buf[0])->state() == Specimen::State::DESTRUCTION
 	&&	reinterpret_cast<Specimen*>(buf[1])->state() == Specimen::State::DESTRUCTION
 	);
@@ -342,7 +342,7 @@ static void outro()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Pinweight, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Pinweight, /**/)
 {	::intro
 ,	::Basic_Usage
 ,	::Construction_and_Assignment

@@ -69,7 +69,7 @@ static void Reverse_iterator_Test()
 	auto ritr2 = sgm::rBegin(numbers);
 
 	for(;  ritr1 != numbers.rend();  ++ritr1,  ++ritr2)
-		SGM_H2U_ASSERT(*ritr1 == *ritr2);
+		H2U_ASSERT(*ritr1 == *ritr2);
 }
 
 
@@ -80,7 +80,7 @@ static void Size_Test()
 	std::list<int> li{0, 1, 2, 3, 4};
 	std::forward_list<int> fli{0, 1, 2, 3, 4};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	sgm::Size(arr) == 5
 	&&	sgm::Size(vec) == 5
 	&&	sgm::Size(li) == 5
@@ -131,7 +131,7 @@ static void iterator_Wrapper_Test()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, iterable, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, iterable, /**/)
 {	::is_iterable_Test
 ,	::is_iterator_Test
 ,	::Reverse_iterator_Test

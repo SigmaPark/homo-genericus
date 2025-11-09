@@ -265,7 +265,7 @@ static void Member_Function_Test()
 	auto const foo_xf = sgm::Memfunc(foo, &Foo::get_x);
 	auto const foo_nx_xf = sgm::Memfunc(foo, &Foo::nx_get_x);
 
-	SGM_H2U_ASSERT(foo_xf() == 5 && foo_nx_xf() == 5);
+	H2U_ASSERT(foo_xf() == 5 && foo_nx_xf() == 5);
 
 	static_assert
 	(	!noexcept(foo_xf()) && noexcept(foo_nx_xf())
@@ -275,7 +275,7 @@ static void Member_Function_Test()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Type_Analysis, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Type_Analysis, /**/)
 {	::Unconstructible_Test
 ,	::Boolean_Test
 ,	::Qualifiers_Test

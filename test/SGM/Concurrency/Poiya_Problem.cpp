@@ -2,7 +2,7 @@
 #include <cmath>
 
 
-void sgm::h2u::PrimeFactors::_update_until(std::size_t const n)
+void sgm::test::PrimeFactors::_update_until(std::size_t const n)
 {
 	for(auto x = _primes.back() + 2;  x <= n;  x += 2)
 		for
@@ -15,7 +15,7 @@ void sgm::h2u::PrimeFactors::_update_until(std::size_t const n)
 }
 
 
-auto sgm::h2u::PrimeFactors::primes_under(std::size_t const n)-> std::deque<std::size_t> const&
+auto sgm::test::PrimeFactors::primes_under(std::size_t const n)-> std::deque<std::size_t> const&
 {
 	if(n > _primes.back())
 		_update_until(n);
@@ -25,7 +25,7 @@ auto sgm::h2u::PrimeFactors::primes_under(std::size_t const n)-> std::deque<std:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-auto sgm::h2u::Poiya_rate::rof_odd_factored(std::size_t const n)-> long double
+auto sgm::test::Poiya_rate::rof_odd_factored(std::size_t const n)-> long double
 {
 	if(_nof_odd_factors.size() <= n)
 		_update_until(n);
@@ -34,7 +34,7 @@ auto sgm::h2u::Poiya_rate::rof_odd_factored(std::size_t const n)-> long double
 }
 
 
-auto sgm::h2u::Poiya_rate::_nof_factors(std::size_t n)-> std::size_t
+auto sgm::test::Poiya_rate::_nof_factors(std::size_t n)-> std::size_t
 {
 	auto const sqn = static_cast<std::size_t>( std::sqrt(n) );
 	auto const& prime_numbers = _primes.primes_under(sqn + 1);
@@ -63,7 +63,7 @@ auto sgm::h2u::Poiya_rate::_nof_factors(std::size_t n)-> std::size_t
 }
 
 
-void sgm::h2u::Poiya_rate::_update_until(std::size_t const n)
+void sgm::test::Poiya_rate::_update_until(std::size_t const n)
 {
 	if(_nof_odd_factors.size() <= n)
 		for(auto k = _nof_odd_factors.size();  k <= n;  ++k)
@@ -75,7 +75,7 @@ void sgm::h2u::Poiya_rate::_update_until(std::size_t const n)
 }
 
 
-auto sgm::h2u::Poiya_Problem(std::size_t const n)-> long double
+auto sgm::test::Poiya_Problem(std::size_t const n)-> long double
 {
 	return Poiya_rate{}.rof_odd_factored(n);
 }

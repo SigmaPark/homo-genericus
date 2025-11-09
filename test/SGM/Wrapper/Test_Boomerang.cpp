@@ -9,7 +9,7 @@
 #include "SGM/TMP/interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void Test01()
@@ -19,12 +19,12 @@ static void Test01()
 	{
 		auto&& bar = sgm::throw_Boomerang( x, [&y](int const& t){  y = 2*t;  } );
 
-		SGM_H2U_ASSERT(bar == 5);
+		H2U_ASSERT(bar == 5);
 
 		sgm::Move(bar) = 10;
 	}
 
-	SGM_H2U_ASSERT(y == 2*10);
+	H2U_ASSERT(y == 2*10);
 }
 
 
@@ -35,7 +35,7 @@ static void Test02()
 
 	sgm::throw_Boomerang( s, [&y](Specimen const& s){  y = s.value() * 2;  } ).value() = 3;
 
-	SGM_H2U_ASSERT(y == 3*2);
+	H2U_ASSERT(y == 3*2);
 }
 
 
@@ -52,12 +52,12 @@ static void Test03()
 	(	std::ref(  sgm::throw_Boomerang( x, [&s](int const t){  s.value() = t;  } )  )
 	);
 
-	SGM_H2U_ASSERT(s.value() == 5);
+	H2U_ASSERT(s.value() == 5);
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Boomerang, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Boomerang, /**/)
 {	::Test01
 ,	::Test02
 ,	::Test03

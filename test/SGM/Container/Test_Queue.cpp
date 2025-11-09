@@ -8,7 +8,7 @@
 #include "Test_Queue.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 struct Queue_Contents : sgm::Unconstructible
@@ -23,7 +23,7 @@ struct Queue_Contents : sgm::Unconstructible
 
 void Queue_Contents::Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Basic Queue Construction");
 	
@@ -34,13 +34,13 @@ void Queue_Contents::Construction()
 
 	sgm::Queue<Specimen> qu;
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 }
 
 
 void Queue_Contents::Push_and_Pop()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"FIFO Operations");
 	
@@ -56,26 +56,26 @@ BEGIN_CODE_BLOCK(queue_basic_usage)
 	qu.push( Specimen(1) );
 	qu.push( Specimen(3) );
 
-	SGM_H2U_ASSERT(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
+	H2U_ASSERT(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
 
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
 END_CODE_BLOCK_AND_LOAD(queue_basic_usage)
 }
 
 
 void Queue_Contents::Clear()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Queue Clearing");
 
@@ -90,11 +90,11 @@ void Queue_Contents::Clear()
 	qu.push( Specimen(3) );
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
 	qu.clear();
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 }
 
 
@@ -141,7 +141,7 @@ END_CODE_BLOCK(queue_test_allocator_decl)
 
 void Queue_Contents::Construction_by_Allocator()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Custom Allocator Construction");
 
@@ -167,14 +167,14 @@ BEGIN_CODE_BLOCK(queue_custom_allocator)
 		(	sgm::_Test_Queue_Allocator_detail::Test_Allocator<Specimen>(node_arr)
 		);
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 END_CODE_BLOCK_AND_LOAD(queue_custom_allocator)
 }
 
 
 void Queue_Contents::Push_and_Pop_by_Allocator()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Custom Allocator Operations", 2);
 
@@ -198,21 +198,21 @@ void Queue_Contents::Push_and_Pop_by_Allocator()
 	qu.push( Specimen(1) );
 	qu.push( Specimen(3) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
 	&&	node_arr[0].value == 1 && node_arr[1].value == 3
 	);
 
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
 	&&	node_arr[0].value == 1 && node_arr[1].value == 3 && node_arr[2].value == 5
 	);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
 	&&	node_arr[0].value == Specimen::State::DESTRUCTION
 	&&	node_arr[1].value == 3
@@ -221,7 +221,7 @@ void Queue_Contents::Push_and_Pop_by_Allocator()
 
 	qu.pop();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
 	&&	node_arr[0].value == Specimen::State::DESTRUCTION
 	&&	node_arr[1].value == Specimen::State::DESTRUCTION
@@ -248,7 +248,7 @@ struct Circular_Queue_Contents : sgm::Unconstructible
 
 void Circular_Queue_Contents::Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Circular Queue Construction");
 
@@ -262,13 +262,13 @@ void Circular_Queue_Contents::Construction()
 
 	sgm::Circular_Queue<Specimen> qu(5);
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 }
 
 
 void Circular_Queue_Contents::Push_and_Pop()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Circular Queue FIFO Operations");
 
@@ -284,26 +284,26 @@ BEGIN_CODE_BLOCK(circular_queue_basic)
 	qu.push( Specimen(1) );
 	qu.push( Specimen(3) );
 
-	SGM_H2U_ASSERT(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
+	H2U_ASSERT(qu.size() == 2 && qu.front() == 1 && qu.back() == 3);
 
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 3 && qu.front() == 1 && qu.back() == 5);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 2 && qu.front() == 3 && qu.back() == 5);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
+	H2U_ASSERT(qu.size() == 1 && qu.front() == 5 && qu.back() == 5);
 END_CODE_BLOCK_AND_LOAD(circular_queue_basic)
 }
 
 
 void Circular_Queue_Contents::Push_and_Pop2()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Advanced Circular Buffer Operations", 2);
 
@@ -318,21 +318,21 @@ BEGIN_CODE_BLOCK(circular_queue_chaining)
 
 	qu.push(1).push(3).push(5);
 
-	SGM_H2U_ASSERT(qu.size() == 3 && qu.is_full());
+	H2U_ASSERT(qu.size() == 3 && qu.is_full());
 
 	qu.pop().pop();
 
-	SGM_H2U_ASSERT(qu.size() == 1 && qu.front() == 5);
+	H2U_ASSERT(qu.size() == 1 && qu.front() == 5);
 
 	qu.push(7).push(9);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3 && qu.is_full() && qu.front() == 5 && qu.back() == 9
 	);
 
 	qu.pop();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 2 && qu.front() == 7 && qu.back() == 9
 	);
 END_CODE_BLOCK_AND_LOAD(circular_queue_chaining)
@@ -341,7 +341,7 @@ END_CODE_BLOCK_AND_LOAD(circular_queue_chaining)
 
 void Circular_Queue_Contents::Copy_Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Copy Semantics");
 
@@ -360,19 +360,19 @@ void Circular_Queue_Contents::Copy_Construction()
 
 	sgm::Circular_Queue<Specimen> qu2 = qu;
 
-	SGM_H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
-	SGM_H2U_ASSERT(qu2.front() == 3);
+	H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	H2U_ASSERT(qu2.front() == 3);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.size() == 3 - 2);
-	SGM_H2U_ASSERT(qu2.front() == 5);
+	H2U_ASSERT(qu2.size() == 3 - 2);
+	H2U_ASSERT(qu2.front() == 5);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.is_empty());
+	H2U_ASSERT(qu2.is_empty());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3 - 1
 	&&	qu.front() == 3 && qu.back() == 5
 	);
@@ -381,7 +381,7 @@ void Circular_Queue_Contents::Copy_Construction()
 
 void Circular_Queue_Contents::Move_Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Move Semantics", 2);
 
@@ -400,19 +400,19 @@ void Circular_Queue_Contents::Move_Construction()
 
 	sgm::Circular_Queue<Specimen> qu2 = sgm::Move(qu);
 
-	SGM_H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
-	SGM_H2U_ASSERT(qu2.front() == 3);
+	H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	H2U_ASSERT(qu2.front() == 3);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.size() == 3 - 2);
-	SGM_H2U_ASSERT(qu2.front() == 5);
+	H2U_ASSERT(qu2.size() == 3 - 2);
+	H2U_ASSERT(qu2.front() == 5);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.is_empty());
+	H2U_ASSERT(qu2.is_empty());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.is_empty() && qu.max_size() == 0
 	);
 }
@@ -420,7 +420,7 @@ void Circular_Queue_Contents::Move_Construction()
 
 void Circular_Queue_Contents::Copy_Assignment()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Copy Assignment", 2);
 
@@ -439,19 +439,19 @@ void Circular_Queue_Contents::Copy_Assignment()
 
 	qu2 = qu;
 
-	SGM_H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
-	SGM_H2U_ASSERT(qu2.front() == 3);
+	H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	H2U_ASSERT(qu2.front() == 3);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.size() == 3 - 2);
-	SGM_H2U_ASSERT(qu2.front() == 5);
+	H2U_ASSERT(qu2.size() == 3 - 2);
+	H2U_ASSERT(qu2.front() == 5);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.is_empty());
+	H2U_ASSERT(qu2.is_empty());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3 - 1
 	&&	qu.front() == 3 && qu.back() == 5
 	);
@@ -460,7 +460,7 @@ void Circular_Queue_Contents::Copy_Assignment()
 
 void Circular_Queue_Contents::Move_Assignment()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Move Assignment", 2);
 
@@ -479,19 +479,19 @@ void Circular_Queue_Contents::Move_Assignment()
 
 	qu2 = sgm::Move(qu);
 
-	SGM_H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
-	SGM_H2U_ASSERT(qu2.front() == 3);
+	H2U_ASSERT(qu2.max_size() == 5 && qu2.size() == 3 - 1);
+	H2U_ASSERT(qu2.front() == 3);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.size() == 3 - 2);
-	SGM_H2U_ASSERT(qu2.front() == 5);
+	H2U_ASSERT(qu2.size() == 3 - 2);
+	H2U_ASSERT(qu2.front() == 5);
 
 	qu2.pop();
 
-	SGM_H2U_ASSERT(qu2.is_empty());
+	H2U_ASSERT(qu2.is_empty());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.is_empty() && qu.max_size() == 0
 	);
 }
@@ -499,7 +499,7 @@ void Circular_Queue_Contents::Move_Assignment()
 
 void Circular_Queue_Contents::Clear()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Circular Queue Clearing");
 
@@ -510,13 +510,13 @@ void Circular_Queue_Contents::Clear()
 
 	sgm::Circular_Queue<Specimen> qu(3);
 
-	SGM_H2U_ASSERT(qu.max_size() == 3);
+	H2U_ASSERT(qu.max_size() == 3);
 
 	qu.push( Specimen(1) );
 	qu.push( Specimen(3) );
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3
 	&&	qu.front() == 1 && qu.back() == 5
 	&&	qu.is_full()
@@ -524,7 +524,7 @@ void Circular_Queue_Contents::Clear()
 
 	qu.clear();
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 }
 
 
@@ -571,7 +571,7 @@ END_CODE_BLOCK(circular_queue_test_allocator_decl)
 
 void Circular_Queue_Contents::Construction_by_Allocator()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Circular Queue with Custom Allocator");
 
@@ -596,14 +596,14 @@ BEGIN_CODE_BLOCK(circular_queue_custom_allocator)
 		,	5
 		);
 
-	SGM_H2U_ASSERT(qu.is_empty());
+	H2U_ASSERT(qu.is_empty());
 END_CODE_BLOCK_AND_LOAD(circular_queue_custom_allocator)
 }
 
 
 void Circular_Queue_Contents::Push_and_Pop_by_Allocator()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Custom Allocator Operations with Verification", 2);
 
@@ -629,14 +629,14 @@ BEGIN_CODE_BLOCK(circular_queue_custom_allocator_2)
 	qu.push( Specimen(1) );
 	qu.push( Specimen(3) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 2 && qu.front() == 1 && qu.back() == 3
 	&&	buffer_arr[0] == 1 && buffer_arr[1] == 3
 	);
 
 	qu.push( Specimen(5) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 3 && qu.front() == 1 && qu.back() == 5
 	&&	buffer_arr[0] == 1
 	&&	buffer_arr[1] == 3
@@ -645,7 +645,7 @@ BEGIN_CODE_BLOCK(circular_queue_custom_allocator_2)
 
 	qu.pop();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 2 && qu.front() == 3 && qu.back() == 5
 	&&	buffer_arr[0] == Specimen::State::DESTRUCTION
 	&&	buffer_arr[1] == 3
@@ -654,7 +654,7 @@ BEGIN_CODE_BLOCK(circular_queue_custom_allocator_2)
 
 	qu.pop();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	qu.size() == 1 && qu.front() == 5 && qu.back() == 5
 	&&	buffer_arr[0] == Specimen::State::DESTRUCTION
 	&&	buffer_arr[1] == Specimen::State::DESTRUCTION
@@ -683,7 +683,7 @@ void Performance::Push_and_Pop()
 	int constexpr N = 100'000'000;
 
 	{
-		sgm::Queue<sgm::h2u::Specimen> qu;
+		sgm::Queue<h2u::Specimen> qu;
 
 		std::wcout << "\tsgm::Queue\n";
 
@@ -710,7 +710,7 @@ void Performance::Push_and_Pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
-		SGM_H2U_ASSERT(qu.is_empty());
+		H2U_ASSERT(qu.is_empty());
 	}	
 
 	std::wcout << '\n';
@@ -718,7 +718,7 @@ void Performance::Push_and_Pop()
 	{
 		std::wcout << "\tstd::queue\n";
 
-		std::queue<sgm::h2u::Specimen> qu;
+		std::queue<h2u::Specimen> qu;
 
 		{
 			std::wcout << "\t\tpush : ";
@@ -743,13 +743,13 @@ void Performance::Push_and_Pop()
 			std::wcout << duration_cast<milliseconds>(time).count() << " millisec.\n";
 		}
 
-		SGM_H2U_ASSERT(qu.empty());
+		H2U_ASSERT(qu.empty());
 	}
 #endif
 }
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Queue, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Queue, /**/)
 {	::Queue_Contents::Construction
 ,	::Queue_Contents::Push_and_Pop
 ,	::Queue_Contents::Clear
