@@ -10,14 +10,14 @@
 #include <chrono>
 
 
-using sgm::h2u::Specimen;
-using sgm::h2u::Are_Equivalent_Ranges;
-using sgm::h2u::Are_All_Equivalent_to;
+using h2u::Specimen;
+using h2u::Are_Equivalent_Ranges;
+using h2u::Are_All_Equivalent_to;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -63,7 +63,7 @@ struct Dynamic : sgm::Unconstructible
 
 void Static::Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Static Array Construction")
@@ -78,7 +78,7 @@ BEGIN_CODE_BLOCK(static_construction_ex)
 		arr2{Specimen(2), Specimen(4), Specimen(6)},
 		arr3 = arr2;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_All_Equivalent_to(arr1, Specimen::State::DEFAULT_CONSTRUCTION)
 	&&	Are_All_Equivalent_to(arr2, Specimen::State::MANUAL_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges
@@ -100,7 +100,7 @@ void Static::No_Move_Construction()
 		_arr1{Specimen(2), Specimen(4), Specimen(6)},
 		arr1 = std::move(_arr1);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges
 		(	arr1
@@ -118,7 +118,7 @@ void Static::Assignment()
 
 	arr2 = arr1;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(arr2, arr1)
 	&&	Are_All_Equivalent_to(arr2, Specimen::State::COPY_ASSIGNMENT)
 	);
@@ -130,7 +130,7 @@ void Static::Assignment()
 
 	arr1 = vec1,  arr2 = vec2;
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() != vec1.size()
 	&&	Are_Equivalent_Ranges
 		(	arr1
@@ -153,7 +153,7 @@ void Static::Move_Assignment()
 
 	arr1 = std::move(_arr);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr1
 		,	std::vector<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
@@ -168,7 +168,7 @@ void Static::Move_Assignment()
 
 	arr2 = {Specimen(-3), Specimen(-6), Specimen(-9)};
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr2
 		,	std::vector<Specimen>{Specimen(-3), Specimen(-6), Specimen(-9)} 
@@ -183,7 +183,7 @@ void Static::Move_Assignment()
 
 	arr2 = std::move(vec2),  arr3 = std::move(vec3);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr2
 		,	std::vector<Specimen>{Specimen(777), Specimen(-6), Specimen(-9)} 
@@ -202,7 +202,7 @@ void Static::Destruction()
 	
 	arr1.~Array();
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() != 0
 	&&	Are_All_Equivalent_to(arr1, Specimen::State::DESTRUCTION)
 	); 
@@ -213,18 +213,18 @@ void Static::Element()
 {
 	sgm::Array<Specimen, 3> arr1{Specimen(2), Specimen(4), Specimen(6)};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) 
 	);
 
 	arr1[1] = arr1[0],  arr1[2] = Specimen(-6);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1[1] == Specimen(2) && arr1[1] == Specimen::State::COPY_ASSIGNMENT
 	&&	arr1[2] == Specimen(-6) && arr1[2] == Specimen::State::MOVE_ASSIGNMENT
 	);
 
-	SGM_H2U_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
+	H2U_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
 }
 
 
@@ -236,7 +236,7 @@ void Static::Swap()
 
 	arr1.swap(arr2);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr1
 		,	sgm::Array<Specimen>{Specimen(2), Specimen(4), Specimen(6)} 
@@ -250,7 +250,7 @@ void Static::Swap()
 
 	std::swap(arr1, arr2);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr1
 		,	sgm::Array<Specimen>{Specimen(1), Specimen(3), Specimen(5)} 
@@ -271,7 +271,7 @@ void Static::Type_Conversion_into_iterable()
 
 	std::vector<Specimen> vec = arr1;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(vec, arr1)
 	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
 	);
@@ -279,7 +279,7 @@ void Static::Type_Conversion_into_iterable()
 
 	vec = sgm::iterable_cast< std::vector<Specimen> >(arr2);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(vec, arr2)
 	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
 	);
@@ -289,7 +289,7 @@ void Static::Type_Conversion_into_iterable()
 
 void Dynamic::Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Dynamic Array Construction")
@@ -307,7 +307,7 @@ BEGIN_CODE_BLOCK(dynamic_construction_ex)
 		arr5(arr4.begin(), arr4.end()),
 		arr6(arr4.rbegin(), arr4.rend());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.is_null()
 	&&	arr2.capacity() == 3 && arr2.is_empty()
 	&&	arr3.capacity() == 3 && arr3.size() == 3
@@ -338,7 +338,7 @@ void Dynamic::Copy_Construction()
 		arr2 = arr1,
 		arr3 = Lvalue_iterable;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(arr2, arr1)
 	&&	Are_All_Equivalent_to(arr2, Specimen::State::COPY_CONSTRUCTION)
 	&&	Are_Equivalent_Ranges(arr3, Lvalue_iterable)
@@ -358,7 +358,7 @@ void Dynamic::Move_Construction()
 		arr1 = std::move(_arr1),
 		arr2 = std::vector<Specimen>{Specimen(2), Specimen(4), Specimen(6)};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_All_Equivalent_to(arr1, _prev_arr1_state)
 	&&	arr1.cdata() == internal_data_address
 	&&	Are_Equivalent_Ranges
@@ -390,7 +390,7 @@ void Dynamic::Assignment()
 
 	arr1 = vec,  arr2 = vec;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(arr1, vec)
 	&&	Are_Equivalent_Ranges(arr2, vec)
 	&&	Are_All_Equivalent_to(arr1, Specimen::State::COPY_CONSTRUCTION)
@@ -402,11 +402,11 @@ void Dynamic::Assignment()
 	sgm::Array<Specimen> arr3(6);
 
 	arr3 = {Specimen(1), Specimen(4)};
-	SGM_H2U_ASSERT(arr3.capacity() == 6 && arr3.size() == 2);
+	H2U_ASSERT(arr3.capacity() == 6 && arr3.size() == 2);
 
 	arr3 = vec;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(arr3, vec)
 	&&	Are_N_Equivalent_to(arr3.cbegin(), 2, Specimen::State::COPY_ASSIGNMENT)
 	&&	Are_N_Equivalent_to(arr3.crbegin(), 2, Specimen::State::COPY_CONSTRUCTION)
@@ -419,14 +419,14 @@ void Dynamic::Assignment()
 	arr4 = {Specimen(3), Specimen(6)};
 	arr5 = {Specimen(1), Specimen(3), Specimen(5), Specimen(7)};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr4.capacity() == 10 && arr4.size() == 2
 	&&	arr5.capacity() == 6 && arr5.size() == 4
 	);
 
 	arr5 = arr4;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(arr5, arr4)
 	&&	arr5.capacity() == 10 && arr5.size() == 2
 	&&	Are_All_Equivalent_to(arr5, Specimen::State::COPY_CONSTRUCTION)
@@ -441,7 +441,7 @@ void Dynamic::Move_Assignment()
 	arr1 = {Specimen(3), Specimen(6)};
 	arr2 = {Specimen(2), Specimen(4), Specimen(6), Specimen(8)};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.capacity() == 10 && arr1.size() == 2
 	&&	arr2.capacity() == 6 && arr2.size() == 4
 	);
@@ -450,7 +450,7 @@ void Dynamic::Move_Assignment()
 
 	arr2 = std::move(arr1);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr2.capacity() == 10 && arr2.size() == 2
 	&&	arr2.cdata() == internal_data_address
 	&&	arr1.is_null()
@@ -465,7 +465,7 @@ void Dynamic::Clear_and_Destruction()
 
 	arr1.clear(),  arr2.~Array();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == 0 && arr1.is_empty() && arr1.capacity() == 4 && !arr1.is_null()
 	&&	arr2.size() == 0 && arr2.is_empty() && arr2.capacity() == 0 && arr2.is_null()
 	);
@@ -476,18 +476,18 @@ void Dynamic::Element()
 {
 	sgm::Array<Specimen> arr1{2, 4, 6};
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1[0] == Specimen(2) && arr1[1] == Specimen(4) && arr1[2] == Specimen(6) 
 	);
 
 	arr1[1] = arr1[0],  arr1[2] = Specimen(-6);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1[1] == Specimen(2) && arr1[1] == Specimen::State::COPY_ASSIGNMENT
 	&&	arr1[2] == Specimen(-6) && arr1[2] == Specimen::State::MOVE_ASSIGNMENT
 	);
 
-	SGM_H2U_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
+	H2U_ASSERT(arr1.front() == *arr1.begin() && arr1.back() == *arr1.rbegin());
 }
 
 
@@ -503,7 +503,7 @@ void Dynamic::Swap()
 
 	arr1.swap(arr2);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr1
 		,	sgm::Array<Specimen>{Specimen(2), Specimen(4)} 
@@ -517,7 +517,7 @@ void Dynamic::Swap()
 
 	std::swap(arr1, arr2);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.cdata() == internal_data_address1 && arr2.cdata() == internal_data_address2
 	&&	Are_Equivalent_Ranges
 		(	arr1
@@ -539,14 +539,14 @@ void Dynamic::Type_Conversion_into_iterable()
 	
 	std::vector<Specimen> vec = arr1;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(vec, arr1)
 	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
 	);
 
 	vec = sgm::iterable_cast< std::vector<Specimen> >(arr2);
 	
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges(vec, arr2)
 	&&	Are_All_Equivalent_to(vec, Specimen::State::COPY_CONSTRUCTION)
 	);
@@ -555,7 +555,7 @@ void Dynamic::Type_Conversion_into_iterable()
 
 void Dynamic::Push()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Dynamic Array Push Operations")
@@ -568,11 +568,11 @@ BEGIN_CODE_BLOCK(push_operations_ex)
 	sgm::Array<Specimen> arr1(100);
 	auto current_size = arr1.size();
 
-	SGM_H2U_ASSERT(current_size == 0);
+	H2U_ASSERT(current_size == 0);
 
 	arr1.emplace_back(3);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += 1)
 	&&	arr1.back() == Specimen(3) && arr1.back() == Specimen::State::MANUAL_CONSTRUCTION
 	);
@@ -582,14 +582,14 @@ BEGIN_CODE_BLOCK(push_operations_ex)
 
 	arr1.emplace_back(5).emplace_back(7).emplace_back(val).emplace_back( Specimen(99) );
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	Are_Equivalent_Ranges
 		(	arr1
 		,	std::vector<Specimen>{Specimen(3), Specimen(5), Specimen(7), val, Specimen(99)}
 		)
 	);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += 4)
 	&&	arr1.rbegin()[0] == Specimen::State::MOVE_CONSTRUCTION
 	&&	arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -598,14 +598,14 @@ BEGIN_CODE_BLOCK(push_operations_ex)
 
 	arr1 >> val;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += 1)
 	&&	arr1.back() == val
 	);
 
 	arr1 >> Specimen(-1) >> val;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += 2)
 	&&	arr1.rbegin()[0] == val && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == -1 && arr1.rbegin()[1] == Specimen::State::MOVE_CONSTRUCTION
@@ -618,7 +618,7 @@ BEGIN_CODE_BLOCK(push_operations_ex)
 
 	arr1.merge_back(arr2.begin(), arr2.end());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += arr2.size())
 	&&	arr1.rbegin()[0] == -7 && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == -5 && arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -628,7 +628,7 @@ BEGIN_CODE_BLOCK(push_operations_ex)
 
 	arr1.merge_back(arr3.begin(), arr3.end()).merge_back(arr3.rbegin(), arr3.rend());
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size += 2*arr3.size())
 	&&	arr1.rbegin()[0] == 10 && arr1.rbegin()[0] == Specimen::State::COPY_CONSTRUCTION
 	&&	arr1.rbegin()[1] == 20 && arr1.rbegin()[1] == Specimen::State::COPY_CONSTRUCTION
@@ -643,7 +643,7 @@ END_CODE_BLOCK_AND_LOAD(push_operations_ex)
 
 static void Performance_Philosophy()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Performance Philosophy: sgm::Array vs std::vector")
@@ -675,7 +675,7 @@ BEGIN_CODE_BLOCK(performance_philosophy_ex)
 
 	// arr >> 1000;  // This would require explicit capacity management
 
-	SGM_H2U_ASSERT(arr.capacity() == 1000 && arr.size() == 1000);
+	H2U_ASSERT(arr.capacity() == 1000 && arr.size() == 1000);
 END_CODE_BLOCK_AND_LOAD(performance_philosophy_ex)
 
 	mdo
@@ -698,7 +698,7 @@ END_CODE_BLOCK_AND_LOAD(performance_philosophy_ex)
 
 void Dynamic::Pop()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Dynamic Array Pop Operations")
@@ -718,32 +718,32 @@ BEGIN_CODE_BLOCK(pop_operations_ex)
 
 	size_t current_size = arr1.size();
 
-	SGM_H2U_ASSERT(current_size == capa);
+	H2U_ASSERT(current_size == capa);
 
 	arr1.pop_back();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 1)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back().pop_back();
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 2)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 3)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.pop_back(3).pop_back(2).pop_back(1);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 3 + 2 + 1)
 	&&	arr1.back() == fn(current_size)
 	);
@@ -753,7 +753,7 @@ BEGIN_CODE_BLOCK(pop_operations_ex)
 
 	arr1.pop_back_from(itr);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 4)
 	&&	arr1.back() == fn(current_size)
 	);
@@ -766,14 +766,14 @@ BEGIN_CODE_BLOCK(pop_operations_ex)
 
 	arr1.pop_back_from(itr1).pop_back_from(itr2).pop_back_from(itr3);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	arr1.size() == (current_size -= 2 + 3 + 1)
 	&&	arr1.back() == fn(current_size)
 	);
 
 	arr1.clear();
 
-	SGM_H2U_ASSERT(arr1.is_empty() && arr1.capacity() == capa);
+	H2U_ASSERT(arr1.is_empty() && arr1.capacity() == capa);
 END_CODE_BLOCK_AND_LOAD(pop_operations_ex)
 
 	mdo << empty_line;
@@ -796,7 +796,7 @@ void Performance::insertion()
 	std::wcout << "insertion test\n";
 	
 	{
-		std::vector<sgm::h2u::Specimen> vec;
+		std::vector<h2u::Specimen> vec;
 
 		vec.reserve(N);
 		
@@ -828,7 +828,7 @@ void Performance::insertion()
 		}
 	}
 	{
-		sgm::Array<sgm::h2u::Specimen> arr(N);
+		sgm::Array<h2u::Specimen> arr(N);
 		
 		for(size_t n = 10; n-->0;)
 		{
@@ -867,8 +867,8 @@ void Performance::random_access()
 	std::wcout << "random access test\n";
 	
 	{
-		std::vector<sgm::h2u::Specimen> vec;
-		sgm::h2u::Specimen s;
+		std::vector<h2u::Specimen> vec;
+		h2u::Specimen s;
 
 		vec.reserve(N);
 
@@ -891,8 +891,8 @@ void Performance::random_access()
 		std::wcout << time << " millisec\n";		
 	}
 	{
-		sgm::Array<sgm::h2u::Specimen> arr(N);
-		sgm::h2u::Specimen s;
+		sgm::Array<h2u::Specimen> arr(N);
+		h2u::Specimen s;
 
 		for(std::size_t i = 0;  i < N;  ++i)
 			arr.emplace_back( static_cast<int>(i) );
@@ -919,13 +919,13 @@ void Performance::random_access()
 
 static void outro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << empty_line;
 }
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Array, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Array, /**/)
 {	::intro
 ,	::Static::Construction
 ,	::Static::No_Move_Construction

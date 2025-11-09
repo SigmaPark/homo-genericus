@@ -39,7 +39,7 @@ static void Parallel_Sum_with_Static_Fork_n_Join()
 			return res;
 		}();
 
-	SGM_H2U_ASSERT(answer == 5050);
+	H2U_ASSERT(answer == 5050);
 }
 
 
@@ -73,12 +73,12 @@ static void Parallel_Sum_with_Dynamic_Fork_n_Join()
 			return res;
 		}();
 
-	SGM_H2U_ASSERT(answer == 5050);
+	H2U_ASSERT(answer == 5050);
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Fork_and_Join, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Fork_and_Join, /**/)
 {	::Parallel_Sum_with_Static_Fork_n_Join
 ,	::Parallel_Sum_with_Dynamic_Fork_n_Join
 };

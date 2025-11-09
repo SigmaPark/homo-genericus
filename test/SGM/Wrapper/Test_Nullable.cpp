@@ -9,12 +9,12 @@
 #include "SGM/TMP/interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -27,7 +27,7 @@ static void intro()
 
 static void Null_type()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Null Type")
@@ -45,7 +45,7 @@ BEGIN_CODE_BLOCK(null_type_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT(!null.has_value());
+	H2U_ASSERT(!null.has_value());
 END_CODE_BLOCK_AND_LOAD(null_type_ex)
 
 	mdo << empty_line;
@@ -54,7 +54,7 @@ END_CODE_BLOCK_AND_LOAD(null_type_ex)
 
 static void Constructions()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Construction Methods");
 
@@ -67,7 +67,7 @@ BEGIN_CODE_BLOCK(default_construction_ex)
 	{
 		auto const n = sgm::Nullable<double>{};
 
-		SGM_H2U_ASSERT(!n.has_value());
+		H2U_ASSERT(!n.has_value());
 	}
 END_CODE_BLOCK_AND_LOAD(default_construction_ex)
 
@@ -85,7 +85,7 @@ BEGIN_CODE_BLOCK(value_construction_ex)
 			nb3(4),
 			nb4 = sgm::Null_t{};
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	!nb1.has_value()
 		&&	nb2.has_value() && nb2 == Specimen(2)
 		&&	nb3.has_value() && nb3 == Specimen(4)
@@ -110,7 +110,7 @@ BEGIN_CODE_BLOCK(copy_construction_ex)
 		,	""
 		);
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	nb1 == Specimen(2)
 		&&	nb1 == nb2
 		&&	nb2 == Specimen::State::COPY_CONSTRUCTION
@@ -134,7 +134,7 @@ BEGIN_CODE_BLOCK(move_construction_ex)
 		,	""
 		);
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	nb1 == Specimen(2)
 		&&	nb1 == nb2
 		&&	nb2 == Specimen::State::MOVE_CONSTRUCTION
@@ -148,7 +148,7 @@ END_CODE_BLOCK_AND_LOAD(move_construction_ex)
 
 static void Conversions()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Type Conversions");
 
@@ -165,7 +165,7 @@ BEGIN_CODE_BLOCK(implicit_conversion_ex)
 		Specimen s = nb;
 		Specimen const cs = nb;
 
-		SGM_H2U_ASSERT( s == Specimen(2) && cs == Specimen(2) );
+		H2U_ASSERT( s == Specimen(2) && cs == Specimen(2) );
 	}
 END_CODE_BLOCK_AND_LOAD(implicit_conversion_ex)
 
@@ -182,7 +182,7 @@ BEGIN_CODE_BLOCK(reference_conversion_ex)
 		double d = nb,  &rd = nb;
 		double const cd = nb, &crd = nb;
 
-		SGM_H2U_ASSERT(d == 0.25 && cd == 0.25 && rd == 0.25 && crd == 0.25);
+		H2U_ASSERT(d == 0.25 && cd == 0.25 && rd == 0.25 && crd == 0.25);
 	}
 END_CODE_BLOCK_AND_LOAD(reference_conversion_ex)
 
@@ -198,7 +198,7 @@ BEGIN_CODE_BLOCK(move_conversion_ex)
 
 		Specimen s = nb.move();
 
-		SGM_H2U_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+		H2U_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
 	}
 END_CODE_BLOCK_AND_LOAD(move_conversion_ex)
 
@@ -208,21 +208,21 @@ END_CODE_BLOCK_AND_LOAD(move_conversion_ex)
 		Specimen s1 = nb;
 		Specimen const cs1 = nb;
 
-		SGM_H2U_ASSERT(s1 == Specimen(2) && cs1 == Specimen(2));
+		H2U_ASSERT(s1 == Specimen(2) && cs1 == Specimen(2));
 	}
 	{
 		sgm::Nullable<Specimen> nb{2};
 
 		Specimen const s = nb.move();
 
-		SGM_H2U_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
+		H2U_ASSERT( s == Specimen(2) && nb.v() == Specimen::State::MOVE_AWAY );
 	}
 	{
 		sgm::constNullable<Specimen> nb{2};
 
 		Specimen s = nb.move();
 
-		SGM_H2U_ASSERT( s == Specimen(2) && nb.v() != Specimen::State::MOVE_AWAY );
+		H2U_ASSERT( s == Specimen(2) && nb.v() != Specimen::State::MOVE_AWAY );
 	}
 
 	mdo << empty_line;
@@ -231,7 +231,7 @@ END_CODE_BLOCK_AND_LOAD(move_conversion_ex)
 
 static void Substitutions()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Assignment Operations");
 
@@ -244,11 +244,11 @@ BEGIN_CODE_BLOCK(null_assignment_ex)
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		SGM_H2U_ASSERT( nb.has_value() && nb == Specimen(2) );
+		H2U_ASSERT( nb.has_value() && nb == Specimen(2) );
 
 		nb = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb.has_value());
+		H2U_ASSERT(!nb.has_value());
 	}
 END_CODE_BLOCK_AND_LOAD(null_assignment_ex)
 
@@ -262,119 +262,119 @@ BEGIN_CODE_BLOCK(value_assignment_ex)
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		SGM_H2U_ASSERT( nb == Specimen(2) );
+		H2U_ASSERT( nb == Specimen(2) );
 
 		nb = 4;
 
-		SGM_H2U_ASSERT( nb == Specimen(4) );
+		H2U_ASSERT( nb == Specimen(4) );
 	}
 END_CODE_BLOCK_AND_LOAD(value_assignment_ex)
 
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(2) );
+		H2U_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = nb2;
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) );
+		H2U_ASSERT( nb1 == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(2) );
+		H2U_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) );
+		H2U_ASSERT( nb1 == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(2) );
+		H2U_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = nb2;
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_ASSIGNMENT );
+		H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_ASSIGNMENT );
 	}
 	{
 		sgm::Nullable<Specimen> nb1(2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(2) );
+		H2U_ASSERT( nb1 == Specimen(2) );
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_ASSIGNMENT );
+		H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_ASSIGNMENT );
 	}
 	{
 		sgm::Nullable<Specimen> nb(2);
 
-		SGM_H2U_ASSERT( nb.has_value() && nb == Specimen(2) );
+		H2U_ASSERT( nb.has_value() && nb == Specimen(2) );
 
 		nb = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb.has_value());
+		H2U_ASSERT(!nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb.has_value());
+		H2U_ASSERT(!nb.has_value());
 
 		nb = 4;
 
-		SGM_H2U_ASSERT( nb == Specimen(4) );
+		H2U_ASSERT( nb == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb1.has_value());
+		H2U_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = nb2;
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) );
+		H2U_ASSERT( nb1 == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb1.has_value());
+		H2U_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<int> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) );
+		H2U_ASSERT( nb1 == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb1.has_value());
+		H2U_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = nb2;
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_CONSTRUCTION );
+		H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::COPY_CONSTRUCTION );
 	}
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{};
 
-		SGM_H2U_ASSERT(!nb1.has_value());
+		H2U_ASSERT(!nb1.has_value());
 
 		sgm::Nullable<Specimen> nb2(4);
 
 		nb1 = sgm::Move(nb2);
 
-		SGM_H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_CONSTRUCTION );
+		H2U_ASSERT( nb1 == Specimen(4) && nb1 == Specimen::State::MOVE_CONSTRUCTION );
 	}
 
 	mdo << empty_line;
@@ -383,7 +383,7 @@ END_CODE_BLOCK_AND_LOAD(value_assignment_ex)
 
 static void Get()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Value Access")
@@ -395,7 +395,7 @@ BEGIN_CODE_BLOCK(value_access_ex)
 	{
 		sgm::Nullable<Specimen> nb1 = sgm::Null_t{}, nb2( Specimen(2) );
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	!nb1.has_value()
 		//&&	nb1.v()		// fragment error in run time
 		&&	nb2.has_value() && nb2 == nb2.v() && nb2.v() == Specimen(2)
@@ -413,7 +413,7 @@ END_CODE_BLOCK_AND_LOAD(value_access_ex)
 
 static void Get_or()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Safe Value Access with Default");
 
@@ -436,7 +436,7 @@ BEGIN_CODE_BLOCK(exception_handling_ex)
 			exception_occurred_ex = true;
 		}
 
-		SGM_H2U_ASSERT(exception_occurred_ex);
+		H2U_ASSERT(exception_occurred_ex);
 	}
 END_CODE_BLOCK_AND_LOAD(exception_handling_ex)
 
@@ -461,7 +461,7 @@ BEGIN_CODE_BLOCK(default_value_ex)
 			exception_occurred_def = true;
 		}
 
-		SGM_H2U_ASSERT( !exception_occurred_def && s_def == Specimen(4) );
+		H2U_ASSERT( !exception_occurred_def && s_def == Specimen(4) );
 	}
 END_CODE_BLOCK_AND_LOAD(default_value_ex)
 
@@ -478,7 +478,7 @@ END_CODE_BLOCK_AND_LOAD(default_value_ex)
 			exception_occured = true;
 		}
 
-		SGM_H2U_ASSERT(exception_occured && !nb.has_value());
+		H2U_ASSERT(exception_occured && !nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb = sgm::Null_t{};
@@ -494,7 +494,7 @@ END_CODE_BLOCK_AND_LOAD(default_value_ex)
 			exception_occured = true;
 		}
 
-		SGM_H2U_ASSERT( !exception_occured && s == Specimen(4) );
+		H2U_ASSERT( !exception_occured && s == Specimen(4) );
 	}
 	{
 		sgm::Nullable<Specimen> nb( Specimen(2) );
@@ -509,7 +509,7 @@ END_CODE_BLOCK_AND_LOAD(default_value_ex)
 			exception_occured = true;
 		}
 
-		SGM_H2U_ASSERT(!exception_occured && nb.has_value());
+		H2U_ASSERT(!exception_occured && nb.has_value());
 	}
 	{
 		sgm::Nullable<Specimen> nb( Specimen(2) );
@@ -525,7 +525,7 @@ END_CODE_BLOCK_AND_LOAD(default_value_ex)
 			exception_occured = true;
 		}
 
-		SGM_H2U_ASSERT( !exception_occured && nb.has_value() && s == Specimen(2) );
+		H2U_ASSERT( !exception_occured && nb.has_value() && s == Specimen(2) );
 	}
 
 	mdo << empty_line;
@@ -534,7 +534,7 @@ END_CODE_BLOCK_AND_LOAD(default_value_ex)
 
 static void Operations()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Operator Overloading")
@@ -572,11 +572,11 @@ BEGIN_CODE_BLOCK(operator_usage_ex)
 
 		AA const aa2 = nb + AA( Specimen(10) );
 
-		SGM_H2U_ASSERT( *nb == Specimen(2) && aa2.get_h2u() == Specimen(12) );
+		H2U_ASSERT( *nb == Specimen(2) && aa2.get_h2u() == Specimen(12) );
 
 		*nb = Specimen(4);
 
-		SGM_H2U_ASSERT( *nb == Specimen(4) && nb.v().get_h2u() == *nb );
+		H2U_ASSERT( *nb == Specimen(4) && nb.v().get_h2u() == *nb );
 	}
 END_CODE_BLOCK_AND_LOAD(operator_usage_ex)
 
@@ -585,7 +585,7 @@ END_CODE_BLOCK_AND_LOAD(operator_usage_ex)
 
 		AA const aa = nb + AA( Specimen(10) );
 
-		SGM_H2U_ASSERT( *nb == Specimen(2) && aa.get_h2u() == Specimen(12) );
+		H2U_ASSERT( *nb == Specimen(2) && aa.get_h2u() == Specimen(12) );
 
 		// *nb = Specimen(4);	// compile error
 	}
@@ -596,7 +596,7 @@ END_CODE_BLOCK_AND_LOAD(operator_usage_ex)
 
 static void invoked()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Function Invocation")
@@ -611,7 +611,7 @@ BEGIN_CODE_BLOCK(function_invocation_ex)
 
 		invoke_f(nb);
 
-		SGM_H2U_ASSERT( nb.v() == Specimen(4) );
+		H2U_ASSERT( nb.v() == Specimen(4) );
 	}
 END_CODE_BLOCK_AND_LOAD(function_invocation_ex)
 
@@ -634,7 +634,7 @@ END_CODE_BLOCK_AND_LOAD(function_invocation_ex)
 
 static void Abbreviable_Nullable()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Nested Nullable (Abbreviable)")
@@ -665,7 +665,7 @@ static void outro()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Nullable, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Nullable, /**/)
 {	::intro
 ,	::Null_type
 ,	::Constructions

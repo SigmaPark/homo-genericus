@@ -8,12 +8,12 @@
 #include "Test_interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -62,7 +62,7 @@ END_CODE_BLOCK(member_detection_ex_decl)
 
 static void Member_Detection()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Member Detection")
@@ -133,7 +133,7 @@ END_CODE_BLOCK(assignment_operators_ex_decl)
 
 static void Assignment_Operators()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Assignment Operator Detection")
@@ -196,7 +196,7 @@ END_CODE_BLOCK(constructor_detection_ex_decl)
 
 static void Constructor_Detection()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Constructor Detection")
@@ -244,7 +244,7 @@ END_CODE_BLOCK(destructor_detection_ex_decl)
 
 static void Destructor_Detection()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Destructor Detection")
@@ -296,7 +296,7 @@ END_CODE_BLOCK(invocation_detection_ex_decl)
 
 static void Invocation_Detection()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Function Call Operator Detection")
@@ -329,7 +329,7 @@ END_CODE_BLOCK_AND_LOAD(invocation_detection_ex)
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, interface_Traits, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, interface_Traits, /**/)
 {	::intro
 ,	::Member_Detection
 ,	::Assignment_Operators

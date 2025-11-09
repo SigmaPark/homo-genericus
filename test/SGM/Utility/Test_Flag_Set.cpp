@@ -30,6 +30,6 @@ static void Test01()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Flag_Set, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Flag_Set, /**/)
 {	::Test01
 };

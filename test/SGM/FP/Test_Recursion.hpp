@@ -5,12 +5,12 @@
 
 
 #pragma once
-#include "SGM/How2use.hpp"
+#include "How2use.hpp"
 
 
-namespace sgm::h2u
+namespace sgm::test
 {
 	
-	SGM_HOW2USE_CLASS(Test_, Recursion, /**/);
+	H2U_HOW2USE_CLASS(Test_, Recursion, /**/);
 
 }

@@ -8,7 +8,7 @@
 #include "Test_Operators_of.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 struct Foo
@@ -98,129 +98,129 @@ static void Test01()
 		};
 	
 	{
-		SGM_H2U_ASSERT( *cb == Specimen(3) );
+		H2U_ASSERT( *cb == Specimen(3) );
 		
 		*b = Specimen(33);
 
-		SGM_H2U_ASSERT( *b == Specimen(33) );
+		H2U_ASSERT( *b == Specimen(33) );
 	}
 
 	reset_f();
 	
 	{
-		SGM_H2U_ASSERT(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
+		H2U_ASSERT(+cb == +3 && -cb == -3 && +b == +3 && -b == -3);
 	}
 	{
-		SGM_H2U_ASSERT( *(++b) == Specimen(3 + 1) );  reset_f();
-		SGM_H2U_ASSERT( *(--b) == Specimen(3 - 1) );  reset_f();
+		H2U_ASSERT( *(++b) == Specimen(3 + 1) );  reset_f();
+		H2U_ASSERT( *(--b) == Specimen(3 - 1) );  reset_f();
 
 		b++;
-		SGM_H2U_ASSERT( *b == Specimen(3 + 1) );  reset_f();
+		H2U_ASSERT( *b == Specimen(3 + 1) );  reset_f();
 
 		b--;
-		SGM_H2U_ASSERT( *b == Specimen(3 - 1) ); 
+		H2U_ASSERT( *b == Specimen(3 - 1) ); 
 	}
 	
 	reset_f();
 
 	{
-		SGM_H2U_ASSERT(&cb == &s);
+		H2U_ASSERT(&cb == &s);
 
 		&b = nullptr;
 
-		SGM_H2U_ASSERT(&b == nullptr);
+		H2U_ASSERT(&b == nullptr);
 	}
 	
 	reset_f();
 	
 	{
-		SGM_H2U_ASSERT(!b == false && ~b == false);
+		H2U_ASSERT(!b == false && ~b == false);
 	}
 	{
-		SGM_H2U_ASSERT(cb->value() == 3);
+		H2U_ASSERT(cb->value() == 3);
 
 		b->value() = -4;
 
-		SGM_H2U_ASSERT(b->value() == -4 && ~b == true);
+		H2U_ASSERT(b->value() == -4 && ~b == true);
 	}
 
 	reset_f();
 
 	{
-		SGM_H2U_ASSERT(cb[1] == 3);
+		H2U_ASSERT(cb[1] == 3);
 
 		b[4] = -5;  
 
-		SGM_H2U_ASSERT(b->value() == -5);
+		H2U_ASSERT(b->value() == -5);
 	}
 
 	reset_f();
 
 	{
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	cb + 30 == 33 && cb - 30 == -27 
 		&&	cb * 5 == 15 && cb / 2 == 1 && cb % 2 == 1
 		);
 	}
 	{
-		SGM_H2U_ASSERT(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
+		H2U_ASSERT(cb == 3 && cb != 33 && cb < 5 && cb > 1 && cb <= 3 && cb >= 3);
 	}
 	{
-		SGM_H2U_ASSERT(cb && true); 
-		SGM_H2U_ASSERT(cb || false);
+		H2U_ASSERT(cb && true); 
+		H2U_ASSERT(cb || false);
 
-		SGM_H2U_ASSERT
+		H2U_ASSERT
 		(	( (cb & 2) == 23 ) && ( (cb | 4) == 403 ) && ( (cb ^ 6) == 6003 )
 		&&	( (cb << 8) == 80003 ) && ( (cb >> 9) == 900003 )
 		);
 	}
 	{
-		SGM_H2U_ASSERT( cb->*Specimen(30) == 33 );
+		H2U_ASSERT( cb->*Specimen(30) == 33 );
 
 		b->*Specimen(30);
 
-		SGM_H2U_ASSERT(b->value() == 33);
+		H2U_ASSERT(b->value() == 33);
 	}
 
 	reset_f();
 
 	{
 		b += 10;
-		SGM_H2U_ASSERT(b->value() == 13);  reset_f();
+		H2U_ASSERT(b->value() == 13);  reset_f();
 
 		b -= 10;
-		SGM_H2U_ASSERT(b->value() == -7);  reset_f();
+		H2U_ASSERT(b->value() == -7);  reset_f();
 
 		b *= 10;
-		SGM_H2U_ASSERT(b->value() == 30);  reset_f();
+		H2U_ASSERT(b->value() == 30);  reset_f();
 
 		b /= 2;
-		SGM_H2U_ASSERT(b->value() == 1);  reset_f();
+		H2U_ASSERT(b->value() == 1);  reset_f();
 
 		b %= 2;
-		SGM_H2U_ASSERT(b->value() == 1);  reset_f();
+		H2U_ASSERT(b->value() == 1);  reset_f();
 
 		b &= 4;
-		SGM_H2U_ASSERT(b->value() == 43);  reset_f();
+		H2U_ASSERT(b->value() == 43);  reset_f();
 
 		b |= 4;
-		SGM_H2U_ASSERT(b->value() == 403);  reset_f();
+		H2U_ASSERT(b->value() == 403);  reset_f();
 
 		b ^= 6;
-		SGM_H2U_ASSERT(b->value() == 6003);  reset_f();
+		H2U_ASSERT(b->value() == 6003);  reset_f();
 
 		b <<= 8;
-		SGM_H2U_ASSERT(b->value() == 80003);  reset_f();
+		H2U_ASSERT(b->value() == 80003);  reset_f();
 
 		b >>= 8;
-		SGM_H2U_ASSERT(b->value() == 800003);  reset_f();
+		H2U_ASSERT(b->value() == 800003);  reset_f();
 	}
 	{
-		SGM_H2U_ASSERT(cb() == 777);
+		H2U_ASSERT(cb() == 777);
 
 		b(1, 23.0, 4);
 
-		SGM_H2U_ASSERT(b->value() == -999);
+		H2U_ASSERT(b->value() == -999);
 	}
 
 	reset_f();
@@ -228,6 +228,6 @@ static void Test01()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Operators_of, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Operators_of, /**/)
 {	::Test01
 };

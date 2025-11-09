@@ -12,31 +12,31 @@
 
 static void intro()
 {
-	sgm::h2u::mdo
-	<<	sgm::h2u::Title(L"CV_Complete")
+	h2u::mdo
+	<<	h2u::Title(L"CV_Complete")
 	<<	L"CV_Complete is a template wrapper that preserves const-volatile (CV) qualifiers "
 	<<	L"when dereferencing any dereferenceable type. It ensures that the CV-qualifiers "
 	<<	L"of the wrapper itself are properly propagated to the dereferenced result."
-	<<	sgm::h2u::newl
-	<<	sgm::h2u::newl
-	<<	L"Key features:" << sgm::h2u::newl
+	<<	h2u::newl
+	<<	h2u::newl
+	<<	L"Key features:" << h2u::newl
 	<<	L"- Works with any dereferenceable type (pointers, smart pointers, iterators)"
-	<<	sgm::h2u::newl
-	<<	L"- Preserves const, volatile, and const volatile qualifications" << sgm::h2u::newl
+	<<	h2u::newl
+	<<	L"- Preserves const, volatile, and const volatile qualifications" << h2u::newl
 	<<	L"- Provides both operator* and operator-> with proper CV-qualification"
-	<<	sgm::h2u::newl
-	<<	L"- Template-based design for maximum flexibility" << sgm::h2u::newl
-	<<	sgm::h2u::newl
+	<<	h2u::newl
+	<<	L"- Template-based design for maximum flexibility" << h2u::newl
+	<<	h2u::newl
 	<<	L"This is particularly useful when you need to ensure CV-correctness "
 	<<	L"across different pointer-like types in generic code."
-	<<	sgm::h2u::empty_line;
+	<<	h2u::empty_line;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 static void Raw_pointer_tests()
 {
-	sgm::h2u::mdo << sgm::h2u::Title(L"Raw Pointer Tests", 2);
+	h2u::mdo << h2u::Title(L"Raw Pointer Tests", 2);
 
 BEGIN_CODE_BLOCK(Raw_pointer_tests)
 	int value = 42;
@@ -47,7 +47,7 @@ BEGIN_CODE_BLOCK(Raw_pointer_tests)
 		sgm::CV_Complete<int*> wrapper{ptr};
 
 		static_assert(sgm::is_Same<decltype(*wrapper), int&>::value);
-		SGM_H2U_ASSERT(*wrapper == 42);
+		H2U_ASSERT(*wrapper == 42);
 	}
 
 	// Test const wrapper
@@ -55,7 +55,7 @@ BEGIN_CODE_BLOCK(Raw_pointer_tests)
 		sgm::CV_Complete<int*> const const_wrapper{ptr};
 	
 		static_assert(sgm::is_Same<decltype(*const_wrapper), int const&>::value);
-		SGM_H2U_ASSERT(*const_wrapper == 42);
+		H2U_ASSERT(*const_wrapper == 42);
 	}
 
 	// Test volatile wrapper
@@ -65,7 +65,7 @@ BEGIN_CODE_BLOCK(Raw_pointer_tests)
 		static_assert
 		(	sgm::is_Same<decltype(*volatile_wrapper), int volatile&>::value
 		);
-		SGM_H2U_ASSERT(*volatile_wrapper == 42);
+		H2U_ASSERT(*volatile_wrapper == 42);
 	}
 
 	// Test const volatile wrapper
@@ -75,7 +75,7 @@ BEGIN_CODE_BLOCK(Raw_pointer_tests)
 		static_assert
 		(	sgm::is_Same<decltype(*cv_wrapper), int const volatile&>::value
 		);
-		SGM_H2U_ASSERT(*cv_wrapper == 42);
+		H2U_ASSERT(*cv_wrapper == 42);
 	}
 END_CODE_BLOCK_AND_LOAD(Raw_pointer_tests)
 }
@@ -84,7 +84,7 @@ END_CODE_BLOCK_AND_LOAD(Raw_pointer_tests)
 
 static void unique_ptr_tests()
 {
-	sgm::h2u::mdo << sgm::h2u::Title(L"unique_ptr Tests", 2);
+	h2u::mdo << h2u::Title(L"unique_ptr Tests", 2);
 
 BEGIN_CODE_BLOCK(unique_ptr_tests)
 	auto unique_ptr = std::make_unique<int>(100);
@@ -94,7 +94,7 @@ BEGIN_CODE_BLOCK(unique_ptr_tests)
 		sgm::CV_Complete< std::unique_ptr<int> > wrapper{std::move(unique_ptr)};
 
 		static_assert(sgm::is_Same<decltype(*wrapper), int&>::value);
-		SGM_H2U_ASSERT(*wrapper == 100);
+		H2U_ASSERT(*wrapper == 100);
 	}
 
 	// Create new unique_ptr for const test
@@ -107,22 +107,22 @@ BEGIN_CODE_BLOCK(unique_ptr_tests)
 		};
 		
 		static_assert(sgm::is_Same<decltype(*const_wrapper), int const&>::value);
-		SGM_H2U_ASSERT(*const_wrapper == 200);
+		H2U_ASSERT(*const_wrapper == 200);
 	}
 END_CODE_BLOCK_AND_LOAD(unique_ptr_tests)
 
-	sgm::h2u::mdo
+	h2u::mdo
 	<<	L"**Note:** volatile and const volatile tests are not valid for unique_ptr "
 	<<	L"because std::unique_ptr does not support volatile-qualified access. "
 	<<	L"This is a design limitation - volatile wrappers only work with raw pointers."
-	<<	sgm::h2u::empty_line;
+	<<	h2u::empty_line;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
 static void vector_iterator_tests()
 {
-	sgm::h2u::mdo << sgm::h2u::Title(L"Vector Iterator Tests", 2);
+	h2u::mdo << h2u::Title(L"Vector Iterator Tests", 2);
 
 BEGIN_CODE_BLOCK(vector_iterator_tests)
 	std::vector<int> vec = {1, 2, 3, 4, 5};
@@ -133,7 +133,7 @@ BEGIN_CODE_BLOCK(vector_iterator_tests)
 		sgm::CV_Complete<typename std::vector<int>::iterator > wrapper{iter};
 
 		static_assert(sgm::is_Same<decltype(*wrapper), int&>::value);
-		SGM_H2U_ASSERT(*wrapper == 1);
+		H2U_ASSERT(*wrapper == 1);
 	}
 
 	// Test const iterator wrapper
@@ -143,16 +143,16 @@ BEGIN_CODE_BLOCK(vector_iterator_tests)
 		};
 
 		static_assert(sgm::is_Same<decltype(*const_wrapper), int const&>::value);
-		SGM_H2U_ASSERT(*const_wrapper == 1);
+		H2U_ASSERT(*const_wrapper == 1);
 	}
 
 END_CODE_BLOCK_AND_LOAD(vector_iterator_tests)
 
-	sgm::h2u::mdo
+	h2u::mdo
 	<<	L"**Note:** volatile and const volatile tests are not valid for iterators "
 	<<	L"because std::vector<int>::iterator does not support volatile-qualified access. "
 	<<	L"This is a design limitation - volatile wrappers only work with raw pointers."
-	<<	sgm::h2u::empty_line;
+	<<	h2u::empty_line;
 }
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
@@ -243,21 +243,21 @@ END_CODE_BLOCK(pimpl_with_cv_complete)
 
 static void Pimpl_false_const_comparison()
 {
-	sgm::h2u::mdo << sgm::h2u::Title(L"Pimpl False Const Problem Comparison", 2);
+	h2u::mdo << h2u::Title(L"Pimpl False Const Problem Comparison", 2);
 
-	sgm::h2u::mdo
+	h2u::mdo
 	<<	L"The traditional Pimpl idiom using raw pointers has a **false const problem**. "
 	<<	L"When the outer class is const-qualified, the pointer itself becomes const, "
 	<<	L"but the pointed-to object remains mutable. This breaks const-correctness." 
-	<<	sgm::h2u::newl
-	<<	sgm::h2u::Load_code_block(L"pimpl_with_false_constness")
-	<<	sgm::h2u::empty_line;
+	<<	h2u::newl
+	<<	h2u::Load_code_block(L"pimpl_with_false_constness")
+	<<	h2u::empty_line;
 
-	sgm::h2u::mdo
+	h2u::mdo
 	<<	L"CV_Complete solves this by properly propagating CV-qualifiers through "
-	<<	L"the indirection, maintaining true const-correctness." << sgm::h2u::newl
-	<<	sgm::h2u::Load_code_block(L"pimpl_with_cv_complete")
-	<<	sgm::h2u::empty_line;
+	<<	L"the indirection, maintaining true const-correctness." << h2u::newl
+	<<	h2u::Load_code_block(L"pimpl_with_cv_complete")
+	<<	h2u::empty_line;
 
 	using namespace _detail_false_constness;
 
@@ -272,7 +272,7 @@ BEGIN_CODE_BLOCK(comparison_pimpl_tests)
 		// This is the false const problem.
 		const_obj.value() = 999;  // Compiles! (BAD)
 
-		SGM_H2U_ASSERT(const_obj.value() == 999);
+		H2U_ASSERT(const_obj.value() == 999);
 	}
 
 	// CV_Complete Pimpl: True const correctness
@@ -290,21 +290,21 @@ BEGIN_CODE_BLOCK(comparison_pimpl_tests)
 		CV_Complete_Pimpl_Foo mutable_obj;
 
 		mutable_obj.value() = 999;
-		SGM_H2U_ASSERT(mutable_obj.value() == 999);
+		H2U_ASSERT(mutable_obj.value() == 999);
 	}
 END_CODE_BLOCK_AND_LOAD(comparison_pimpl_tests)
 
-	sgm::h2u::mdo
+	h2u::mdo
 	<<	L"**Key takeaway:** CV_Complete enables proper const-correctness in Pimpl, "
 	<<	L"preventing accidental mutations through const interfaces. "
 	<<	L"Traditional raw pointer Pimpl allows mutation of the pointed-to object "
 	<<	L"even when accessed through a const method."
-	<<	sgm::h2u::empty_line;
+	<<	h2u::empty_line;
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, CV_Complete, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, CV_Complete, /**/)
 {	::intro
 ,	::Raw_pointer_tests
 ,	::unique_ptr_tests

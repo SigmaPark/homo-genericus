@@ -9,7 +9,7 @@
 
 namespace sgm
 {
-	namespace h2u
+	namespace test
 	{
 
 		auto Poiya_Problem(std::size_t const n)-> long double;
@@ -22,7 +22,7 @@ namespace sgm
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-class sgm::h2u::PrimeFactors
+class sgm::test::PrimeFactors
 {
 public:
 	PrimeFactors() : _primes({2, 3}){}
@@ -37,7 +37,7 @@ private:
 };
 
 
-class sgm::h2u::Poiya_rate
+class sgm::test::Poiya_rate
 {
 public:
 	Poiya_rate() : _primes(), _nof_odd_factors({0, 0, 1}){}

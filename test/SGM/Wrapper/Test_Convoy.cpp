@@ -9,12 +9,12 @@
 #include "SGM/TMP/interface_Traits.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -46,7 +46,7 @@ static void intro()
 
 static void Move_Only_Construction()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << Title(L"Move-Only Construction");
 
@@ -74,7 +74,7 @@ BEGIN_CODE_BLOCK(move_construction_ex)
 
 	sgm::Convoy<Specimen> cvy = sgm::Move(s);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	cvy == 3
 	&&	s == Specimen::State::MOVE_AWAY
 	);
@@ -91,7 +91,7 @@ static void outro()
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Convoy, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Convoy, /**/)
 {	::intro
 ,	::Move_Only_Construction
 ,	::outro

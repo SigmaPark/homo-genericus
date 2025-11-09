@@ -92,29 +92,29 @@ bool wt::Tests(wchar_t const* const module_title) noexcept
 
 void test() noexcept(false)
 {
-    sgm::h2u::Test_Array::test();
-    sgm::h2u::Test_Avatar::test();
-    sgm::h2u::Test_Convoy::test();
-    sgm::h2u::Test_Nullable::test();
-    sgm::h2u::Test_Pinweight::test();
-    sgm::h2u::Test_Boomerang::test();
-    sgm::h2u::Test_Fork_and_Join::test();
-    sgm::h2u::Test_Concurrent_Pipeline::test();
-    sgm::h2u::Test_CV_Complete::test();
-    sgm::h2u::Test_Family::test();
-    sgm::h2u::Test_Flag_Set::test();
-    sgm::h2u::Test_High_Templar::test();
-    sgm::h2u::Test_interface_Traits::test();
-    sgm::h2u::Test_iterable::test();    
-    sgm::h2u::Test_List::test();
-    sgm::h2u::Test_Mathexpr::test();
-    sgm::h2u::Test_Operators_of::test();
-    sgm::h2u::Test_Queue::test();
-    sgm::h2u::Test_Recursion::test();
-	sgm::h2u::Test_Span::test();
-    sgm::h2u::Test_Type_Analysis::test();
-    sgm::fp::h2u::Test_Functor::test();
-    sgm::fp::h2u::Test_Parameters::test();
+    sgm::test::Test_Array::test();
+    sgm::test::Test_Avatar::test();
+    sgm::test::Test_Convoy::test();
+    sgm::test::Test_Nullable::test();
+    sgm::test::Test_Pinweight::test();
+    sgm::test::Test_Boomerang::test();
+    sgm::test::Test_Fork_and_Join::test();
+    sgm::test::Test_Concurrent_Pipeline::test();
+    sgm::test::Test_CV_Complete::test();
+    sgm::test::Test_Family::test();
+    sgm::test::Test_Flag_Set::test();
+    sgm::test::Test_High_Templar::test();
+    sgm::test::Test_interface_Traits::test();
+    sgm::test::Test_iterable::test();    
+    sgm::test::Test_List::test();
+    sgm::test::Test_Mathexpr::test();
+    sgm::test::Test_Operators_of::test();
+    sgm::test::Test_Queue::test();
+    sgm::test::Test_Recursion::test();
+	sgm::test::Test_Span::test();
+    sgm::test::Test_Type_Analysis::test();
+    sgm::test::Test_Functor::test();
+    sgm::test::Test_Parameters::test();
 }
 
 

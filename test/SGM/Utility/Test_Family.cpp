@@ -8,12 +8,12 @@
 #include "Test_Family.hpp"
 
 
-using sgm::h2u::Specimen;
+using h2u::Specimen;
 
 
 static void intro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Introduction")
@@ -27,7 +27,7 @@ static void intro()
 
 static void Constructor()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Basic Construction and Copy")
@@ -43,7 +43,7 @@ BEGIN_CODE_BLOCK(constructor_ex)
 
 	auto fam2 = fam1;
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	fam1 == sgm::Make_Family( Specimen(-1), s1, cs1 )
 	&&	fam2 == sgm::Make_Family( Specimen(-1), s1, cs1 )
 	);
@@ -55,7 +55,7 @@ END_CODE_BLOCK_AND_LOAD(constructor_ex)
 
 static void Move_Rvalue_Member()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Move Semantics with Rvalue Members")
@@ -73,7 +73,7 @@ BEGIN_CODE_BLOCK(move_rvalue_ex)
 
 	auto fam2 = sgm::Move(fam1);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	fam2 == sgm::Make_Family( Specimen(-1), s1, cs1, Specimen(3) )
 	&&	std::get<0>(fam1) == Specimen::State::MOVE_AWAY
 	&&	std::get<1>(fam1) == s1
@@ -88,7 +88,7 @@ END_CODE_BLOCK_AND_LOAD(move_rvalue_ex)
 
 static void Assignment()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Assignment Operations")
@@ -104,7 +104,7 @@ BEGIN_CODE_BLOCK(assignment_ex)
 
 	fam2 = fam1;
 
-	SGM_H2U_ASSERT( fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 1} );
+	H2U_ASSERT( fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 1} );
 END_CODE_BLOCK_AND_LOAD(assignment_ex)
 
 	mdo << empty_line;
@@ -113,7 +113,7 @@ END_CODE_BLOCK_AND_LOAD(assignment_ex)
 
 static void Move_Assignment()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Move Assignment")
@@ -130,7 +130,7 @@ BEGIN_CODE_BLOCK(move_assignment_ex)
 
 	fam2 = sgm::Move(fam1);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	fam2 == sgm::Family<Specimen, Specimen, Specimen>{-1, 1, 3}
 	&&	std::get<0>(fam1) == Specimen::State::MOVE_AWAY
 	&&	std::get<1>(fam1) == 1
@@ -144,7 +144,7 @@ END_CODE_BLOCK_AND_LOAD(move_assignment_ex)
 
 static void Get_and_Forward()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Element Access and Perfect Forwarding")
@@ -188,7 +188,7 @@ END_CODE_BLOCK_AND_LOAD(get_forward_ex)
 
 static void Convenience_Member_Functions()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Convenience Member Functions")
@@ -202,18 +202,18 @@ BEGIN_CODE_BLOCK(convenience_members_ex)
 	// Demonstrate .first() and .second() with a 2-element Family
 	sgm::Family<int, double> duo(42, 3.14);
 
-	SGM_H2U_ASSERT(duo.first() == 42 && duo.second() == 3.14);
+	H2U_ASSERT(duo.first() == 42 && duo.second() == 3.14);
 
 	// Modify values through convenience functions
 	duo.first() = 100;
 	duo.second() = 2.718;
 
-	SGM_H2U_ASSERT(duo.first() == 100 && duo.second() == 2.718);
+	H2U_ASSERT(duo.first() == 100 && duo.second() == 2.718);
 
 	// Demonstrate .first(), .second(), .third() with a 3-element Family
 	sgm::Family<int, double, wchar_t> trio(1, 2.5, L'A');
 
-	SGM_H2U_ASSERT(trio.first() == 1 && trio.second() == 2.5 && trio.third() == L'A');
+	H2U_ASSERT(trio.first() == 1 && trio.second() == 2.5 && trio.third() == L'A');
 
 	// Type safety and const-correctness
 	static_assert
@@ -228,7 +228,7 @@ BEGIN_CODE_BLOCK(convenience_members_ex)
 	// Demonstrate all four convenience functions with a 4-element Family
 	sgm::Family<int, double, wchar_t, bool> quartet(10, 1.5, L'Z', true);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	quartet.first() == 10
 	&&	quartet.second() == 1.5
 	&&	quartet.third() == L'Z'
@@ -236,7 +236,7 @@ BEGIN_CODE_BLOCK(convenience_members_ex)
 	);
 
 	// Compare convenience syntax vs std::get syntax
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	quartet.first() == std::get<0>(quartet)
 	&&	quartet.second() == std::get<1>(quartet)
 	&&	quartet.third() == std::get<2>(quartet)
@@ -250,7 +250,7 @@ END_CODE_BLOCK_AND_LOAD(convenience_members_ex)
 
 static void Merge_Family_Test()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Merging Families")
@@ -274,7 +274,7 @@ BEGIN_CODE_BLOCK(merge_family_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT(fam3 == sgm::Family<Specimen, Specimen, Specimen, Specimen>{s2, 3, -4, 1});
+	H2U_ASSERT(fam3 == sgm::Family<Specimen, Specimen, Specimen, Specimen>{s2, 3, -4, 1});
 END_CODE_BLOCK_AND_LOAD(merge_family_ex)
 
 	mdo << empty_line;
@@ -283,7 +283,7 @@ END_CODE_BLOCK_AND_LOAD(merge_family_ex)
 
 static void Harden_Test()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Hardening References")
@@ -302,7 +302,7 @@ BEGIN_CODE_BLOCK(harden_ex)
 	,	""
 	);
 
-	SGM_H2U_ASSERT
+	H2U_ASSERT
 	(	std::get<0>(fam2) == s1
 	&&	std::get<1>(fam2) == 3
 	&&	s2 == Specimen::State::MOVE_AWAY
@@ -315,7 +315,7 @@ END_CODE_BLOCK_AND_LOAD(harden_ex)
 
 static void As_it_is_Test()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"As-It-Is Forwarding")
@@ -328,7 +328,7 @@ BEGIN_CODE_BLOCK(as_it_is_ex)
 
 	sgm::Tie(s1, s2) = sgm::Forward_as_Family(5, sgm::as_it_is);
 
-	SGM_H2U_ASSERT( s1 == Specimen(5) && s2 == 3 );
+	H2U_ASSERT( s1 == Specimen(5) && s2 == 3 );
 END_CODE_BLOCK_AND_LOAD(as_it_is_ex)
 
 	mdo << empty_line;
@@ -337,7 +337,7 @@ END_CODE_BLOCK_AND_LOAD(as_it_is_ex)
 
 static void Structured_Binding()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo
 	<<	Title(L"Structured Binding Support")
@@ -405,13 +405,13 @@ END_CODE_BLOCK_AND_LOAD(structured_binding_ex)
 
 static void outro()
 {
-	using namespace sgm::h2u;
+	using namespace h2u;
 
 	mdo << empty_line;
 }
 
 
-SGM_HOW2USE_TESTS(sgm::h2u::Test_, Family, /**/)
+H2U_HOW2USE_TESTS(sgm::test::Test_, Family, /**/)
 {	::intro
 ,	::Constructor
 ,	::Move_Rvalue_Member
