@@ -507,6 +507,33 @@ struct sgm::is_random_access_iterator< sgm::ht::Morph_iterator<ITR, FUNC> >
 template<class ITR, class FUNC>
 struct sgm::is_bidirectional_iterator< sgm::ht::Morph_iterator<ITR, FUNC> >
 :	is_bidirectional_iterator<ITR>{};
+
+
+namespace std
+{
+	
+	template<class ITR, class FUNC, int ITR_TRAIT>
+	struct iterator_traits< sgm::ht::Morph_iterator<ITR, FUNC, ITR_TRAIT> >
+	{
+	private:
+		using _deref_t = decltype( sgm::Mock<FUNC>()(*sgm::Mock<ITR>()) );
+
+	public:
+		using iterator_category
+		=	sgm::Selective_t
+			<	ITR_TRAIT == 3, random_access_iterator_tag
+			,	sgm::Selective_t
+				<	ITR_TRAIT == 2, bidirectional_iterator_tag, forward_iterator_tag
+				>
+			>;
+
+		using value_type = sgm::Decay_t<_deref_t>;
+		using difference_type = ptrdiff_t;
+		using pointer = typename sgm::ht::_Pointer_Proxy<_deref_t>::type;
+		using reference = _deref_t&&;
+	};
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -560,6 +587,12 @@ public:
 	auto crend() const noexcept-> const_reverse_iterator{  return {rEnd(_rg), _func};  }
 	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
 	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _func};  }
+
+
+	template<class CON, class...ARGS>
+	auto construct(ARGS&&...args) const
+	noexcept(  noexcept( iterable_cast<CON>(Mock<Morph_Range const&>(), Mock<ARGS&&>()...) )  )
+	->	CON{  return iterable_cast<CON>( *this, Forward<ARGS>(args)... );  }
 
 
 	template<class EVAL_FLAG = None, class ALC = _Default_Array_Allocator_t<value_type> >
@@ -678,6 +711,27 @@ private:
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+namespace std
+{
+
+	template<class ITR, class FUNC>
+	struct iterator_traits< sgm::ht::Filter_iterator<ITR, FUNC> >
+	{
+	private:
+		using _deref_t = decltype(*sgm::Mock<ITR>());
+
+	public:
+		using iterator_category = forward_iterator_tag;
+		using value_type = sgm::Decay_t<_deref_t>;
+		using difference_type = ptrdiff_t;
+		using pointer = typename sgm::ht::_Pointer_Proxy<_deref_t>::type;
+		using reference = _deref_t&&;
+	};
+
+}
+//--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
+
+
 template<class RG, class FUNC, bool TRY_MUTABLE>
 class sgm::ht::Filter_Range
 {
@@ -739,6 +793,12 @@ public:
 	
 	auto rend() const noexcept-> SGM_DECLTYPE_AUTO(  crend()  )
 	auto rend() noexcept-> reverse_iterator{  return {rEnd(_rg), _fritr_func(this)};  }
+
+
+	template<class CON, class...ARGS>
+	auto construct(ARGS&&...args) const
+	noexcept(  noexcept( iterable_cast<CON>(Mock<Filter_Range const&>(), Mock<ARGS&&>()...) )  )
+	->	CON{  return iterable_cast<CON>( *this, Forward<ARGS>(args)... );  }
 
 
 	template< class ALC = _Default_Array_Allocator_t<value_type> >

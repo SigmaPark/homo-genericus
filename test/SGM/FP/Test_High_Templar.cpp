@@ -8,6 +8,7 @@
 #include "SGM/FP/High_Templar.hpp"
 #include "Test_High_Templar.hpp"
 #include <forward_list>
+#include <vector>
 
 
 using h2u::Specimen;
@@ -309,6 +310,45 @@ static void Plait_Test()
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
+static void Construct_Test()
+{
+	{
+		auto const vec = sgm::Countable<std::size_t>{5}.construct< std::vector<std::size_t> >();
+
+		H2U_ASSERT
+		(	Are_Equivalent_Ranges(vec, std::initializer_list<std::size_t>{0, 1, 2, 3, 4})
+		);
+	}
+	{
+		auto triple_f = [](int x)-> Specimen{  return 3*x;  };
+		
+		std::initializer_list<Specimen> const answer
+		{	Specimen(0), Specimen(3), Specimen(6), Specimen(9), Specimen(12)
+		};
+
+		auto const vec 
+		=	sgm::Morph(sgm::Countable<int>(5), triple_f).construct< std::vector<Specimen> >();
+		
+		H2U_ASSERT( Are_Equivalent_Ranges(vec, answer) );
+	}
+	{
+		auto is_odd_f = [](Specimen const& s)-> bool{  return s.value() % 2 == 1;  };
+		auto make_h2u_f = [](int const& x)-> Specimen{  return x;  };
+
+		auto const inputs
+		=	sgm::Morph( sgm::Countable<int>(10), make_h2u_f )
+			.	construct< std::vector<Specimen> >();
+
+		std::initializer_list<Specimen> const answer
+		{	Specimen(1), Specimen(3), Specimen(5), Specimen(7), Specimen(9)
+		};
+
+		auto const filtered
+		=	sgm::Filter(inputs, is_odd_f).construct< std::vector<Specimen> >();
+
+		H2U_ASSERT( Are_Equivalent_Ranges(filtered, answer) );
+	}
+}
 //========//========//========//========//=======#//========//========//========//========//=======#
 
 
@@ -319,4 +359,5 @@ H2U_HOW2USE_TESTS(sgm::test::Test_, High_Templar, /**/)
 ,	::Filter_Test
 ,	::Fold_Test
 ,	::Plait_Test
+,	::Construct_Test
 };

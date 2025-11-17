@@ -12,7 +12,8 @@
 #include <cassert>
 #include <limits>
 #include <iterator>
-#include "SGM/TMP/Type_Analysis.hpp"
+#include "SGM/Container/iterable.hpp"
+//#include "SGM/TMP/Type_Analysis.hpp"
 
 
 namespace sgm
@@ -180,6 +181,13 @@ public:
 
 	auto size() const noexcept-> size_t{  return _length;  }
 
+	template<class CON, class...ARGS>
+	auto construct(ARGS&&...args) const 
+	noexcept(  noexcept( iterable_cast<CON>(Mock<Countable const&>(), Mock<ARGS&&>()...) )  )
+	->	CON
+	{
+		return iterable_cast<CON>( *this, Forward<ARGS>(args)... );
+	}
 
 private:
 	T _length, _offset;
