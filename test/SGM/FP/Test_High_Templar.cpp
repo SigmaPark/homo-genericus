@@ -348,6 +348,30 @@ static void Construct_Test()
 
 		H2U_ASSERT( Are_Equivalent_Ranges(filtered, answer) );
 	}
+	{
+		std::vector<int> const arr_int{1, 3, 5, 7, 9};
+		
+		std::vector<Specimen> const arr_h2u
+		{	Specimen(0), Specimen(2), Specimen(4), Specimen(6), Specimen(8)
+		};
+
+		std::initializer_list<wchar_t> const iL{'a', 'b', 'c', 'd', 'e'};
+
+		auto const answer
+		=	std::vector< sgm::Family<int, Specimen, wchar_t> >
+			{	sgm::Family<int, Specimen, wchar_t>(1, Specimen(0), 'a')
+			,	sgm::Family<int, Specimen, wchar_t>(3, Specimen(2), 'b')
+			,	sgm::Family<int, Specimen, wchar_t>(5, Specimen(4), 'c')
+			,	sgm::Family<int, Specimen, wchar_t>(7, Specimen(6), 'd')
+			,	sgm::Family<int, Specimen, wchar_t>(9, Specimen(8), 'e')
+			};
+
+		auto const plait_vec
+		=	sgm::Plait(arr_int, arr_h2u, iL)
+			.	construct<  std::vector< sgm::Family<int, Specimen, wchar_t> >  >();
+
+		H2U_ASSERT( Are_Equivalent_Ranges(plait_vec, answer) );
+	}
 }
 //========//========//========//========//=======#//========//========//========//========//=======#
 

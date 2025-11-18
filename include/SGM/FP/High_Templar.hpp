@@ -1485,6 +1485,33 @@ struct sgm::is_bidirectional_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITR
 template<bool TM, class...ITRS>
 struct sgm::is_random_access_iterator<  sgm::ht::Plait_iterator< sgm::Family<ITRS...>, TM >  >
 :	ht::_Plait_iterator_Trait< is_random_access_iterator, Family<ITRS...> >{};
+
+
+namespace std
+{
+
+	template<class FAM, bool TRY_MUTABLE, int ITR_TRAIT>
+	struct iterator_traits< sgm::ht::Plait_iterator<FAM, TRY_MUTABLE, ITR_TRAIT> >
+	{
+	private:
+		using _deref_t = typename sgm::_ht_Plait_detail::Deref<FAM, TRY_MUTABLE>::res_t;
+
+	public:
+		using iterator_category
+		=	sgm::Selective_t
+			<	ITR_TRAIT == 3, random_access_iterator_tag
+			,	sgm::Selective_t
+				<	ITR_TRAIT == 2, bidirectional_iterator_tag, forward_iterator_tag
+				>
+			>;
+
+		using value_type = _deref_t;
+		using difference_type = ptrdiff_t;
+		using pointer = typename sgm::ht::_Pointer_Proxy<_deref_t>::type;
+		using reference = _deref_t&&;
+	};
+
+}
 //--------//--------//--------//--------//-------#//--------//--------//--------//--------//-------#
 
 
@@ -1551,6 +1578,12 @@ public:
 
 	auto rbegin() const-> SGM_DECLTYPE_AUTO(  crbegin()  )
 	auto rend() const-> SGM_DECLTYPE_AUTO(  crend()  )
+
+
+	template<class CON, class...ARGS>
+	auto construct(ARGS&&...args) const
+	noexcept(  noexcept( iterable_cast<CON>(Mock<cPlait_Range const&>(), Mock<ARGS&&>()...) )  )
+	->	CON{  return iterable_cast<CON>( *this, Forward<ARGS>(args)... );  }
 
 
 	template<class FNJ_FLAG>
